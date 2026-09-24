@@ -166,6 +166,8 @@ body:not(.mobile) #hud.air #nadeBtn{bottom:calc(84px + env(safe-area-inset-botto
 @keyframes blink{50%{opacity:.25}}
 #intel .nm2{font-family:Oxanium,sans-serif;font-weight:800;font-size:19px;letter-spacing:1.5px;margin:2px 0 3px;display:flex;align-items:center;gap:8px;white-space:nowrap}
 #intel .thr{display:flex;gap:2px}#intel .thr i{width:5px;height:9px;border-radius:1.5px;background:rgba(255,255,255,.1)}#intel .thr i.f{background:var(--bad)}
+#intel.kit{border-left-color:var(--blue)}#intel.kit .tag2{color:var(--blue)}#intel.kit .tag2:before{background:var(--blue);box-shadow:0 0 8px var(--blue)}#intel.kit .tm{background:var(--blue)}
+#intel #intelName{min-width:0;overflow:hidden;text-overflow:ellipsis}
 #intel .tip{font-size:12.5px;line-height:1.4;color:var(--dim)}
 #intel .tm{position:absolute;left:0;bottom:0;height:2px;width:100%;background:var(--acc);transform-origin:left;transform:scaleX(0)}
 #intel.on .tm{animation:drain var(--dur,4s) linear forwards}@keyframes drain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
@@ -737,6 +739,10 @@ const rsDone=id=>rsOwned(id)>=RLINES[id].t.length-1;
 function rsFieldNew(){const prev=S.rsF;S.rsF=Object.assign({},S.rs);save();if(!prev)return'';
   const n=RLINES.lines.filter(r=>(S.rs[r.id]|0)>(prev[r.id]|0)&&L(r.u)>0).map(r=>r.t[S.rs[r.id]|0].n);
   return n.length>3?n.slice(0,3).join(' · ')+' +'+(n.length-3)+' more':n.join(' · ')}
+// first time a researched tier is ever fielded: a non-blocking briefing card through the intel pipeline (seen()['rs_'+line+'_'+tier])
+function rsBriefs(){let n=0;for(const r of RLINES.lines){if(n>=3)break;   // at most three a run so enemy contact cards are not held up
+  const k=rTier(r.id);if(k===rsDefTier(r.id)||L(r.u)<1)continue;const key='rs_'+r.id+'_'+k;if(seen()[key])continue;
+  const t=r.t[k],s=sigText(t.sig);INTEL[key]=[t.n,0,r.label+(t.w?': '+t.w:'')+'. '+(s||'DMG x'+fxm(t.mul)+(t.pen?', AP '+pct(t.pen):''))+'.'];spotted(key);n++}}
 const rsReady=()=>RLINES.lines.filter(r=>!rsDone(r.id)&&!rsWhy(r.id,rsOwned(r.id)+1));
 function buyResearch(id){const r=RLINES[id];if(!r)return false;
   if(rsDone(id)){const n=S.rf[id]||0,c=refitCost(n);if(S.rp<c){sfx('deny');return false}S.rp-=c;S.rf[id]=n+1}
@@ -1178,7 +1184,7 @@ function startWave(){
   if(G.wave%10===0)spawn('boss');
   layMines();
   if(G.wallMax){G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.25)}
-  banner(G.wave%10===0?'WAVE '+G.wave+' — ENEMY ARMOR INCOMING':'WAVE '+G.wave,G.rsNew?'NEW KIT: '+G.rsNew:'',G.rsNew?'110,195,255':'');G.rsNew='';sfx('wave');
+  banner(G.wave%10===0?'WAVE '+G.wave+' — ENEMY ARMOR INCOMING':'WAVE '+G.wave,G.rsNew?'NEW KIT: '+G.rsNew:'',G.rsNew?'110,195,255':'');G.rsNew='';if(G.wave===G.startWave)rsBriefs();sfx('wave');
   if(G.wave===2&&!seen().nade)float(0,-fortHalf()-30,MOBILE?'NEW: TAP FRAG, THEN A SPOT':'NEW: PRESS G TO THROW A GRENADE','#ffcf5a',13);
   skyWaveStart();evStart();vehWave();
   G.uavT=!G.ev&&G.wave>=6&&G.wave%10!==0&&Math.random()<0.3?4+Math.random()*7:0;   // recon UAV pass partway into the wave
@@ -3099,12 +3105,12 @@ function intelTick(){const now=performance.now(),gap=now-intelLast,el=$('intel')
   if(intelCur){if(gap>250)intelEnd+=gap;if(now>=intelEnd){intelCur=null;el.classList.remove('on');intelEnd=now+450}}
   else if(intelQ.length&&now>=intelEnd)showIntel(intelQ.shift(),now)}
 function showIntel(type,now){const [name,thr,tip]=INTEL[type],el=$('intel');seen()[type]=1;save();intelCur=type;intelEnd=now+INTEL_MS;
-  el.querySelector('.tag2').textContent=type.startsWith('ev_')?'FIELD REPORT':'NEW CONTACT';
-  $('intelName').textContent=name;$('intelTip').textContent=tip;$('intelThr').innerHTML='<i class="f"></i>'.repeat(thr)+'<i></i>'.repeat(5-thr);
+  el.classList.toggle('kit',type.startsWith('rs_'));el.querySelector('.tag2').textContent=type.startsWith('ev_')?'FIELD REPORT':type.startsWith('rs_')?'NEW KIT FIELDED':'NEW CONTACT';
+  $('intelName').textContent=name;$('intelTip').textContent=tip;$('intelThr').innerHTML=thr?'<i class="f"></i>'.repeat(thr)+'<i></i>'.repeat(5-thr):'';
   drawPreview(type);el.style.setProperty('--dur',INTEL_MS+'ms');el.classList.remove('on');void el.offsetWidth;el.classList.add('on');
   tone(880,0.07,'square',0,0.035);setTimeout(()=>tone(1175,0.1,'square',0,0.035),90)}
 // renders the real in-game sprite, facing right, fitted to the card's preview canvas
-function drawPreview(type){if(SKY[type])return skyPreview(type);if(type.startsWith('ev_'))return evPreview(type.slice(3));const c=$('intelCv'),d=ET[type],k=d.r/6,span=d.span||(d.boss?25:21),cxo=d.cx??(d.boss?2.5:4.5),fit=c.width*0.94/(span*k),main=ctx;
+function drawPreview(type){if(SKY[type])return skyPreview(type);if(type.startsWith('rs_')){const c=$('intelCv');c.dataset.th=type.slice(3).replace(/_(\d+)$/,':$1');return paintThumb(c)}if(type.startsWith('ev_'))return evPreview(type.slice(3));const c=$('intelCv'),d=ET[type],k=d.r/6,span=d.span||(d.boss?25:21),cxo=d.cx??(d.boss?2.5:4.5),fit=c.width*0.94/(span*k),main=ctx;
   ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,c.width,c.height);ctx.setTransform(fit,0,0,fit,c.width/2-cxo*k*fit+100*fit,c.height/2);
     drawEnemy({type,r:d.r,col:d.col,boss:d.boss,veh:d.veh,moving:false,wob:0,flash:0,odo:0},-100,0)}finally{ctx=main}}
 // ================= BATTLEFIELD EVENTS =================
