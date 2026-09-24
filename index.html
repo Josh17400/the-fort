@@ -623,7 +623,7 @@ function audioFrame(){const c=AU.ctx;if(!c||c.state!=='running')return;const t=c
   AU.amb.gain.setTargetAtTime(live?0.1:0.04,t,0.8);
   const helis=live&&G.units?G.units.reduce((n,u)=>n+(u.k==='heli'&&(u.spin??1)>0.2),0):0;
   AU.rotor.g.gain.setTargetAtTime(helis?0.5+0.25*helis:0,t,0.4);AU.rotor.lfo.frequency.setTargetAtTime(10.5+helis*0.6,t,0.5);
-  const R2=live?Math.pow(vision()+80,2):0,armor=live?G.enemies.reduce((n,e)=>n+(e.veh&&e.moving&&e.x*e.x+e.y*e.y<R2),0):0;
+  const R2=live?Math.pow(vision()+80,2):0,armor=live?G.enemies.reduce((n,e)=>n+(e.veh&&e.moving&&e.x*e.x+e.y*e.y<R2?1:0),0):0;
   AU.eng.g.gain.setTargetAtTime(armor?Math.min(1.1,0.45+0.14*armor):0,t,0.7);AU.eng.f.frequency.setTargetAtTime(95+Math.min(6,armor)*9,t,0.8);
   const want=S.set.music&&live&&(G.spawnLeft>0||G.enemies.length>0||G.sky.length>0)?0.16:0;AU.mus.gain.setTargetAtTime(want,t,want?1.2:2.2);
   if(want)AU.musOn=t+7;if(t>AU.musOn)return;                                                         // keep scheduling only while audible
@@ -3773,7 +3773,7 @@ setInterval(()=>{if(running&&!paused)persist()},10000);
 let last=performance.now(),acc=0;const STEP=1/60;
 function loop(now){acc+=Math.min((now-last)/1000,0.25)*S.set.speed*(G&&running?G.simSpeed||1:1);last=now;
   if(running&&!paused&&!G.choosing){while(acc>=STEP&&running&&!G.choosing){update(STEP);acc-=STEP}}else acc=0;
-  if(running)draw();audioFrame();requestAnimationFrame(loop)}
+  if(running)draw();try{audioFrame()}catch(err){if(!loop._aw){loop._aw=1;console.warn('audio',err)}}requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 medalSync();renderHome();
 </script>
