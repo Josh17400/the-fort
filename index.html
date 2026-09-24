@@ -1442,8 +1442,9 @@ function update(dt){
   updateSky(dt,half);if(!running)return;
   // artillery
   const al=L('arty');if(al){G.artyT-=dt;if(G.artyT<=0){const vis=G.enemies.filter(visible);if(vis.length){let best=vis[0],bc=-1,R=artyR(al);
-    for(const c of vis.slice(0,25)){let k=0;for(const o of vis)if(Math.hypot(o.x-c.x,o.y-c.y)<R)k+=o.veh||o.stand?3:1;if(k>bc){bc=k;best=c}}
-    fireArty(sg('arty','seek')&&sgSeek(vis,G.gun||{x:0,y:0})||best,R,artyDmg(al));G.artyT=artyCdNow()}else G.artyT=0.5}}
+    const sk=sg('arty','seek');   // precision tiers weigh armor far heavier, then guide onto the armor inside the chosen cluster
+    for(const c of vis.slice(0,25)){let k=0;for(const o of vis)if(Math.hypot(o.x-c.x,o.y-c.y)<R)k+=sk&&(o.veh||o.boss)?8:o.veh||o.stand?3:1;if(k>bc){bc=k;best=c}}
+    fireArty(sk&&sgSeek(vis,best,R)||best,R,artyDmg(al));G.artyT=artyCdNow()}else G.artyT=0.5}}
   for(const s of G.shells){s.t-=dt;if(s.tg)sgGuide(s);if(s.t<=0){s.done=true;explode(s.x,s.y,s.r,s.dmg);if(s.mega)sgMegaFx(s)}}G.shells=G.shells.filter(s=>!s.done);
   updateNades(dt);
   // air
@@ -2212,7 +2213,7 @@ function sgRockets(u,t){const n=sg('heli','salvo')||1,near=n>1?topTargets(G.enem
   sfx('rocket',u.x,u.y)}
 // canister: a tank facing infantry close in fires a shotgun cone instead of a shell. true = it fired
 function sgCanister(u,t){if(!sg('tank','canister')||t.veh||t.boss||t.air||Math.hypot(t.x-u.x,t.y-u.y)>130)return false;
-  const a=Math.atan2(t.y-u.y,t.x-u.x),mx=u.x+Math.cos(a)*30,my=u.y+Math.sin(a)*30;sgCone(mx,my,a,0.4,120,G.enemies,tankDmg(L('tank'))*0.5,0,'255,220,150');
+  const a=Math.atan2(t.y-u.y,t.x-u.x),mx=u.x+Math.cos(a)*30,my=u.y+Math.sin(a)*30;sgCone(mx,my,a,0.5,140,G.enemies,tankDmg(L('tank')),0,'255,220,150');
   for(let i=0;i<6;i++){const b=a+(R()-.5)*0.8,r=70+R()*50;G.fx.push({k:'tracer',x:mx,y:my,x2:mx+Math.cos(b)*r,y2:my+Math.sin(b)*r,life:0.07,max:0.07,c:'#ffe7a0',w:1})}
   light(mx,my,50,'255,200,120',0.1);sfx('tank',u.x,u.y);return true}
 // flame bunkers: thermobaric burn and the active-denial slow on everything in the fire zone; the HEL tiers add wall lasers (sigLaser)
@@ -2226,8 +2227,8 @@ function sigLaser(ph,reach,fl){G.lzT=(G.lzT||0)-0.1;if(G.lzT>0)return;G.lzT=LASE
     if(!t)continue;n++;sgBeam(ex,ey,t.x,t.y,HEL_C,1.3,LASER_T+0.02);sgHit(t,d,'p',pen);if(sl)sgSlow(t,sl[0],sl[1]);if(ch)sigChain(t,ch[0],d*ch[1],'p',pen,HEL_C,90);
     spark(t.x,t.y,2,70,['#fff0e0','#ff9a6a'],0.18,1.1)}
   if(n)sfx('laser',0,-ph)}
-// sniper thermal optics: engage through the fog out to 1.45x the sight line
-const sgThermal=e=>!e.air&&!e.dead&&Math.hypot(e.x,e.y)<sight()*1.45;
+// sniper thermal optics: engage through the fog out to 60m past the sight line (standoff mortar and rocket crews, not fresh spawns)
+const sgThermal=e=>!e.air&&!e.dead&&Math.hypot(e.x,e.y)<sight()+60;
 function sigFogPick(u){if(u.k!=='sniper'||sg('sniper','fogSight')==null)return null;let b=null;for(const e of G.enemies)if(sgThermal(e)&&(!b||e.hp>b.hp))b=e;return b}
 // walls: rebar thorns bite melee attackers; after a breach the EM screen soaks all damage for SHIELD_T seconds (once a wave) while
 // the crews patch the walls back to 30%
