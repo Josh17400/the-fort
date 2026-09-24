@@ -2568,7 +2568,7 @@ function hqBarrel(len,col){hqCyl(4.8,-1.25,2.6,2.5,hexOf(hqSh(col,-.2)));   // m
   hqCyl(6,-.75,len-6,1.5,'#3a3f2a');hqCyl(len*.55,-.95,2.2,1.9,'#353a26');for(const x of[8.5,11.5])box(x,-.75,.25,1.5,'rgba(0,0,0,.45)');hqCyl(len-.6,-1,1.6,2,'#23261a');box(len+.9,-.35,.2,.7,'#050505')}
 const hexOf=c=>c[0]==='#'?c:'#'+c.match(/\d+/g).slice(0,3).map(v=>(+v).toString(16).padStart(2,'0')).join('');
 function drawTankHQ(x,y,ang,tur,tr,since,k,px,o){const T=hqTrack('trkT',px*k,20,3.6,1.6),hull=hqBake(o.key+'H',px*k,22,13,11,6.5,()=>{hqTankHull(o.col,o.camo,o.enemy);if(o.tier)hqTankHullDeco(o)}),
-    top=hqBake(o.key+'T',px*k,19,12,11.5,6,()=>o.tier?hqTankTurretT(o):hqTankTurret(o.col,o.camo,o.enemy,!o.enemy)),bar=hqBake(o.key+'B',px*k,o.len+3,3.2,0,1.6,()=>o.tier>=4?hqRailBarrel(o.len,o):hqBarrel(o.len,o.col));
+    top=hqBake(o.key+'T',px*k,19,12,11.5,6,()=>o.tier?hqTankTurretT(o):hqTankTurret(o.col,o.camo,o.enemy,!o.enemy)),bar=hqBake(o.key+'B',px*k,o.len+3,3.2,0,1.6,()=>o.tier?hqRailBarrel(o.len,o):hqBarrel(o.len,o.col));
   const rc=since<.45?Math.pow(1-since/.45,2):0,jig=o.moving?Math.sin(G.time*37+x)*.12:0;
   ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.scale(k,k);let l=hqLoc(1.1,1.5,ang,1);hqShadow(hull,l[0],l[1],.55);
   hqTrackDraw(T,-10.4,-8.3,20.8,3.6,tr,1.6);hqTrackDraw(T,-10.4,4.7,20.8,3.6,tr,1.6);
@@ -2930,7 +2930,7 @@ const ERA_C=['#6d6f4b','#5b7132','#77744c','#44533a','#3b3f44','#23262a'];   // 
 const ERA_V=['#6f6a48','#56652f','#6a6a44','#44533a','#3b3f44','#25282c'];   // vehicles: era2 keeps a green cast so it never reads as enemy sand
 const ERA_CAMO=['nato','nato','multi','ranger','graph','matte'];
 const ERA_ACC=[null,null,'#ffe7a0','#ff5a3a','#5fd4ff','#dff8ff'];
-Object.assign(CAMO,{multi:()=>hqCamoTile('multi',['#86804f','#55663a','#4a3a26'],5,5),ranger:()=>hqCamoTile('ranger',['#586a4a','#2c3527','#3c4a34'],5,7),
+Object.assign(CAMO,{multi:()=>hqCamoTile('multi',['#7b7a4c','#55663a','#43402a'],5,5),ranger:()=>hqCamoTile('ranger',['#586a4a','#2c3527','#3c4a34'],5,7),
   graph:()=>hqCamoTile('graph',['#4c5158','#2c3035'],7,4),matte:()=>hqCamoTile('matte',['#30343a','#1a1c20'],6,6)});
 // weapon look per tier: b ballistic, g gauss/rail (cyan tracer + glow), B directed energy (beam, no flash star)
 const TFX={dmg:'bbbbbbggBg',squad:'bbbbbbgB',turret:'bbbbbg',sniper:'bbbbBg',truck:'bbbbbbB',tank:'bbbbgg',flame:'bbBBB',heli:'bbbbB',
@@ -3034,7 +3034,7 @@ function hqMGBase(t){const e=eraOf('turret',t),pad=t>=4?'#3b3f44':'#7c7f78';
 function hqMGGun(t){const e=eraOf('turret',t),c=ERA_V[e],acc=ERA_ACC[e];
   if(t===1){limb(0,0,2.5,-3,.4,'#222');limb(0,0,2.5,3,.4,'#222');hqRR(-4.8,-2.6,3,5.2,1,'#6d5c40');
     for(const y of[-1.6,.7]){hqBar(-.6,y,4.2,1.8,'#26272a');hqBar(3.6,y+.45,8.2,.9,'#141414');hqCyl(3.6,y+.15,3.4,1.5,'#1f2023');box(11.6,y+.3,1,1.2,'#070707')}
-    hqCyl(.2,2.6,2.2,1.6,'#4a5530');hqArm(-2.6,-2.2,-1.6,-1.2,'#8b7550',1.4);hqArm(-2.6,2.2,-1.6,1.2,'#8b7550',1.4);hqDome(-3.2,0,2.3,2.2,'#8b7550',.35,-.5);return}
+    hqCyl(.2,2.6,2.2,1.6,'#4a5530');hqArm(-2.6,-2.2,-1.6,-1.2,'#7a7450',1.4);hqArm(-2.6,2.2,-1.6,1.2,'#7a7450',1.4);hqDome(-3.2,0,2.3,2.2,'#7a7450',.35,-.5);return}
   const tur=(x,y,w,h)=>{ctx.beginPath();ctx.roundRect(x,y,w,h,1);ctx.fillStyle=c;ctx.fill();hqCamo(ERA_CAMO[e],14,.5);ctx.beginPath();ctx.roundRect(x,y,w,h,1);hqShadeV(y,y+h);ctx.fill()};
   if(t===2||t===3){tur(-4,-3.2,7.4,6.4);hqRR(-1.4,-4.8,3.2,1.7,.4,'#23272a');ell(1.7,-3.95,.45,.55,'#6d97b0');ell(1.8,-4.1,.18,.22,'#e8f6ff');
     hqRR(-3.4,3.2,4,1.6,.4,'#3a3e2c');limb(-1.4,3.9,1.4,1.6,.5,'#2a2a28');
@@ -3052,32 +3052,107 @@ function mgLo(u,t,flash){const e=eraOf('turret',t),c=tierTint('#8a7650',e);ell(0
   if(flash){const f=tierFx('turret',t);ell(MG_MZ[t]+.6,0,2.5,1.4,f.flash?'#ffcf5a':f.tr)}}
 
 // ---- tank platoon: Booker -> M1A1 -> SEPv3 + Trophy -> AbramsX -> rail MBT -> optionally-crewed rail MBT ----
-function tankOpt(t){const e=eraOf('tank',t);return{key:'tnk'+(t?'_t'+t:''),col:t?ERA_V[e]:'#56652f',camo:t?ERA_CAMO[e]:'nato',enemy:false,len:[17.5,18.5,18.5,19,20,20.5][t],moving:true,flash:0,tier:t,e}}
-function hqTankHullDeco(o){const t=o.tier,acc=ERA_ACC[o.e];if(!t)return;
-  if(t>=1){for(const s of[-1,1])for(let i=0;i<6;i++)hqRR(-9.6+i*3.2,s*5.1-.55,3,1.1,.2,hexOf(hqSh(o.col,-.18)))}   // side skirts
-  if(t>=4){limb(-9,-4.3,6.6,-4.3,.2,acc);limb(-9,4.3,6.6,4.3,.2,acc);limb(7.2,-4.2,9.3,-3,.2,acc);limb(7.2,4.2,9.3,3,.2,acc)}
-  if(t>=5){hqDome(-6.6,-2.6,1.1,1.1,'#34383e');hqDome(-6.6,2.6,1.1,1.1,'#34383e');ell(-6.4,-2.6,.35,.35,acc);ell(-6.4,2.6,.35,.35,acc)}}
-function hqTankTurretT(o){const t=o.tier,c=o.col,acc=ERA_ACC[o.e];
-  if(t<3){hqTankTurret(c,o.camo,false,true);
-    if(t===2){for(const s of[-1,1]){hqRR(-3.6,s*4.9-.9,3.2,1.8,.3,'#2e3528');box(-3.2,s*4.9-.5,2.4,1,'#556048');ell(-2,s*5.1,.35,.35,'#1a1a1a')}   // Trophy APS
-      hqRR(-3.4,-3.6,2.8,1.8,.4,'#2a2e24');hqBar(-1.2,-3.1,3.6,.6,'#161616');ell(-2.8,-2.7,.3,.3,'#6d97b0')}                                  // CROWS
-    return}
-  hqRR(-9,-3.8,3.2,7.6,.6,hexOf(hqSh(c,-.3)));const P=[-6.4,-4.6,2.2,-5,6.6,-2,6.6,2,2.2,5,-6.4,4.6];hqPoly(P,c);hqClosed(P);hqCamo(o.camo,18,.6);hqClosed(P);
-  const g=ctx.createRadialGradient(-1,0,0,0,0,7);g.addColorStop(0,'rgba(255,250,225,.16)');g.addColorStop(.7,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.35)');ctx.fillStyle=g;ctx.fill();
-  hqPoly([2.2,-5,6.6,-2,3.6,-1.2],'rgba(255,245,210,.12)');ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=.22;ctx.beginPath();ctx.moveTo(-4,-4.7);ctx.lineTo(-4,4.7);ctx.moveTo(2.2,-5);ctx.lineTo(3.6,0);ctx.lineTo(2.2,5);ctx.stroke();
-  if(t===3){hqRR(-3.2,-3.2,3.4,2.4,.4,'#2a2e24');hqBar(0,-2.5,4.6,.8,'#161616');ell(-2.6,-2.8,.3,.3,'#6d97b0');hqHatch(-2.4,2.2,1.1,hexOf(hqSh(c,.05)))}
-  else{for(const s of[-1,1]){hqRR(-5.6,s*3.2-.7,5,1.4,.3,'#1d2024');box(-5.2,s*3.2-.15,4.2,.3,acc)}hqDome(-2.4,0,1.5,1.5,t>=5?'#1c1e22':'#2c3035',.4,-.4);ell(-2,0,.5,.5,acc)}
-  limb(-5.4,-3.4,-10.6,-4.4,.18,'#111');hqBolts([-5.4,-3.9,-5.4,3.9,2,-4.6,2,4.6])}
-function hqRailBarrel(len,o){const acc=ERA_ACC[o.e];hqCyl(4.6,-1.5,2.8,3,hexOf(hqSh(o.col,-.2)));box(6.4,-1.3,len-6.4,.8,'#59616a');box(6.4,.5,len-6.4,.8,'#59616a');box(6.4,-.5,len-6.4,1,'#0c0e10');
-  box(6.6,-.2,len-6.8,.4,acc);for(let x=8;x<len-1;x+=2.4)box(x,-1.4,.5,2.8,'#3d444c');box(len-.4,-1.4,.7,2.8,'#0a0b0c')}
-function tankLo(u,t,flash){const e=eraOf('tank',t),c=tierTint('#56652f',e),len=[13,14,14,14.5,15.5,16][t];
+function tankOpt(t){const e=eraOf('tank',t);return{key:'tnk'+(t?'_t'+t:''),col:t?ERA_V[e]:'#56652f',camo:t?ERA_CAMO[e]:'nato',enemy:false,len:[17.5,18.8,19,19.2,20,21][t],moving:true,flash:0,tier:t,e}}
+// ground-vehicle tier kit (bake time): shaded armour shell, seam segments [x1,y1,x2,y2,..], ammo can, rucksack, smoke-grenade bank, IR/sensor pod
+function gvShell(P,c,camo,tile,r=7.5){hqPoly(P,c);if(camo){hqClosed(P);hqCamo(camo,tile,.6)}hqClosed(P);const g=ctx.createRadialGradient(-1.4,-.8,0,0,0,r);
+  g.addColorStop(0,'rgba(255,250,225,.2)');g.addColorStop(.6,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.4)');ctx.fillStyle=g;ctx.fill()}
+function gvSeams(S,c='rgba(0,0,0,.4)',w=.22){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.beginPath();for(let i=0;i<S.length;i+=4){ctx.moveTo(S[i],S[i+1]);ctx.lineTo(S[i+2],S[i+3])}ctx.stroke()}
+function gvCan(x,y,c,w=1.5,h=2){hqRR(x,y,w,h,.2,c);box(x,y,w,h*.24,hexOf(hqSh(c,.2)));box(x+.2,y+h*.5,w-.4,.16,'rgba(0,0,0,.45)');box(x+w*.3,y+h*.66,w*.4,.2,'#c9b24a')}
+function gvRuck(x,y,w,h,c){hqRR(x,y,w,h,Math.min(w,h)*.3,c);box(x+.25,y+.2,w-.5,h*.32,hexOf(hqSh(c,.16)));box(x+w*.3,y,.22,h,'rgba(0,0,0,.35)');box(x+w*.7,y,.22,h,'rgba(0,0,0,.35)')}
+function gvSmoke(x,y,s,n=4){for(let i=0;i<n;i++){hqCyl(x+i*.62,y+(s<0?-.72:.08),.56,.64,'#262a20');ell(x+i*.62+.28,y+(s<0?-.4:.4),.14,.14,'#0a0a08')}}
+function gvPod(x,y,r,acc){hqDome(x,y,r,r,'#23262a',.4,-.45);ell(x+r*.3,y,r*.36,r*.36,'#0b0d10');ell(x+r*.36,y-r*.08,r*.16,r*.16,acc)}
+function hqTankHullDeco(o){const t=o.tier,c=o.col,acc=ERA_ACC[o.e],sk=hexOf(hqSh(c,-.2)),dk=hexOf(hqSh(c,-.42));if(!t)return;
+  if(t<=2){for(const s of[-1,1])for(let i=0;i<6;i++){hqRR(-9.6+i*3.2,s*5.1-.55,3,1.1,.2,sk);box(-9.4+i*3.2,s*5.1-(s<0?.5:-.2),2.6,.26,'rgba(255,250,220,.12)')}   // Abrams side skirts
+    hqRR(-10.4,-3.8,1.2,7.6,.3,dk);for(let y=-3.4;y<3.4;y+=.7)box(-10.3,y,1,.32,'#15160f');                                           // rear grille doors
+    if(t===2){for(const s of[-1,1]){for(let i=0;i<4;i++)for(let j=0;j<2;j++)hqRR(1.2+i*2,s*5.1-.62+j*.62*s,1.8,.56,.1,j?hexOf(hqSh(c,.08)):hexOf(hqSh(c,-.05)));   // TUSK reactive tiles
+      for(let i=0;i<8;i++)box(-9.6+i*.8,s*5.1-.55,.28,1.1,'#1d2016')}                                                                     // rear slat armour
+      hqRR(-9.2,-1.3,1.6,2.6,.3,'#2a2e24');box(-9,-.9,1.2,.35,'#4a4f44');ell(9.3,-4.2,.3,.3,acc);ell(9.3,4.2,.3,.3,acc)}}               // APU box, IR markers
+  else if(t===3){for(const s of[-1,1]){hqPoly([-10,s*4.5,7.6,s*4.5,9.4,s*4,9.4,s*5.7,-10.4,s*5.7],sk);gvSeams([-6,s*4.6,-6,s*5.6,-1.6,s*4.6,-1.6,s*5.6,3,s*4.6,3,s*5.6]);box(-9.6,s*5.1-.1,18.6,.2,'rgba(255,250,220,.1)')}
+    for(const s of[-1,1])gvPod(8.6,s*3.4,.55,acc);hqRR(-10.3,-3.6,1.1,7.2,.3,dk);for(let y=-3.2;y<3.4;y+=.9)box(-10.2,y,.9,.45,'#15160f')}
+  else{for(const s of[-1,1]){hqPoly([-10.2,s*4.4,6.8,s*4.4,9.6,s*3.2,9.6,s*5.7,-10.2,s*5.7],t>=5?'#1b1d20':'#2c3035');gvSeams([-7,s*4.5,-7,s*5.6,-2,s*4.5,-2,s*5.6,3,s*4.5,3,s*5.6],'rgba(0,0,0,.6)',.2);
+      limb(-9.6,s*4.9,6.8,s*4.9,.24,acc)}
+    for(let i=0;i<4;i++){hqCyl(-9.8,-2.9+i*1.5,2.8,1.1,'#2a2e33');ell(-7,-2.35+i*1.5,.24,.4,acc)}                                     // capacitor bank on the engine deck
+    if(t>=5){for(const s of[-1,1])gvPod(8.8,s*3.3,.6,acc);gvSeams([-5,-4.3,-3.6,-2.2,-3.6,-2.2,-3.6,2.2,-3.6,2.2,-5,4.3,5,-4.3,6.4,-2.6,6.4,-2.6,6.4,2.6,6.4,2.6,5,4.3],'rgba(0,0,0,.55)',.2)}
+    else{limb(7.2,-4.2,9.3,-3,.2,acc);limb(7.2,4.2,9.3,3,.2,acc)}}}
+// M1A1 / SEPv3 turret: long flat wedge, stowage bins, loaded bustle rack; SEPv3 adds Trophy, CROWS and CITV
+function gvAbrams(o){const t=o.tier,c=o.col,d=hexOf(hqSh(c,-.3)),acc=ERA_ACC[o.e];
+  box(-11.2,-5.1,5.8,10.2,'#16180f');
+  if(t===1){hqCyl(-11,-4.9,5.2,2,'#7a734c');for(const x of[-10.2,-8.6,-7])box(x,-4.9,.28,2,'rgba(40,30,10,.5)');                        // rolled tarp
+    gvRuck(-11,-2.7,2.6,2.8,'#5d5a3a');gvRuck(-8.2,-2.8,2.6,2.3,'#716646');gvCan(-8.1,-.3,'#4c5530');gvCan(-6.5,-.3,'#4c5530');hqCyl(-11,.3,2.6,1.3,'#3d4a24');
+    gvRuck(-11,1.8,2.7,3,'#6a5f40');hqCyl(-8.2,2,2.4,1.1,'#2f3a22');hqCyl(-8.2,3.4,2.4,1.1,'#2f3a22')}                                       // rucks, ammo cans, jerrycans
+  else{for(let i=0;i<3;i++)for(let j=0;j<4;j++)gvCan(-11+i*1.8,-4.8+j*2.45,j%2?'#3b4630':'#435036',1.6,2.1);hqRR(-11,-5.05,5.4,1.1,.4,'#58603f')}   // ammo-can rows + strapped tarp
+  gvSeams([-11.3,-5.1,-5.6,-5.1,-11.3,5.1,-5.6,5.1,-11.3,-5.1,-11.3,5.1,-8.4,-5.1,-8.4,5.1],'#3c3f2e',.42);
+  for(const s of[-1,1])hqRR(-5.8,s>0?4.1:-5.9,5.8,1.8,.35,d);                                                                              // turret side bins
+  const P=[-6,-5.25,1,-5.55,6.8,-3.2,7.3,-1.4,7.3,1.4,6.8,3.2,1,5.55,-6,5.25];gvShell(P,c,o.camo,18);
+  hqPoly([1,-5.55,6.8,-3.2,7.3,-1.4,2.6,-2],'rgba(255,245,210,.16)');hqPoly([1,5.55,6.8,3.2,7.3,1.4,2.6,2],'rgba(0,0,0,.16)');
+  gvSeams([1,-5.55,2.6,-2,1,5.55,2.6,2,2.6,-2,2.6,2,-6,-3.9,-.6,-3.9,-6,3.9,-.6,3.9,-5.9,0,-3.9,0]);
+  for(const s of[-1,1]){gvSeams([-5.6,s*5.2,-.2,s*5.2],'rgba(255,250,220,.18)',.18);gvSmoke(3.4,s*4.2,s,3)}
+  hqRR(2.8,1.9,2.4,2,.35,d);box(5,2.1,.35,1.5,'#7aa8c2');box(3,2,1.9,.35,'rgba(255,255,255,.14)');                                       // gunner's primary sight doghouse
+  hqHatch(-2.1,-2.6,1.3,hexOf(hqSh(c,-.08)));                                                                                              // loader's hatch
+  if(t===1){hqBar(-1.2,-3.9,4.4,.55,'#161616');hqRR(2.4,-4.6,.5,1.9,.2,'#2c3024');gvCan(-1.6,-4.9,'#4c5530',1.2,1.1);                       // M240 on skate mount + shield
+    hqHatch(-2.4,2.5,1.6,hexOf(hqSh(c,.04)));for(let i=0;i<6;i++){const a=i/6*TAU;box(-2.4+Math.cos(a)*1.25-.2,2.5+Math.sin(a)*1.25-.2,.4,.4,'#7aa8c2')}
+    hqBar(-1.6,2,4.8,.75,'#141414');box(3.1,2.08,.8,.6,'#070707');gvCan(-2.2,3.4,'#4c5530',1.3,1.1)}                                        // commander's M2
+  else{hqRR(-4.2,1.2,4.2,3,.5,'#2c3326');hqBevel(-4.2,1.2,4.2,3,0,.35,.3);hqRR(-3.6,3.1,2.4,1.3,.3,'#1b1e18');ell(-1.4,3.75,.32,.42,'#7aa8c2');   // CROWS
+    hqBar(-.6,1.9,5.4,.75,'#141414');box(4.6,1.95,.7,.65,'#070707');gvCan(-3.9,.1,'#3b4630',1.6,1.1);
+    hqDome(.9,-3.3,.9,.9,'#2a2e24',.35,-.45);hqRR(.4,-3.9,1.6,1.2,.25,'#1d201a');box(1.8,-3.7,.3,.8,'#7aa8c2');                              // CITV
+    for(const s of[-1,1]){hqPoly([-5.4,s*4.5,-.4,s*4.6,0,s*5.95,-5.8,s*5.95],'#262b21');                                                    // Trophy: radar panels + launcher each side
+      hqPoly([-2.6,s*5,-.6,s*5.05,-.2,s*5.9,-2.8,s*5.9],'#5d6a52');hqPoly([-5.3,s*5,-3.3,s*5,-3.1,s*5.9,-5.7,s*5.9],'#5d6a52');
+      gvSeams([-2.2,s*5.4,-.6,s*5.4,-4.9,s*5.4,-3.4,s*5.4],'rgba(0,0,0,.45)',.14);hqDome(-2.95,s*4.4,.95,.95,'#3c4535',.35,-.5);box(-3.5,s*4.4-.22,1.3,.44,'#1b1e18')}
+    ell(-5.6,-4.2,.28,.28,acc)}
+  limb(-6.2,-4.2,-11.2,-5.4,.2,'#111');limb(-6.2,4.2,-11.2,5.4,.2,'#111');limb(-5.6,-.8,-7,-.8,.3,'#222');ell(-7,-.8,.35,.35,'#2a2a2a');     // whips, wind sensor
+  hqBolts([-5.7,-4.6,-5.7,4.6,.8,-5.1,.8,5.1,6.6,-2.8,6.6,2.8])}
+function hqTankTurretT(o){const t=o.tier,c=o.col,acc=ERA_ACC[o.e],d=hexOf(hqSh(c,-.3));
+  if(t<3){gvAbrams(o);return}
+  if(t===3){const P=[-8.4,-4.2,-6.4,-5.2,1.6,-5.4,6.8,-2.6,7.2,-1.2,7.2,1.2,6.8,2.6,1.6,5.4,-6.4,5.2,-8.4,4.2];gvShell(P,c,o.camo,18);  // AbramsX: low faceted turret, armoured bustle
+    hqPoly([1.6,-5.4,6.8,-2.6,7.2,-1.2,3,-1.6],'rgba(255,245,210,.16)');hqPoly([1.6,5.4,6.8,2.6,7.2,1.2,3,1.6],'rgba(0,0,0,.18)');hqPoly([-8.4,-4.2,-6.4,-5.2,-6.4,5.2,-8.4,4.2],'rgba(0,0,0,.2)');
+    gvSeams([1.6,-5.4,3,-1.6,1.6,5.4,3,1.6,3,-1.6,3,1.6,-6.4,-5.2,-6.4,5.2,-6.4,-2.6,1.4,-2.6,-6.4,2.6,1.4,2.6]);
+    for(const s of[-1,1]){hqRR(-4.6,s>0?4.6:-5.9,3.2,1.3,.4,'#262a22');hqDome(-3,s*5.25,.7,.7,'#3a4232',.35,-.5)}                          // integrated Trophy
+    hqRR(-5.6,-1.8,4.6,3.6,.6,d);hqBevel(-5.6,-1.8,4.6,3.6,0,.35,.3);hqRR(-5.2,-2.6,2.4,1.1,.3,'#1b1e18');ell(-3,-2.05,.3,.36,'#7aa8c2');   // XM914 30mm RWS
+    hqCyl(-1.2,-.5,8.6,1,'#1a1c18');hqCyl(4.8,-.62,1.2,1.24,'#232620');box(7.3,-.35,.3,.7,'#050505');gvCan(-5.4,.4,'#3b4630',1.8,1.2);
+    hqRR(2.6,2.4,2.2,1.9,.35,'#22261e');box(4.6,2.6,.35,1.4,'#7aa8c2');for(const[x,y]of[[-7.8,-3.6],[-7.8,3.6],[5.8,-3],[5.8,3]])gvPod(x,y,.5,acc);
+    limb(-8,-.6,-11,-.8,.2,'#111');hqBolts([-6.2,-4.8,-6.2,4.8,1.4,-5,1.4,5]);return}
+  const P=t===4?[-8.8,-4,-6,-5.3,2.4,-5.3,7,-2.2,7,2.2,2.4,5.3,-6,5.3,-8.8,4]:[-10.6,-3.2,-7,-4.6,3.8,-4.6,7.2,-1.6,7.2,1.6,3.8,4.6,-7,4.6,-10.6,3.2];
+  gvShell(P,c,o.camo,18);hqPoly(t===4?[2.4,-5.3,7,-2.2,3.8,-1.4]:[3.8,-4.6,7.2,-1.6,4.4,-1],'rgba(255,245,210,.14)');
+  if(t===4){for(let i=0;i<6;i++){box(-8.4+i*.62,-3.4,.34,6.8,'#15171a');box(-8.4+i*.62,-3.4,.34,6.8,i%2?'rgba(95,212,255,.18)':'rgba(0,0,0,0)')}   // radiator fins
+    for(const s of[-1,1]){hqRR(-5.4,s*3.3-.8,6.6,1.6,.4,'#1d2024');for(let i=0;i<5;i++)box(-5+i*1.3,s*3.3-.6,.6,1.2,'#3d444c');box(-5.2,s*3.3-.12,6.2,.24,acc)}   // coil banks
+    gvSeams([2.4,-5.3,3.8,-1.4,2.4,5.3,3.8,1.4,3.8,-1.4,3.8,1.4,-6,-5.3,-6,5.3],'rgba(0,0,0,.55)',.2);hqDome(-1.8,0,1.6,1.6,'#2c3035',.4,-.4);ell(-1.3,0,.55,.55,acc);ell(-1.2,-.1,.2,.2,'#fff');
+    for(const s of[-1,1])gvPod(5.2,s*2.6,.5,acc);limb(-6,-4,-11,-5,.18,'#111');hqBolts([-5.8,-4.9,-5.8,4.9,2.2,-4.9,2.2,4.9])}
+  else{gvSeams([-7,-4.6,-7,4.6,3.8,-4.6,4.4,-1,3.8,4.6,4.4,1,4.4,-1,4.4,1,-7,-2,2,-2,-7,2,2,2],'rgba(0,0,0,.6)',.2);                        // optionally-crewed: flush, hatchless
+    for(const s of[-1,1]){limb(-9.8,s*3,3.4,s*4.2,.24,acc);ell(-8.6,s*1.5,1.05,1.05,'#141619');ctx.strokeStyle=acc;ctx.lineWidth=.16;ctx.beginPath();ctx.arc(-8.6,s*1.5,.8,0,7);ctx.stroke()}   // drone docks
+    hqRR(-4.4,-3.6,3.4,2.2,.4,'#15171a');hqDome(-2.7,-2.5,.9,.9,'#2a2d31',.4,-.4);ell(-2.4,-2.5,.34,.34,acc);                               // sensor mast head
+    hqRR(-4.6,1,3.8,2.4,.5,'#191b1e');hqCyl(-1.8,1.6,3.2,1.2,'#0e1012');ell(1.4,2.2,.45,.55,acc);ell(1.45,2.2,.2,.26,'#fff');                // laser dazzler
+    for(const s of[-1,1])gvPod(5.6,s*2.3,.5,acc)}}
+// main-gun layer for tiers 1+ (drawTankHQ routes o.tier to here): 120mm M256 with thermal sleeve, XM360 composite, rails
+function hqRailBarrel(len,o){const t=o.tier,acc=ERA_ACC[o.e],c=o.col,d=hexOf(hqSh(c,-.24));
+  if(t<4){if(t<3){hqRR(4.6,-1.75,3,3.5,.4,d);box(4.6,-1.75,3,.5,hexOf(hqSh(c,.12)));box(7.2,-1.25,.4,2.5,'#1c1e16')}else hqPoly([4.4,-1.9,7.6,-1.2,7.6,1.2,4.4,1.9],d);
+    const tb=t===3?'#2d3129':hexOf(hqSh(c,-.1));hqCyl(7.4,-.8,len-7.4,1.6,tb);
+    if(t<3)for(let x=8.6;x<len-1.6;x+=2.1){box(x,-.82,.3,1.64,'rgba(0,0,0,.45)');box(x+.3,-.82,.2,1.64,'rgba(255,255,230,.16)')}           // thermal-sleeve clamps
+    else for(let x=8.2;x<len-2;x+=.8)box(x,-.8,.14,1.6,'rgba(0,0,0,.28)');                                                             // composite overwrap
+    hqCyl(len*.5,-1.05,t===3?1.8:2.8,2.1,hexOf(hqSh(tb,-.12)));hqCyl(len-.8,-.95,1.8,1.9,'#23261a');box(len-.4,-1.35,1,.55,'#3a3d33');box(len+.9,-.35,.2,.7,'#050505');return}
+  const w=t>=5?1.5:1.35;hqRR(4.4,-1.7,3.4,3.4,.5,d);hqBevel(4.4,-1.7,3.4,3.4,0,.3,.3);
+  box(7.4,-w,len-7.4,.8,'#59616a');box(7.4,w-.8,len-7.4,.8,'#59616a');box(7.4,-w+.8,len-7.4,2*w-1.6,'#0c0e10');box(7.6,-.2,len-7.8,.4,acc);
+  box(7.4,-w,len-7.4,.22,'rgba(255,255,255,.22)');
+  if(t===4)for(let x=8.6;x<len-1;x+=2.4)hqRR(x,-1.55,.6,3.1,.15,'#3d444c');
+  else{for(let x=8.4;x<len-1.4;x+=1.4){hqRR(x,-1.6,.34,3.2,.12,'#2a2d31');box(x+.05,-1.5,.24,.3,acc)}hqRR(len-2.6,-1.6,1.2,3.2,.3,'#1e2024')}
+  hqRR(len-.6,-1.6,1.2,3.2,.3,'#0a0b0c');box(len,-.2,.5,.4,acc)}
+// Medium/Low: flat shapes, but the turret silhouette, gun and key gear still read per tier
+function tankLo(u,t,flash){const e=eraOf('tank',t),c=tierTint('#56652f',e),acc=ERA_ACC[e],len=[13,14.4,14.6,14.8,15.6,16.6][t],dk=hexOf(hqSh(c,-.3)),tc=hexOf(hqSh(c,-.1));
   ctx.save();ctx.translate(u.x,u.y);ctx.scale(US.tank,US.tank);ell(1.5,2,11,8.5,'rgba(0,0,0,.35)');ctx.rotate(u.ang);
   box(-10,-8,20,4,'#1e1e1a');box(-10,4,20,4,'#1e1e1a');for(let i=-10+(u.tr%3);i<10;i+=3){box(i,-8,1,4,'#3a3a32');box(i,4,1,4,'#3a3a32')}
-  box(-9,-5,18,10,c);box(-9,-5,18,1.2,hexOf(hqSh(c,.2)));box(-9,3.8,18,1.2,hexOf(hqSh(c,-.3)));if(t>=4){box(-9,-4.4,16,.5,ERA_ACC[e]);box(-9,3.9,16,.5,ERA_ACC[e])}ctx.restore();
-  ctx.save();ctx.translate(u.x,u.y);ctx.scale(US.tank,US.tank);ctx.rotate(u.tur);
-  if(t>=4){box(3,-1.4,len,.9,'#59616a');box(3,.5,len,.9,'#59616a');box(3,-.3,len,.6,ERA_ACC[e])}else{box(3,-1,len,2,'#2e3519');box(len+2,-1.5,2.5,3,'#1d2210')}
-  if(t>=3)hqPoly([-5,-4.4,2,-4.8,5.4,-1.8,5.4,1.8,2,4.8,-5,4.4],hexOf(hqSh(c,-.1)));else ell(0,0,5,4.5,hexOf(hqSh(c,-.1)));ctx.strokeStyle='#28301a';ctx.lineWidth=.7;ctx.stroke();
-  if(t===2){box(-3.4,-5.8,3,1.4,'#2e3528');box(-3.4,4.4,3,1.4,'#2e3528')}ell(-1.5,-1.4,1.3,1.3,hexOf(hqSh(c,-.3)));
+  box(-9,-5,18,10,c);box(-9,-5,18,1.2,hexOf(hqSh(c,.2)));box(-9,3.8,18,1.2,dk);box(-9.6,-6,19,1.4,dk);box(-9.6,4.6,19,1.4,dk);
+  if(t===2)for(let i=0;i<4;i++){box(1+i*2,-6,1.6,1.4,tc);box(1+i*2,4.6,1.6,1.4,tc)}
+  if(t>=4){box(-9,-4.4,16,.5,acc);box(-9,3.9,16,.5,acc);box(-8.6,-2.6,2.4,5.2,'#2a2e33')}else tierStripe(-8.6,-.3,3,e);ctx.restore();
+  ctx.save();ctx.translate(u.x,u.y);ctx.scale(US.tank,US.tank);ctx.rotate(u.tur);ctx.strokeStyle='#1c2112';ctx.lineWidth=.7;
+  if(t>=4){box(4,-1.5,len,1,'#59616a');box(4,.5,len,1,'#59616a');box(4,-.4,len,.8,acc);box(len+3,-1.7,1.4,3.4,'#0a0b0c')}
+  else{box(4,-.9,len,1.8,dk);box(4+len*.45,-1.2,2.4,2.4,dk);box(len+2.6,-1.3,2,2.6,'#1d2210')}
+  if(t<=2){box(-10.8,-4.8,5.4,9.6,'#2a2b1e');box(-10.4,-4.4,2.4,3.6,'#6a6446');box(-10.4,.6,2.4,3.8,'#4c5530');hqPoly([-6,-5.2,1,-5.5,7,-2.8,7,2.8,1,5.5,-6,5.2],tc)}
+  else if(t===3)hqPoly([-8.2,-4,-6.2,-5.1,1.6,-5.3,7,-2.2,7,2.2,1.6,5.3,-6.2,5.1,-8.2,4],tc);
+  else if(t===4)hqPoly([-8.6,-4,-6,-5.2,2.4,-5.2,7,-2.2,7,2.2,2.4,5.2,-6,5.2,-8.6,4],tc);else hqPoly([-10.4,-3.2,-7,-4.5,3.8,-4.5,7.2,-1.6,7.2,1.6,3.8,4.5,-7,4.5,-10.4,3.2],tc);ctx.stroke();
+  if(t===1){ell(-2.4,2.5,1.6,1.6,dk);box(-1.6,2.1,4.6,.7,'#141414')}
+  else if(t===2){box(-4.2,1.2,4.2,3,'#2c3326');box(-.6,1.9,5.2,.7,'#141414');box(-5.6,-6.1,5.6,1.5,'#262b21');box(-5.6,4.6,5.6,1.5,'#262b21')}
+  else if(t===3){box(-5.6,-1.8,4.6,3.6,dk);box(-1.2,-.5,8.6,1,'#1a1c18');ell(-3,-5.2,.8,.8,'#3a4232');ell(-3,5.2,.8,.8,'#3a4232')}
+  else if(t===4){for(let i=0;i<5;i++)box(-8+i*.7,-3.2,.35,6.4,'#15171a');box(-5.2,-3.9,6.2,1.2,'#1d2024');box(-5.2,2.7,6.2,1.2,'#1d2024');ell(-1.8,0,1.5,1.5,'#2c3035');ell(-1.4,0,.55,.55,acc)}
+  else{ell(-8.6,-1.5,1.05,1.05,'#141619');ell(-8.6,1.5,1.05,1.05,'#141619');box(-4.4,-3.6,3.4,2.2,'#15171a');ell(-2.4,-2.5,.4,.4,acc);box(-10,-3,13,.45,acc);box(-10,2.55,13,.45,acc)}
   if(flash){const f=tierFx('tank',t);ell(len+7,0,4,2.4,f.flash?'#ffcf5a':f.tr);ell(len+6,0,2,1.2,'#fff')}ctx.restore()}
 
 // ---- sniper tower: M24 -> M107 -> Mk22 thermal nest -> robotic smart-rifle post -> laser designator -> gauss precision ----
@@ -3110,26 +3185,63 @@ function drawSniperT(u,px,flash,t){const s=US.sniper*bS(),twr=hqBake('twr_t'+t,p
 function hqTruckBody(t){const e=eraOf('truck',t),c=ERA_V[e],acc=ERA_ACC[e],camo=ERA_CAMO[e];
   const shade=(P)=>{hqClosed(P);ctx.fillStyle=c;ctx.fill();hqCamo(camo,14,.5);hqClosed(P);const g=ctx.createLinearGradient(0,-4.8,0,4.8);g.addColorStop(0,'rgba(255,250,220,.18)');g.addColorStop(1,'rgba(0,0,0,.28)');ctx.fillStyle=g;ctx.fill()};
   const glass=(x,y,w,h)=>{ctx.save();ctx.beginPath();ctx.roundRect(x,y,w,h,.4);ctx.clip();const g=ctx.createLinearGradient(x,y,x+w,y+h);g.addColorStop(0,'#8fb3c8');g.addColorStop(.5,'#22384a');g.addColorStop(1,'#0e1822');ctx.fillStyle=g;ctx.fill();ctx.fillStyle='rgba(255,255,255,.3)';ctx.fillRect(x+.2,y+.5,.35,h*.35);ctx.restore()};
-  if(t<=2){hqRR(-8.6,-4.9,17.4,9.8,1,hexOf(hqSh(c,-.4)));shade([-8.2,-4.6,5,-4.6,8.6,-3.8,8.6,3.8,5,4.6,-8.2,4.6]);
-    for(let y=-3.2;y<3.4;y+=.8)box(8,y,.5,.4,'#1e2016');box(7.9,-4,.7,.9,'#f0e9b8');box(7.9,3.1,.7,.9,'#f0e9b8');glass(3.6,-3.6,1.2,3.2);glass(3.6,.4,1.2,3.2);
-    box(-8.2,-4.6,11.8,.5,hexOf(hqSh(c,.15)));hqRR(-6.2,-3.2,4.4,6.4,.6,hexOf(hqSh(c,-.25)));box(-7.6,-4,1.4,8,hexOf(hqSh(c,-.1)));
-    ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=.22;ctx.beginPath();for(const x of[-1.4,1.8]){ctx.moveTo(x,-4.6);ctx.lineTo(x,4.6)}ctx.stroke();hqBolts([-8,-4.3,-8,4.3,4.8,-4.3,4.8,4.3])}
-  else if(t===3){hqRR(-9.2,-5,18.8,10,1,hexOf(hqSh(c,-.4)));shade([-8.8,-4.7,4.4,-4.7,9.4,-3,9.4,3,4.4,4.7,-8.8,4.7]);hqPoly([4.4,-4.7,9.4,-3,9.4,3,4.4,4.7],'rgba(255,245,210,.12)');
-    glass(3.2,-3.8,1.1,3.4);glass(3.2,.4,1.1,3.4);box(8.8,-2.6,.6,5.2,'#1e2016');hqRR(-8.4,-3.8,5,7.6,.6,hexOf(hqSh(c,-.2)));for(let i=0;i<4;i++)box(-8,-3.2+i*1.9,4.2,.3,'rgba(0,0,0,.3)');hqBolts([-8.6,-4.4,-8.6,4.4,4.2,-4.4,4.2,4.4])}
-  else if(t===4){box(-8.4,-4.2,16.8,8.4,'#1f2118');for(const s of[-1,1]){limb(-8,s*4,7.4,s*3.6,.55,c);limb(-3,s*4,-3,-s*4,.4,c)}limb(7.4,-3.6,7.4,3.6,.55,c);limb(-8,-4,-8,4,.55,c);
-    hqRR(-7.4,-3.2,3.2,6.4,.4,'#3e4a34');for(const[x,y]of[[1,-2.4],[1,1.2],[-2.2,-2.4],[-2.2,1.2]])hqRR(x,y,2,1.3,.3,'#2a2c24');hqCyl(-7.6,-4.4,5,1,'#4a5540');box(7.3,-3.3,.8,6.6,'#1a1a14');hqRR(4.2,-3.4,2.6,6.8,.5,'#44533a')}
-  else{const P=[-9,-4.2,6,-4.6,9.6,-2,9.6,2,6,4.6,-9,4.2];hqRR(-9.2,-4.8,18.6,9.6,1.4,hexOf(hqSh(c,-.4)));shade(P);hqPoly([6,-4.6,9.6,-2,9.6,2,6,4.6],'rgba(255,255,255,.08)');
-    limb(-8.4,-3.8,5.8,-4.1,.2,acc);limb(-8.4,3.8,5.8,4.1,.2,acc);hqDome(7.4,0,1.2,1.2,'#1c1e22',.4,-.4);ell(7.9,0,.45,.45,acc);box(-8.8,-2,1.2,4,'#1c1e22');for(let i=0;i<3;i++)box(-8.6,-1.6+i*1.2,.9,.35,acc)}
+  const lamps=(x,y0,y1)=>{box(x,y0,.7,.9,'#f0e9b8');box(x,y1,.7,.9,'#f0e9b8');box(x+.1,y0+.1,.3,.3,'#fff')};
+  if(t<=2){hqRR(-8.6,-4.9,17.4,9.8,1,hexOf(hqSh(c,-.4)));shade([-8.2,-4.6,5,-4.6,8.6,-3.8,8.6,3.8,5,4.6,-8.2,4.6]);            // HMMWV: hood, split screen, armoured doors
+    for(let y=-3.2;y<3.4;y+=.8)box(8,y,.5,.4,'#1e2016');lamps(7.9,-4,3.1);glass(3.6,-3.6,1.2,3.2);glass(3.6,.4,1.2,3.2);
+    box(-8.2,-4.6,11.8,.5,hexOf(hqSh(c,.15)));gvSeams([5,-4.4,5,4.4,6,-1.2,8,-1.2,6,1.2,8,1.2,-1.4,-4.6,-1.4,4.6,1.8,-4.6,1.8,4.6]);for(const s of[-1,1]){box(3.5,s*4.7-.4,.8,.8,'#222');box(-.4,s*4.3-.1,.7,.2,'#141410');box(2.8,s*4.3-.1,.7,.2,'#141410')}
+    limb(8.7,-3.6,8.7,3.6,.4,'#23251c');limb(8.7,-3.6,9.6,-3.1,.4,'#23251c');limb(8.7,3.6,9.6,3.1,.4,'#23251c');limb(9.6,-3.1,9.6,3.1,.4,'#23251c');   // brush guard
+    if(t===1){hqRR(-8.2,-4,6.4,8,.4,hexOf(hqSh(c,-.28)));box(-8.2,-4,6.4,.4,hexOf(hqSh(c,-.1)));                                        // open cargo deck
+      gvRuck(-7.8,-3.6,2.6,2.2,'#5d5a3a');gvRuck(-7.8,1.2,2.4,2.4,'#6e6444');hqCyl(-5,-3.7,2.8,1.1,'#3d4a24');gvCan(-4.9,-2.2,'#4c5530',1.3,1.7);gvCan(-3.4,-2.2,'#4c5530',1.3,1.7);
+      hqCyl(-7.9,-1.2,1.6,2.2,'#77714c');ell(-4.2,2.2,1.5,1.5,'#1b1b18');ell(-4.2,2.2,.7,.7,'#3a3a34');                                   // tarp roll, spare
+      for(const s of[-1,1]){ell(-8,s*4,.32,.32,'#222');limb(-8,s*4,-10,s*4.6,.2,'#111')}}
+    else{hqRR(-8.4,-4.3,6.8,8.6,.6,hexOf(hqSh(c,-.12)));hqBevel(-8.4,-4.3,6.8,8.6,0,.4,.3);for(let i=0;i<5;i++)box(-7.8+i*1.2,-3.6,.5,7.2,'rgba(0,0,0,.2)');  // M1151 hard cargo shell
+      for(const s of[-1,1]){hqRR(-8.1,s*3.1-.8,1.8,1.6,.3,'#1c1e18');ell(-7.2,s*3.1,.45,.45,'#3a3c34');limb(-7.2,s*3.1,-10.2,s*5.2,.3,'#141414')}   // Duke jammer antennas
+      hqCyl(-5.4,-4.9,3,1.1,'#3d4a24');hqCyl(-5.4,3.8,3,1.1,'#3d4a24');gvCan(-3.6,-1.2,'#4c5530',1.4,1.2);gvCan(-3.6,.4,'#4c5530',1.4,1.2);
+      hqRR(1.8,-4.3,1.6,8.6,.3,hexOf(hqSh(c,-.08)));for(let x=6;x<8;x+=.5)box(x,-.9,.28,1.8,'rgba(0,0,0,.35)')}                          // roof plate, hood vents
+    hqBolts([-8,-4.3,-8,4.3,4.8,-4.3,4.8,4.3])}
+  else if(t===3){hqRR(-9.2,-5,18.8,10,1,hexOf(hqSh(c,-.4)));shade([-8.8,-4.7,4.4,-4.7,9.4,-3,9.4,3,4.4,4.7,-8.8,4.7]);hqPoly([4.4,-4.7,9.4,-3,9.4,3,4.4,4.7],'rgba(255,245,210,.14)');   // JLTV
+    glass(3.2,-3.8,1.1,3.4);glass(3.2,.4,1.1,3.4);for(let y=-2.4;y<2.6;y+=.6)box(8.8,y,.6,.3,'#1e2016');lamps(8.6,-3.4,2.5);for(let x=5.4;x<7.8;x+=.6)box(x,-1.6,.28,3.2,'rgba(0,0,0,.28)');
+    gvSeams([4.4,-4.7,5.2,0,4.4,4.7,5.2,0,-1.2,-4.7,-1.2,4.7,-4.6,-4.7,-4.6,4.7,-8.8,-3.9,-4.6,-3.9,-8.8,3.9,-4.6,3.9]);for(const s of[-1,1]){box(3.1,s*4.9-.4,.9,.8,'#222');box(-3.4,s*4.9-.3,4,.6,hexOf(hqSh(c,-.25)))}
+    hqRR(-8.6,-3.6,4,7.2,.5,hexOf(hqSh(c,-.24)));gvRuck(-8.3,-3.3,1.8,2.6,'#3c4a34');gvRuck(-8.3,.6,1.8,2.7,'#4a5540');gvCan(-6.3,-3.2,'#3b4630',1.5,1.6);gvCan(-6.3,1.6,'#3b4630',1.5,1.6);hqCyl(-6.4,-1,1.7,2,'#2c3527');
+    for(const s of[-1,1]){ell(-8.4,s*4.2,.3,.3,'#222');limb(-8.4,s*4.2,-10.2,s*4.6,.2,'#111')}ell(9,-4,.26,.26,acc);ell(9,4,.26,.26,acc);hqBolts([-8.6,-4.4,-8.6,4.4,4.2,-4.4,4.2,4.4])}
+  else if(t===4){box(-8.4,-4.2,16.8,8.4,'#1c1e16');hqRR(4.6,-3.9,4.6,7.8,.8,c);ctx.beginPath();ctx.roundRect(4.6,-3.9,4.6,7.8,.8);hqCamo(camo,14,.5);           // ISV: open cage, bench seats, troops
+    for(let y=-3;y<3.2;y+=.7)box(9,y,.4,.35,'#1e2016');lamps(8.7,-3.8,2.9);box(4.6,-3.9,4.6,.4,'rgba(255,250,220,.2)');box(4.2,-3.4,.4,6.8,'#26303a');
+    for(const[x,y]of[[2.2,-2.1],[2.2,2.1],[-.6,-2.1],[-.6,2.1],[-3.4,-2.1],[-3.4,2.1],[-6.2,-2.1],[-6.2,2.1]]){hqRR(x-1,y-1.3,2,2.6,.4,'#2a2c24');box(x-1,y-1.3,.5,2.6,'#1b1c17')}
+    for(const[x,y]of[[2.2,-2.1],[-.6,2.1],[-3.4,-2.1],[-6.2,2.1]]){ell(x+.3,y+.2,1.2,1.2,'rgba(0,0,0,.3)');hqDome(x,y,1.05,1.05,'#4a5a3e',.35,-.5);box(x+.5,y-.5,.4,1,'#1a1a1a')}
+    const cg=hexOf(hqSh(c,-.15));for(const s of[-1,1]){limb(-8,s*4,4.2,s*4,.6,cg);for(const x of[-8,-4.6,-1.2,2.2])limb(x,s*4,x,s*3.2,.5,cg)}limb(-1.2,-4,-1.2,4,.5,cg);limb(4.2,-4,4.2,4,.55,cg);limb(-8,-4,-8,4,.55,cg);
+    for(const s of[-1,1]){gvRuck(-6.6,s>0?4:-5.4,2.6,1.4,'#3c4a34');gvRuck(-2.8,s>0?4:-5.4,2.4,1.4,'#4a5540')}ell(-9.2,0,1.6,1.6,'#1b1b18');ell(-9.2,0,.7,.7,'#3a3a34');hqCyl(1.2,-4.9,2.6,.9,'#3d4a24')}
+  else{const P=t===5?[-9.4,-4.4,6,-4.8,9.8,-2.2,9.8,2.2,6,4.8,-9.4,4.4]:[-9.6,-3.8,-7.6,-4.9,6.4,-4.9,9.8,-1.8,9.8,1.8,6.4,4.9,-7.6,4.9,-9.6,3.8];    // RCV / RCV-laser: crewless, armoured
+    hqRR(-9.4,-5,19,10,1.4,hexOf(hqSh(c,-.45)));shade(P);hqPoly(P.slice(t===5?2:4,t===5?10:12),'rgba(255,255,255,.08)');
+    gvSeams(t===5?[6,-4.8,7,0,6,4.8,7,0,-4,-4.4,-4,4.4,2,-4.6,2,4.6]:[6.4,-4.9,7.4,0,6.4,4.9,7.4,0,-7.6,-4.9,-7.6,4.9,-4.6,-2.4,4.8,-2.4,-4.6,2.4,4.8,2.4,-4.6,-2.4,-4.6,2.4],'rgba(0,0,0,.55)',.2);
+    for(const s of[-1,1]){limb(-8.6,s*4,5.8,s*4.3,.22,acc);gvPod(8.6,s*3,.55,acc);gvPod(-8.6,s*3.6,.5,acc)}
+    for(let i=0;i<5;i++){box(-9.2,-2.4+i*1.1,1.4,.55,'#15171a');box(-9,-2.3+i*1.1,1,.18,t===5?'rgba(95,212,255,.35)':'rgba(223,248,255,.3)')}   // rear radiator
+    if(t===5){hqRR(4.6,-3.4,1.8,1.6,.3,'#1b1d20');hqDome(5.5,-2.6,.75,.75,'#2a2d31',.4,-.4);ell(5.8,-2.6,.3,.3,acc);hqRR(-7,1.8,3,1.8,.3,'#1d2024');for(let i=0;i<3;i++)box(-6.7+i*.9,2.1,.5,1.2,'#3d444c')}
+    else{for(let i=0;i<7;i++)box(-6.8+i*.9,-4.3,.4,1.6,'#15171a'),box(-6.8+i*.9,2.7,.4,1.6,'#15171a');                                // power-pack fins
+      hqRR(3.4,-4.3,2.4,1.8,.4,'#131518');limb(4.6,-3.4,6.8,-3.4,.5,'#2a2d31');hqDome(7,-3.4,1,1,'#2a2d31',.4,-.4);ell(7.35,-3.4,.42,.42,acc);ell(7.45,-3.5,.16,.16,'#fff');   // folding sensor mast
+      hqRR(3.4,2.5,2.4,1.8,.4,'#131518');for(let i=0;i<3;i++)box(3.7+i*.7,2.8,.35,1.2,acc)}}
   if(t<5){hqPoly([5.6,-1.4,6.6,0,5.6,1.4,5,1.4,6,0,5,-1.4],'rgba(150,200,255,.75)')}}   // blue-force chevron
-function hqTruckGun(t){const e=eraOf('truck',t),acc=ERA_ACC[e],gun=e>=2?'#8b7550':'#4c5f2b';
-  if(t===1||t===2){for(let i=0;i<7;i++){const a=-1.3+i*.43;hqRR(Math.cos(a)*2.6-.4,Math.sin(a)*2.6-.8,.8,1.6,.2,'#5a5e4a')}hqRR(1.2,-2.4,.9,4.8,.3,'#62664f');
-    if(t===1){hqBar(-.8,-1.1,2.4,2.2,'#2a2a2a');hqBar(1.4,-.4,7.4,.8,'#111');hqCyl(3.4,-.55,2.2,1.1,'#1a1a1a')}else{hqBar(-.8,-1.4,3.4,2.8,'#26272a');hqCyl(2.4,-.8,5.6,1.6,'#1d1e1a');hqCyl(7.4,-1,1.2,2,'#111');hqRR(-.4,1.4,2.2,1.6,.3,'#4a5530')}
-    hqRR(-3.6,-1.8,2,3.6,.7,gun);hqDome(-2.2,0,1.45,1.4,'#8b7550',.35,-.5);return}
+function hqTruckGun(t){const e=eraOf('truck',t),acc=ERA_ACC[e],gun=e>=2?'#77744c':'#4c5f2b',sh='#5a5e4a';
+  if(t===1){hqRR(1,-2.9,.9,5.8,.3,'#62664f');box(1.1,-.7,.7,1.4,'#6d97b0');for(const s of[-1,1])hqPoly([1.1,s*2.9,1.9,s*2.9,-1.2,s*3.9,-1.9,s*3.5],sh);   // M1114 gun shield + wings
+    hqBar(-.8,-1.1,2.4,2.2,'#2a2a2a');hqBar(1.4,-.4,7.4,.8,'#111');hqCyl(3.4,-.55,2.2,1.1,'#1a1a1a');box(8.6,-.5,.7,1,'#050505');gvCan(-.6,1.2,'#4c5530',1.6,1.2);    // M2 + can
+    hqRR(-3.6,-1.8,2,3.6,.7,gun);hqDome(-2.2,0,1.45,1.4,'#7a7450',.35,-.5);return}
+  if(t===2){const R=3.1,n=6;for(let i=0;i<n;i++){const a0=-2.1+i*.7,a1=a0+.7;hqPoly([Math.cos(a0)*R,Math.sin(a0)*R,Math.cos(a1)*R,Math.sin(a1)*R,Math.cos(a1)*(R+1),Math.sin(a1)*(R+1),Math.cos(a0)*(R+1),Math.sin(a0)*(R+1)],i%2?'#686b52':'#5c5f48')}   // O-GPK faceted shield
+    for(const a of[-.35,.35])ell(Math.cos(a)*3.6,Math.sin(a)*3.6,.28,.7,'#7aa8c2',a);hqPoly([3.2,-.9,4.2,-.9,4.2,.9,3.2,.9],'#62664f');
+    hqRR(-.9,-1.5,3.6,3,.4,'#26272a');hqBevel(-.9,-1.5,3.6,3,0,.3,.3);hqCyl(2.6,-.85,4.2,1.7,'#1d1e1a');for(let x=3;x<6.6;x+=.6)ell(x,0,.16,.16,'#070707');hqCyl(6.6,-1,2,2,'#111');   // Mk19 + perforated jacket
+    hqRR(-.8,-3.4,2.6,1.8,.3,'#4a5530');box(-.8,-3.4,2.6,.4,'#5e6a3e');box(.2,-1.8,.8,.5,'#b89a4a');                                          // 40mm can + belt
+    hqRR(-3.6,-1.8,2,3.6,.7,gun);hqDome(-2.2,0,1.45,1.4,'#7a7450',.35,-.5);box(-1.4,-.5,.5,1,'#1c1c1c');return}
   const c=ERA_V[e];
-  if(t===3||t===5){hqRR(-2.6,-2.4,5,4.8,.8,c);hqBevel(-2.6,-2.4,5,4.8,0,.4,.3);hqRR(-1.4,-3.8,2.6,1.4,.3,'#23272a');ell(.9,-3.1,.35,.45,'#6d97b0');hqCyl(2.2,-.7,8.4,1.4,'#1a1c18');hqCyl(9.6,-1,1.6,2,'#111');if(t===5)limb(-2.2,2,2,2,.2,acc);return}
-  if(t===4){limb(0,0,-1.2,-1.6,.35,'#222');hqCyl(-3,-1.2,11,2.4,'#4a5530');hqCyl(-3.8,-1.5,1.6,3,'#1c1d1a');hqRR(-.6,1,2.6,1.4,.3,'#26272a');hqCyl(7.4,-1.3,1.2,2.6,'#262a20');return}
-  hqDome(0,0,2.8,2.8,'#1c1e22',.35,-.45);hqRR(-1,-1.6,4.4,3.2,.6,'#26292d');hqCyl(3,-1.2,4.6,2.4,'#101214');ell(7.8,0,.7,1.1,acc);ell(7.9,0,.35,.6,'#fff');limb(-1.6,-2.2,1.6,-2.2,.2,acc)}
-const TR_MZ=[9.3,9.3,9,10.6,8.6,10.6,8.4];
+  if(t===3){hqRR(-2.8,-2.5,5.4,5,.8,c);hqBevel(-2.8,-2.5,5.4,5,0,.4,.3);gvSeams([-2.8,0,2.6,0],'rgba(0,0,0,.3)');hqRR(-1.6,-3.9,2.8,1.5,.3,'#23272a');ell(1,-3.15,.36,.46,'#7aa8c2');   // 30mm RWS
+    gvCan(-2.6,2.6,'#3b4630',2.4,1.2);gvSmoke(-2.4,-2.5,-1,3);hqCyl(2.4,-.72,7.4,1.44,'#1a1c18');hqCyl(4.2,-.9,1.4,1.8,'#222520');hqCyl(9.4,-1,1.4,2,'#111');box(10.6,-.3,.3,.6,'#050505');return}
+  if(t===4){ell(0,0,1.2,1.2,'#26272a');limb(0,0,.6,-1.4,.35,'#222');hqCyl(-3,-1.2,11,2.4,'#4a5530');hqCyl(-3.8,-1.5,1.6,3,'#1c1d1a');hqCyl(7.4,-1.3,1.2,2.6,'#262a20');   // Javelin + CLU
+    hqRR(-.8,-2.9,3.2,1.9,.4,'#2a2c24');hqBevel(-.8,-2.9,3.2,1.9,0,.3,.3);ell(2.2,-1.95,.4,.6,'#7aa8c2');box(-.4,-2.6,2,.3,'#3a3d33');gvRuck(-3.8,1.4,2.2,1.5,'#3c4a34');
+    ell(-2.4,-1.6,1.3,1.3,'rgba(0,0,0,.3)');hqDome(-2.6,-1.8,1.25,1.25,'#4a5a3e',.35,-.5);return}                                        // gunner shouldering it
+  if(t===5){hqPoly([-3.2,-2.4,-1.8,-3.2,2.4,-3.2,3.6,-1.4,3.6,1.4,2.4,3.2,-1.8,3.2,-3.2,2.4],c);hqBevel(-3,-3,6.4,6,0,.35,.3);gvSeams([-1.8,-3.2,-1.8,3.2,2.4,-3.2,2.4,3.2],'rgba(0,0,0,.5)',.2);
+    limb(-2.8,-2.7,2.2,-2.7,.2,acc);hqRR(-1.4,1.9,3.4,1.6,.3,'#1d2024');for(let i=0;i<2;i++)hqCyl(-1.2,2.1+i*.7,3,.6,'#2a2e33');                // ATGM pod
+    hqRR(-1,-4,2.4,1.3,.3,'#1b1d20');ell(1.2,-3.35,.3,.36,acc);hqCyl(3,-.7,7,1.4,'#1d2024');hqCyl(8.8,-1,1.8,2,'#0f1113');box(10.6,-.3,.3,.6,'#050505');return}
+  hqDome(0,0,3.1,3.1,'#1c1e22',.35,-.45);for(let i=0;i<8;i++){const a=1.9+i*.32;box(Math.cos(a)*2.6-.2,Math.sin(a)*2.6-.2,.4,.4,'#2e3237')}   // laser turret + cooling ring
+  hqRR(-1,-1.9,4.8,3.8,.7,'#26292d');hqBevel(-1,-1.9,4.8,3.8,0,.3,.3);hqCyl(3.2,-1.4,4.4,2.8,'#101214');box(4.6,-1.4,.3,2.8,'rgba(255,255,255,.12)');
+  ell(7.7,0,.8,1.25,acc);ell(7.8,0,.4,.7,'#fff');hqDome(-.4,2.6,.9,.9,'#2a2d31',.4,-.4);ell(-.1,2.6,.34,.34,acc);limb(-1.6,-2.4,2.2,-2.4,.2,acc);limb(-1.6,2.4-.1,-1.6,-2.4,.2,'rgba(0,0,0,.4)')}
+const TR_MZ=[9.3,9.3,8.8,10.9,8.6,10.9,8.6];
 function drawTruckT(u,px,flash,t){const k=US.truck,W=hqTrack('whT',px*k,3.8,1.7,.6,1),body=hqBake('trkB_t'+t,px*k,20,11,10,5.5,()=>hqTruckBody(t)),gun=hqBake('trkG_t'+t,px*k,15,8,4.5,4,()=>hqTruckGun(t)),tr=u.tr*8;
   ctx.save();ctx.translate(u.x,u.y);ctx.rotate(u.ang);ctx.scale(k,k);let l=hqLoc(1,1.4,u.ang,1);hqShadow(body,l[0],l[1],.55);
   for(const[wx,wy]of[[-7.2,-5.5],[4,-5.5],[-7.2,3.8],[4,3.8]])hqTrackDraw(W,wx,wy,3.8,1.7,tr,.6);
@@ -3137,9 +3249,19 @@ function drawTruckT(u,px,flash,t){const k=US.truck,W=hqTrack('whT',px*k,3.8,1.7,
   ctx.translate(t>=3?-2:-3.5,0);ctx.rotate(u.gun-u.ang);if(flash&&t<6)ctx.translate(-.3,0);l=hqLoc(.5,.7,u.gun,1);hqShadow(gun,l[0],l[1],.4);hqDraw(gun);if(flash)tierMuzzle('truck',TR_MZ[t],0,t===3||t===5?1.1:.8);ctx.restore()}
 function truckLo(u,t,flash){const e=eraOf('truck',t),c=ERA_V[e];ctx.save();ctx.translate(u.x,u.y);ctx.scale(US.truck,US.truck);ell(1,1.8,9,6,'rgba(0,0,0,.35)');ctx.rotate(u.ang);
   for(const [wx,wy] of [[-5,-5],[5,-5],[-5,4],[5,4]])box(wx-2,wy,4,1.6,'#141414');
-  if(t===4){box(-8,-4,16,8,'#1f2118');ctx.strokeStyle=c;ctx.lineWidth=.6;ctx.strokeRect(-7.6,-3.6,15,7.2)}else{box(-8.4,-4.6,17,9.2,c);box(-8.4,-4.6,17,1,hexOf(hqSh(c,.2)));if(t<5){box(3.4,-3.4,1.2,6.8,'#28404f');box(-7.8,-3.6,8,7.2,hexOf(hqSh(c,-.25)))}}
-  tierStripe(-8.4,3.6,15,e);if(t<5)ctx.fillStyle='rgba(150,200,255,.75)',ctx.fillRect(6,-.4,1.4,.8);
-  ctx.save();ctx.translate(t>=3?-2:-3.5,0);ctx.rotate(u.gun-u.ang);box(0,t===2||t===3||t===5?-.9:-.6,TR_MZ[t]-.6,t===2||t===3||t===5?1.8:1.2,t===4?'#4a5530':'#111');box(-1.5,-2,3,4,t>=5?'#26292d':'#2a2a2a');if(t<3)ell(-2.5,0,2,2,'#8b7550');
+  const dk=hexOf(hqSh(c,-.28)),acc=ERA_ACC[e];
+  if(t===4){box(-8,-4,16,8,'#1f2118');box(4.6,-3.9,4.6,7.8,c);ctx.strokeStyle=c;ctx.lineWidth=.6;ctx.strokeRect(-7.6,-3.6,11.8,7.2);ctx.beginPath();ctx.moveTo(-1.2,-3.6);ctx.lineTo(-1.2,3.6);ctx.stroke();
+    for(const[x,y]of[[2.2,-2.1],[-.6,2.1],[-3.4,-2.1],[-6.2,2.1]])ell(x,y,1,1,'#4a5a3e')}
+  else{box(-8.4,-4.6,17,9.2,c);box(-8.4,-4.6,17,1,hexOf(hqSh(c,.2)));
+    if(t<5){box(3.4,-3.4,1.2,6.8,'#28404f');box(-7.8,-3.6,t===2?6.8:8,7.2,dk);if(t===2){box(-8.2,-4,6.8,8,hexOf(hqSh(c,-.1)));box(-9.6,-5,2,1,'#141414');box(-9.6,4,2,1,'#141414')}
+      else if(t===1){box(-7.4,-3.2,2.4,2.2,'#5d5a3a');ell(-4.2,2.2,1.4,1.4,'#1b1b18')}else{box(-8.2,-3.2,1.8,2.6,'#3c4a34');box(-8.2,.6,1.8,2.6,'#4a5540')}}
+    else{box(-9,-2.4,1.2,4.8,'#15171a');box(-8.6,-4,14.4,.45,acc);box(-8.6,3.55,14.4,.45,acc);if(t===6){box(3.4,-4.2,2.4,1.6,'#131518');ell(7,-3.4,1,1,'#2a2d31')}}}
+  if(t<5)tierStripe(-8.4,3.6,15,e);if(t<5)ctx.fillStyle='rgba(150,200,255,.75)',ctx.fillRect(6,-.4,1.4,.8);
+  ctx.save();ctx.translate(t>=3?-2:-3.5,0);ctx.rotate(u.gun-u.ang);
+  if(t===6){ell(0,0,3,3,'#1c1e22');box(-1,-1.9,4.8,3.8,'#26292d');box(3.2,-1.4,4.4,2.8,'#101214');ell(7.7,0,.7,1.1,acc)}
+  else{const fat=t===2||t===3||t===5||t===4,w=t===4?2.4:fat?1.8:1.2;box(0,-w/2,TR_MZ[t]-.6,w,t===4?'#4a5530':'#111');
+    if(t===1){box(1,-2.9,.9,5.8,'#62664f')}else if(t===2){ctx.strokeStyle='#62664f';ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,3.6,-2.1,2.1);ctx.stroke();box(-.8,-3.4,2.6,1.8,'#4a5530')}
+    box(-1.5,-2,3,4,t>=5?'#26292d':t===3?c:'#2a2a2a');if(t===5)box(-1.4,1.9,3.4,1.6,'#1d2024');if(t<3||t===4)ell(t===4?-2.6:-2.5,t===4?-1.8:0,t===4?1.2:2,t===4?1.2:2,t===4?'#4a5a3e':'#8b7550')}
   if(flash){const f=tierFx('truck',t);ell(TR_MZ[t]+1.2,0,2.4,1.3,f.flash?'#ffcf5a':f.tr)}ctx.restore();ctx.restore()}
 
 // ---- APC squadron: Stryker Mk19 -> Dragoon 30mm -> Bradley TOW -> XM30 50mm -> XM30 + dismounts -> drone-carrier IFV ----
@@ -3147,19 +3269,45 @@ const APC_MZ=[10.4,13.6,11.6,13.8,13.8,0];
 function hqApcHullT(t){const e=eraOf('apc',t),c=ERA_V[e],acc=ERA_ACC[e],camo=ERA_CAMO[e],P=t===1?[-11,-5.6,8,-5.6,12,-3,12,3,8,5.6,-11,5.6]:t===2?[-10.6,-5.2,6.4,-5.2,10.8,-2.2,10.8,2.2,6.4,5.2,-10.6,5.2]:[-11,-5.2,5,-5.4,11.4,-1.8,11.4,1.8,5,5.4,-11,5.2];
   if(t===1)box(-11.4,-6,22.6,12,hexOf(hqSh(c,-.45)));else box(-10.8,-5.8,21.6,11.6,hexOf(hqSh(c,-.45)));
   hqPoly(P,c);hqClosed(P);hqCamo(camo,18,.6);hqClosed(P);const g=ctx.createLinearGradient(0,-5.6,0,5.6);g.addColorStop(0,'rgba(255,250,220,.14)');g.addColorStop(.5,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.3)');ctx.fillStyle=g;ctx.fill();
-  hqPoly(P.slice(2,10),'rgba(255,245,210,.14)');ctx.strokeStyle='rgba(0,0,0,.4)';ctx.lineWidth=.25;ctx.beginPath();for(const x of[-6,0]){ctx.moveTo(x,-5.2);ctx.lineTo(x,5.2)}ctx.stroke();
-  if(t===2){for(let x=-9.6;x<5;x+=2.4)box(x,-5.2,.3,10.4,'rgba(0,0,0,.18)');hqRR(-10.4,-3.4,2.2,6.8,.4,hexOf(hqSh(c,-.2)));hqHatch(7.6,-2.6,1,hexOf(hqSh(c,.05)))}
-  if(t>=3){for(let i=0;i<5;i++)hqRR(-9.8+i*3.2,-5.6,2.9,1,.2,hexOf(hqSh(c,-.18))),hqRR(-9.8+i*3.2,4.6,2.9,1,.2,hexOf(hqSh(c,-.18)));hqHatch(8.4,-2.8,1,hexOf(hqSh(c,.05)));box(9.2,-3.6,.4,.6,'#9cc2d6')}
+  hqPoly(P.slice(2,10),'rgba(255,245,210,.14)');gvSeams([-6,-5.2,-6,5.2,0,-5.2,0,5.2],'rgba(0,0,0,.4)',.25);const dk=hexOf(hqSh(c,-.2)),sk=hexOf(hqSh(c,-.18));
+  if(t===1){hqHatch(9,-2.4,1.1,hexOf(hqSh(c,.05)));box(10.1,-3.2,.4,.6,'#9cc2d6');box(10.1,-2,.4,.6,'#9cc2d6');for(let y=1;y<4.4;y+=.6)box(8.6,y,2.2,.3,'#1b1e14');   // Dragoon: driver, engine grille
+    hqRR(-10.6,-3.4,2.4,6.8,.4,dk);box(-10.6,-.1,2.4,.2,'#1d2415');hqHatch(-4,3,1.1,hexOf(hqSh(c,.05)));hqHatch(-8.2,-2.6,.9,hexOf(hqSh(c,.05)));
+    for(let x=-9.6;x<5;x+=3.2){hqRR(x,-5.55,2.8,1.1,.3,'#3a4428');hqRR(x,4.45,2.8,1.1,.3,'#3a4428')}gvCan(1.8,2.8,'#4c5530',1.4,1.8);hqCyl(-10.2,4.3,2.6,1.1,'#3d4a24');
+    limb(-10,-4.8,-15.4,-6.4,.2,'#111');limb(-10,4.8,-15.4,6.4,.2,'#111');box(11.2,-3,.9,6,hexOf(hqSh(c,-.25)));box(11.1,-5,.8,1.1,'#e9e2b0');box(11.1,3.9,.8,1.1,'#e9e2b0')}
+  if(t===2){for(const s of[-1,1])for(let i=0;i<6;i++)for(let j=0;j<2;j++){const x=-9.4+i*2.5,y=s>0?3.5+j*.85:-5.35+j*.85;box(x-.1,y-.1,2.5,.95,'#1a1d14');hqRR(x,y,2.3,.75,.12,(i+j)%2?hexOf(hqSh(c,.14)):hexOf(hqSh(c,-.06)));box(x,y,2.3,.2,'rgba(255,250,220,.2)')}   // Bradley: BRAT reactive tiles
+    hqRR(-10.4,-3.4,2.2,6.8,.4,dk);box(-10.4,-.1,2.2,.2,'#1d2415');hqHatch(7.6,-2.6,1,hexOf(hqSh(c,.05)));box(8.5,-3.4,.4,.6,'#9cc2d6');
+    for(let y=.8;y<3.2;y+=.6)box(6.6,y,2.8,.3,'#1b1e14');hqCyl(8,3.2,2,.8,'#1d1d1a');hqPoly([10.8,-2.2,11.6,-1.8,11.6,1.8,10.8,2.2],dk);hqHatch(-6.2,0,.9,hexOf(hqSh(c,.05)));
+    ell(10.4,-2,.28,.28,acc);ell(10.4,2,.28,.28,acc)}
+  if(t>=3){for(let i=0;i<5;i++)hqRR(-9.8+i*3.2,-5.6,2.9,1,.2,sk),hqRR(-9.8+i*3.2,4.6,2.9,1,.2,sk);hqHatch(8.4,-2.8,1,hexOf(hqSh(c,.05)));box(9.2,-3.6,.4,.6,'#9cc2d6');
+    for(let y=1;y<3.6;y+=.6)box(7.2,y,2.6,.3,t>=4?'#15171a':'#1b1e14');gvPod(10.6,-4.2,.5,acc);gvPod(10.6,4.2,.5,acc);gvPod(-10.2,-4.6,.45,acc);gvPod(-10.2,4.6,.45,acc)}
+  if(t===3){hqRR(-10.4,-3.4,2.2,6.8,.4,dk);gvRuck(-8.2,-4.3,2.4,1.5,'#3c4a34');gvRuck(-5.2,-4.3,2.4,1.5,'#4a5540');hqCyl(-8,3.1,3,1.1,'#2c3527')}
   if(t>=4){limb(-10,-4.6,4.6,-4.8,.2,acc);limb(-10,4.6,4.6,4.8,.2,acc)}
-  if(t===4){hqRR(-15.6,-3.6,5,7.2,.4,hexOf(hqSh(c,-.15)));for(let i=0;i<4;i++)box(-15,-2.8+i*1.8,3.8,.3,'rgba(0,0,0,.35)');hqDome(-13.4,-1.9,1.1,1.1,'#4a4f56');hqDome(-13,1.9,1.1,1.1,'#4a4f56')}   // rear ramp down, dismounts
-  if(t===5){hqRR(-9.6,-3.6,9,7.2,.6,'#1c1e22');for(const[x,y]of[[-7.4,-1.8],[-7.4,1.8],[-3,0]]){ctx.strokeStyle=acc;ctx.lineWidth=.2;ctx.beginPath();ctx.arc(x,y,1.3,0,7);ctx.stroke();box(x-.8,y-.1,1.6,.2,'rgba(95,212,255,.5)')}}
+  if(t===4){hqRR(-16,-3.7,5.4,7.4,.4,hexOf(hqSh(c,-.15)));for(let i=0;i<5;i++)box(-15.5,-3+i*1.5,4.4,.3,'rgba(0,0,0,.35)');box(-10.9,-3.7,.4,7.4,'#0c0d0f');   // ramp down, fire team deploying
+    for(const[x,y,r]of[[-13.6,-2,.2],[-12.6,1.8,-.3],[-15.6,.1,.4]]){ctx.save();ctx.translate(x,y);ctx.rotate(r);ell(.2,.2,1.5,1.9,'rgba(0,0,0,.3)');ell(0,0,1.1,1.7,'#3e4448');hqBar(.2,.3,3,.5,'#141414');hqDome(0,0,1,1,'#4a4f56',.35,-.5);ell(.5,0,.25,.4,acc);ctx.restore()}}
+  if(t===5){hqRR(-9.8,-3.8,9.6,7.6,.6,'#1c1e22');for(const[x,y,o]of[[-7.6,-1.9,1],[-7.6,1.9,0],[-3,0,1]]){ell(x,y,1.35,1.35,'#0c0d0f');ctx.strokeStyle=acc;ctx.lineWidth=.2;ctx.beginPath();ctx.arc(x,y,1.35,0,7);ctx.stroke();   // drone bays
+      if(o){hqPoly([x-1.3,y-1.3,x+1.3,y-1.3,x+1,y-2.2,x-1,y-2.2],'#34383e');box(x-.9,y-.12,1.8,.24,'rgba(95,212,255,.6)')}else box(x-.8,y-.1,1.6,.2,'rgba(95,212,255,.5)')}
+    for(let i=0;i<3;i++)hqCyl(2+i*.1,-5+i*.9,3.2,.7,'#2a2e33');for(const s of[-1,1]){limb(-9.4,s*4.4,-12,s*5.4,.2,'#111');ell(-9.4,s*4.4,.3,.3,'#222')}hqRR(2,3,3,1.8,.3,'#1d2024');for(let i=0;i<3;i++)box(2.3+i*.9,3.3,.5,1.2,acc)}
   hqBolts([-10.4,-4.8,-10.4,4.8,4.8,-4.8,4.8,4.8])}
-function hqApcTopT(t){const e=eraOf('apc',t),c=hexOf(hqSh(ERA_V[e],-.08)),acc=ERA_ACC[e];
-  if(t===5){hqDome(0,0,2.6,2.6,'#2a2d31',.35,-.45);ell(.6,0,.8,.8,acc);return}
-  if(t===1){hqDome(0,0,4.2,4,c,.3,-.5);hqRR(-3,-2.8,5,5.6,.9,hexOf(hqSh(c,-.1)));hqCyl(2,-.8,11,1.6,'#1a1c18');hqCyl(12,-1.05,1.6,2.1,'#111');hqRR(-1.6,-4.2,2.8,1.4,.3,'#23272a');ell(1,-3.5,.3,.4,'#6d97b0');return}
-  const P=t===2?[-4,-3.4,1.6,-3.8,4,-2,4,2,1.6,3.8,-4,3.4]:[-4.6,-3.8,2,-4.2,4.8,-1.6,4.8,1.6,2,4.2,-4.6,3.8];hqPoly(P,c);hqClosed(P);hqCamo(ERA_CAMO[e],16,.5);
-  if(t===2){hqRR(-2.6,3.4,6,2.2,.4,'#3e4a34');ell(3.2,4.5,.8,.8,'#151515');hqCyl(3.6,-.7,8,1.4,'#1a1c18');hqCyl(11,-.9,.8,1.8,'#111');hqRR(-2.4,-3.2,2.2,1.6,.3,'#2a2c24')}
-  else{hqCyl(4.4,-1.1,9,2.2,'#1a1c18');for(const x of[7,9.4])box(x,-1.1,.3,2.2,'rgba(0,0,0,.45)');hqCyl(12.4,-1.4,1.8,2.8,'#111');hqRR(-3.4,-3.6,3,1.8,.4,'#23272a');ell(-.6,-2.7,.4,.5,'#6d97b0');hqRR(-3.8,2.2,3.4,1.6,.3,'#2a2c24');if(t>=4)limb(-3.6,0,1.6,0,.2,acc)}}
+function hqApcTopT(t){const e=eraOf('apc',t),c=hexOf(hqSh(ERA_V[e],-.08)),acc=ERA_ACC[e],d=hexOf(hqSh(c,-.25));
+  if(t===5){hqDome(0,0,2.4,2.4,'#2a2d31',.35,-.45);hqRR(-1.2,-4.6,1.8,9.2,.4,'#1e2024');hqBevel(-1.2,-4.6,1.8,9.2,0,.3,.3);   // rotating AESA / EW panel
+    for(let i=0;i<7;i++)box(.3,-4.2+i*1.2,.2,.9,'rgba(95,212,255,.45)');gvSeams([-1.2,-1.5,.6,-1.5,-1.2,1.5,.6,1.5],'rgba(0,0,0,.6)',.18);ell(1.6,0,.6,.6,'#0c0d0f');ell(1.7,0,.3,.3,acc);limb(-.8,0,-4.4,-.8,.2,'#111');return}
+  if(t===1){const P=[-4.8,-3.2,-3.4,-4.3,2.6,-4.3,4.8,-2.4,4.8,2.4,2.6,4.3,-3.4,4.3,-4.8,3.2];gvShell(P,c,ERA_CAMO[e],16,5.5);   // MCT-30 unmanned turret
+    hqPoly([2.6,-4.3,4.8,-2.4,4.8,-.9,2.2,-1.6],'rgba(255,245,210,.16)');hqPoly([2.6,4.3,4.8,2.4,4.8,.9,2.2,1.6],'rgba(0,0,0,.16)');gvSeams([2.2,-1.6,2.2,1.6,2.6,-4.3,2.2,-1.6,2.6,4.3,2.2,1.6,-3.4,-4.3,-3.4,4.3]);
+    for(const s of[-1,1])gvSmoke(2.2,s*3.6,s,3);hqRR(-4.2,1.2,2.8,2.4,.4,'#23272a');hqBevel(-4.2,1.2,2.8,2.4,0,.3,.3);box(-1.6,1.6,.35,1.6,'#7aa8c2');   // CIV sight
+    hqRR(.4,-3.2,1.8,1.4,.3,'#23272a');box(2,-2.9,.3,.8,'#7aa8c2');hqRR(3.8,-1.2,1.8,2.4,.3,d);hqCyl(5.4,-.55,6.8,1.1,'#1a1c18');hqCyl(11.8,-.8,1.8,1.6,'#111');for(const x of[12.2,12.9])box(x,-.8,.22,1.6,'#3a3d33');
+    box(4.6,1.2,2,.4,'#141414');limb(-4.2,-2.8,-5.2,-3.6,.2,'#111');hqBolts([-3.2,-3.9,-3.2,3.9,2.4,-3.9,2.4,3.9]);return}
+  if(t===2){const P=[-4.2,-3.6,1.6,-3.8,4,-2,4,2.4,1.6,3.6,-4.2,3.6];gvShell(P,c,ERA_CAMO[e],16,5.5);hqPoly([1.6,-3.8,4,-2,4,-.8,1.6,-1.2],'rgba(255,245,210,.14)');   // Bradley turret
+    gvSeams([1.6,-3.8,1.6,3.6,-2,-3.6,-2,3.6]);hqRR(-3.2,-5.4,6.8,2,.35,'#3e4a34');hqBevel(-3.2,-5.4,6.8,2,0,.3,.3);for(const y of[-4.9,-3.9])ell(3.5,y,.42,.42,'#101010');   // TOW twin launcher
+    box(-3.2,-4.4,6.8,.18,'rgba(0,0,0,.4)');hqRR(-3,1.2,2.6,2,.4,'#23272a');box(-.7,1.5,.35,1.4,'#7aa8c2');hqRR(.6,-2.2,1.8,1.4,.3,'#2a2c24');box(2.2,-1.9,.3,.8,'#7aa8c2');   // BCIV, ISU
+    hqCyl(3.4,-.6,7.4,1.2,'#1a1c18');hqCyl(10.4,-.85,1.2,1.7,'#111');box(11.4,-.3,.3,.6,'#050505');gvSmoke(1.8,3.2,1,3);hqBolts([-3.8,-3.2,-3.8,3.2]);return}
+  const P=[-5,-3.6,-3.6,-4.6,2.4,-4.6,5,-2.2,5,2.2,2.4,4.6,-3.6,4.6,-5,3.6];gvShell(P,c,ERA_CAMO[e],16,6);                              // XM30: 50mm turret
+  hqPoly([2.4,-4.6,5,-2.2,5,-.9,2.2,-1.6],'rgba(255,245,210,.16)');hqPoly([2.4,4.6,5,2.2,5,.9,2.2,1.6],'rgba(0,0,0,.18)');gvSeams([2.2,-1.6,2.2,1.6,2.4,-4.6,2.2,-1.6,2.4,4.6,2.2,1.6,-3.6,-4.6,-3.6,4.6],t>=4?'rgba(0,0,0,.55)':'rgba(0,0,0,.4)');
+  hqRR(-2.6,-5.4,5,1.6,.35,t>=4?'#1d2024':'#2e3528');for(const x of[1.9,.9])ell(x,-4.6,.4,.4,'#0c0c0c');                                    // twin ATGM pod
+  if(t>=4){hqRR(-2.6,3.9,5,1.5,.35,'#1d2024');for(let i=0;i<4;i++)box(-2.2+i*1.1,4.2,.7,.9,'#3d444c');limb(-4.4,-2.6,2,-2.6,.2,acc);limb(-4.4,2.6,2,2.6,.2,acc)}   // loitering-munition cells
+  else{gvSmoke(2.4,3.9,1,3);gvCan(-3.2,3.4,'#3b4630',1.8,1.1)}
+  hqRR(-4.2,-2.8,2.8,2,.4,'#23272a');hqBevel(-4.2,-2.8,2.8,2,0,.3,.3);ell(-1.7,-1.8,.4,.5,'#7aa8c2');hqRR(-4,.8,2.4,1.8,.3,'#2a2c24');gvPod(-.6,1.6,.55,acc);  // CIV, gunner sight, APS
+  hqRR(3.6,-1.5,2.4,3,.4,d);hqCyl(5.6,-.95,6.4,1.9,'#1a1c18');for(const x of[7.4,9.4])box(x,-.95,.3,1.9,'rgba(0,0,0,.45)');hqCyl(11.8,-1.3,2,2.6,'#111');for(const x of[12.3,13])box(x,-1.3,.25,2.6,'#3a3d33');
+  hqBolts([-3.4,-4.2,-3.4,4.2,2.2,-4.2,2.2,4.2])}
 function drawAPCT(u,px,flash,t){const k=US.apc,tracked=t>=2,hull=hqBake('apcH_t'+t,px*k,33,13,17,6.5,()=>hqApcHullT(t)),top=hqBake('apcT_t'+t,px*k,19,11,5.5,5.5,()=>hqApcTopT(t)),
     tr=u.tr*6,since=G.time-(u.fl||-9),rc=since<.15?1-since/.15:0;
   ctx.save();ctx.translate(u.x,u.y);ctx.rotate(u.ang);ctx.scale(k,k);let l=hqLoc(1.1,1.5,u.ang,1);hqShadow(hull,l[0],l[1],.55);
@@ -3172,8 +3320,16 @@ function apcLo(u,t,flash){const e=eraOf('apc',t),c=ERA_V[e];ctx.save();ctx.trans
   if(t>=2){box(-11,-7.6,22,3,'#1e1e1a');box(-11,4.6,22,3,'#1e1e1a');for(let i=-11+(u.tr%3);i<11;i+=3){box(i,-7.6,1,3,'#3a3a32');box(i,4.6,1,3,'#3a3a32')}}
   else for(let i=0;i<4;i++){const wx=-8+i*5.2;box(wx,-7.4,3.4,2,'#151515');box(wx,5.4,3.4,2,'#151515')}
   ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(-11,-5.4);ctx.lineTo(6,-5.4);ctx.lineTo(11.4,-2);ctx.lineTo(11.4,2);ctx.lineTo(6,5.4);ctx.lineTo(-11,5.4);ctx.closePath();ctx.fill();ctx.strokeStyle='rgba(0,0,0,.45)';ctx.lineWidth=.7;ctx.stroke();
-  tierStripe(-10,-4.8,14,e);if(t===4)box(-15,-3.4,4.4,6.8,hexOf(hqSh(c,-.15)));if(t===5)box(-9.4,-3.4,8.6,6.8,'#1c1e22');ctx.restore();
-  ctx.save();ctx.translate(u.x,u.y);ctx.scale(US.apc,US.apc);ctx.rotate(u.tur);ell(0,0,t===5?2.6:4,3.8,hexOf(hqSh(c,-.12)));if(APC_MZ[t]){box(2.5,-.9,APC_MZ[t]-3,t>=3?2.2:1.8,'#1e241a');box(APC_MZ[t]-1,-1.2,1.6,2.4,'#111');if(t===2)box(-2.6,3.4,6,2,'#3e4a34')}
+  const dk=hexOf(hqSh(c,-.2)),acc=ERA_ACC[e];tierStripe(-10,-4.8,14,e);
+  if(t===2)for(let i=0;i<6;i++){box(-9.4+i*2.5,-5.2,2.2,1.4,i%2?dk:c);box(-9.4+i*2.5,3.8,2.2,1.4,i%2?dk:c)}else if(t>=3){box(-9.8,-5.6,16,1,dk);box(-9.8,4.6,16,1,dk)}
+  if(t===4){box(-16,-3.6,5.4,7.2,hexOf(hqSh(c,-.15)));ell(-13.6,-2,1.1,1.1,'#4a4f56');ell(-12.6,1.8,1.1,1.1,'#4a4f56');ell(-15.4,.1,1.1,1.1,'#4a4f56')}
+  if(t===5){box(-9.8,-3.8,9.6,7.6,'#1c1e22');for(const[x,y]of[[-7.6,-1.9],[-7.6,1.9],[-3,0]])ell(x,y,1.3,1.3,'#0c0d0f')}ctx.restore();
+  ctx.save();ctx.translate(u.x,u.y);ctx.scale(US.apc,US.apc);ctx.rotate(u.tur);if(t===2)ctx.translate(-1,0);const tc=hexOf(hqSh(c,-.12));ctx.strokeStyle='rgba(0,0,0,.5)';ctx.lineWidth=.6;
+  if(t===5){ell(0,0,2.4,2.4,'#2a2d31');box(-1.2,-4.6,1.8,9.2,'#1e2024');box(.3,-4.2,.25,8.4,acc)}
+  else if(t===1){hqPoly([-4.8,-3.2,-3.4,-4.3,2.6,-4.3,4.8,-2.4,4.8,2.4,2.6,4.3,-3.4,4.3,-4.8,3.2],tc);ctx.stroke();box(4.8,-.55,8,1.1,'#1a1c18');box(11.8,-.8,1.8,1.6,'#111');box(-4.2,1.2,2.8,2.4,'#23272a')}
+  else if(t===2){hqPoly([-4.2,-3.6,1.6,-3.8,4,-2,4,2.4,1.6,3.6,-4.2,3.6],tc);ctx.stroke();box(-3.2,-5.4,6.8,2,'#3e4a34');box(3.4,-.6,8,1.2,'#1a1c18');box(10.4,-.85,1.2,1.7,'#111')}
+  else{hqPoly([-5,-3.6,-3.6,-4.6,2.4,-4.6,5,-2.2,5,2.2,2.4,4.6,-3.6,4.6,-5,3.6],tc);ctx.stroke();box(-2.6,-5.4,5,1.6,t>=4?'#1d2024':'#2e3528');if(t>=4){box(-2.6,3.9,5,1.5,'#1d2024');box(-4.4,-2.7,6.4,.35,acc)}
+    box(5,-.95,7,1.9,'#1a1c18');box(11.8,-1.3,2,2.6,'#111')}
   if(flash&&APC_MZ[t])ell(APC_MZ[t]+1.6,0,2.6,1.5,'#ffcf5a');ctx.restore();if(t===5)drawDrones(u.x,u.y,3,4,30,u.orb||0)}
 
 // ---- flame bunkers: M2 flame -> thermobaric projector -> HEL-50 -> HEL-300 battery -> active denial array ----
@@ -3192,8 +3348,11 @@ function flameBunkerT(b,a,t,f,emx){const l=hqLoc(1,1.3,a,1);hqShadow(b,l[0],l[1]
   const gl=f.glow?hqGlow('tg'+f.glow,[[0,'rgba(255,255,255,.95)'],[.3,`rgba(${f.glow},.7)`],[1,`rgba(${f.glow},0)`]]):hqGlow('fl',[[0,'rgba(255,200,90,.9)'],[1,'rgba(255,90,20,0)']]);
   for(const y of t===3?[-3,0,3]:t===4?[-3.6,0,3.6]:[t===1?-1.3:0])ctx.drawImage(gl,emx-1.4-fl,y-1.4-fl,2.8+2*fl,2.8+2*fl);ctx.globalCompositeOperation='source-over'}
 function flameLo(ph,t){const e=eraOf('flame',t);for(const a of [-Math.PI/2,0,Math.PI]){ctx.save();ctx.translate(Math.cos(a)*ph,Math.sin(a)*ph);ctx.rotate(a);ctx.scale(1.6,1.6);
-  box(-4.4,-5,8.8,10,t>=3?'#3b3f44':'#6e716b');tierStripe(-4.4,-5,8.8,e);
-  if(t===4)box(1,-4.8,2.6,9.6,'#4a4f56');else if(t>=2){ell(1.4,0,2.4,2.4,'#2a2d31');box(2,-.8,5,1.6,'#15171a')}else box(1,-1.4,7,2.8,t===1?'#3a4632':'#222');
+  const w=t>=3?'#3b3f44':'#6e716b',ac=ERA_ACC[e];box(-4.4,-5,8.8,10,w);box(-4.4,-5,8.8,.7,hexOf(hqSh(w,.18)));box(-4.4,4.3,8.8,.7,hexOf(hqSh(w,-.3)));ctx.strokeStyle='#1c1e1a';ctx.lineWidth=.35;ctx.strokeRect(-4.4,-5,8.8,10);tierStripe(-4.4,-5,8.8,e);
+  if(t===1){for(const y of[-4.2,1.6]){box(-3.9,y,2.6,2.6,'#44533a');box(-3,y,.6,2.6,'#e07a20')}for(const y of[-2.4,.2]){box(1.2,y,6.4,2.2,'#3a4632');box(1.2,y,6.4,.5,'#55634a');ell(7.6,y+1.1,.75,.75,'#151515')}}   // fuel tanks + twin projectors
+  else if(t===4){box(-3.6,-4.6,3,9.2,'#26292d');box(1,-5,2.6,10,'#4a4f56');for(let y=-4.5;y<5;y+=.9)box(1.2,y,2.2,.18,'rgba(0,0,0,.45)');for(let y=-3.6;y<4.5;y+=3.6)ell(3.7,y,.45,.45,ac)}   // emitter panel
+  else{const ys=t===2?[0]:[-3,0,3],r=t===2?2.5:1.6,l=t===2?7.2:6.2;box(-3.8,-3.6,2.4,7.2,'#1c1e22');for(let i=0;i<5;i++)box(-3.6,-3+i*1.4,2,.35,'#4a4f56');
+    for(const y of ys){ell(1.4,y,r,r,'#2a2d31');ell(1,y-r*.35,r*.45,r*.4,'rgba(255,255,255,.16)');box(1.8,y-r*.35,l-1.8,r*.7,'#15171a');ell(l,y,r*.32,r*.32,ac)}}   // beam directors
   if(G.flameT>0.05&&Math.random()<.5)ell(t===4?4:9,0,2.4,1.5,t>=2?tierFx('flame',t).tr:'#ffb13b');ctx.restore()}}
 
 // ---- attack helicopter: Little Bird -> AH-64E -> Apache + JAGM (Longbow) -> compound coaxial -> autonomous tilt-rotor ----
@@ -3260,23 +3419,107 @@ function artyLo(g,at){const e=eraOf('arty',at),c=ERA_V[e],acc=ERA_ACC[e],pr=ARTY
   else{box(-9,-7,18,14,'#23262a');for(let a=0;a<3;a++)for(let b=0;b<2;b++){ctx.strokeStyle=acc;ctx.lineWidth=.4;ctx.strokeRect(-6.6+a*4.6,-4.8+b*5.2,3.8,4.4)}}
   tierStripe(-9,-7.6,18,e);ctx.restore()}
 
+// shared emplacement helpers (bake time only): octagon outline, bolt circle, world-lit overlay for static pads, hazard fill, crate, cable, power unit
+const adOct=(r,k=.41)=>[-r,-r*k,-r*k,-r,r*k,-r,r,-r*k,r,r*k,r*k,r,-r*k,r,-r,r*k];
+const adRing=(r,n,o=0)=>{const P=[];for(let k=0;k<n;k++){const a=o+k/n*TAU;P.push(Math.cos(a)*r,Math.sin(a)*r)}return P};
+function adLit(x,y,w,h){const g=ctx.createLinearGradient(x,y,x+w,y+h);g.addColorStop(0,'rgba(255,248,220,.18)');g.addColorStop(.45,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.3)');ctx.fillStyle=g;ctx.fill()}
+function adHaz(P,c){ctx.save();hqClosed(P);ctx.clip();ctx.fillStyle='#1c1c1c';ctx.fill();ctx.fillStyle=c;ctx.beginPath();for(let i=-26;i<26;i+=1.1){ctx.moveTo(i,-13);ctx.lineTo(i+.55,-13);ctx.lineTo(i+26.55,13);ctx.lineTo(i+26,13)}ctx.fill();ctx.restore()}
+function adCrate(x,y,w,h,c){hqRR(x,y,w,h,.25,c);box(x,y,w,h*.3,hqSh(c,.2));box(x,y+h-.3,w,.3,hqSh(c,-.45));box(x+w*.48,y,.22,h,'rgba(0,0,0,.35)');box(x+w*.12,y+h*.5,w*.28,.24,'rgba(235,225,160,.6)')}
+function adCable(P,c='#15171a',w=.45){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(P[0],P[1]);for(let i=2;i<P.length;i+=4)ctx.quadraticCurveTo(P[i],P[i+1],P[i+2],P[i+3]);ctx.stroke();ctx.strokeStyle='rgba(255,255,255,.14)';ctx.lineWidth=w*.3;ctx.stroke()}
+function adGen(x,y,w,h,c,led){hqRR(x,y,w,h,.35,c);box(x+.2,y+.2,w-.4,h*.28,hqSh(c,.2));box(x,y+h-.3,w,.3,hqSh(c,-.45));for(let i=0;i<4;i++)box(x+w*.1+i*w*.15,y+h*.46,w*.08,h*.38,'rgba(0,0,0,.42)');
+  ell(x+w-.75,y+h*.62,.46,.46,'#161616');ell(x+w-.85,y+h*.55,.2,.2,'#4a4a4a');ell(x+.5,y+.55,.2,.2,led)}
 // ---- AA gun: twin 35 -> radar-slaved -> AHEAD -> M-SHORAD -> Coyote rack -> HEL air defence -> HPM (Leonidas) ----
-function hqAATurret(t){const e=eraOf('aagun',t),c=ERA_V[e],acc=ERA_ACC[e];
-  const tur=(x,y,w,h)=>{ctx.beginPath();ctx.roundRect(x,y,w,h,.8);ctx.fillStyle=c;ctx.fill();hqCamo(ERA_CAMO[e],12,.5);ctx.beginPath();ctx.roundRect(x,y,w,h,.8);hqShadeV(y,y+h);ctx.fill()};
-  if(t<=2){tur(-4.6,-3.8,7.8,7.6);for(const sy of[-2.6,2.6]){hqBar(3,sy-.5,9,1,'#1d1f1a');if(t===2){hqRR(10.6,sy-.95,2.6,1.9,.4,'#111');box(11.4,sy-.95,.3,1.9,'#333')}else hqCyl(11.2,sy-.75,1.8,1.5,'#111')}
-    if(t>=1){hqDome(1.2,0,1.9,1.9,'#d8dcd4',.3,-.4);ell(1.8,0,.9,1.4,'#8d918a')}if(t===2){hqRR(-4,-5.4,3.4,1.8,.4,'#26292d');ell(-1,-4.5,.35,.45,'#6d97b0')}return}
-  if(t===3){tur(-4.4,-3.2,7.6,6.4);hqCyl(3,-.8,10,1.6,'#1a1c18');hqCyl(12.6,-1,1.4,2,'#111');for(const s of[-1,1]){hqRR(-3.6,s*4.8-1.8,6.4,3.6,.4,'#3a4632');for(let i=0;i<2;i++)for(let j=0;j<2;j++)ell(2.2,s*4.8-.9+j*1.8,.7,.7,'#e8e6de'),ell(2.3,s*4.8-.9+j*1.8,.3,.3,'#b33')}return}
-  if(t===4){tur(-4.8,-4.6,6,9.2);hqRR(-1.2,-4.2,11,8.4,.6,hexOf(hqSh(c,-.12)));for(let i=0;i<2;i++)for(let j=0;j<4;j++){ell(9.2,-3.1+j*2.05,.85,.85,'#151515');ell(9.3,-3.1+j*2.05,.4,.4,'#6b6f5c')}hqRR(-4.4,-6.2,3.6,1.6,.3,'#26292d');return}
-  hqPoly([-5,-3.6,-2.6,-4.8,3,-4.8,5,-2.4,5,2.4,3,4.8,-2.6,4.8,-5,3.6],c);limb(-2.4,-4.2,2.8,-4.2,.22,acc);limb(-2.4,4.2,2.8,4.2,.22,acc);
-  if(t===5){hqDome(1,0,3,3,'#1c1e22',.4,-.4);hqCyl(2,-1.3,7,2.6,'#101214');ell(9,0,.9,1.2,acc);ell(9.1,0,.45,.6,'#fff')}
-  else{ctx.save();ctx.translate(4.6,0);hqRR(-.9,-5.6,2,11.2,.4,'#4a4f56');ctx.strokeStyle='rgba(0,0,0,.5)';ctx.lineWidth=.12;ctx.beginPath();for(let y=-5.2;y<5.6;y+=.8){ctx.moveTo(-.8,y);ctx.lineTo(1,y)}ctx.stroke();for(let y=-4.8;y<5;y+=1.6)ell(.9,y,.28,.28,acc);ctx.restore()}}
-function drawAAGunT(u,t){const s=US.aagun*bS(),hot=G.time-u.fl<0.06,px=hqPx(),e=eraOf('aagun',t),q=HQ?'':'L',f=tierFx('aagun',t);
-  const tur=hqBake('aaT'+t+q,px*s,20,15,6.5,7.5,()=>hqAATurret(t),HQ?.36:0);
-  ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);ell(0.8,1,7.4,7.4,'rgba(0,0,0,.3)');sandbags(6.5,14,k=>k===3);ell(0,0,5.2,5.2,e>=4?'#3b3f44':'#58564a');if(e>=4){ctx.strokeStyle=ERA_ACC[e];ctx.lineWidth=.3;ctx.stroke()}
-  ctx.rotate(u.ang);hqDraw(tur);
-  if(t<=2){ctx.save();ctx.translate(-3.6,0);ctx.rotate(G.time*4);box(-.5,-2.6,1,5.2,'#c9ccc4');ctx.restore()}
-  if(hot){if(f.flash){const sy=t<=2?(u.side?-2.6:2.6):0,mx=t===3?13.6:t===4?10:14.4;ell(mx,sy,2.4,1.2,'#ffcf5a');ell(mx-.4,sy,1.1,.6,'#fff')}
-    else{ctx.globalCompositeOperation='lighter';ctx.drawImage(hqGlow('tg'+f.glow,[[0,'rgba(255,255,255,.95)'],[.3,`rgba(${f.glow},.7)`],[1,`rgba(${f.glow},0)`]]),t===5?6.5:2.5,-4,8,8);ctx.globalCompositeOperation='source-over'}}
+// pad (static, world-lit): sandbag revetment (era1-2), HESCO-ringed concrete (era3), hardened graphite slab (era4)
+function hqAAPad(t){const e=eraOf('aagun',t),acc=ERA_ACC[e];
+  if(t<=2){ell(0,0,8.6,8.6,'#4b4231');ctx.beginPath();ctx.arc(0,0,8.6,0,7);adLit(-8.6,-8.6,17.2,17.2);hqSpeckle(-8,-8,16,16,70,'rgba(28,22,12,.45)',.5);
+    ell(0,0,6.3,6.3,'#352e20');hqSpeckle(-5.5,-5.5,11,11,40,'rgba(96,80,54,.55)',.4);for(let i=0;i<10;i++){const a=sr()*TAU,r=4.6+sr()*1.4;box(Math.cos(a)*r,Math.sin(a)*r,.5,.22,'#c9a24a')}
+    hqDome(0,0,5,5,'#77776c',.15,-.4);ell(0,0,4.2,4.2,'#595a50');hqBolts(adRing(4.6,12),'#34352f');
+    if(t){adCable([-4.2,5.2,-3.2,3.4,-1.6,2.8],'#15171a',.5);adCable([-5.2,4.6,-5.4,2,-4.6,-.4])}
+    hqBagRing(7,16,2.6,k=>k===5||k===6);ctx.save();ctx.rotate(TAU/32);hqBagRing(7,16,1.5,k=>k>=4&&k<=6);ctx.restore();
+    ctx.save();ctx.translate(-3.7,5.5);ctx.rotate(2.16+Math.PI/2);
+    if(t){adGen(-1.8,-1.1,3.6,2.2,'#4e5a34','#7fe07a')}else{adCrate(-1.9,-.9,1.7,1.8,'#56602f');adCrate(.1,-.9,1.7,1.8,'#4e5a34')}ctx.restore();
+    if(t===2){ctx.save();ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,8.8,-1.9,.1);ctx.closePath();ctx.clip();ctx.beginPath();ctx.arc(0,0,8.4,0,7);ctx.arc(0,0,5.6,0,7,true);hqCamo('multi',7,.8);
+      ctx.strokeStyle='rgba(20,18,10,.45)';ctx.lineWidth=.08;ctx.beginPath();for(let i=-10;i<10;i+=.7){ctx.moveTo(i,-10);ctx.lineTo(i+10,10);ctx.moveTo(i,10);ctx.lineTo(i+10,-10)}ctx.stroke();ctx.restore()}
+    return}
+  const P=adOct(8.2),g=e>=4;hqPoly(P,g?'#3b3f44':'#76796f');hqClosed(P);adLit(-8.2,-8.2,16.4,16.4);hqSpeckle(-8,-8,16,16,90,g?'rgba(0,0,0,.3)':'rgba(40,40,36,.35)',.4);
+  ctx.strokeStyle='rgba(0,0,0,.32)';ctx.lineWidth=.14;ctx.beginPath();for(const v of g?[-5.4,-2.7,0,2.7,5.4]:[-2.8,2.8]){ctx.moveTo(v,-8);ctx.lineTo(v,8);ctx.moveTo(-8,v);ctx.lineTo(8,v)}ctx.save();hqClosed(P);ctx.clip();ctx.stroke();ctx.restore();
+  for(const sx of[-1,1])for(const sy of[-1,1]){const C=[sx*8.2,sy*3.36,sx*3.36,sy*8.2,sx*2.72,sy*7.56,sx*7.56,sy*2.72];if(g){hqPoly(C,'#23262a');ctx.strokeStyle='rgba(0,0,0,.6)';ctx.lineWidth=.12;ctx.beginPath();for(let i=1;i<6;i++){const k=i/6;ctx.moveTo(C[0]+(C[2]-C[0])*k,C[1]+(C[3]-C[1])*k);ctx.lineTo(C[6]+(C[4]-C[6])*k,C[7]+(C[5]-C[7])*k)}ctx.stroke()}else adHaz(C,'#d8b23a')}
+  if(!g)for(let k=0;k<12;k++){if(k===3)continue;const a=k/12*TAU;ctx.save();ctx.translate(Math.cos(a)*6.9,Math.sin(a)*6.9);ctx.rotate(a);
+    hqRR(-1.1,-1.15,2.2,2.3,.25,'#6f6d50');box(-.85,-.9,1.7,1.8,'#86795a');hqSpeckle(-.8,-.85,1.6,1.7,6,'rgba(40,32,20,.5)',.3);
+    ctx.strokeStyle='rgba(26,26,20,.4)';ctx.lineWidth=.07;ctx.beginPath();for(let v=-.9;v<1;v+=.45){ctx.moveTo(v,-1.15);ctx.lineTo(v,1.15);ctx.moveTo(-1.1,v);ctx.lineTo(1.1,v)}ctx.stroke();ctx.restore()}
+  else{ctx.strokeStyle=acc;ctx.lineWidth=.3;ctx.beginPath();ctx.arc(0,0,6.3,0,7);ctx.stroke();for(let k=0;k<8;k++){const a=k/8*TAU+.39;ell(Math.cos(a)*6.3,Math.sin(a)*6.3,.4,.4,acc)}}
+  hqDome(0,0,5.2,5.2,g?'#2e3136':'#5f625b',.15,-.4);ell(0,0,4.3,4.3,g?'#1f2226':'#40433e');hqBolts(adRing(4.75,12),g?'#5a5f66':'#2a2c28');
+  if(t===3){adCable([0,7.8,.8,6,0,4.4]);for(let i=0;i<3;i++)adCrate(-3.4+i*1.5,6.3,1.3,1.6,'#4a5230');adCrate(1.5,6.1,2.4,1.9,'#56602f')}
+  else if(t===4){adCable([0,7.8,.8,6,0,4.4]);hqRR(-3.8,5.8,7.6,2.4,.3,'#2b2e28');for(const x of[-1.9,1.9]){hqCyl(x-1.5,6.7,3,.6,'#9aa093');hqRR(x-.2,5.9,.5,2.2,.2,'#8a9084');ell(x+1.5,7,.25,.3,'#1b2a33')}}
+  else if(t===5){adCable([0,7.8,1,6.2,0,4.4],'#15171a',.6);ctx.globalAlpha=.7;adCable([.3,7.6,1.3,6.2,.3,4.4],acc,.14);ctx.globalAlpha=1;hqRR(-3.2,5.4,6.4,2.8,.4,'#2c3035');box(-3,5.6,6,.5,'#40454c');
+    for(const x of[-1.5,1.5]){ell(x,6.9,1.05,1.05,'#121417');ctx.strokeStyle='#4a5058';ctx.lineWidth=.22;ctx.beginPath();for(let b=0;b<4;b++){const a=b*1.57+.4;ctx.moveTo(x,6.9);ctx.lineTo(x+Math.cos(a)*.9,6.9+Math.sin(a)*.9)}ctx.stroke();ell(x,6.9,.25,.25,acc)}}
+  else if(t===6){adCable([0,7.8,1,6.2,0,4.4],'#15171a',.8);ctx.globalAlpha=.7;adCable([.3,7.6,1.3,6.2,.3,4.4],acc,.14);ctx.globalAlpha=1;hqRR(-3.9,5.5,7.8,2.6,.3,'#1e2125');
+    for(let i=0;i<4;i++){hqDome(-2.7+i*1.8,6.8,.78,.78,'#4a4f56',.35,-.4);ell(-2.7+i*1.8,6.8,.26,.26,acc)}box(-3.4,6.7,6.8,.18,'rgba(0,0,0,.5)')}}
+// rotating turret: +x is the line of fire (muzzles at AA_MZ)
+function hqAATurret(t){const e=eraOf('aagun',t),c=ERA_V[e],acc=ERA_ACC[e],cm=ERA_CAMO[e];
+  const skin=(P,tile=12)=>{hqPoly(P,c);hqClosed(P);hqCamo(cm,tile,.5);hqClosed(P);let a=9,b=-9;for(let i=1;i<P.length;i+=2){a=Math.min(a,P[i]);b=Math.max(b,P[i])}hqShadeV(a,b)};
+  const ring=col=>{ell(0,0,4.9,4.9,'#15170f');ell(0,0,4.5,4.5,col);hqBolts(adRing(4.7,14),'rgba(255,255,255,.28)')};
+  if(t<=2){ring('#2c3026');
+    for(const sy of[-1,1]){const y=sy*2.6,ay=sy<0?-5.75:3.85;
+      hqRR(-2.9,ay,4.6,1.9,.35,'#454d2c');box(-2.9,ay+(sy<0?0:1.4),4.6,.5,'#5d6840');box(-.7,ay,.22,1.9,'rgba(0,0,0,.35)');box(-2.5,ay+.75,1.2,.28,'rgba(230,220,150,.55)');
+      limb(1.2,sy*4.6,2.2,sy*3.5,.8,'#23251d');for(let k=0;k<3;k++){const f=.2+k*.3;box(1.2+f-.12,sy*(4.6-f*1.1)-.12,.24,.24,'#3a3d32')}
+      ctx.beginPath();ctx.roundRect(-3.4,y-1.15,6.4,2.3,.5);ctx.fillStyle=hqSh(c,-.18);ctx.fill();hqShadeV(y-1.15,y+1.15);box(-3,y-.2,5.4,.16,'rgba(0,0,0,.35)');
+      hqCyl(2.8,y-.75,3.6,1.5,'#2a2c26');for(let x=3.3;x<6.2;x+=.6)box(x,y-.75,.22,1.5,'rgba(0,0,0,.4)');hqCyl(6.2,y-.42,6.6,.84,'#1b1d19');
+      if(t===2){hqRR(11.2,y-.95,3.4,1.9,.45,'#2b2e33');for(let x=11.6;x<14.2;x+=.55)box(x,y-.95,.22,1.9,'#4a4f56');box(11.2,y-.95,3.4,.35,'rgba(255,255,255,.18)');box(14.3,y-.55,.3,1.1,acc)}
+      else{hqCyl(12.4,y-.72,2,1.44,'#141414');box(12.9,y-.72,.25,1.44,'#3a3a3a');box(13.5,y-.72,.25,1.44,'#3a3a3a')}}
+    if(t===0){skin([-4.8,-1.7,2.2,-1.7,2.8,-1.1,2.8,1.1,2.2,1.7,-4.8,1.7],14);hqRR(.6,-.75,1.8,1.5,.3,'#23261f');ell(2.35,0,.3,.45,'#6d97b0');ell(2.3,-.12,.12,.16,'#e8f6ff');
+      ell(-1,1.1,.8,.8,'#1c1d18');ctx.strokeStyle='#8a8c80';ctx.lineWidth=.16;ctx.beginPath();ctx.arc(-1,1.1,.62,0,7);ctx.stroke();
+      hqArm(-3.2,-1.1,-1.6,-.6,'#5d7036',1.1);hqDome(-3,0,1.3,1.25,'#5d7036',.35,-.5);ctx.strokeStyle='rgba(24,28,12,.7)';ctx.lineWidth=.25;ctx.beginPath();ctx.arc(-3,0,.9,0,7);ctx.stroke();return}
+    if(t===1)skin([-5,-1.9,-4,-2.25,2.4,-2.25,3.4,-1.2,3.4,1.2,2.4,2.25,-4,2.25,-5,1.9]);
+    else{skin([-5.2,-1.6,-3.6,-2.3,2.2,-2.3,3.8,-.9,3.8,.9,2.2,2.3,-3.6,2.3,-5.2,1.6]);limb(-3.4,-1.95,1.8,-1.95,.2,acc);limb(-3.4,1.95,1.8,1.95,.2,acc)}
+    hqPoly([-4,-2.25,2.4,-2.25,3.4,-1.2,-3.6,-1.2],'rgba(255,255,255,.08)');ell(-1.8,-.9,.85,.85,hqSh(c,-.25));ell(-1.9,-1,.55,.55,hqSh(c,.08));box(-.2,1,1.2,.5,'#1d2226');box(1.3,1,.6,.5,'#1d2226');
+    ell(-4.1,0,.95,.95,'#1f221b');ell(-4.1,0,.5,.5,'#40433a');hqBolts([-.2,-2,1.6,-2,-.2,2,1.6,2]);
+    if(t===1){ell(4.15,0,1,2.05,'#9da298');ell(4.3,0,.66,1.6,'#c9ccc4');ell(4.36,0,.4,1.2,'#8d918a');limb(4.3,0,5.4,0,.22,'#333');ell(5.4,0,.26,.26,'#1a1a1a')}
+    else{hqRR(.1,-1.55,3,3.1,.4,'#24272b');box(.1,-1.55,3,.5,'#3a3e44');box(.1,1.2,3,.35,'#15171a');hqGlass(2.75,-.65,.42,.58);ell(2.7,.7,.45,.45,'#0e1012');ell(2.75,.7,.22,.22,'#8a3a2a');ell(-.1,0,.18,.18,acc)}
+    return}
+  if(t===3){ring('#262b22');const P=[-4.8,-2.4,-3.4,-3.4,2.4,-3.4,3.8,-2.2,3.8,2.2,2.4,3.4,-3.4,3.4,-4.8,2.4];
+    hqRR(-3,3.1,6.2,3,.3,'#2b2f26');for(const y of[3.75,5.35]){box(-2.6,y-.85,1,1.7,'#3d4234');hqCyl(-2.4,y-.55,9.4,1.1,'#6b7258');box(-.4,y-.55,.3,1.1,'rgba(0,0,0,.35)');hqDome(7,y,.6,.55,'#3e4a3a',.3,-.4);ell(7.2,y,.28,.3,'#2a4050')}
+    hqRR(-3.6,-6.3,8.2,3,.45,'#3a4632');box(-3.6,-6.3,8.2,.55,'#52603f');box(-3.6,-3.8,8.2,.5,'#28311f');for(const x of[-1.4,1.4])box(x,-6.3,.3,3,'rgba(0,0,0,.3)');box(-2.8,-5.2,1.6,.3,'rgba(230,220,150,.55)');
+    box(4.2,-6.1,.5,2.6,'#20261a');for(const y of[-5.45,-4.1]){ell(4.55,y,.6,.6,'#e8e6de');ell(4.62,y,.28,.28,'#b33')}
+    skin(P);hqPoly([-3.4,-3.4,2.4,-3.4,3.8,-2.2,-3,-2],'rgba(255,255,255,.1)');hqBolts([-3.8,-2,-3.8,2,2.6,-2.8,2.6,2.8]);
+    hqRR(2,-1.2,2.8,2.4,.4,'#23261f');hqCyl(4.6,-.5,7.6,1,'#1a1c18');for(let x=5.2;x<7.6;x+=.55)box(x,-.5,.2,1,'rgba(0,0,0,.4)');hqCyl(12,-.8,1.8,1.6,'#111');box(12.5,-.8,.25,1.6,'#3a3a3a');box(13.1,-.8,.25,1.6,'#3a3a3a');
+    limb(3.4,1.7,6.4,1.7,.35,'#161616');hqDome(-1.1,-1.4,1.3,1.3,'#2a2e28',.4,-.45);hqGlass(-.4,-1.4,.42,.55);ell(-2.6,1.3,.95,.95,hqSh(c,-.25));ell(-2.7,1.2,.6,.6,hqSh(c,.08));ell(1.2,2.6,.22,.22,acc);return}
+  if(t===4){ring('#262b22');hqRR(-4.8,-2.8,3.4,5.6,.5,'#2b2f26');
+    hqRR(-6.3,-3.9,1.7,7.8,.3,'#7c8277');box(-4.9,-3.9,.4,7.8,'#3d4238');ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=.08;ctx.beginPath();for(let y=-3.4;y<3.9;y+=.6){ctx.moveTo(-6.2,y);ctx.lineTo(-4.9,y)}ctx.stroke();box(-6.3,-3.9,1.7,.4,'#a3a99d');
+    hqRR(-2.7,-5.1,12.9,10.2,.6,'#23261f');for(let i=0;i<4;i++){const y=-3.75+i*2.5;hqCyl(-2.5,y-1.1,12.5,2.2,c);box(-.6,y-1.1,.5,2.2,'rgba(0,0,0,.3)');ell(10,y,1,1.05,'#121212');ell(10.1,y,.66,.72,'#6b6f5c');ell(10.2,y-.18,.24,.2,'rgba(255,255,255,.35)')}
+    for(const x of[1.4,6.2]){box(x,-5.1,.55,10.2,'#1f221b');box(x,-5.1,.55,.4,'#4a4f44')}box(2.6,-4.9,2.4,.3,acc);hqRR(3.2,-.7,1.8,1.4,.3,'#1d2024');hqGlass(4.7,0,.3,.45);return}
+  const P=[-4.6,-2.8,-2.8,-4.2,2.2,-4.2,3.6,-2.8,3.6,2.8,2.2,4.2,-2.8,4.2,-4.6,2.8];ring('#1c1f23');
+  if(t===5){skin(P,10);for(let i=0;i<5;i++)box(-4,-1.6+i*.8,1.1,.35,'rgba(0,0,0,.45)');limb(-4,-2.6,-4,2.6,.2,acc);
+    for(const y of[-4.8,3.4]){hqRR(-1.8,y,3.6,1.4,.3,'#2a2d32');box(-1.8,y,3.6,.35,'#454a52');ell(0,y+.7,.4,.4,'#15171a')}
+    hqCyl(-3.2,-3.1,10.4,6.2,'#30343a');for(const x of[-.4,3])box(x,-3.1,.35,6.2,'rgba(0,0,0,.4)');limb(-2.8,-2.75,6.4,-2.75,.18,acc);
+    hqCyl(-.4,-2.4,5.8,1.2,'#16181b');ell(5.4,-1.8,.25,.5,acc);ell(7.2,0,1.25,3.1,'#0c0e10');hqGlass(7.35,0,.9,2.55);ctx.strokeStyle=acc;ctx.lineWidth=.22;ctx.beginPath();ctx.ellipse(7.2,0,1.1,2.9,0,0,7);ctx.stroke();return}
+  skin([-5.6,-4.2,1,-4.2,1.6,-3.6,1.6,3.6,1,4.2,-5.6,4.2],10);for(let i=0;i<6;i++)box(-5,-3.4+i*.6,2.2,.3,'rgba(0,0,0,.45)');limb(-5.2,3.6,.6,3.6,.22,acc);ell(-.6,-3.3,.26,.26,acc);ell(-.6,-2.6,.26,.26,'#7fe07a');
+  for(const s of[-1,1]){limb(-1,s*2.6,2.2,s*4.4,.6,'#1a1c1f');limb(-1,s*2.6,2.2,s*4.4,.25,'#4a4f56')}
+  hqRR(1.5,-6.7,4.4,13.4,.4,'#15171a');hqRR(1.7,-6.5,4,13,.3,'#2c3035');
+  for(let i=0;i<2;i++)for(let j=0;j<8;j++){const x=1.95+i*1.9,y=-6.25+j*1.58;hqRR(x,y,1.62,1.38,.2,'#454b53');box(x,y,1.62,.3,'#5a616a');ell(x+.81,y+.72,.3,.3,'#1b1e22')}
+  box(5.7,-6.5,.3,13,acc);for(let j=0;j<8;j++)ell(5.85,-5.56+j*1.58,.2,.2,'#fff')}
+const AA_MZ=[[14.4,2.6,.9],[14.4,2.6,.9],[14.6,2.6,.9],[13.8,0,.9],[10.4,1.25,1.1],[8.4,0,1.3],[6.4,0,2]];
+// search radar (radar-slaved / AHEAD): spun per frame on the turret's rear mast
+const aaRadar=px=>hqBake('adR',px,7,2.6,3.5,1.3,()=>{hqRR(-2.9,-.6,5.8,1.2,.35,'#b8bcb2');box(-2.9,-.6,5.8,.35,'#dfe2da');ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=.08;ctx.beginPath();for(let x=-2.4;x<2.9;x+=.6){ctx.moveTo(x,-.6);ctx.lineTo(x,.6)}ctx.stroke();ell(0,0,.55,.55,'#2a2c26')},.25);
+// Medium/Low: flat shapes, era tint, one accent stripe
+function aaLo(u,t,hot){const e=eraOf('aagun',t),c=tierTint('#5b6440',e),acc=ERA_ACC[e];ell(.8,1,8,8,'rgba(0,0,0,.3)');
+  if(t<=2){sandbags(6.5,14,k=>k===3);ell(0,0,5.2,5.2,'#58564a')}else{const P=adOct(8);hqPoly(P,e>=4?'#3b3f44':'#76796f');ctx.strokeStyle='rgba(0,0,0,.45)';ctx.lineWidth=.4;hqClosed(P);ctx.stroke();ell(0,0,5,5,e>=4?'#23262a':'#50534d');if(e>=4){ctx.strokeStyle=acc;ctx.lineWidth=.35;ctx.beginPath();ctx.arc(0,0,6.2,0,7);ctx.stroke()}}
+  ctx.rotate(u.ang);
+  if(t<=2){for(const sy of[-2.6,2.6]){box(-2.9,sy<0?-5.75:3.85,4.6,1.9,'#454d2c');box(-3.4,sy-1.1,6.4,2.2,'#2f3424');box(3,sy-.45,9.6,.9,'#1d1f1a');if(t===2){box(11.2,sy-.95,3.4,1.9,'#2b2e33');box(14.1,sy-.55,.4,1.1,acc)}else box(12.4,sy-.72,2,1.44,'#111')}
+    box(-4.8,t?-2.2:-1.7,t?8.2:7.6,t?4.4:3.4,c);tierStripe(-4.8,t?-2.2:-1.7,t?8.2:7.6,e);if(!t)ell(-3,0,1.3,1.3,'#5d7036');else if(t===1)ell(4.2,0,.9,2,'#c9ccc4');else box(.1,-1.5,3,3,'#24272b');
+    if(t){ctx.save();ctx.translate(-4.1,0);ctx.rotate(G.time*4);box(-.5,-2.8,1,5.6,'#c9ccc4');ctx.restore()}}
+  else if(t===3){box(-3.6,-6.3,8.2,3,'#3a4632');ell(4.5,-5.4,.6,.6,'#e8e6de');ell(4.5,-4.1,.6,.6,'#e8e6de');box(-2.4,3.2,9.4,1.1,'#6b7258');box(-2.4,4.8,9.4,1.1,'#6b7258');box(-4.6,-3.4,8.4,6.8,c);tierStripe(-4.6,-3.4,8.4,e);box(4.6,-.5,7.6,1,'#1a1c18');box(12,-.8,1.8,1.6,'#111')}
+  else if(t===4){box(-6.3,-3.9,1.7,7.8,'#7c8277');box(-2.7,-5.1,12.9,10.2,c);tierStripe(-2.7,-5.1,12.9,e);for(let i=0;i<4;i++)ell(10,-3.75+i*2.5,.95,.95,'#151515')}
+  else if(t===5){box(-4.6,-4.2,8.2,8.4,c);tierStripe(-4.6,-4.2,8.2,e);box(-3.2,-3.1,10.4,6.2,'#30343a');ell(7.2,0,1.1,2.9,'#0c0e10');ell(7.3,0,.6,2.2,acc)}
+  else{box(-5.6,-4.2,7.2,8.4,c);tierStripe(-5.6,-4.2,7.2,e);box(1.6,-6.6,4.2,13.2,'#2c3035');for(let j=0;j<8;j++)box(2,-6.2+j*1.58,3.4,1.2,'#454b53');box(5.6,-6.6,.4,13.2,acc)}
+  if(hot){const m=AA_MZ[t],y=m[1]?(u.side?-m[1]:m[1]):0,f=tierFx('aagun',t);ell(m[0]+.6,y,2.4*m[2],1.2*m[2],f.flash?'#ffcf5a':f.tr);ell(m[0]+.2,y,1.1*m[2],.6*m[2],'#fff')}}
+function drawAAGunT(u,t){const s=US.aagun*bS(),hot=G.time-u.fl<0.06;ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);
+  if(!HQ){aaLo(u,t,hot);ctx.restore();return}
+  const px=hqPx(),pad=hqBake('adP_t'+t,px,20,20,10,10,()=>hqAAPad(t)),tur=hqBake('adT_t'+t,px,22,15,6.8,7.5,()=>hqAATurret(t));
+  hqShadow(pad,.8,1,.45);hqDraw(pad);ctx.rotate(u.ang);if(hot&&t<=3)ctx.translate(-.35,0);
+  const l=hqLoc(.7,.9,u.ang,1);hqShadow(tur,l[0],l[1],.42);hqDraw(tur);
+  if(t===1||t===2){ctx.save();ctx.translate(-4.1,0);ctx.rotate(G.time*4);hqDraw(aaRadar(px));ctx.restore()}
+  if(hot){const m=AA_MZ[t];tierMuzzle('aagun',m[0],m[1]?(u.side?-m[1]:m[1]):0,m[2])}
   ctx.restore()}
 
 // ---- CIWS: Phalanx -> Block 2 -> Iron Beam HEL -> networked point-defence grid -> megawatt HEL ----
@@ -3305,16 +3548,83 @@ function ciwsLo(u,flash,t){const s=US.tesla*bS(),e=eraOf('tesla',t),a=ERA_ACC[e]
   if(flash){const f=tierFx('tesla',t);ell(CW_MZ[t]+1,0,3,1.6,f.flash?'#ffcf5a':f.tr)}ctx.restore()}
 
 // ---- SAM site: Avenger -> NASAMS -> Patriot PAC-3 -> Enduring Shield -> glide-phase interceptor ----
-function hqSamLauncher(t,ready){const e=eraOf('sam',t),c=ERA_V[e],acc=ERA_ACC[e];hqRR(-4.4,-5.8,3.2,11.6,.4,'#2c3326');
-  const cap=(x,y,r)=>{ell(x,y,r,r,ready?'#e8e6de':'#151515');if(ready)ell(x+.1,y,r*.5,r*.5,e>=4?acc:'#b33')};
-  if(t===1){hqRR(-2.6,-5.4,11,10.8,.6,c);hqCamo('ranger',14,.5);for(let i=0;i<2;i++)for(let j=0;j<3;j++){hqRR(5.4+i*1.6,-4.6+j*3.2,1.4,2.8,.3,'#1d241a');cap(6.1+i*1.6,-3.2+j*3.2,.6)}return}
-  if(t===2){for(let i=0;i<2;i++)for(let j=0;j<2;j++){hqRR(-2.6,-5.6+j*5.8+i*.2,11.4,5,.6,hexOf(hqSh(c,-.05*i)));box(-2.6,-5.6+j*5.8,11.4,.6,hexOf(hqSh(c,.2)));cap(8,-3.1+j*5.8,1.6)}return}
-  if(t===3){hqRR(-2.6,-5.8,11,11.6,.6,c);for(let i=0;i<3;i++)for(let j=0;j<6;j++){ell(4+i*1.9,-4.4+j*1.76,.7,.7,'#15171a');if(ready)ell(4+i*1.9,-4.4+j*1.76,.3,.3,acc)}limb(-2,-5.2,8,-5.2,.2,acc);return}
-  hqCyl(-3,-3.2,13,6.4,'#23262a');for(const x of[1,5])box(x,-3.2,.5,6.4,acc);hqDome(10,0,2,3.1,ready?'#d8dcd4':'#15171a',.3,-.4)}
-function drawSAMT(u,t){const s=US.sam*bS(),ready=G.time-u.fl>1.2,e=eraOf('sam',t),px=hqPx(),q=HQ?'':'L',ln=hqBake('samL'+t+(ready?'r':'')+q,px*s,17,14,5,7,()=>hqSamLauncher(t,ready),HQ?.36:0);
-  ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);box(-7.2,-7,16,16,'rgba(0,0,0,.3)');box(-8,-8,16,16,e>=4?'#3b3f44':'#6d6f66');box(-8,-8,16,.7,e>=4?ERA_ACC[e]:'#8a8c82');
-  for(const[cx,cy]of[[-8,-8],[5.6,-8],[-8,5.6],[5.6,5.6]]){box(cx,cy,2.4,2.4,e>=4?ERA_ACC[e]:'#d8b23a');box(cx+.6,cy+.6,1.2,1.2,'#1c1c1c')}
-  ell(0,0,5.6,5.6,'#3a3d36');ctx.rotate(u.ang);hqDraw(ln);ctx.restore()}
+// pad (static, world-lit): slab with hazard corners, tie-downs, and each tier's carrier (HMMWV, launcher trailer, semi-trailer, erector cradle) + power
+function hqSamPad(t){const e=eraOf('sam',t),acc=ERA_ACC[e],hz=e>=4?acc:'#d8b23a',col=t===0?'#73756b':e>=5?'#2c2f33':e>=4?'#3d4146':'#6b6e65',c=ERA_V[e],cm=ERA_CAMO[e],dk=e>=4;
+  hqRR(-8.7,-8.7,17.4,17.4,.8,hqSh(col,-.35));hqRR(-8,-8,16,16,.5,col);ctx.beginPath();ctx.roundRect(-8,-8,16,16,.5);adLit(-8,-8,16,16);
+  hqSpeckle(-8,-8,16,16,90,dk?'rgba(0,0,0,.3)':'rgba(40,40,36,.32)',.4);for(let i=0;i<4;i++)ell(-5+sr()*10,-5+sr()*10,.8+sr()*1.4,.5+sr()*.8,'rgba(0,0,0,.12)',sr()*3);
+  ctx.lineWidth=.14;for(const v of[-2.67,2.67]){ctx.strokeStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.moveTo(v,-8);ctx.lineTo(v,8);ctx.moveTo(-8,v);ctx.lineTo(8,v);ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,.08)';ctx.beginPath();ctx.moveTo(v+.18,-8);ctx.lineTo(v+.18,8);ctx.moveTo(-8,v+.18);ctx.lineTo(8,v+.18);ctx.stroke()}
+  for(const sx of[-1,1])for(const sy of[-1,1])adHaz([sx*8,sy*8,sx*4.6,sy*8,sx*8,sy*4.6],hz);
+  ctx.strokeStyle='#1c1d19';ctx.lineWidth=.2;for(const[x,y]of[[0,-7.3],[0,7.3],[-7.3,0],[7.3,0]]){ctx.beginPath();ctx.arc(x,y,.42,0,7);ctx.stroke()}
+  if(e>=5){ctx.strokeStyle=acc;ctx.globalAlpha=.5;ctx.lineWidth=.16;ctx.strokeRect(-7.1,-7.1,14.2,14.2);ctx.globalAlpha=1}
+  const tyre=(x,y,w)=>{hqRR(x,y,w,1.3,.45,'#191916');for(let k=.25;k<w-.2;k+=.5)box(x+k,y+.08,.2,1.14,'#2e2e29')};
+  const jacks=(xs,sp)=>{for(const x of xs)for(const s of[-1,1]){const px=x+(x>0?1.4:-1.4),py=s*sp;limb(x,s*2.4,px,py,.85,'#1b1e18');limb(x,s*2.4,px,py,.3,'#4a4f44');hqRR(px-.9,py-.9,1.8,1.8,.3,dk?'#26292e':'#3a3d36');hqBolts([px-.5,py-.5,px+.5,py-.5,px-.5,py+.5,px+.5,py+.5]);if(dk)ell(px,py,.25,.25,acc)}};
+  if(t===0){ctx.save();ctx.translate(0,-.5);for(const x of[-4.4,4.8])for(const s of[-1,1])tyre(x-1.25,s>0?2.95:-4.25,2.5);
+    const H=[-7,-3.4,4.8,-3.4,5.4,-3.1,8.3,-2.9,8.6,-2.4,8.6,2.4,8.3,2.9,5.4,3.1,4.8,3.4,-7,3.4];hqPoly(H,c);hqClosed(H);hqCamo(cm,12,.6);hqClosed(H);hqShadeV(-3.4,3.4);
+    hqRR(-6.8,-3,8.4,6,.3,hqSh(c,-.3));for(const x of[-5.6,-2.8,-.2])for(const s of[-1,1])ell(x,s*2.6,.18,.18,'#15170f');box(-7.35,-3,.45,6,'#1d2016');
+    hqRR(1.8,-3.1,2.6,6.2,.3,hqSh(c,-.08));box(1.8,-3.1,2.6,.35,'rgba(255,255,255,.12)');hqRR(4.3,-2.9,.9,5.8,.2,'#15202a');box(4.45,-2.65,.28,2.3,'rgba(200,230,255,.4)');box(4.45,.35,.28,2.3,'rgba(200,230,255,.22)');
+    box(5.5,-.15,2.8,.3,'rgba(0,0,0,.28)');for(let y=-1.9;y<2;y+=.55)box(8.15,y,.35,.28,'#161810');ell(8.4,-2.3,.28,.38,'#e8e6d0');ell(8.4,2.3,.28,.38,'#e8e6d0');box(4.7,-3.95,.35,.6,'#1a1c14');box(4.7,3.35,.35,.6,'#1a1c14');ctx.restore();
+    adGen(-1.8,-7.7,3.6,2.1,'#4e5a34','#7fe07a');adCable([-.2,-5.6,.8,-4.9,1.6,-4.2]);adCrate(-4.2,5,4,1.5,'#56602f');adCrate(.2,5.1,1.5,1.9,'#4e5a34');for(const x of[2,3])hqRR(x,5.2,.85,1.7,.2,'#4a5530');return}
+  if(t===1||t===2){const L=t===2,x0=L?-7.8:-6.4,x1=L?6.6:6.2,hw=L?2.8:2.6;
+    if(L){for(const x of[-6.8,-4.7])for(const s of[-1,1])tyre(x-.9,s>0?hw-.1:-hw-1.2,1.8)}else for(const s of[-1,1])tyre(-5.2,s>0?hw-.1:-hw-1.2,2.2);
+    hqRR(x0,-hw,x1-x0,2*hw,.3,'#2d3228');hqSpeckle(x0,-hw,x1-x0,2*hw,30,'rgba(0,0,0,.35)',.3);for(const y of[-hw,hw-.8])box(x0,y,x1-x0,.8,'#1b1e18');for(let x=x0+1;x<x1;x+=2.6)box(x,-hw,.45,2*hw,'#1b1e18');box(x0,-hw,x1-x0,.25,'rgba(255,255,255,.12)');
+    hqPoly(L?[x1,-2.2,8.6,-1.5,8.6,1.5,x1,2.2]:[x1,-1.9,8.3,-.35,8.3,.35,x1,1.9],'#1f231c');ell(L?7.8:8,0,.45,.45,'#0f100d');
+    jacks(L?[-2.8,4.6]:[-3.6,4.6],6.1);
+    if(L){adGen(1.6,-7.8,3.8,2,c,'#7fe07a');adCable([3.2,-5.8,2.6,-4.4,1.2,-2.8]);for(const x of[-5,1.8])box(x,5.4,.55,2.4,'#5a4a30');hqCyl(-5.8,5.7,8.4,1.8,c);for(const x of[-3,.2])box(x,5.7,.3,1.8,'rgba(0,0,0,.35)');ell(2.6,6.6,.5,.85,'#e6e4dc')}
+    else{adGen(-1.8,-7.7,3.6,2.1,c,'#7fe07a');adCable([0,-5.6,1,-4.3,.2,-2.6]);adCrate(-2.8,5.5,5.4,1.8,hexOf(hqSh(c,-.1)))}}
+  else if(t===3){for(const s of[-1,1])tyre(-5.1,s>0?2.5:-3.8,2.2);hqRR(-6.2,-2.6,11.8,5.2,.4,'#23262b');for(const y of[-2.6,1.8])box(-6.2,y,11.8,.8,'#16181b');box(-6,-.1,11.4,.2,acc);
+    jacks([-3.4,4],6.1);hqRR(1.6,-7.8,4.6,2.2,.4,'#2a2e33');box(1.8,-7.6,4.2,.45,'#454a52');for(let i=0;i<4;i++)ell(2.3+i*.8,-6.4,.2,.2,i===3?'#7fe07a':acc);
+    adCable([3.4,-5.6,2.6,-4.2,1.2,-2.6],'#15171a',.55);ctx.globalAlpha=.7;adCable([3.6,-5.6,2.8,-4.2,1.4,-2.6],acc,.12);ctx.globalAlpha=1;
+    hqRR(-4.8,5.4,8.4,2.2,.3,'#1e2125');for(let i=0;i<3;i++){hqCyl(-4.5,5.55+i*.68,8,.6,'#3b3f44');ell(3.5,5.85+i*.68,.2,.2,acc)}}
+  else{hqPoly([-8,-3.4,-5.8,-2.4,-5.8,2.4,-8,3.4],'#1a1c1f');ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=.12;ctx.beginPath();for(let i=0;i<4;i++){ctx.moveTo(-7.8+i*.5,-3);ctx.lineTo(-6.2+i*.1,0);ctx.lineTo(-7.8+i*.5,3)}ctx.stroke();limb(-5.8,-2.4,-5.8,2.4,.14,acc);
+    for(const s of[-1,1]){hqRR(-5.4,s*3.9-.7,12.8,1.4,.3,'#131518');box(-5.4,s*3.9-.7,12.8,.3,'#30343a');for(const x of[-3,1,5])limb(x,s*3.4,x+1,s*1.6,.5,'#23262a')}
+    for(const[x,y]of[[4,-7.8],[4,5.9]]){hqRR(x,y,3.4,1.9,.3,'#1e2125');for(let i=0;i<5;i++)box(x+.4+i*.55,y+.35,.28,1.2,'#0c0d0f');ell(x+3,y+.4,.18,.18,acc)}}
+  hqDome(0,0,3.9,3.9,dk?'#26292e':'#3a3e35',.2,-.45);ell(0,0,3.1,3.1,dk?'#16181b':'#23261f');hqBolts(adRing(3.5,10),dk?'#50555d':'#5c6055')}
+// rotating launcher: +x toward the target; rounds show frangible caps when ready, open dark tubes while reloading
+function hqSamLauncher(t,ready){const e=eraOf('sam',t),c=ERA_V[e],acc=ERA_ACC[e],cm=ERA_CAMO[e];
+  const cap=(x,y,r)=>{ell(x,y,r,r,'#0c0d0b');if(ready){hqDome(x,y,r*.84,r*.84,'#e6e4dc',.25,-.35);ell(x+.08*r,y,r*.36,r*.36,e>=4?acc:'#b8322a')}else{ell(x+.08*r,y,r*.62,r*.62,'#020202');ctx.strokeStyle='rgba(255,150,70,.4)';ctx.lineWidth=.1;ctx.beginPath();ctx.arc(x+.08*r,y,r*.62,0,7);ctx.stroke()}};
+  const skin=(x,y,w,h,r,tile=14)=>{ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=c;ctx.fill();hqCamo(cm,tile,.45);ctx.beginPath();ctx.roundRect(x,y,w,h,r);hqShadeV(y,y+h)};
+  const mount=(w,col)=>{hqRR(-4.8,-w/2,3.8,w,.5,col);box(-4.8,-w/2,3.8,.4,'rgba(255,255,255,.12)');hqBolts([-4.2,-w/2+.6,-4.2,w/2-.6,-1.7,-w/2+.6,-1.7,w/2-.6])};
+  if(t===0){ell(0,0,3.3,3.3,'#1e2119');
+    for(const s of[-1,1]){const y0=s<0?-6:2.8;limb(-.6,s*2,-.6,s*3.2,.9,'#23261d');hqRR(-3,y0,8.6,3.2,.5,'#3d4731');box(-3,y0,8.6,.5,'#56633f');box(-3,y0+2.7,8.6,.5,'#262d1e');
+      for(const x of[-1,1.6])box(x,y0,.3,3.2,'rgba(0,0,0,.3)');box(-2.4,y0+1.3,1.8,.3,'rgba(230,220,150,.5)');box(5.2,y0+.1,.5,3,'#1d231a');cap(5.75,y0+.85,.62);cap(5.75,y0+2.35,.62)}
+    hqRR(-.4,6,3.6,1.1,.25,'#1f2023');box(.1,6.1,1.2,.9,'#35373a');hqBar(3.2,6.3,6.4,.5,'#141414');box(9.4,6.15,.7,.8,'#070707');
+    skin(-2.8,-2.5,5.4,5,1.2,10);hqGlass(.3,0,1.45,1.65);limb(-.9,0,1.5,0,.18,'#1b1e16');hqRR(-2.6,-.9,1,1.8,.3,'#23261d');ell(-2.1,0,.22,.22,'#6d97b0');return}
+  if(t===1){mount(5,'#23271f');for(const s of[-1,1])limb(-3.6,s*2.4,.8,s*4.2,.6,'#1a1c17');
+    for(let j=0;j<3;j++){const y=-4.8+j*3.2;hqRR(-2,y+.6,11.4,3,.4,hqSh(c,-.42));cap(9.55,y+2.2,.9)}
+    for(let j=0;j<3;j++){const y=-4.8+j*3.2;skin(-2.6,y,11.4,3,.4,12);box(-2.6,y,11.4,.45,'rgba(255,255,255,.14)');for(const x of[.6,4,7.2])box(x,y,.35,3,'rgba(0,0,0,.3)');box(1.2,y+1.3,1.8,.28,'rgba(230,220,150,.5)');box(8.5,y,.25,3,'#1a1d17');cap(9.05,y+1.5,1.05)}
+    ctx.strokeStyle='#15170f';ctx.lineWidth=.3;ctx.strokeRect(-2.7,-4.9,11.6,9.8);box(-2.2,4.7,3,.3,acc);return}
+  if(t===2){mount(7,'#23271f');for(const s of[-1,1])limb(-3.6,s*3,1.6,s*6,.8,'#1a1c17');
+    skin(-3.2,-6.2,13.2,12.4,.6,16);box(-3.2,-6.2,13.2,.5,'rgba(255,255,255,.16)');box(-3.2,-.25,13.2,.5,'#1a1d17');
+    for(const x of[-.6,2.2,5,7.8]){box(x,-6.2,.5,12.4,'rgba(0,0,0,.28)');box(x+.5,-6.2,.2,12.4,'rgba(255,255,255,.1)')}
+    for(const y of[-3.4,2.8])box(-.1,y,2.2,.35,'rgba(230,220,150,.55)');box(8.6,-5.8,.3,11.6,acc);hqBolts([-2.8,-5.7,-2.8,5.7,9.6,-5.7,9.6,5.7]);
+    hqRR(9.9,-6.2,2.2,12.4,.3,hqSh(c,-.35));for(let i=0;i<2;i++)for(let j=0;j<8;j++)cap(10.45+i*1.05,-5.1+j*1.457,.52);return}
+  if(t===3){mount(6,'#1f2226');skin(-3,-5.8,12,11.6,.8,12);
+    for(let j=0;j<5;j++){const y=-4.64+j*2.32;hqCyl(-2.7,y-1.02,11.4,2.04,hexOf(hqSh(c,-.05)))}
+    for(const x of[.4,4.6]){box(x,-5.8,.5,11.6,'#1d2024');box(x,-5.8,.5,.3,'#50555d')}limb(-2.6,-5.45,8.4,-5.45,.22,acc);for(let i=0;i<3;i++)ell(-2.2+i*.6,5.3,.18,.18,i?acc:'#7fe07a');
+    hqRR(8.9,-5.8,2.7,11.6,.3,'#1d2024');for(let i=0;i<3;i++)for(let j=0;j<5;j++)cap(9.35+i*.9,-4.64+j*2.32,.42);return}
+  mount(7.4,'#15171a');for(const s of[-1,1]){hqRR(-4.4,s*4.1-.55,14,1.1,.3,'#0f1114');box(-4.4,s*4.1-.55,14,.3,'#2c3035')}for(const x of[-1,3.6,8])hqRR(x,-4.4,.8,8.8,.2,'#1a1c20');
+  hqCyl(-4.2,-3.3,14.2,6.6,'#1f2226');for(const x of[-1,3.6,8]){box(x,-3.3,.8,6.6,'rgba(0,0,0,.4)');box(x,-3.3,.8,.8,'rgba(255,255,255,.12)')}for(const x of[1.4,6])box(x,-3.3,.3,6.6,acc);box(-2.6,-1.6,2.4,.3,'rgba(223,248,255,.5)');
+  limb(-3.6,3,2.4,3.6,.35,'#0c0d0f');
+  if(ready){hqDome(10,0,1.6,3.1,'#dfe4ea',.3,-.45);ell(10.6,0,.35,.9,acc)}else{ell(10,0,1.1,3,'#050506');ctx.strokeStyle=acc;ctx.lineWidth=.18;ctx.beginPath();ctx.ellipse(10,0,1,2.8,0,0,7);ctx.stroke()}}
+// Medium/Low: flat pad + carrier, simplified launcher, era tint and accent stripe; ready caps still read
+function samLo(u,t,ready){const e=eraOf('sam',t),c=tierTint('#4e5a3a',e),hz=e>=4?ERA_ACC[e]:'#d8b23a',dk=e>=4,cp=ready?'#e8e6de':'#151515';
+  box(-7.2,-7,16,16,'rgba(0,0,0,.3)');box(-8,-8,16,16,t===0?'#6d6f66':e>=5?'#2a2d31':dk?'#3b3f44':'#65685f');ctx.strokeStyle='rgba(0,0,0,.45)';ctx.lineWidth=.4;ctx.strokeRect(-8,-8,16,16);
+  for(const[cx,cy]of[[-8,-8],[5.6,-8],[-8,5.6],[5.6,5.6]]){box(cx,cy,2.4,2.4,hz);box(cx+.6,cy+.6,1.2,1.2,'#1c1c1c')}
+  if(t===0){box(-7,-3.9,15.6,6.8,tierTint('#56652f',1));box(-6.8,-3.5,8.4,6,'#3f4a26');box(4.3,-3.4,.9,5.8,'#15202a')}
+  else if(t<=3){const L=t===2;box(L?-7.8:-6.4,-2.7,L?14.4:12.6,5.4,dk?'#23262b':'#2d3228');for(const x of L?[-2.8,4.6]:[-3.6,4.6])for(const s of[-1,1])limb(x,s*2.4,x+(x>0?1.4:-1.4),s*6.1,.8,'#1b1e18')}
+  else{box(-5.4,-4.6,12.8,1.4,'#131518');box(-5.4,3.2,12.8,1.4,'#131518');box(-8,-3,2.2,6,'#1a1c1f')}
+  ell(0,0,3.8,3.8,dk?'#16181b':'#3a3d36');ctx.rotate(u.ang);
+  if(t===0){for(const s of[-1,1]){const y0=s<0?-6:2.8;box(-3,y0,8.6,3.2,'#3d4731');ell(5.75,y0+.85,.6,.6,cp);ell(5.75,y0+2.35,.6,.6,cp)}box(3.2,6.3,6.4,.5,'#141414');box(-2.8,-2.5,5.4,5,c);ell(.3,0,1.3,1.5,'#2a3a44')}
+  else if(t===1){for(let j=0;j<3;j++){const y=-4.8+j*3.2;box(-2.6,y,11.4,2.8,c);ell(9.05,y+1.4,1,1,cp)}}
+  else if(t===2){box(-3.2,-6.2,13.2,12.4,c);box(-3.2,-.25,13.2,.5,'#1a1d17');box(9.9,-6.2,2.2,12.4,'#2a3024');for(let j=0;j<8;j++)ell(10.9,-5.1+j*1.457,.55,.55,cp)}
+  else if(t===3){box(-3,-5.8,12,11.6,c);box(8.9,-5.8,2.7,11.6,'#1d2024');for(let j=0;j<5;j++)ell(10.2,-4.64+j*2.32,.8,.8,cp)}
+  else{box(-4.2,-3.3,14.2,6.6,'#1f2226');box(1.4,-3.3,.4,6.6,ERA_ACC[e]);box(6,-3.3,.4,6.6,ERA_ACC[e]);ell(10,0,1.4,3,ready?'#dfe4ea':'#050506')}
+  tierStripe(-2.6,t===2?-6.2:-5.4,8,e)}
+function drawSAMT(u,t){const s=US.sam*bS(),ready=G.time-u.fl>1.2;ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);
+  if(!HQ){samLo(u,t,ready);ctx.restore();return}
+  const px=hqPx(),pad=hqBake('sdP_t'+t,px,20,20,10,10,()=>hqSamPad(t)),ln=hqBake('sdL_t'+t+(ready?'r':''),px,19,16,5.5,8,()=>hqSamLauncher(t,ready));
+  hqShadow(pad,.8,1,.45);hqDraw(pad);ctx.rotate(u.ang);const l=hqLoc(.8,1,u.ang,1);hqShadow(ln,l[0],l[1],.45);hqDraw(ln);ctx.restore()}
 
 // ---- missile launcher: Javelin/Stinger -> Spike NLOS -> JAGM quad-packs -> Switchblade rack -> hypersonic strike pod ----
 function hqLauncherT(t){const e=eraOf('mlaunch',t),c=ERA_V[e],acc=ERA_ACC[e];hqRR(-5.2,-4.8,4.2,9.6,.6,'#39432b');limb(-3.4,-3,.5,-4.2,.6,'#222');limb(-3.4,3,.5,4.2,.6,'#222');
@@ -4057,21 +4367,10 @@ function drawCraft(e,x,y,k){const t=G.time,hot=t-(e.fl??-9)<0.06;ctx.save();ctx.
   ctx.restore()}
 function craftShadow(type,x,y,ang,alt,k){ctx.save();ctx.translate(x+alt*0.55,y+alt*0.7);ctx.rotate(ang);ctx.scale(k,k);ctx.fillStyle='rgba(0,0,0,.26)';ctx.fill(skySil(type));
   if(type==='gunheli')ell(0,0,20,20,'rgba(0,0,0,.05)');ctx.restore()}
-// Twin 35mm flak (Gepard-style) in a sandbag revetment, search radar spinning on the turret rear
-function drawAAGun(u){if(tierOf('aagun')){drawAAGunT(u,tierOf('aagun'));return}const s=US.aagun*bS(),hot=G.time-u.fl<0.06;ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);
-  ell(0.8,1,7.4,7.4,'rgba(0,0,0,.3)');sandbags(6.5,14,k=>k===3);ell(0,0,5.2,5.2,'#58564a');ctx.rotate(u.ang);
-  box(-4.4,-3.6,7.4,7.2,'#5b6440');box(-4.4,-3.6,7.4,.7,'#737d52');ctx.strokeStyle='#2e3320';ctx.lineWidth=.4;ctx.strokeRect(-4.4,-3.6,7.4,7.2);
-  for(const sy of[-2.6,2.6]){const rc=hot&&(u.side?sy<0:sy>0)?1.2:0;box(3-rc,sy-.5,9,1,'#1d1f1a');box(11.4-rc,sy-.75,1.8,1.5,'#111')}
-  ctx.save();ctx.translate(-3.2,0);ctx.rotate(G.time*4);box(-.5,-2.6,1,5.2,'#c9ccc4');ctx.restore();ell(-3.2,0,.8,.8,'#333');ell(-.6,0,1.5,1.5,'#3d4428');
-  if(hot){const sy=u.side?-2.6:2.6;ell(14.4,sy,2.4,1.2,'#ffcf5a');ell(14,sy,1.1,.6,'#fff')}
-  ctx.restore()}
-// SAM site: hazard-cornered pad, turntable, four canisters (caps show loaded rounds while reloading)
-function drawSAM(u){if(tierOf('sam')){drawSAMT(u,tierOf('sam'));return}const s=US.sam*bS(),ready=G.time-u.fl>1.2;ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);
-  box(-7.2,-7,16,16,'rgba(0,0,0,.3)');box(-8,-8,16,16,'#6d6f66');box(-8,-8,16,.7,'#8a8c82');ctx.strokeStyle='#3e403a';ctx.lineWidth=.4;ctx.strokeRect(-8,-8,16,16);
-  for(const[cx,cy]of[[-8,-8],[5.6,-8],[-8,5.6],[5.6,5.6]]){box(cx,cy,2.4,2.4,'#d8b23a');box(cx+.6,cy+.6,1.2,1.2,'#1c1c1c')}
-  ell(0,0,5.6,5.6,'#3a3d36');ctx.rotate(u.ang);box(-4,-5.6,3,11.2,'#39432b');
-  for(let i=0;i<4;i++){const y=-4.2+i*2.8;box(-2.5,y-1.2,11,2.4,'#4e5a3a');box(-2.5,y-1.2,11,.5,'#65744b');ell(8.5,y,.9,1,ready?'#e8e6de':'#151515');if(ready)ell(8.9,y,.45,.5,'#b33')}
-  ctx.restore()}
+// AA emplacement: every tier (incl. tier 0 twin 35) goes through the tier painters (baked on High, flat on Medium/Low)
+function drawAAGun(u){drawAAGunT(u,tierOf('aagun'))}
+// SAM site: tiered pad + carrier and rotating launcher (caps show loaded rounds, dark tubes while reloading)
+function drawSAM(u){drawSAMT(u,tierOf('sam'))}
 // Air-search radar: lattice base, rotating planar array, faint sweep on the ground
 function drawRadar(u){const s=US.radar*bS(),a=G.time*1.6;ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);
   ctx.save();ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgba(110,230,150,.07)';ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,20,a-0.5,a);ctx.closePath();ctx.fill();ctx.restore();
