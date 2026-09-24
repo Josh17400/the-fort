@@ -62,6 +62,17 @@ html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webk
 .aarfix i{font-style:normal;font-family:Oxanium;font-size:12px;color:var(--dim);white-space:nowrap}.aarfix.can{border-color:rgba(127,211,90,.45)}.aarfix.can i{color:var(--good)}
 .aarfix:hover{border-color:var(--acc);background:rgba(227,181,60,.08)}
 @keyframes cardFlash{0%,60%{box-shadow:0 0 0 2px var(--acc2),0 0 28px rgba(255,207,90,.35)}100%{box-shadow:0 0 0 0 transparent}}.card.flash{animation:cardFlash 1.6s ease-out}
+.nxt{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.nxtr{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--line)}
+.nxtr .ico{width:34px;height:34px;border-radius:9px;color:var(--dim)}
+.nxtr .nb{min-width:0;flex:1;display:flex;flex-direction:column;gap:5px}
+.nxtr .nm{font:600 14px Inter,sans-serif;color:var(--text);background:none;border:0;padding:0;text-align:left;cursor:pointer;display:flex;align-items:center;gap:6px}
+.nxtr .nm:after{content:"\2192";color:var(--dim);font-size:13px;transition:.15s}.nxtr .nm:hover{color:var(--acc2)}.nxtr .nm:hover:after{color:var(--acc2);transform:translateX(2px)}
+.nxtr .rq{display:flex;flex-wrap:wrap;gap:5px}
+.nxtr .rq>*{font:600 11.5px Oxanium,sans-serif;letter-spacing:.3px;padding:3px 8px;border-radius:7px;border:1px solid var(--line2);background:rgba(0,0,0,.2);color:var(--dim);display:flex;align-items:center;gap:5px}
+.nxtr .rq span{position:relative;overflow:hidden}.nxtr .rq span i{position:absolute;left:0;bottom:0;height:2px;background:var(--acc);opacity:.7}
+.nxtr .rq button{cursor:pointer;color:var(--text);transition:.15s}.nxtr .rq button:hover{border-color:var(--acc);color:var(--acc2)}
+.nxtr .rq button.can{border-color:rgba(127,211,90,.5);color:var(--good)}
 .help{color:var(--dim);font-size:13px;line-height:1.7}.help kbd{font-family:Oxanium;background:rgba(255,255,255,.08);border:1px solid var(--line2);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--text)}
 .store{width:100%;max-width:1180px;margin-top:24px}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
@@ -100,7 +111,7 @@ input[type=range]{accent-color:var(--acc);width:150px}
 select{background:#20271a;color:var(--text);border:1px solid var(--line2);border-radius:8px;padding:6px 10px;font:inherit}
 #hud{position:fixed;inset:0;pointer-events:none;display:none}
 #hud.on{display:block}
-#airBtn,#pauseBtn,#aimBtn{position:fixed;pointer-events:auto;touch-action:manipulation}
+#airBtn,#pauseBtn,#aimBtn,#nadeBtn{position:fixed;pointer-events:auto;touch-action:manipulation}
 #aimBtn{display:none}
 #speedBtn{position:fixed;pointer-events:auto;touch-action:manipulation;right:calc(72px + env(safe-area-inset-right));top:calc(16px + env(safe-area-inset-top));height:44px;min-width:56px;padding:0 12px;border-radius:12px;background:rgba(22,27,18,.7);backdrop-filter:blur(6px);font-weight:800}
 #speedBtn.fast{border-color:var(--acc);color:var(--acc2)}
@@ -121,11 +132,24 @@ body.mobile .card:hover,body.mobile .btn:hover{transform:none}
 @keyframes pulse{50%{box-shadow:0 0 30px rgba(255,90,50,.6)}}
 #airBtn:disabled{cursor:default}
 #resetBtn:disabled{opacity:.45;cursor:not-allowed}
+#nadeBtn{--p:1;right:calc(16px + env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));width:72px;height:72px;padding:0;border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:rgba(22,27,18,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-color:transparent}
+#nadeBtn b{font-size:10.5px;letter-spacing:1.4px;font-weight:800;line-height:1}#nadeBtn .ic{color:var(--dim);transition:color .15s}
+#nadeBtn .rg{position:absolute;inset:0;border-radius:50%;pointer-events:none;background:conic-gradient(var(--acc) calc(var(--p)*360deg),rgba(255,255,255,.1) 0);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3.5px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 3.5px),#000 calc(100% - 3px))}
+#nadeBtn kbd{position:absolute;top:-3px;right:-3px;font-family:Oxanium,sans-serif;font-size:10px;line-height:1;padding:3px 5px;border-radius:5px;background:#20271a;border:1px solid var(--line2);border-bottom-width:2px;color:var(--text)}
+#nadeBtn.ready{box-shadow:0 0 18px rgba(227,181,60,.3)}#nadeBtn.ready .ic,#nadeBtn.ready b{color:var(--acc2)}
+#nadeBtn:not(.ready):not(.armed) b{color:var(--dim);font-size:13px;letter-spacing:.5px}
+#nadeBtn.armed{background:rgba(120,35,20,.9);animation:pulse 1s infinite}#nadeBtn.armed .rg{background:#ff7a4a}#nadeBtn.armed .ic{color:#ffd0c4}
+#nadeBtn.fresh:after{content:"";position:absolute;top:3px;left:5px;width:9px;height:9px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good);animation:blink 1s steps(2) infinite}
+#nadeBtn:hover{transform:none;background:rgba(40,48,32,.9)}#nadeBtn.armed:hover{background:rgba(140,40,22,.95)}
+body:not(.mobile) #hud.air #nadeBtn{bottom:calc(84px + env(safe-area-inset-bottom))}
 #prioBtn{position:fixed;pointer-events:auto;touch-action:manipulation;display:none;right:calc(16px + env(safe-area-inset-right));top:calc(68px + env(safe-area-inset-top));height:36px;padding:0 12px 0 10px;border-radius:10px;
   background:rgba(22,27,18,.7);backdrop-filter:blur(6px);align-items:center;gap:7px;font-family:Oxanium,sans-serif;font-size:12px;font-weight:800;letter-spacing:1.2px;white-space:nowrap}
 #prioBtn.on{display:flex}#prioBtn small{font-size:9px;font-weight:600;letter-spacing:1.5px;color:var(--dim)}
 #prioBtn.threat{border-color:rgba(239,90,79,.7);color:#ffb3a6}#prioBtn.threat .ic{color:#ff8a70}
 #prioBtn.tough{border-color:var(--acc);color:var(--acc2)}#prioBtn.tough .ic{color:var(--acc2)}
+#prioBtn.hint{animation:pulse 1s infinite;border-color:#ff7a4a}
 #pauseBtn{right:calc(16px + env(safe-area-inset-right));top:calc(16px + env(safe-area-inset-top));width:44px;height:44px;padding:0;border-radius:12px;background:rgba(22,27,18,.7);backdrop-filter:blur(6px)}
 /* first-encounter intel card */
 #intel{position:fixed;left:calc(20px + env(safe-area-inset-left));top:calc(120px + env(safe-area-inset-top));width:320px;pointer-events:none;display:flex;gap:12px;align-items:center;
@@ -171,7 +195,8 @@ body.mobile .pcard .pk{display:none}
 .pcard.risk .prk{color:#ff9d8a}.pcard.risk:hover{border-color:var(--bad);box-shadow:0 0 0 1px rgba(239,90,79,.35),0 14px 34px rgba(0,0,0,.45)}
 @media(max-width:600px){.pgrid{grid-template-columns:1fr;gap:8px}.pcard{display:grid;grid-template-columns:44px 1fr;column-gap:12px;row-gap:2px;text-align:left;align-items:center;padding:12px 14px}
   .pcard .pk{display:none}.pcard .pico{grid-row:1/4;width:44px;height:44px}.pcard .pnm{margin:0;font-size:15px}#perkModal h2{font-size:24px}.psub{margin-bottom:12px}}
-@media(max-width:600px){#airBtn{min-width:0;padding:12px 14px;bottom:calc(120px + env(safe-area-inset-bottom))}.logo h1{font-size:20px}.btn.big{width:100%}.deploy h2{font-size:22px}.grid{grid-template-columns:1fr}}
+@media(max-width:600px){body:not(.mobile) #nadeBtn{bottom:calc(120px + env(safe-area-inset-bottom))}body:not(.mobile) #hud.air #nadeBtn{bottom:calc(178px + env(safe-area-inset-bottom))}
+  #airBtn{min-width:0;padding:12px 14px;bottom:calc(120px + env(safe-area-inset-bottom))}.logo h1{font-size:20px}.btn.big{width:100%}.deploy h2{font-size:22px}.grid{grid-template-columns:1fr}}
 /* compact phone battle HUD */
 body.mobile #aimBtn{width:58px!important;height:58px!important;font-size:9px!important;letter-spacing:1px;bottom:calc(92px + env(safe-area-inset-bottom))!important}
 body.mobile #aimBtn .ic{width:20px;height:20px}
@@ -182,6 +207,10 @@ body.mobile #airBtn{bottom:calc(158px + env(safe-area-inset-bottom))!important;p
 body.mobile #airBtn .ic{width:14px;height:14px;margin-right:4px}
 body.mobile #pauseBtn{width:38px!important;height:38px!important}
 body.mobile #pauseBtn .ic{width:16px;height:16px}
+body.mobile #nadeBtn{width:58px;height:58px;right:calc(84px + env(safe-area-inset-right));bottom:calc(92px + env(safe-area-inset-bottom))}
+body.mobile #prioBtn.on + #nadeBtn{right:calc(152px + env(safe-area-inset-right))}
+body.mobile #nadeBtn kbd{display:none}body.mobile #nadeBtn .ic{width:20px;height:20px}body.mobile #nadeBtn b{font-size:9px;letter-spacing:1px}
+body.mobile #nadeBtn:not(.ready):not(.armed) b{font-size:12px}
 body.mobile #speedBtn{height:38px!important;min-width:44px;font-size:12px;right:calc(62px + env(safe-area-inset-right))!important}
 </style>
 </head>
@@ -193,6 +222,7 @@ body.mobile #speedBtn{height:38px!important;min-width:44px;font-size:12px;right:
   <button class="btn" id="speedBtn" title="Battle speed (F)">1×</button>
   <button class="btn" id="aimBtn"><svg class="ic" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M12 2v5M12 17v5M2 12h5M17 12h5M12 12h.01"/></svg>LOCK ON</button>
   <button class="btn" id="prioBtn" title="Target priority (T)"></button>
+  <button class="btn" id="nadeBtn" title="Frag grenade (G)"><span class="rg"></span><svg class="ic" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 15m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M8.5 9.3V6.5h5v2.8M13.5 7.5c2.6 0 4.2 1.3 4.8 3.6M18.5 4.8m-1.7 0a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0M5.4 13.5h11.2M11 9.2v11.6"/></svg><b id="nadeTxt">FRAG</b><kbd>G</kbd></button>
   <button class="btn" id="airBtn"><span id="airTxt">AIRSTRIKE</span><div class="cd" id="airCd"></div></button>
   <div id="intel" role="status" aria-live="polite"><canvas id="intelCv" width="128" height="128"></canvas><div class="it"><div class="tag2">NEW CONTACT</div><div class="nm2"><span id="intelName"></span><span class="thr" id="intelThr"></span></div><div class="tip" id="intelTip"></div></div><div class="tm"></div></div>
 </div>
@@ -230,8 +260,9 @@ body.mobile #speedBtn{height:38px!important;min-width:44px;font-size:12px;right:
     </div>
     <div class="panel side">
       <div id="lastRun"></div>
+      <div id="nextUnl"></div>
       <h3 style="margin-top:4px">FIELD MANUAL</h3>
-      <div class="help" id="helpTxt"><kbd>Click</kbd> an enemy to lock on &nbsp;·&nbsp; <kbd>Hold</kbd> to keep firing<br><kbd>Click</kbd> <svg class="ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10M7.5 5l9 4"/></svg> crates for cash &nbsp;·&nbsp; <kbd>Q</kbd> airstrike &nbsp;·&nbsp; <kbd>T</kbd> target priority &nbsp;·&nbsp; <kbd>Esc</kbd> pause<br>Hold waves 3, 5, 10, 15... to earn a Field Commendation: pick one of three directives for the run.<br>Upgrades unlock other upgrades, and reaching deeper waves opens new tech.</div>
+      <div class="help" id="helpTxt"><kbd>Click</kbd> an enemy to lock on &nbsp;·&nbsp; <kbd>Hold</kbd> to keep firing<br><kbd>Click</kbd> <svg class="ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10M7.5 5l9 4"/></svg> crates for cash &nbsp;·&nbsp; <kbd>G</kbd> grenade at cursor &nbsp;·&nbsp; <kbd>Q</kbd> airstrike &nbsp;·&nbsp; <kbd>T</kbd> target priority &nbsp;·&nbsp; <kbd>Esc</kbd> pause<br>Hold waves 3, 5, 10, 15... to earn a Field Commendation: pick one of three directives for the run.<br>Upgrades unlock other upgrades, and reaching deeper waves opens new tech.</div>
     </div>
   </div>
   <div class="store"><div class="tabs" id="tabs"></div><div class="grid" id="store"></div></div>
@@ -262,6 +293,7 @@ IC.ddef='M3 20h18M5 20v-3h14v3M8 17v-3h8v3M12 14V9l7-4M9 9h.01';
 IC.feff='M4 18a8 8 0 1 1 16 0M12 18l4-6M7 14h.01M17 14h.01M12 10h.01';
 function ic(n,s=20){return`<svg class="ic" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[n]}"/></svg>`}
 IC.threat='M12 3L2 20h20zM12 9.5v4.5M12 17h.01';
+IC.nade='M11 15m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M8.5 9.3V6.5h5v2.8M13.5 7.5c2.6 0 4.2 1.3 4.8 3.6M18.5 4.8m-1.7 0a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0M5.4 13.5h11.2M11 9.2v11.6';
 const _p2={};function cIcon(n,x,y,s,c,lw=2){const p=_p2[n]||(_p2[n]=new Path2D(IC[n]));ctx.save();ctx.translate(x,y);ctx.scale(s/24,s/24);ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke(p);ctx.restore()}
 // ================= SAVE =================
 const GFX_DEF=matchMedia('(pointer:coarse)').matches&&matchMedia('(hover:none)').matches?'medium':'high';
@@ -280,6 +312,8 @@ const wallHalfAt=l=>l?14+Math.min(l,20)*9:10, wallMaxAt=l=>l?Math.round(60*l*Mat
 const repairAt=l=>Math.min(0.04,0.003*l), hpAt=l=>50+25*l, autoAt=l=>l?Math.min(1,0.35+0.13*l):0;
 const artyCd=l=>Math.max(1.2,9*Math.pow(0.88,l-1)), artyDmg=l=>35*Math.pow(1.28,l-1), artyR=l=>Math.min(70,32+3*l);
 const crateEvery=l=>Math.max(8,22*Math.pow(0.9,l)), crateMul=l=>1+0.15*l, crateVal=(w,l)=>money((12+4*w)*crateMul(l)*waveRew(w));
+// Frag grenade: the rifleman's own active ability from wave 1. Damage rides on rifle damage (so it stays relevant) times its own levels.
+const nadeDmg=l=>(dmgAt(L('dmg'))*2.2+22)*Math.pow(1.16,l),nadeR=l=>Math.min(64,36+2*l),nadeCd=l=>Math.max(5,12*Math.pow(0.93,l)),nadeN=l=>1+(l>=5)+(l>=10);
 const mineDmg=l=>45*Math.pow(1.3,l-1), airDmg=l=>60*Math.pow(1.25,l-1), airCd=l=>Math.max(12,50*Math.pow(0.9,l-1));
 const SUF=['','k','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc'];
 const f1=n=>{if(!isFinite(n))return'∞';if(n<1e4)return n>=100?Math.round(n)+'':(Math.round(n*10)/10)+'';const e=Math.min(SUF.length-1,Math.floor(Math.log10(n)/3));return e===SUF.length-1&&n>=1e36?n.toExponential(2):(n/Math.pow(10,e*3)).toFixed(n/Math.pow(10,e*3)>=100?0:1)+SUF[e]};
@@ -289,6 +323,8 @@ const U=[
  {id:'rate',cat:'WEAPONS',name:'Rate of Fire',max:20,cost:20,g:1.38,desc:'Faster bolt cycling.',val:l=>(1/cdAt(l)).toFixed(2)+' shots/s'},
  {id:'crit',wave:2,need:[["dmg", 3]],cat:'WEAPONS',name:'Marksmanship',max:Infinity,cost:40,g:1.45,desc:'Chance for a critical hit (x2.5 damage).',val:l=>pct(Math.min(0.6,l*0.04))+' crit'+(l>15?' · x'+(2.5+(l-15)*0.1).toFixed(1):'')},
  {id:'frag',wave:6,need:[["dmg", 5]],cat:'WEAPONS',name:'Frag Rounds',max:8,cost:120,g:1.7,desc:'Bullets burst, splashing 35% damage nearby.',val:l=>l?Math.min(40,10+4*l)+'px splash':'none'},
+ {id:'nade',wave:2,cat:'WEAPONS',name:'Hand Grenades',max:20,cost:35,g:1.5,desc:'Your rifleman hurls a frag grenade at any spot you pick (G, or the FRAG button). Hits harder, wider and reloads faster each level; Lv 5 and 10 throw an extra grenade.',
+  val:l=>nadeN(l)+'× '+f1(nadeDmg(l))+' dmg · '+nadeR(l)+'m · '+nadeCd(l).toFixed(1)+'s'},
  {id:'auto',wave:3,need:[["rate", 3]],cat:'WEAPONS',name:'Auto-Fire',max:5,cost:80,g:1.8,desc:'Your soldier fires on its own when you are not aiming.',val:l=>l?pct(autoAt(l))+' fire rate':'off'},
  {id:'vision',cat:'FORT',name:'Watchtower',max:30,cost:30,g:1.5,desc:'Raise the watch. The camera pulls back to reveal more battlefield, so bigger bases and bigger battles fit.',val:l=>visionAt(l)+'m vision'},
  {id:'walls',cat:'FORT',name:'Fort Walls',max:Infinity,cost:45,g:1.72,desc:'Starts as a tiny perch. Each level makes the fort bigger, the walls thicker and tougher. From Lv 6 they are thick enough for your riflemen to man the ramparts.',val:l=>l?'size '+(wallHalfAt(l)*2)+' · '+wallMaxAt(l)+' HP':'just a crate'},
@@ -334,10 +370,23 @@ function lockWhy(u){const miss=[];
   return miss.length?'Needs '+miss.join(' + '):''}
 const costOf=(u,l)=>Math.round(u.cost*Math.pow(u.g,l));
 // After-action report: what broke the fort last run, and the upgrade that best answers it (affordable first, else the next one to save for)
-const COUNTER={grunt:['dmg','rate','squad','turret','auto'],runner:['auto','rate','wire','turret','squad'],brute:['dmg','crit','frag','sniper','tank'],
+const COUNTER={grunt:['dmg','rate','nade','squad','turret','auto'],runner:['auto','rate','wire','nade','turret','squad'],brute:['dmg','crit','frag','sniper','tank'],
   shooter:['sniper','dmg','crit','arty','vision'],bomber:['mines','wire','flame','arty','dmg'],boss:['arty','tank','air','sniper','mlaunch','silo'],
   drone:['aagun','turret','tesla','radar','rate'],gunheli:['aagun','radar','mlaunch','sam','dmg'],strikejet:['aagun','sam','tesla','radar'],
   heavybomber:['sam','aagun','fighter','radar'],airboss:['sam','mlaunch','aagun','fighter','radar'],walls:['walls','repair','armor']};
+// Home 'next unlocks': the locked upgrades closest to opening (wave gap first, then the cash still needed for their prerequisites).
+// Each missing requirement is a chip; prerequisite chips jump to that card, the name jumps to the locked card itself.
+function nextUnlocks(n){const rows=[];
+  for(const u of U){if(!lockWhy(u))continue;const gap=Math.max(0,(u.wave||0)-S.best);if(gap>5)continue;let cash=0;const pre=[];
+    for(const[id,l]of u.need||[]){const q=U.find(x=>x.id===id),have=L(id);if(have>=l)continue;if(lockWhy(q)){cash=Infinity;break}
+      let c=0;for(let k=have;k<l;k++)c+=costOf(q,k);cash+=c;pre.push({q,l,c:costOf(q,have),ok:l-have===1&&S.bank>=costOf(q,have)})}
+    if(isFinite(cash))rows.push({u,gap,cash,pre})}
+  return rows.sort((a,b)=>a.gap-b.gap||a.cash-b.cash).slice(0,n)}
+function nextUnlockHtml(){const rows=nextUnlocks(MOBILE||innerWidth<820?2:3);if(!rows.length)return'';
+  return`<h3>NEXT UNLOCKS</h3><div class="nxt">${rows.map(({u,gap,pre})=>`<div class="nxtr"><div class="ico">${ic(u.id,18)}</div><div class="nb"><button class="nm" data-goto="${u.id}">${u.name}</button><div class="rq">`
+    +(gap?`<span>${ic('trophy',12)}Reach wave ${u.wave}<i style="width:${Math.round(100*S.best/u.wave)}%"></i></span>`:'')
+    +pre.map(({q,l,c,ok})=>`<button data-goto="${q.id}" class="${ok?'can':''}">${ic(q.id,12)}${q.name} Lv ${l}${ok?' · $'+f1(c):''}</button>`).join('')
+    +`</div></div></div>`).join('')}</div>`}
 function counterPick(){if(!lastCause)return null;const ids=[...(lastCause.breachW?COUNTER.walls:[]),...lastCause.top.flatMap(t=>COUNTER[t]||[])];
   const ok=[...new Set(ids)].map(id=>U.find(u=>u.id===id)).filter(u=>u&&L(u.id)<u.max&&!lockWhy(u));
   return ok.find(u=>S.bank>=costOf(u,L(u.id)))||ok[0]||null}
@@ -358,6 +407,7 @@ function renderStartSel(){const c=checkpoints(),el=$('startSel');if(c.length<2){
 function renderHome(){renderStartSel();
   $('bank').textContent='$'+f1(S.bank);$('best').textContent=S.best;$('tkills').textContent=S.tkills;
   $('lastRun').innerHTML=lastRunMsg?`<h3>LAST RUN</h3><div class="lastrun">${lastRunMsg}${afterAction()}</div>`:'';
+  $('nextUnl').innerHTML=nextUnlockHtml();
   $('loadout').innerHTML=[['HP',hpAt(L('hp'))],['DMG',f1(dmgAt(L('dmg')))],['Vision',Math.round(vision())+'m'],['Soldiers',1+L('squad')],['Walls',L('walls')?'Lv '+L('walls'):'crate']]
     .map(([k,v])=>`<span class="tag">${k} <b>${v}</b></span>`).join('');
   {const n=U.filter(u=>L(u.id)<u.max&&!lockWhy(u)&&S.bank>=costOf(u,L(u.id))).length;if(n)$('loadout').innerHTML+=`<span class="tag" style="border-color:rgba(127,211,90,.5);color:var(--good);cursor:pointer" onclick="document.querySelector('.store').scrollIntoView({behavior:'smooth'})">▲ <b style="color:var(--good)">${n}</b> upgrade${n>1?'s':''} ready</span>`}
@@ -380,8 +430,9 @@ $('tabs').addEventListener('click',e=>{const t=e.target.closest('[data-tab]');if
 $('store').addEventListener('click',e=>{const id=e.target.closest('[data-id]')?.dataset.id;if(!id)return;const u=U.find(u=>u.id===id),l=L(id),c=costOf(u,l);
   if(l<u.max&&S.bank>=c&&!lockWhy(u)){S.bank-=c;S.lv[id]=l+1;save();sfx('buy');renderHome();const b=document.querySelector(`[data-id="${id}"]`);if(b)b.classList.add('pop')}else sfx('deny')});
 $('deployBtn').onclick=()=>{startRun();};
-$('lastRun').addEventListener('click',e=>{const id=e.target.closest('[data-goto]')?.dataset.goto;if(!id)return;storeTab='ALL';renderHome();
-  const c=document.querySelector(`[data-id="${id}"]`)?.closest('.card');if(c){c.scrollIntoView({behavior:'smooth',block:'center'});c.classList.remove('flash');void c.offsetWidth;c.classList.add('flash')}});
+function gotoCard(e){const id=e.target.closest('[data-goto]')?.dataset.goto;if(!id)return;storeTab='ALL';renderHome();
+  const c=document.querySelector(`[data-id="${id}"]`)?.closest('.card');if(c){c.scrollIntoView({behavior:'smooth',block:'center'});c.classList.remove('flash');void c.offsetWidth;c.classList.add('flash')}}
+$('lastRun').addEventListener('click',gotoCard);$('nextUnl').addEventListener('click',gotoCard);
 $('settingsBtn').onclick=()=>{syncSettings();showScreen('settings')};
 const closeSettings=()=>{if(running)$('settings').classList.remove('on');else showScreen('home')};
 $('backBtn').onclick=closeSettings;
@@ -489,6 +540,8 @@ function sfx(n,x,y,k=1){
     og.gain.value=0.025;o.connect(og).connect(g);
     const rs=c.createBufferSource(),r=c.createBiquadFilter(),rg=c.createGain();rs.buffer=AU.nb;rs.loop=true;r.type='lowpass';r.frequency.value=220;rg.gain.value=0.5;rs.connect(r).connect(rg).connect(g);
     for(const src of [s,o,rs]){src.start(t);src.stop(t+d+0.05)}}break}
+  case'toss':if(v=voice(0.45,0.9,x,y,true)){lOsc(v,'sine',3100,2900,0.045,0.001,0.06);lOsc(v,'sine',4300,4200,0.025,0.001,0.05,0.035);   // pin ping, spoon flick
+    lNoise(v,'bandpass',500,1700,1.3,0.16,0.05,0.22,0.07)}break;                                                                 // arm whoosh
   case'whistle':if(v=voice(0.9,0.8,null,null,true))lOsc(v,'sine',1500*jit(0.05),700,0.035,0.05,0.75);break;
   case'kill':if(v=voice(0.1,jit(0.15),x,y))lNoise(v,'lowpass',600,200,0.8,0.12,0.002,0.06);break;
   case'wall':if(v=voice(0.2,1,null,null,true)){lNoise(v,'lowpass',700,250,0.8,0.22,0.002,0.1);lOsc(v,'sine',90,60,0.12,0.002,0.08)}break;
@@ -553,10 +606,10 @@ function startRun(){
   for(let i=0;i<Math.min(8,L('squad'));i++)sold.push({x:0,y:0,cd:Math.random(),ang:0,tgt:null});
   G={wave:startWaveOk()-1,spawnLeft:0,spawnT:0,spawnInt:1,breakT:2,breakMax:2,enemies:[],fx:[],parts:[],floats:[],shells:[],bombs:[],planes:[],mines:[],crates:[],
     hp:hpAt(L('hp')),maxHp:hpAt(L('hp')),wallMax:wallMaxAt(L('walls')),wallHp:wallMaxAt(L('walls')),sold,kills:0,earned:0,time:0,shake:0,
-    zoomV:vision()*0.3,artyT:3,airT:0,airArmed:false,crateT:10,banner:'',bannerT:0,hurtT:0,breached:false,pk:{},choosing:null,perkAt:0,startBest:S.best,threat:{},breachW:0};
+    zoomV:vision()*0.3,artyT:3,airT:0,airArmed:false,nadeT:0,nadeArmed:false,nades:[],crateT:10,banner:'',bannerT:0,hurtT:0,breached:false,pk:{},choosing:null,perkAt:0,startBest:S.best,threat:{},breachW:0};
   {const w0=startWaveOk();if(w0>1){G.cp={i:0,n:Math.min(8,Math.floor(w0/10))};G.perkAt=0.5}}
   G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=Math.min(S.set.lastSpeed||1,SPEEDS[L('speed')]);syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;initLogi();
-  skyInit();syncPrioBtn();
+  skyInit();syncPrioBtn();syncNadeBtn(true);$('hud').classList.toggle('air',L('air')>0);
   running=true;paused=false;mouse.down=false;$('overlay').classList.remove('on');showScreen('game');
 }
 // vision() is hit thousands of times a frame via visible(); levels can't change mid-run, so memoise it per sim tick.
@@ -590,6 +643,7 @@ function startWave(){
   layMines();
   if(G.wallMax){G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.25)}
   banner(G.wave%10===0?'WAVE '+G.wave+' — ENEMY ARMOR INCOMING':'WAVE '+G.wave);sfx('wave');
+  if(G.wave===2&&!seen().nade)float(0,-fortHalf()-30,MOBILE?'NEW: TAP FRAG, THEN A SPOT':'NEW: PRESS G TO THROW A GRENADE','#ffcf5a',13);
   skyWaveStart();
 }
 function dropCrate(){const a=Math.random()*7,r=fortHalf()+wallThick()+wireOut()+18+Math.random()*Math.max(20,vision()-fortHalf()-wireOut()-40);
@@ -689,7 +743,7 @@ function update(dt){
   for(const s of G.sold)s.cd-=dt;
   const m=G.sold[0],cd=cdAt(L('rate'))/(1+0.2*pk('drill'));
   if(m.tgt&&(m.tgt.dead||!visible(m.tgt)))m.tgt=null;
-  if(!m.tgt&&mouse.down&&!G.airArmed)m.tgt=enemyAt(mouse.wx,mouse.wy,Math.max(24,(MOBILE?36:18)/sc));
+  if(!m.tgt&&mouse.down&&!G.airArmed&&!G.nadeArmed)m.tgt=enemyAt(mouse.wx,mouse.wy,Math.max(24,(MOBILE?36:18)/sc));
   let t=m.tgt,rm=1;if(!t&&L('auto')){t=nearestVisible(m);rm=autoAt(L('auto'))}
   if(t&&m.cd<=0){_aimed=t===m.tgt;fire(m,t);_aimed=false;m.cd=cd/rm}else if(t)m.ang=Math.atan2(t.y-m.y,t.x-m.x);
   let near=null;   // best visible targets by doctrine (measured from the fort), built at most once per tick and shared by the squad
@@ -727,6 +781,7 @@ function update(dt){
     for(const c of vis.slice(0,25)){let k=0;for(const o of vis)if(Math.hypot(o.x-c.x,o.y-c.y)<R)k++;if(k>bc){bc=k;best=c}}
     fireArty(best,R,artyDmg(al));G.artyT=artyCdNow()}else G.artyT=0.5}}
   for(const s of G.shells){s.t-=dt;if(s.t<=0){s.done=true;explode(s.x,s.y,s.r,s.dmg)}}G.shells=G.shells.filter(s=>!s.done);
+  updateNades(dt);
   // air
   if(G.gun&&G.gun.recoil>0)G.gun.recoil=Math.max(0,G.gun.recoil-dt*3);
   if(G.airT>0)G.airT-=dt;
@@ -739,6 +794,7 @@ function update(dt){
   fxUpdate(dt);for(const f of G.fx)f.life-=dt;G.fx=G.fx.filter(f=>f.life>0);
   for(const p of G.parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=0.92;p.vy*=0.92;p.life-=dt}G.parts=G.parts.filter(p=>p.life>0);
   for(const f of G.floats){f.y-=22*dt;f.life-=dt}G.floats=G.floats.filter(f=>f.life>0);
+  syncNadeBtn();
   // air button
   const ab=$('airBtn'),alv=L('air');ab.style.display=alv?'block':'none';
   if(alv){const txt=G.airArmed?ic('dmg',18)+(MOBILE?'TAP & DRAG TO AIM · cancel':'CLICK & DRAG TO AIM · Esc'):ic('air',18)+(G.airT>0?'READY IN '+Math.ceil(G.airT)+'s':(MOBILE?'AIRSTRIKE':'AIRSTRIKE · Q'));if(ab._t!==txt){ab._t=txt;$('airTxt').innerHTML=txt}ab.disabled=G.airT>0&&!G.airArmed;ab.classList.toggle('armed',G.airArmed);ab.classList.toggle('ready',G.airT<=0&&!G.airArmed);$('airCd').style.width=(G.airT>0?100*(1-G.airT/airCdNow()):100)+'%'}
@@ -757,6 +813,41 @@ function callAir(x,y,ang){
   for(let i=0;i<n;i++){const o=(i-(n-1)/2)*24;G.bombs.push({x:x+dx*o,y:y+dy*o,t:(800+o)/500,dmg:airDmg(l)})}
   G.airArmed=false;G.airT=airCdNow();
 }
+
+// ================= FRAG GRENADE =================
+// Armed from the FRAG button (then tap/click a spot) or thrown straight at the cursor with G. The main rifleman lobs it in an arc;
+// it bursts on landing through explode(), so like every ground weapon it never touches aircraft. Throws are capped at sight range.
+const nadeCdNow=()=>nadeCd(L('nade'))*Math.pow(0.65,pk('grenadier')),nadeNow=()=>nadeN(L('nade'))+pk('grenadier');
+function nadeClamp(x,y){const d=Math.hypot(x,y),R=vision()*0.97;return d>R?[x/d*R,y/d*R]:[x,y]}
+function throwNade(x,y){if(!running||paused||G.choosing)return;if(G.nadeT>0){sfx('deny');return}
+  const m=G.sold[0],l=L('nade'),r=nadeR(l),n=nadeNow(),dmg=nadeDmg(l);[x,y]=nadeClamp(x,y);m.ang=Math.atan2(y-m.y,x-m.x);
+  for(let i=0;i<n;i++){const a=Math.random()*TAU,o=i?r*(0.55+Math.random()*0.45):0,[tx,ty]=nadeClamp(x+Math.cos(a)*o,y+Math.sin(a)*o),d=Math.hypot(tx-m.x,ty-m.y);
+    G.nades.push({sx:m.x,sy:m.y,x:tx,y:ty,t:-i*0.14,dur:0.4+d/560,h:Math.min(110,18+d*0.3),r,dmg,spin:(Math.random()<.5?-1:1)*(9+Math.random()*5)})}
+  G.nadeT=nadeCdNow();G.nadeArmed=false;if(!seen().nade){seen().nade=1;save()}syncNadeBtn(true);sfx('toss',m.x,m.y)}
+function updateNades(dt){if(G.nadeT>0)G.nadeT=Math.max(0,G.nadeT-dt);if(!G.nades.length)return;
+  for(const g of G.nades){g.t+=dt;if(g.t<g.dur)continue;g.done=true;const{x,y,r}=g;
+    explode(x,y,r,g.dmg);fireball(x,y,r*0.55,0.32);ring(x,y,r*1.1,0.3,'255,226,170',2.2);spark(x,y,14,190,['#fff6d0','#ffc04a','#ff7a1a'],0.45,1.5);
+    puff(x,y,4,r*0.35,1.3,'64,58,50',20,0.5);decal(x,y,'scorch',r*0.5);light(x,y,r*2.4,'255,170,80',0.22)}
+  G.nades=G.nades.filter(g=>!g.done)}
+function drawNades(){const k=Math.max(1,1.6/(sc*2.4));
+  for(const g of G.nades){if(g.t<0)continue;const f=Math.min(1,g.t/g.dur),x=g.sx+(g.x-g.sx)*f,y=g.sy+(g.y-g.sy)*f,h=Math.sin(f*Math.PI)*g.h;
+    ctx.strokeStyle=`rgba(255,90,60,${0.35+0.35*f})`;ctx.lineWidth=Math.max(1,1.2/sc);ctx.beginPath();ctx.arc(g.x,g.y,g.r*(1.05-0.25*f),0,7);ctx.stroke();   // landing ring tightens as it drops
+    ell(x,y,2.4*k,1.4*k,'rgba(0,0,0,.35)');ctx.save();ctx.translate(x,y-h);ctx.rotate(g.t*g.spin);ctx.scale(k,k);
+    ell(0,0,2.4,2.1,'#4b5a2a');box(-0.8,-3.2,1.6,1.3,'#2a2e22');box(0.6,-3,2.2,0.6,'#8c8f86');ell(-0.8,-0.7,0.8,0.6,'rgba(210,230,160,.45)');ctx.restore()}}
+function drawNadeAim(){if(!G.nadeArmed||MOBILE&&!mouse.down||!MOBILE&&!mouse.in)return;const[x,y]=nadeClamp(mouse.wx,mouse.wy),r=nadeR(L('nade')),m=G.sold[0],lw=Math.max(1.5,2/sc);
+  ctx.lineWidth=lw;ctx.strokeStyle='rgba(255,207,90,.9)';ctx.fillStyle='rgba(255,207,90,.14)';ctx.setLineDash([5/sc,4/sc]);
+  const mx=(m.x+x)/2,my=(m.y+y)/2-Math.min(110,Math.hypot(x-m.x,y-m.y)*0.3);ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.quadraticCurveTo(mx,my,x,y);ctx.stroke();
+  ctx.setLineDash([]);ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();ctx.stroke();const t=Math.max(5,7/sc);ctx.beginPath();ctx.moveTo(x-t,y);ctx.lineTo(x+t,y);ctx.moveTo(x,y-t);ctx.lineTo(x,y+t);ctx.stroke()}
+// FRAG button: conic cooldown ring via --p, seconds while reloading; only touches the DOM when something visible changes
+function syncNadeBtn(force){const b=$('nadeBtn'),t=G.nadeT,st=G.nadeArmed?'armed':t<=0?'ready':'cd',p=t<=0?1:Math.max(0,1-t/nadeCdNow()),
+    txt=st==='armed'?'AIM':st==='ready'?'FRAG':Math.ceil(t)+'s';
+  if(force||b._s!==st){b._s=st;b.classList.toggle('armed',st==='armed');b.classList.toggle('ready',st==='ready');b.classList.toggle('fresh',!seen().nade)}
+  if(force||Math.abs(p-b._p)>=0.004||(p===1)!==(b._p===1)){b._p=p;b.style.setProperty('--p',p.toFixed(3))}
+  if(force||b._t!==txt){b._t=txt;$('nadeTxt').textContent=txt}}
+function nadeButton(){if(!running||paused||G.choosing)return;if(G.nadeArmed){G.nadeArmed=false;syncNadeBtn();return}
+  if(G.nadeT>0){sfx('deny');return}G.airArmed=false;G.airAim=null;G.nadeArmed=true;sfx('buy');syncNadeBtn()}
+function nadeKey(){if(!running||paused||G.choosing)return;if(G.nadeArmed){G.nadeArmed=false;syncNadeBtn();return}
+  if(mouse.in){G.airArmed=false;G.airAim=null;throwNade((mouse.x-VW/2)/sc,(mouse.y-VH/2)/sc)}else nadeButton()}
 
 // ================= SCALE =================
 // Reference: a soldier is ~12 units across. Sprites were authored small; these bring them to believable relative sizes.
@@ -2139,6 +2230,7 @@ const PERKS=[
  {id:'hazard',ic:'skull',name:'Hazard Pay',desc:'Enemies arrive 25% tougher, but everything pays 40% more.',risk:true},
  {id:'supply',ic:'scav',name:'Supply Drop',desc:'Three cash crates land now, and crates drop 40% more often.',go:()=>{for(let i=0;i<3;i++)dropCrate()}},
  {id:'firemission',ic:'arty',name:'Fire Mission',desc:'Artillery reloads 35% faster.',ok:()=>L('arty')>0,go:()=>{G.artyT=Math.min(G.artyT,0.5)}},
+ {id:'grenadier',ic:'nade',name:'Grenadier Drill',desc:'Grenades reload 35% faster and every throw adds one more grenade. One is ready now.',go:()=>{G.nadeT=0}},
  {id:'cas',ic:'air',name:'Close Air Support',desc:'Airstrike cooldown -35%, and a strike is ready now.',ok:()=>L('air')>0,go:()=>{G.airT=0}},
  {id:'minelayer',ic:'mines',name:'Minelayers',desc:'Twice the mines every wave, and a fresh field is laid now.',ok:()=>L('mines')>0,go:()=>layMines()},
  {id:'flak',ic:'aagun',name:'Flak Barrage',desc:'Air-defence fire +40% damage against aircraft.',ok:()=>L('aagun')>0&&G.wave>=SKY_WAVE.drone},
@@ -2148,7 +2240,7 @@ const ROMAN=['','I','II','III','IV','V','VI','VII','VIII','IX','X'],rank=n=>ROMA
 let perkOpenT=0;
 function offerPerks(){if(!running)return;const pool=PERKS.filter(p=>!p.ok||p.ok()),pick=[];
   while(pick.length<3&&pool.length)pick.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
-  G.choosing=pick;mouse.down=false;G.airArmed=false;G.airAim=null;perkOpenT=performance.now();
+  G.choosing=pick;mouse.down=false;G.airArmed=false;G.airAim=null;G.nadeArmed=false;perkOpenT=performance.now();
   const cp=G.cp&&G.cp.i<G.cp.n?G.cp:null;   // checkpoint briefing: a short draft before the first wave, standing in for the commendations skipped
   $('perkTag').textContent=cp?'CHECKPOINT BRIEFING':'FIELD COMMENDATION';
   $('perkWave').textContent=cp?'DIRECTIVE '+(cp.i+1)+' OF '+cp.n:'WAVE '+G.wave+' HELD';
@@ -2169,22 +2261,31 @@ const perkChips=()=>perkList().map(q=>`<span${q.risk?' class="risk"':''}>${ic(q.
 // HUD: one badge per directive held, top-right under the pause/speed buttons
 // Boss bars stack top-center under the money chip (desktop) or under the money/depot column (phones, which also pushes the intel card down)
 let _bossY=-1;
-function drawBossHud(nar,hk){const bs=G.bosses||[],w=nar?VW-40:Math.max(260,Math.min(420,VW-700)),x=VW/2-w/2,h=40;let y=nar?248:96;
-  for(const b of bs.slice(0,2)){const e=b.e,name=BOSS_NAME[e.type],warn=b.t<BOSS_WARN&&!e.dead,r=Math.max(0,e.hp/e.max);
-    ctx.globalAlpha=e.dead?Math.max(0,1-b.gone/BOSS_FADE):Math.min(1,b.t*5);
+// Air-boss advice under the WARNING strip: no flak/SAM at all -> AA priority; AA but guns on NEAREST -> switch doctrine
+function bossHint(e,nar){if(!e.air)return'';const aa=L('aagun')>0||L('sam')>0,th=prio()==='threat';
+  if(!aa)return nar?(th?'NO AIR DEFENCE · LOCK ON TO IT':'NO AIR DEFENCE · TARGET: THREATS'):'AA PRIORITY · no flak or SAMs: '+(th?'lock on and keep firing':'set TARGET to THREATS and lock on');
+  return th?'':nar?'SET TARGET: THREATS':'Set TARGET to THREATS so every gun tracks it'}
+let _prioHint=false;
+function drawBossHud(nar,hk){const bs=G.bosses||[],w=nar?VW-40:Math.max(260,Math.min(420,VW-700)),x=VW/2-w/2;let y=nar?248:96,hintOn=false;
+  for(const b of bs.slice(0,2)){const e=b.e,name=BOSS_NAME[e.type],hint=bossHint(e,nar),warn=b.t<BOSS_WARN+(hint?2:0)&&!e.dead,r=Math.max(0,e.hp/e.max),h=warn&&hint?58:40;
+    ctx.globalAlpha=e.dead?Math.max(0,1-b.gone/BOSS_FADE):Math.min(1,b.t*5);if(warn&&hint&&prio()!=='threat')hintOn=true;
     if(warn){const p=0.5+0.5*Math.sin(b.t*12),off=(b.t*28)%18;rrect(x,y,w,h,10,'rgba(60,10,6,.9)');
       ctx.save();ctx.beginPath();ctx.roundRect(x,y,w,h,10);ctx.clip();ctx.fillStyle='rgba(227,181,60,.13)';
       for(let sx=x-h-18+off;sx<x+w;sx+=18){ctx.beginPath();ctx.moveTo(sx,y+h);ctx.lineTo(sx+9,y+h);ctx.lineTo(sx+9+h,y);ctx.lineTo(sx+h,y);ctx.fill()}ctx.restore();
       ctx.strokeStyle=`rgba(255,90,70,${0.4+0.55*p})`;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(x+1,y+1,w-2,h-2,10);ctx.stroke();
       cIcon('threat',x+11,y+10,20,`rgba(255,138,112,${0.6+0.4*p})`,2.2);ctx.textAlign='left';ctx.font=`800 ${nar?15:16}px Oxanium,sans-serif`;ctx.fillStyle='#ffd0c4';
-      ctx.fillText('WARNING',x+40,y+26);const ww=ctx.measureText('WARNING ').width;ctx.font=`600 ${nar?13:14}px Oxanium,sans-serif`;ctx.fillStyle='#ff9d8a';ctx.fillText('· '+name+' INBOUND',x+40+ww,y+26)}
+      ctx.fillText('WARNING',x+40,y+26);const ww=ctx.measureText('WARNING ').width;ctx.font=`600 ${nar?13:14}px Oxanium,sans-serif`;ctx.fillStyle='#ff9d8a';ctx.fillText('· '+name+' INBOUND',x+40+ww,y+26);
+      if(hint){ctx.font=`700 ${nar?10.5:11.5}px Oxanium,sans-serif`;ctx.fillStyle=`rgba(255,207,90,${0.75+0.25*p})`;ctx.fillText(hint,x+40,y+45)}}
     else{panel(x,y,w,h);if(e.flash>0&&!e.dead){ctx.strokeStyle='rgba(239,90,79,.55)';ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(x+.5,y+.5,w-1,h-1,12);ctx.stroke()}
       cIcon(e.air?'gunship':'tank',x+11,y+6,15,'#ef5a4f');ctx.textAlign='left';ctx.font='800 12px Oxanium,sans-serif';ctx.fillStyle='#e6ead9';ctx.fillText(name,x+33,y+18);
       ctx.textAlign='right';ctx.font='600 11px Oxanium,sans-serif';ctx.fillStyle=e.dead?'#7fd35a':'#c9cfbd';
-      ctx.fillText(e.dead?'DESTROYED':visible(e)?f1(e.hp)+' / '+f1(e.max):'CLOSING · OUT OF SIGHT',x+w-11,y+18);
+      const rt=e.dead?'DESTROYED':visible(e)?f1(e.hp)+' / '+f1(e.max):'CLOSING · OUT OF SIGHT';ctx.fillText(rt,x+w-11,y+18);
+      if(!e.dead&&(e.sup||0)>0.3){const rw=ctx.measureText(rt).width;ctx.font='800 12px Oxanium,sans-serif';const tx=x+41+ctx.measureText(name).width;ctx.font='700 9px Oxanium,sans-serif';
+        const sw=ctx.measureText('SUPPRESSED').width+10;if(tx+sw<x+w-19-rw){rrect(tx,y+7,sw,14,4,`rgba(127,211,90,${0.18+0.2*e.sup})`);ctx.textAlign='left';ctx.fillStyle='#b9f09a';ctx.fillText('SUPPRESSED',tx+5,y+17.5)}}
       const bx=x+11,bw=w-22,by=y+25;rrect(bx,by,bw,8,4,'rgba(255,255,255,.08)');rrect(bx,by,bw*b.ghost,8,4,'rgba(255,214,190,.5)');
       if(r>0){const g=ctx.createLinearGradient(bx,0,bx+bw,0);g.addColorStop(0,'#b8322a');g.addColorStop(1,e.flash>0?'#ffb0a0':'#ef5a4f');rrect(bx,by,Math.max(8,bw*r),8,4,g)}}
     y+=h+6}
+  if(hintOn!==_prioHint){_prioHint=hintOn;$('prioBtn').classList.toggle('hint',hintOn)}
   ctx.globalAlpha=1;const by=bs.length&&nar?Math.round((y-6)*hk+6):0;   // screen px the intel card must clear on phones
   if(by!==_bossY){_bossY=by;$('intel').style.setProperty('--boss-y',by+'px')}}
 function drawPerkHud(nar,hk){const ps=perkList();if(!ps.length)return;const s=30,g=6,per=nar?6:10,below=$('prioBtn').classList.contains('on')&&!MOBILE,y0=below?112/hk:nar?64/hk:72;   // desktop: clear the TARGET pill
@@ -2227,7 +2328,7 @@ const SKY={
  gunheli:    {hp:150, spd:30, dmg:9, rate:1.9,rew:40, r:12,alt:26,col:'#8a8060'},
  strikejet:  {hp:110, spd:190,dmg:20,rate:0,  rew:45, r:11,alt:44,col:'#6f746c'},
  heavybomber:{hp:220, spd:64, dmg:12,rate:0,  rew:90, r:18,alt:60,col:'#5d625c'},
- airboss:    {hp:1400,spd:34, dmg:36,rate:3.2,rew:700,r:24,alt:66,col:'#3f4442'}};
+ airboss:    {hp:1250,spd:34, dmg:36,rate:3.2,rew:700,r:24,alt:66,col:'#3f4442'}};
 // first wave each threat can appear; drones start arriving in swarms at `swarm`; the gunship leads waves 25, 35, 45...
 const SKY_WAVE={drone:7,swarm:12,gunheli:14,strikejet:22,heavybomber:30,airboss:25};
 Object.assign(INTEL,{
@@ -2235,7 +2336,7 @@ Object.assign(INTEL,{
  gunheli:['Attack Helicopter',3,'Hovers at standoff range raking your walls with cannon and rockets. Ground weapons can\'t reach it: lock on, set TARGET to THREATS, or build AA.'],
  strikejet:['Strike Jet',4,'Strafing runs across the fort, then loops back for more. Too fast for most guns: flak, SAMs and CIWS track it.'],
  heavybomber:['Heavy Bomber',4,'Carpets the fort with bombs on every pass. Tough airframe: kill it before it lines up its run.'],
- airboss:['Heavy Gunship',5,'Armored flying battery circling the fort with a 105mm gun. Mass every AA weapon you have on it.']});
+ airboss:['Heavy Gunship',5,'Armored flying battery circling the fort with a 105mm gun. Flak and SAMs tear through its armor and suppress its guns. No AA? Lock on and set TARGET to THREATS.']});
 Object.assign(IC,{aagun:'M4 21h16M7 21l2-5h6l2 5M9 16l6-11M12 16l6-9M14 5l2-1.5M17 7l2-1',
   sam:'M4 21h16M6 21l3-5h6l3 5M8.5 16l8-11 2.5 2-8 10.5zM16.5 5l3-2-1 3.5',
   radar:'M12 21v-6M8 21h8M4.5 12.5a7 7 0 0 0 10-10zM9.5 7.5l3 3M15 3a6 6 0 0 1 6 6M15 6a3 3 0 0 1 3 3'});
@@ -2243,6 +2344,9 @@ Object.assign(US,{aagun:1.5,sam:1.6,radar:1.4});
 const aaDmg=l=>30*Math.pow(1.3,l-1),aaGuns=l=>l>=4?2:1,radarR=l=>l?30+18*l:0,aaMul=()=>(1+0.06*L('radar'))*(1+0.4*pk('flak'));
 const samDmg=l=>900*Math.pow(1.33,l-1),samCd=l=>Math.max(1.4,5*Math.pow(0.92,l-1)),samN=l=>Math.min(4,1+Math.floor(l/3));
 const AIR_BONUS={ciws:1.75,msl:1.5,squad:0.6};
+// Dedicated air defence (flak, SAMs, fighter AAMs) also strips a slice of the airframe's max HP on every hit, so AA stays decisive
+// against late heavy aircraft whose HP has long outgrown flat damage; each hit also adds suppression (see skySuppress).
+const flakPct=l=>0.002+0.00025*Math.min(l,30),samPct=l=>Math.min(0.12,0.035+0.006*l),AAM_PCT=0.015;
 const AA_UNIT={turret:1,heli:1,tesla:2,mlaunch:2};   // units whose guns reach aircraft; 2 = engages aircraft first
 const skyVision=()=>vision()+radarR(L('radar'));
 // ---- waves -------------------------------------------------------------------------------------------------------
@@ -2298,7 +2402,7 @@ function aiHeli(e,dt,h){const d=Math.hypot(e.x,e.y)||1,stand=Math.max(h+60,Math.
   if(!e.st){fly(e,0,0,2,e.spd,dt);if(d<=stand){e.st=1;e.orb=Math.atan2(e.y,e.x);e.dir=Math.random()<.5?1:-1}return}
   e.orb+=e.dir*e.spd*0.25/stand*dt;const R0=stand+Math.sin(e.t*0.6+e.wob)*12;glide(e,Math.cos(e.orb)*R0,Math.sin(e.orb)*R0,Math.min(1,dt*1.5),dt);
   e.ang+=Math.max(-2*dt,Math.min(2*dt,angTo(e.ang,Math.atan2(-e.y,-e.x))));
-  e.cd-=dt;if(e.cd<=0&&!e.burst){e.burst=6;e.cd=e.rate*(0.85+Math.random()*0.3)}
+  e.cd-=dt;if(e.cd<=0&&!e.burst){e.burst=6;e.cd=e.rate*(0.85+Math.random()*0.3)*(1+(e.sup||0))}
   if(e.burst){e.bt-=dt;if(e.bt<=0){e.bt=0.07;e.burst--;const[wx,wy]=wallPt(e.x,e.y,h,18),[nx,ny]=noseOf(e,16);e.fl=G.time;
     G.fx.push({k:'tracer',x:nx,y:ny,x2:wx,y2:wy,life:0.06,max:0.06,c:'#ff7a5a',w:1.3});spark(wx,wy,2,70,['#ffd08a','#fff'],0.2,1.2);sfx('mg',e.x,e.y);damageFort(e.dmg/6,e.type);if(!running)return}}
   e.rk-=dt;if(e.rk<=0){e.rk=4.2+Math.random()*1.6;for(const s of[-1,1]){const[wx,wy]=wallPt(e.x,e.y,h,30),ox=-Math.sin(e.ang)*8.6*s,oy=Math.cos(e.ang)*8.6*s;
@@ -2328,16 +2432,19 @@ function bomberRun(e,dt,h){flyby(e,'plane');e.bay=Math.max(0,e.bay-dt);const fal
 function aiBoss(e,dt,h){const Ro=Math.max(h+110,Math.min(vision()-e.r-26,h+230));
   if(!e.st){fly(e,0,0,1.2,e.spd*1.6,dt);if(Math.hypot(e.x,e.y)<=Ro+4){e.st=1;e.orb=Math.atan2(e.y,e.x)}return}
   e.orb-=e.spd/Ro*dt;glide(e,Math.cos(e.orb)*Ro,Math.sin(e.orb)*Ro,Math.min(1,dt*2),dt);e.ang+=Math.max(-dt,Math.min(dt,angTo(e.ang,e.orb-Math.PI/2)));
-  const gx=e.x+Math.cos(e.ang-Math.PI/2)*12,gy=e.y+Math.sin(e.ang-Math.PI/2)*12;
-  e.gt-=dt;if(e.gt<=0){e.gt=0.28;e.fl=G.time;const[wx,wy]=wallPt(e.x,e.y,h,h*0.9);G.fx.push({k:'tracer',x:gx,y:gy,x2:wx,y2:wy,life:0.07,max:0.07,c:'#ffb15a',w:1.8});
-    spark(wx,wy,3,90,['#ffd08a','#fff'],0.25,1.3);sfx('cannon',e.x,e.y);damageFort(e.dmg*0.08,e.type);if(!running)return}
-  e.cd-=dt;if(e.cd<=0){e.cd=e.rate;const[wx,wy]=wallPt(e.x,e.y,h,h);G.skyShots.push({k:'shell',x:gx,y:gy,tx:wx,ty:wy,t:0,dur:0.55,dmg:e.dmg,alt:e.alt,src:e.type});
+  const gx=e.x+Math.cos(e.ang-Math.PI/2)*12,gy=e.y+Math.sin(e.ang-Math.PI/2)*12,sup=e.sup||0;
+  // suppressed (flak/SAM hits): the crew jinks, so the cannon slows and sprays wide of the walls and the 105mm reloads slower
+  e.gt-=dt;if(e.gt<=0){e.gt=0.28*(1+1.6*sup);e.fl=G.time;let[wx,wy]=wallPt(e.x,e.y,h,h*0.9);const miss=Math.random()<sup*0.6;
+    if(miss){const a=Math.atan2(wy,wx)+(Math.random()-.5)*0.5,o=24+Math.random()*40;wx+=Math.cos(a)*o;wy+=Math.sin(a)*o}
+    G.fx.push({k:'tracer',x:gx,y:gy,x2:wx,y2:wy,life:0.07,max:0.07,c:'#ffb15a',w:1.8});sfx('cannon',e.x,e.y);
+    if(miss)puff(wx,wy,1,3,0.6,'110,96,72',8,0.4);else{spark(wx,wy,3,90,['#ffd08a','#fff'],0.25,1.3);damageFort(e.dmg*0.08,e.type);if(!running)return}}
+  e.cd-=dt;if(e.cd<=0){e.cd=e.rate*(1+1.2*sup);const[wx,wy]=wallPt(e.x,e.y,h,h);G.skyShots.push({k:'shell',x:gx,y:gy,tx:wx,ty:wy,t:0,dur:0.55,dmg:e.dmg,alt:e.alt,src:e.type});
     light(gx,gy,60,'255,190,110',0.12);sfx('howitzer',e.x,e.y,1.4)}}
 const SKY_AI={drone:aiDrone,gunheli:aiHeli,airboss:aiBoss,
   strikejet:(e,dt,h)=>aiPasses(e,dt,h,1.5,0.6,3,jetRun),heavybomber:(e,dt,h)=>aiPasses(e,dt,h,0.55,0.35,2,bomberRun)};
 // ---- per-tick update, driven from update() after the ground enemies -----------------------------------------------
 function updateSky(dt,h){
-  for(const e of G.sky){if(e.dead)continue;e.t+=dt;e.flash-=dt;
+  for(const e of G.sky){if(e.dead)continue;e.t+=dt;e.flash-=dt;if(e.sup)e.sup=Math.max(0,e.sup-dt*0.22);
     if(!seen()[e.type]&&visible(e))spotted(e.type);
     SKY_AI[e.type](e,dt,h);if(!running)return}
   const ds=G.sky.filter(e=>e.type==='drone'&&!e.dead);   // keep swarms loose so flak bursts read one by one
@@ -2361,19 +2468,20 @@ function updateAAD(dt){const tg=G.sky.length?skyTargets():[];
       if(u.burst){u.bt-=dt;if(u.bt<=0){u.bt=0.11;if(!--u.burst)u.cd=0.55;
         const s=US.aagun*bS(),side=u.side?1:-1,mx=u.x+Math.cos(u.ang)*13*s-Math.sin(u.ang)*2.6*side*s,my=u.y+Math.sin(u.ang)*13*s+Math.cos(u.ang)*2.6*side*s;
         const d=Math.hypot(t.x-mx,t.y-my),T=d/720,sp=d*0.035;u.fl=G.time;u.side^=1;   // lead the target, a little dispersion with range
-        G.flak.push({x:mx,y:my,tx:t.x+t.vx*T+(Math.random()-.5)*sp,ty:t.y+t.vy*T+(Math.random()-.5)*sp,t:0,dur:Math.max(0.03,T),dmg:aaDmg(L('aagun'))*aaMul()});
+        G.flak.push({x:mx,y:my,tx:t.x+t.vx*T+(Math.random()-.5)*sp,ty:t.y+t.vy*T+(Math.random()-.5)*sp,t:0,dur:Math.max(0.03,T),dmg:aaDmg(L('aagun'))*aaMul(),pct:flakPct(L('aagun'))*aaMul()});
         light(mx,my,20,'255,200,120',0.05);sfx('cannon',u.x,u.y)}}}
     else if(u.k==='sam'){u.cd-=dt;if(!tg.length)continue;const s=[...tg].sort((a,b)=>b.hp-a.hp);
       u.ang+=Math.max(-3*dt,Math.min(3*dt,angTo(u.ang,Math.atan2(s[0].y-u.y,s[0].x-u.x))));
       if(u.cd<=0){const l=L('sam');u.cd=samCd(l);u.fl=G.time;
-        for(let i=0;i<samN(l);i++){const e=s[i%s.length],a=u.ang+(Math.random()-.5)*0.6;G.sams.push({x:u.x,y:u.y,h:a,v:90,vx:0,vy:0,tgt:e,tx:e.x,ty:e.y,life:6,dmg:samDmg(l)*aaMul(),delay:i*0.25,spd:340,acc:700,turn:5})}
+        const focus=s[0].type==='airboss'||s[0].type==='heavybomber';   // a heavy airframe draws the whole salvo
+        for(let i=0;i<samN(l);i++){const e=focus?s[0]:s[i%s.length],a=u.ang+(Math.random()-.5)*0.6;G.sams.push({x:u.x,y:u.y,h:a,v:90,vx:0,vy:0,tgt:e,tx:e.x,ty:e.y,life:6,dmg:samDmg(l)*aaMul(),pct:samPct(l)*aaMul(),delay:i*0.25,spd:340,acc:700,turn:5})}
         puff(u.x,u.y,6,6,1.2,'170,165,155',25,0.5);sfx('launch',u.x,u.y)}}}
-  for(const f of G.flak){f.t+=dt;if(f.t>=f.dur){f.done=true;skyBurst(f.tx,f.ty,16,f.dmg)}}G.flak=G.flak.filter(f=>!f.done);
+  for(const f of G.flak){f.t+=dt;if(f.t>=f.dur){f.done=true;skyBurst(f.tx,f.ty,16,f.dmg,f.pct,0.04)}}G.flak=G.flak.filter(f=>!f.done);
   // fighter CAP: while fighters are on strength, a pair sweeps past and looses air-to-air missiles at the toughest aircraft
   const fl=L('fighter');if(fl&&L('airstrip')){G.capT-=dt;if(G.capT<=0){if(tg.length){G.capT=Math.max(4,14*Math.pow(0.9,fl-1))*stripMul();
       G.caps.push({a:Math.random()*TAU,o:(Math.random()-.5)*160,t:0,n:Math.min(4,1+Math.floor(fl/2)),fired:0});if(G.time-G.jetSnd>1.4){G.jetSnd=G.time;sfx('jet')}}else G.capT=1}}
   for(const c of G.caps){c.t+=dt;if(!c.fired&&c.t>=0.9){c.fired=1;const p=capPos(c),s=skyTargets().sort((a,b)=>b.hp-a.hp);
-    for(let i=0;i<c.n&&s.length;i++){const e=s[i%s.length];G.sams.push({x:p.x,y:p.y,h:c.a,v:260,vx:0,vy:0,tgt:e,tx:e.x,ty:e.y,life:4,dmg:jetDmg(fl)*1.6,delay:i*0.15,spd:420,acc:900,turn:6,aam:1})}
+    for(let i=0;i<c.n&&s.length;i++){const e=s[i%s.length];G.sams.push({x:p.x,y:p.y,h:c.a,v:260,vx:0,vy:0,tgt:e,tx:e.x,ty:e.y,life:4,dmg:jetDmg(fl)*1.6,pct:AAM_PCT,delay:i*0.15,spd:420,acc:900,turn:6,aam:1})}
     if(s.length)sfx('launch',p.x,p.y)}}
   G.caps=G.caps.filter(c=>c.t<2.6);
   for(const m of G.sams){if(m.delay>0){m.delay-=dt;continue}m.life-=dt;
@@ -2381,15 +2489,20 @@ function updateAAD(dt){const tg=G.sky.length?skyTargets():[];
     const dx=m.tx-m.x,dy=m.ty-m.y,d=Math.hypot(dx,dy)||1;   // turn-rate-limited seeker: tight enough to catch a jetting target
     m.h+=Math.max(-m.turn*dt,Math.min(m.turn*dt,angTo(m.h,Math.atan2(dy,dx))));m.v=Math.min(m.spd,m.v+m.acc*dt);m.vx=Math.cos(m.h)*m.v;m.vy=Math.sin(m.h)*m.v;
     m.x+=m.vx*dt;m.y+=m.vy*dt;if(Math.random()<.8)puff(m.x,m.y,1,2.4,0.9,'205,205,200',4,0.4);
-    if(m.tgt&&d<m.tgt.r+6+m.v*dt){m.done=true;hurtEnemy(m.tgt,m.dmg,false);skyBurst(m.x,m.y,20,m.dmg*0.25)}else if(m.life<=0||(!m.tgt&&d<8)){m.done=true;skyBurst(m.x,m.y,14,0)}}
+    if(m.tgt&&d<m.tgt.r+6+m.v*dt){m.done=true;skySuppress(m.tgt,0.3);hurtEnemy(m.tgt,m.dmg+m.tgt.max*m.pct,false);skyBurst(m.x,m.y,20,m.dmg*0.25)}else if(m.life<=0||(!m.tgt&&d<8)){m.done=true;skyBurst(m.x,m.y,14,0)}}
   G.sams=G.sams.filter(m=>!m.done)}
 const capPos=c=>{const s=-950+800*c.t;return{x:Math.cos(c.a)*s-Math.sin(c.a)*c.o,y:Math.sin(c.a)*s+Math.cos(c.a)*c.o}};
 // ---- damage + effects (air bursts only ever touch G.sky; aircraft ordnance only ever touches the fort) -------------
-function skyBurst(x,y,r,dmg){if(dmg)for(const e of G.sky)if(!e.dead&&Math.hypot(e.x-x,e.y-y)<r+e.r)hurtEnemy(e,dmg,false);
+function skyBurst(x,y,r,dmg,pct=0,sup=0){if(dmg)for(const e of G.sky)if(!e.dead&&Math.hypot(e.x-x,e.y-y)<r+e.r){if(sup)skySuppress(e,sup);hurtEnemy(e,dmg+e.max*pct,false)}
   puff(x,y,2,5,0.9,'46,44,40',8,0.6);spark(x,y,4,110,['#ffe7a0','#ff9a3a'],0.25,1.3);light(x,y,26,'255,190,110',0.08)}
 function skyBlast(x,y,k){fireball(x,y,22*k,0.4+0.15*k);ring(x,y,34*k,0.35,'255,220,170',1.5+k);spark(x,y,Math.round(8+8*k),150*k,['#fff6d0','#ffc04a','#ff7a1a'],0.45,1.5);
   puff(x,y,Math.round(2+3*k),9*k,1.4+k*0.5,'58,52,46',14*k,0.55);decal(x,y,'scorch',12*k);light(x,y,70*k,'255,165,70',0.3);sfx('boom',x,y,0.5+0.7*k);if(k>=0.9)shake(2*k)}
 function skyImpact(s){const k=s.k==='shell'?1.3:s.k==='bomb'?1:0.6;skyBlast(s.tx,s.ty,k);if(s.dmg&&boxD(s.tx,s.ty)<=blockHalf()+4)damageFort(s.dmg,s.src)}
+// AA suppression 0..1 (decays ~0.22/s): gunships and attack helicopters fire slower while under flak; big hits make the gunship dump flares
+function skySuppress(e,k){if(e.type!=='airboss'&&e.type!=='gunheli')return;const was=e.sup||0;e.sup=Math.min(1,was+k*(e.type==='airboss'?1:0.7));
+  if(k>=0.25&&e.type==='airboss'&&G.time-(e.flareT||-9)>1.2){e.flareT=G.time;const bx=-Math.cos(e.ang),by=-Math.sin(e.ang);
+    for(let i=0;i<8;i++){const s=(i%2?1:-1)*(0.6+i*0.12);G.parts.push({x:e.x+bx*20,y:e.y+by*20,vx:bx*70-by*s*60+(Math.random()-.5)*20,vy:by*70+bx*s*60+(Math.random()-.5)*20,life:0.9+Math.random()*0.5,max:1.4,c:i%3?'#fff4c8':'#ffb347',sz:2.6,glow:1})}
+    light(e.x+bx*24,e.y+by*24,70,'255,220,150',0.35)}}
 function skyHit(e,crit){spark(e.x,e.y,crit?6:2,crit?150:100,crit?['#fff','#ffe07a']:['#ffe7a0','#c9ccd0'],0.25,1.3);if(crit)light(e.x,e.y,22,'255,230,140',0.1)}
 // shot down: the airframe tumbles out of the sky trailing smoke and burns in where it lands (no ground damage)
 function airDown(e){const big=e.type==='airboss'||e.type==='heavybomber';
@@ -3002,7 +3115,7 @@ function draw(){
   // fx
   drawSmoke();drawParts();drawFx();
   for(const s of G.shells){ctx.strokeStyle='rgba(255,80,60,.9)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(s.x,s.y,s.r*(0.3+s.t*0.8),0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(s.x-5,s.y);ctx.lineTo(s.x+5,s.y);ctx.moveTo(s.x,s.y-5);ctx.lineTo(s.x,s.y+5);ctx.stroke()}
-  drawArtyShells();
+  drawArtyShells();drawNades();
   for(const b of G.bombs){ctx.fillStyle='rgba(255,60,40,.35)';ctx.beginPath();ctx.arc(b.x,b.y,6,0,7);ctx.fill()}
   drawFog(V);
   drawLights();
@@ -3016,7 +3129,7 @@ function draw(){
     ctx.save();ctx.translate(x+34,y+34);ctx.rotate(a);ctx.fillStyle='rgba(0,0,0,.35)';drawPlane();ctx.restore();
     ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.fillStyle='#8a9a7a';drawPlane();ctx.restore()}
   drawHelisOps();drawJetsLow(true);drawAirTop();drawFuelBars();
-  drawFloats();
+  drawFloats();drawNadeAim();
   if(G.airArmed||G.airAim){const lw=Math.max(1.5,2/sc);ctx.strokeStyle='#ff6a3a';ctx.fillStyle='rgba(255,106,58,.25)';ctx.lineWidth=lw;
     if(G.airAim){const a=G.airAim,dx=mouse.wx-a.x,dy=mouse.wy-a.y,dd=Math.hypot(dx,dy),ok=dd*sc>14,ang=ok?Math.atan2(dy,dx):0,n=Math.min(16,5+L('air')),len=(n-1)*24;
       const ux=Math.cos(ang),uy=Math.sin(ang);ctx.setLineDash([6/sc,5/sc]);
@@ -3058,6 +3171,9 @@ function draw(){
   if(G.bannerT>0){const a=Math.min(1,G.bannerT),y=VW<640?VH*0.44:VH*0.22;ctx.globalAlpha=a;ctx.font=`800 ${VW<640?22:Math.round(Math.min(32,VW/34))}px Oxanium,sans-serif`;ctx.textAlign='center';
     ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillText(G.banner,VW/2+2,y+3);ctx.fillStyle='#ffd76a';ctx.fillText(G.banner,VW/2,y);
     const w=ctx.measureText(G.banner).width;rrect(VW/2-w/2,y+12,w*a,3,2,'#e3b53c');ctx.globalAlpha=1}
+  if(G.nadeArmed){const y=nar?VH-262/hk:VH-(G.wallMax?112:78);   // phones: clear the FRAG / TARGET / LOCK ON row
+    ctx.font='700 13px Oxanium,sans-serif';ctx.textAlign='center';const t=MOBILE?'TOUCH A SPOT · LIFT TO THROW':'CLICK TO THROW · G OR ESC CANCELS',w=ctx.measureText(t).width+28;
+    rrect(VW/2-w/2,y-17,w,26,13,'rgba(120,35,20,.85)');ctx.fillStyle='#ffd0c4';ctx.fillText(t,VW/2,y+1)}
   if(G.wave===1&&G.time<9){ctx.fillStyle='#e6ead9';ctx.font='500 15px Inter,sans-serif';ctx.textAlign='center';ctx.fillText(MOBILE?'Tap an enemy, or the LOCK ON button, to shoot':'Click an enemy to lock on · hold to keep firing',VW/2,(VW<640?VH*0.44:VH*0.22)+40)}
   VW=_VW;VH=_VH;
 }
@@ -3078,18 +3194,20 @@ function drawPlane(){if(S.set.gfx==='high'){drawPlaneHQ();return}ctx.scale(2.2,2
 // ================= INPUT =================
 const MOBILE=matchMedia('(pointer:coarse)').matches&&matchMedia('(hover:none)').matches;
 if(MOBILE){document.body.classList.add('mobile');
-  $('helpTxt').innerHTML='<kbd>Tap</kbd> an enemy to lock on · <kbd>Hold</kbd> to keep firing<br><kbd>LOCK ON</kbd> grabs a target · <kbd>TARGET</kbd> sets what every gun shoots first<br><kbd>Tap</kbd> '+ic('scav',16)+' crates for cash · <kbd>'+ic('air',14)+'</kbd> button for airstrikes<br>Hold waves 3, 5, 10, 15... to earn a Field Commendation: pick one of three directives for the run.<br>Upgrades unlock other upgrades, and reaching deeper waves opens new tech.';}
+  $('helpTxt').innerHTML='<kbd>Tap</kbd> an enemy to lock on · <kbd>Hold</kbd> to keep firing<br><kbd>LOCK ON</kbd> grabs a target · <kbd>TARGET</kbd> sets what every gun shoots first<br><kbd>Tap</kbd> '+ic('scav',16)+' crates for cash · <kbd>FRAG</kbd> then a spot throws a grenade<br><kbd>'+ic('air',14)+'</kbd> button for airstrikes<br>Hold waves 3, 5, 10, 15... to earn a Field Commendation: pick one of three directives for the run.<br>Upgrades unlock other upgrades, and reaching deeper waves opens new tech.';}
 if(MOBILE)$('pauseHelp').textContent='Tap Resume to continue';
-$('aimBtn').onclick=()=>{if(!running||paused)return;if(G.airArmed){G.airArmed=false;return}const t=nearestVisible(G.sold[0]);if(t)G.sold[0].tgt=t};   // locks by the current target doctrine
+$('aimBtn').onclick=()=>{if(!running||paused)return;if(G.airArmed||G.nadeArmed){G.airArmed=G.nadeArmed=false;return}const t=nearestVisible(G.sold[0]);if(t)G.sold[0].tgt=t};   // locks by the current target doctrine
 function toWorld(e){mouse.x=e.clientX;mouse.y=e.clientY;mouse.wx=(e.clientX-VW/2)/sc;mouse.wy=(e.clientY-VH/2)/sc}
-cv.addEventListener('mousemove',toWorld);
+cv.addEventListener('mousemove',e=>{toWorld(e);mouse.in=true});cv.addEventListener('mouseleave',()=>{mouse.in=false});
 cv.addEventListener('mousedown',e=>{if(!running||paused||e.button!==0)return;toWorld(e);mouse.down=true;
+  if(G.nadeArmed){if(!MOBILE)throwNade(mouse.wx,mouse.wy);return}   // phones throw on release, once the finger has seen the blast circle
   if(G.airArmed){G.airAim={x:mouse.wx,y:mouse.wy};return}
   for(const c of G.crates)if(Math.hypot(c.x-mouse.wx,c.y-mouse.wy)<Math.max(14,(MOBILE?30:16)/sc)){c.life=0;fxCrate(c);S.bank+=c.val;G.earned+=c.val;float(c.x,c.y-10,'+$'+c.val,'#ffe066',13);sfx('cash');return}
   const t=enemyAt(mouse.wx,mouse.wy,Math.max(24,(MOBILE?36:18)/sc));if(t)G.sold[0].tgt=t});
 function airRelease(){if(!G||!G.airAim)return;const a=G.airAim,dx=mouse.wx-a.x,dy=mouse.wy-a.y;G.airAim=null;
   callAir(a.x,a.y,Math.hypot(dx,dy)*sc>14?Math.atan2(dy,dx):undefined)}
 addEventListener('mouseup',()=>{mouse.down=false;airRelease()});
+function nadeRelease(){if(G&&G.nadeArmed&&running&&!paused)throwNade(mouse.wx,mouse.wy)}
 const tm=(type,t)=>new MouseEvent(type,{clientX:t.clientX,clientY:t.clientY,button:0});
 // two-finger pinch = camera zoom (centered on the fort); one finger keeps aiming/firing
 let pinch=null;const tdist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
@@ -3097,23 +3215,24 @@ const setZoom=z=>{if(G)G.uZoom=Math.max(1,Math.min(4,z))};
 cv.addEventListener('touchstart',e=>{e.preventDefault();if(e.touches.length>=2){pinch={d:tdist(e.touches),z:G?G.uZoom||1:1};mouse.down=false;if(G){G.airAim=null;G.sold[0].tgt=G.sold[0].tgt}return}
   if(pinch)return;cv.dispatchEvent(tm('mousedown',e.changedTouches[0]))},{passive:false});
 cv.addEventListener('touchmove',e=>{e.preventDefault();if(pinch&&e.touches.length>=2){setZoom(pinch.z*tdist(e.touches)/pinch.d);return}if(pinch)return;cv.dispatchEvent(tm('mousemove',e.changedTouches[0]))},{passive:false});
-cv.addEventListener('touchend',e=>{e.preventDefault();if(pinch){if(!e.touches.length)pinch=null;mouse.down=false;return}mouse.down=e.touches.length>0;if(!e.touches.length)airRelease()},{passive:false});
+cv.addEventListener('touchend',e=>{e.preventDefault();if(pinch){if(!e.touches.length)pinch=null;mouse.down=false;return}const was=mouse.down;mouse.down=e.touches.length>0;if(!e.touches.length){airRelease();if(was)nadeRelease()}},{passive:false});
 cv.addEventListener('touchcancel',()=>{mouse.down=false;pinch=null;if(G)G.airAim=null});
 cv.addEventListener('wheel',e=>{if(!G||!running)return;e.preventDefault();setZoom((G.uZoom||1)*Math.exp(-e.deltaY*0.0015))},{passive:false});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 $('airBtn').onclick=()=>toggleAir();
+$('nadeBtn').onclick=()=>nadeButton();
 const SPEEDS=[1,1.5,2,2.5,3,3.5,4];
 function syncSpeedBtn(){const b=$('speedBtn'),v=G?G.simSpeed||1:1;b.textContent=v+'×';b.classList.toggle('fast',v>1);b.style.display=L('speed')?'block':'none'}
 function cycleSpeed(){if(!running||!L('speed'))return;const opts=SPEEDS.slice(0,L('speed')+1),i=opts.indexOf(G.simSpeed||1);G.simSpeed=opts[(i+1)%opts.length];S.set.lastSpeed=G.simSpeed;save();syncSpeedBtn();sfx('buy')}
 $('speedBtn').onclick=()=>cycleSpeed();
 const prioShown=()=>!!G&&(L('auto')>0||G.sold.length>1||G.units.length>0||G.aa.length>0||G.air.some(u=>u.k==='gunship'));
-function syncPrioBtn(){const b=$('prioBtn'),p=prio(),on=prioShown();b.className='btn'+(on?' on '+p:'');if(!on)return;b.title='Target priority (T): '+PRIO_TIP[p];
+function syncPrioBtn(){const b=$('prioBtn'),p=prio(),on=prioShown();b.className='btn'+(on?' on '+p:'')+(_prioHint?' hint':'');if(!on)return;b.title='Target priority (T): '+PRIO_TIP[p];
   b.innerHTML=ic(p==='near'?'dmg':p==='threat'?'threat':'armor',16)+(MOBILE?'':'<small>TARGET</small>')+PRIO_NAME[p]}
 function cyclePrio(){if(!running||paused||!prioShown())return;S.set.prio=PRIO[(PRIO.indexOf(prio())+1)%PRIO.length];save();syncPrioBtn();sfx('buy');
   float(0,-fortHalf()-26,'TARGETING: '+PRIO_NAME[prio()],prio()==='threat'?'#ff9d8a':'#ffcf5a',13)}
 $('prioBtn').onclick=()=>cyclePrio();
-function toggleAir(){if(!running||paused||!L('air'))return;if(G.airArmed)G.airArmed=false;else if(G.airT<=0)G.airArmed=true}
+function toggleAir(){if(!running||paused||!L('air'))return;if(G.airArmed)G.airArmed=false;else if(G.airT<=0){G.airArmed=true;G.nadeArmed=false}}
 function setPause(p){if(!running)return;paused=p;mouse.down=false;$('overlay').classList.toggle('on',p);
   if(p)$('pausePerks').innerHTML=perkChips();if(!p)$('settings').classList.remove('on');const b=$('abandonBtn');delete b.dataset.arm;b.textContent='Retreat — end run'}
 $('pauseBtn').onclick=()=>setPause(true);$('resumeBtn').onclick=()=>setPause(false);
@@ -3121,8 +3240,8 @@ $('abandonBtn').onclick=e=>{const b=e.currentTarget;if(!b.dataset.arm){b.dataset
 addEventListener('keydown',e=>{if(!running||e.repeat)return;
   if($('settings').classList.contains('on')){if(e.code==='Escape')closeSettings();return}
   if(G.choosing){if(/^(Digit|Numpad)[1-3]$/.test(e.code))pickPerk(+e.code.slice(-1)-1);return}
-  if(e.code==='Escape'){if(G.airArmed)G.airArmed=false;else setPause(!paused)}
-  if(e.code==='KeyQ')toggleAir();if(e.code==='KeyF')cycleSpeed();if(e.code==='KeyT')cyclePrio();if(e.code==='KeyP')setPause(!paused)});
+  if(e.code==='Escape'){if(G.airArmed)G.airArmed=false;else if(G.nadeArmed)G.nadeArmed=false;else setPause(!paused)}
+  if(e.code==='KeyQ')toggleAir();if(e.code==='KeyF')cycleSpeed();if(e.code==='KeyT')cyclePrio();if(e.code==='KeyG')nadeKey();if(e.code==='KeyP')setPause(!paused)});
 addEventListener('blur',()=>{mouse.down=false;if(S.set.blurPause)setPause(true)});
 // persist mid-run earnings (phones kill backgrounded apps without warning)
 function persist(){if(G&&running&&G.wave>S.best)S.best=G.wave;save()}
