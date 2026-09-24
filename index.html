@@ -2001,11 +2001,11 @@ function drawLogiHud(){const D=G.depot,nar=VW<640;
 // Ground vehicles roam off their lanes to hunt (logiDrive 'roam' / 'return'), leashed inside the sight line and kept off the fort,
 // the depot, the sites and the jet apron; below FALLBACK of their HP they break off, hold the lane and wait for repairs.
 const FC={
- truck:  {hp:140, g:1.24,arm:0.2, n:'GUN TRUCK',  r:12,span:58, fix:16,line:'truck',  cls:1,adv:5},
- apc:    {hp:360, g:1.24,arm:0.4, n:'APC',        r:14,span:68, fix:24,line:'apc',    cls:2,adv:5},
+ truck:  {hp:180, g:1.24,arm:0.2, n:'GUN TRUCK',  r:12,span:58, fix:16,line:'truck',  cls:1,adv:5},
+ apc:    {hp:420, g:1.24,arm:0.4, n:'APC',        r:14,span:68, fix:24,line:'apc',    cls:2,adv:5},
  tank:   {hp:760, g:1.25,arm:0.55,n:'TANK',       r:15,span:112,fix:32,line:'tank',   cls:3,adv:4},
- heli:   {hp:300, g:1.24,arm:0.3, n:'HELICOPTER', r:14,span:84, fix:22,line:'heli',   cls:1,adv:4,air:1},
- jet:    {hp:240, g:1.24,arm:0.2, n:'FIGHTER JET',r:14,span:74, fix:28,line:'fighter',cls:2,adv:3,air:1},
+ heli:   {hp:380, g:1.24,arm:0.3, n:'HELICOPTER', r:14,span:84, fix:22,line:'heli',   cls:1,adv:4,air:1},
+ jet:    {hp:400, g:1.24,arm:0.2, n:'FIGHTER JET',r:14,span:74, fix:28,line:'fighter',cls:2,adv:3,air:1},
  gunship:{hp:1500,g:1.25,arm:0.35,n:'GUNSHIP',    r:26,span:156,fix:44,line:'gunship',cls:3,adv:3,air:1}};
 // enemy source -> [damage x vs craft, armour penetration 0..1]. e.dmg is tuned against the walls; anti-armour weapons hit vehicles harder
 const EVH={grunt:[0.5,0],runner:[0.5,0],brute:[0.7,0],shooter:[0.8,0.05],bomber:[1.2,0.7],boss:[2,0.9],rpg:[2.6,0.8],mortar:[1.4,0.4],
@@ -2013,8 +2013,8 @@ const EVH={grunt:[0.5,0],runner:[0.5,0],brute:[0.7,0],shooter:[0.8,0.05],bomber:
   drone:[1.2,0.6],gunheli:[1,0.3],strikejet:[1,0.5],heavybomber:[1,0.6],airboss:[1,0.6]},EVH0=[1,0.3];
 const AIRHIT={technical:1,apc:1,ifv:1,rpg:1};   // ground weapons that can reach a low helicopter or a strafing jet
 const FALLBACK=0.35,ABORT=0.3,WAVE_PATCH=0.2,FC_DMG=1;
-// HP rides on the line's level and research tier (tiers track enemy firepower, so they count at x^0.8)
-const fcHpAt=k=>{const c=FC[k],l=Math.max(1,L(c.line));return Math.round(c.hp*Math.pow(c.g,l-1)*late(c.line,l,c.g)*Math.pow(rMult(c.line),0.8))};
+// HP rides on the line's level and research tier. Tier multipliers are sized against enemy HP, which outgrows enemy firepower, so they count at x^0.3
+const fcHpAt=k=>{const c=FC[k],l=Math.max(1,L(c.line));return Math.round(c.hp*Math.pow(c.g,l-1)*late(c.line,l,c.g)*Math.pow(rMult(c.line),0.3))};
 const fcArm=k=>Math.min(0.8,FC[k].arm+0.035*rTier(FC[k].line)+(k==='truck'&&sg('truck','armor')?0.1:0));
 // sites: bays 1,1,2,2,3,3,4 by level; class cap (1 light .. 3 heavy, 5 = top research tiers); rebuild seconds; field team Lv 4, hot-pit Lv 3
 const bayN=l=>l?Math.min(4,Math.ceil(l/2)):0,siteCls=l=>l>=5?5:Math.min(3,l),fixT=(k,l)=>FC[k].fix*Math.pow(0.88,Math.max(0,l-1));
@@ -2033,13 +2033,13 @@ function fcInit(){G.fw=[];G.crash=[];G._cg=[];G._ca=[];G._vz=[];G.gsAway=[];G.cs
   G.mp=L('rfac')?mkSite('rfac'):null;G.hg=L('hangar')&&L('airstrip')&&L('walls')?mkSite('hangar'):null}
 // Motor pool west of the fort beyond the outer lane (2 x rows grid of bays, queue hardstand north, wreckers south);
 // hangar south-west beside the runway's west end (one column of service pads under an open truss, workshop behind).
-function mkSite(id){const air=id==='hangar',l=L(id),n=bayN(l),H=laneOuter(),mx=Math.round(depotHpAt(L('darmor'))*(air?0.9:0.75));
+function mkSite(id){const air=id==='hangar',l=L(id),n=bayN(l),H=laneOuter(),mx=Math.round(depotHpAt(L('darmor'))*(air?1.5:1.4));   // bermed yards: tougher than the fuel farm, and Depot Hardening counts
   const s={id,air,lv:l,hp:mx,max:mx,dead:false,hitT:0,sfxT:0,wave:G.wave,bays:[],q:[],crews:[],guns:[],dl:0};
   if(!air){const rows=Math.ceil(n/2);s.rows=rows;s.x=-(H+82);s.y=-30;s.hw=58;s.top=-rows*31-74;s.bot=rows*31+44;
     for(let i=0;i<n;i++)s.bays.push({x:s.x+(i%2?-26:26),y:s.y+(Math.floor(i/2)-(rows-1)/2)*62,a:-Math.PI/2,w:null,hoist:0});
     for(let i=0;i<2;i++)s.q.push({x:s.x+(i?-26:26),y:s.y-rows*31-40,a:-Math.PI/2});
     const nc=Math.min(3,1+Math.floor(l/3));for(let i=0;i<nc;i++){const hx=s.x+26-i*26,hy=s.y+rows*31+24;s.crews.push({i,x:hx,y:hy,hx,hy,ang:-Math.PI/2,st:'home',w:null,path:null,t:0,tr:0})}}
-  else{const g=rwyGeo(),mpB=G.mp?G.mp.y+G.mp.bot:-1e9;s.rows=n;s.x=-(H+70);s.hw=62;s.top=-n*32-74;s.bot=n*32+44;s.y=Math.max(g.cy,mpB+30-s.top);
+  else{const g=rwyGeo(),mpB=G.mp?G.mp.y+G.mp.bot:-1e9;s.rows=n;s.x=-(H+86);s.hw=62;s.top=-n*32-74;s.bot=n*32+44;s.y=Math.max(g.cy,mpB+30-s.top);
     for(let i=0;i<n;i++)s.bays.push({x:s.x+12,y:s.y+(i-(n-1)/2)*64,a:0,w:null,hoist:0});
     s.q.push({x:s.x+12,y:s.y-n*32-38,a:0});
     const nc=Math.min(2,1+Math.floor(l/4));for(let i=0;i<nc;i++){const hx=s.x+20-i*30,hy=s.y+n*32+22;s.crews.push({i,x:hx,y:hy,hx,hy,ang:-Math.PI/2,st:'home',w:null,path:null,t:0,tr:0})}}
@@ -2215,7 +2215,7 @@ function roamDrive(u,dt,burn){u.fuel=Math.max(0,u.fuel-burn);if(u.fuel<=0){u.fue
   u.rT-=dt;if(u.rT<=0){u.rT=0.4+R()*0.25;u.tgt=u.hold||u.fuel<FUEL_LOW||!combatOn()?null:roamPick(u)}
   const t=u.tgt;if(!t||t.dead){u.fs='return';u.rf=null;return}
   const dx=u.x-t.x,dy=u.y-t.y,d=Math.hypot(dx,dy)||1,H=VEH_HOLD[u.k];
-  if(d<=H*1.08){u.ang=turnTo(u.ang,Math.atan2(-dy,-dx),0.9*dt);fcSep(u,dt);fcPushOut(u,10);fcLeash(u,FC[u.k].r+8);return}   // in position: hold and fight
+  if(d<=H*1.08){u.ang=turnTo(u.ang,Math.atan2(-dy,-dx),0.9*dt);fcSep(u,dt);fcPushOut(u,FC[u.k].r+4);fcLeash(u,FC[u.k].r+8);return}   // in position: hold and fight
   const a=Math.atan2(dy,dx)+u.flank;vehGo(u,t.x+Math.cos(a)*H,t.y+Math.sin(a)*H,VEH_V[u.k],dt)}
 function returnDrive(u,lane,dt,burn){u.fuel=Math.max(u.fuel>0?RESERVE:0,u.fuel-burn*0.8);
   u.rfT=(u.rfT||0)-dt;if(u.rf==null||u.rfT<=0){u.rfT=1;u.rf=laneNearF(lane,u.x,u.y)}
@@ -2229,7 +2229,7 @@ function vehGo(u,gx,gy,v,dt){const m=FC[u.k].r+8,gd=Math.hypot(gx,gy),mx=sight()
   const wp=fcDetour(u.x,u.y,gx,gy)[0]||{x:gx,y:gy},dx=wp.x-u.x,dy=wp.y-u.y,d=Math.hypot(dx,dy);
   if(d<3&&wp.x===gx&&wp.y===gy)return true;
   const want=Math.atan2(dy,dx);u.ang=turnTo(u.ang,want,3*dt);const al=Math.max(0.3,Math.cos(wrapA(want-u.ang))),s=Math.min(d,v*al*dt);
-  u.x+=dx/(d||1)*s;u.y+=dy/(d||1)*s;u.tr+=s*0.5;fcSep(u,dt);fcPushOut(u,10);fcLeash(u,m);return false}
+  u.x+=dx/(d||1)*s;u.y+=dy/(d||1)*s;u.tr+=s*0.5;fcSep(u,dt);fcPushOut(u,FC[u.k].r+4);fcLeash(u,m);return false}
 // formation spacing: vehicles off the lanes keep a hull-length apart
 function fcSep(u,dt){for(const o of G._cg){if(o===u||o.dead)continue;const dx=u.x-o.x,dy=u.y-o.y,d=Math.hypot(dx,dy),mn=(FC[u.k].r+FC[o.ck].r)*1.25;
   if(d<mn&&d>0.01){const p=Math.min(mn-d,60*dt);u.x+=dx/d*p;u.y+=dy/d*p}}}
@@ -2258,7 +2258,7 @@ function pickCraft(e){const cg=G._cg,ca=G._ca;if(!cg.length&&!ca.length)return n
 // enemies near a site may divert onto it (like the depot); true when it handled this enemy's move/attack this tick
 function siteEnemy(e,spd,dt){if(e.air||e.nodep||!G.fw)return false;let s=e.fsite;
   if(s===undefined){let bd=1e9;for(const q of[G.mp,G.hg]){if(!q||q.dead)continue;const d=Math.hypot(q.x-e.x,q.y-e.y)-q.rad;if(d<bd){bd=d;s=q}}
-    if(!s||bd>(e.range||0)+60||!visible(e))return false;s=e.fsite=R()<(e.range?0.4:0.25)?s:null}
+    if(!s||bd>(e.range||0)+60||!visible(e))return false;s=e.fsite=R()<(e.range?0.22:0.12)?s:null}
   if(!s)return false;if(s.dead){e.fsite=null;return false}
   const cx=Math.max(s.rect.x0,Math.min(s.rect.x1,e.x)),cy=Math.max(s.rect.y0,Math.min(s.rect.y1,e.y)),dx=cx-e.x,dy=cy-e.y,d=Math.hypot(dx,dy)||1;
   for(const mi of G.mines)if(!mi.used&&!e.dead&&Math.hypot(mi.x-e.x,mi.y-e.y)<e.r+6+sgMineR())sigMine(mi,e);
