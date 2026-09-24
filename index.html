@@ -5379,8 +5379,8 @@ function dayFrame(){const on=!!(G&&S.set.dayNight&&G.todT!=null);DN.on=on;
   // After dusk a faint moon takes over from the other side (the swap happens while both are at zero strength).
   const el=Math.sin(Math.PI*(h-6)/12),day=h>=5.5&&h<18.8,ph=day?(h-12)/6:(((h+12)%24)-12)/6,rot=Math.max(-1.2,Math.min(1.2,ph))*0.73;
   SH.on=HQ;SH.c=Math.cos(rot);SH.s=Math.sin(rot);
-  if(day){const e=Math.max(0.05,el);SH.len=Math.min(2.2,0.85/Math.pow(Math.max(.28,e),.95));SH.st=1+Math.max(0,SH.len-1)*0.6;SH.air=0.8+0.5*(1-e);SH.a=sstep(-.02,.22,el)*(1+.2*sstep(1.2,2.6,SH.len))}
-  else{SH.len=1.5;SH.st=1.25;SH.air=1;SH.a=0.38*sstep(.5,1,nk)}}
+  if(day){const e=Math.max(0.05,el);SH.len=Math.min(4.6,2.3/Math.pow(Math.max(.28,e),.95));SH.st=1+Math.max(0,SH.len/2.3-1)*0.6;SH.air=0.8+0.5*(1-e);SH.a=Math.min(1.35,1.3*sstep(-.02,.22,el)*(1+.2*sstep(2.6,4.4,SH.len)))}
+  else{SH.len=2.6;SH.st=1.25;SH.air=1;SH.a=0.45*sstep(.5,1,nk)}}
 // ---- cached light sprites (built once, tinted once per colour) ----
 const _dn={};
 // Wedge of light, apex at the left edge centre pointing +x, spanning the full height at the right edge (the caller's scale sets
