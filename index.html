@@ -750,16 +750,78 @@ function drawEnemy(e,x,y){
   if(e.flash>0){ctx.globalAlpha=.7;ell(0,0,5.5,6,'#fff');ctx.globalAlpha=1}
   ctx.restore();
 }
+const WPAL={
+  wood:{top:'#8b6a3e',side:'#4a3620',line:'#2a1d10',hi:'#b08a55',floor:'#6b5a3a',floorLine:'#54462c'},
+  stone:{top:'#8f8b80',side:'#4d4a43',line:'#2d2b27',hi:'#bdb9ac',floor:'#6f6a5e',floorLine:'#5a564c'},
+  concrete:{top:'#9ea4a4',side:'#51575b',line:'#2a2f32',hi:'#d0d6d7',floor:'#5f6466',floorLine:'#50555a'}};
+const wallTier=l=>l<=3?'wood':l<=6?'stone':'concrete';
+const hash=(a,b)=>{const x=Math.sin(a*12.9898+b*78.233)*43758.5453;return x-Math.floor(x)};
+function drawFloor(ph,wlv){
+  const P=WPAL[wallTier(Math.max(1,wlv))];ctx.fillStyle=P.floor;ctx.fillRect(-ph,-ph,ph*2,ph*2);
+  ctx.strokeStyle=P.floorLine;ctx.lineWidth=0.8;
+  if(!wlv||wallTier(wlv)==='wood'){for(let i=-ph;i<ph;i+=6){ctx.beginPath();ctx.moveTo(i,-ph);ctx.lineTo(i,ph);ctx.stroke()}
+    for(let i=-ph,r=0;i<ph;i+=6,r++)for(let j=-ph+(r%3)*7;j<ph;j+=21){ctx.beginPath();ctx.moveTo(i,j);ctx.lineTo(i+6,j);ctx.stroke()}}
+  else if(wallTier(wlv)==='stone'){for(let j=-ph,r=0;j<ph;j+=9,r++){ctx.beginPath();ctx.moveTo(-ph,j);ctx.lineTo(ph,j);ctx.stroke();
+    for(let i=-ph+(r%2)*6;i<ph;i+=12){ctx.beginPath();ctx.moveTo(i,j);ctx.lineTo(i,j+9);ctx.stroke()}}}
+  else{for(let i=-ph;i<=ph;i+=16){ctx.beginPath();ctx.moveTo(i,-ph);ctx.lineTo(i,ph);ctx.moveTo(-ph,i);ctx.lineTo(ph,i);ctx.stroke()}
+    ctx.strokeStyle='rgba(227,181,60,.35)';ctx.lineWidth=1.2;ctx.setLineDash([4,4]);ctx.strokeRect(-ph*0.6,-ph*0.6,ph*1.2,ph*1.2);ctx.setLineDash([])}
+  // inner shadow along walls
+  const g=ctx.createLinearGradient(0,-ph,0,-ph+10);g.addColorStop(0,'rgba(0,0,0,.35)');g.addColorStop(1,'rgba(0,0,0,0)');
+  for(let s=0;s<4;s++){ctx.save();ctx.rotate(s*Math.PI/2);ctx.fillStyle=g;ctx.fillRect(-ph,-ph,ph*2,10);ctx.restore()}
+}
 function drawWalls(ph,wlv){
-  const r=Math.max(0,G.wallHp/G.wallMax),up=G.wallHp>0,wt=Math.min(7,3+wlv*0.5),L2=6;
-  const col=up?`rgb(${150-50*r|0},${128+10*r|0},${88})`:'#5a5040';
-  let i=0;
-  for(const [sx,sy,dx,dy] of [[-ph,-ph,1,0],[ph,-ph,0,1],[ph,ph,-1,0],[-ph,ph,0,-1]]){
-    for(let t=0;t<ph*2;t+=L2){i++;if(!up&&(i%3===0||i%5===0))continue;
-      const x=sx+dx*t,y=sy+dy*t,w=dx?L2-0.6:wt,h=dx?wt:L2-0.6;
-      ctx.fillStyle=col;ctx.fillRect(x-(dx?0:wt/2)+(dx<0?-L2:0),y-(dy?0:wt/2)+(dy<0?-L2:0),w,h);
-      ctx.strokeStyle='rgba(30,25,15,.8)';ctx.lineWidth=.6;ctx.strokeRect(x-(dx?0:wt/2)+(dx<0?-L2:0),y-(dy?0:wt/2)+(dy<0?-L2:0),w,h)}
-  }
+  const tier=wallTier(wlv),P=WPAL[tier],up=G.wallHp>0,hk=G.wallMax?Math.max(0,G.wallHp/G.wallMax):0;
+  const T=Math.min(11,4+wlv*0.7),h=T/2,o=ph+h,inn=ph-h;
+  // cast shadow on the ground (fake height, light from top-left)
+  const sh=up?3+wlv*0.25:1.5;ctx.fillStyle='rgba(0,0,0,.38)';ctx.beginPath();ctx.rect(-o+sh,-o+sh,o*2,o*2);ctx.rect(-inn+sh,-inn+sh,inn*2,inn*2);ctx.fill('evenodd');
+  for(let s=0;s<4;s++){ctx.save();ctx.rotate(s*Math.PI/2);
+    const len=ph*2,gate=s===2;
+    if(tier==='wood'){const st=T*0.62;let i=0;
+      for(let x=-ph;x<ph;x+=st,i++){const cx=x+st/2;if(gate&&Math.abs(cx)<8)continue;const dmg=hash(i,s);
+        if(!up&&dmg>0.3){if(dmg>0.6){ctx.fillStyle=P.side;ctx.fillRect(cx-1.5,-ph-1+dmg*4,3,2)}continue}
+        ctx.fillStyle=P.side;ctx.beginPath();ctx.arc(cx+0.6,-ph+0.8,st*0.52,0,7);ctx.fill();
+        ctx.fillStyle=up&&dmg>hk+0.35?'#5e4a2c':P.top;ctx.beginPath();ctx.arc(cx,-ph,st*0.46,0,7);ctx.fill();
+        ctx.strokeStyle=P.line;ctx.lineWidth=0.5;ctx.stroke();ctx.fillStyle=P.hi;ctx.beginPath();ctx.arc(cx-st*0.14,-ph-st*0.14,st*0.15,0,7);ctx.fill()}
+      if(up){ctx.fillStyle='#5c4526';ctx.fillRect(-ph,-ph+h*0.2,len,1.1);ctx.fillRect(-ph,-ph-h*0.4,len,0.8)}}  // lashing ropes/rails
+    else{
+      // wall body: outer face + top
+      const segL=tier==='stone'?7:12;let i=0;
+      for(let x=-ph;x<ph-0.01;x+=segL,i++){const w=Math.min(segL,ph-x),cx=x+w/2;if(gate&&Math.abs(cx)<9)continue;const dmg=hash(i,s);
+        if(!up&&dmg>0.3){if(dmg>0.55){ctx.fillStyle=P.side;ctx.fillRect(x+dmg*3,-ph-h+dmg*6,3+dmg*3,2.5);ctx.fillStyle=P.top;ctx.fillRect(x+1,-ph+dmg*4,2.5,2)}continue}
+        ctx.fillStyle=P.side;ctx.fillRect(x,-o,w,T+1.5);
+        ctx.fillStyle=P.top;ctx.fillRect(x,-o,w,T);
+        ctx.strokeStyle=P.line;ctx.lineWidth=0.6;ctx.strokeRect(x+0.3,-o+0.3,w-0.6,T-0.6);
+        if(tier==='stone'){ctx.beginPath();ctx.moveTo(x,-ph);ctx.lineTo(x+w,-ph);ctx.moveTo(x+w/2,-ph);ctx.lineTo(x+w/2,-ph+h);ctx.stroke()}
+        else{ctx.fillStyle=P.line;ctx.fillRect(x+1.5,-o+1.5,0.9,0.9);ctx.fillRect(x+w-2.4,-o+1.5,0.9,0.9);ctx.fillRect(x+1.5,-ph+h-2.4,0.9,0.9);ctx.fillRect(x+w-2.4,-ph+h-2.4,0.9,0.9)}
+        ctx.fillStyle=P.hi;ctx.fillRect(x,-o,w,0.8);
+        // battlements on the outer half
+        if(i%2===0&&up){const mw=Math.min(w,segL*0.7);ctx.fillStyle='rgba(0,0,0,.3)';ctx.fillRect(x+0.8,-o+0.8,mw,h*0.9);
+          ctx.fillStyle=P.hi;ctx.fillRect(x,-o,mw,h*0.9);ctx.strokeStyle=P.line;ctx.lineWidth=0.5;ctx.strokeRect(x,-o,mw,h*0.9)}
+        // cracks when damaged
+        if(up&&dmg>hk+0.3){ctx.strokeStyle='rgba(20,15,10,.8)';ctx.lineWidth=0.7;ctx.beginPath();ctx.moveTo(x+w*0.2,-o+1);ctx.lineTo(x+w*0.5,-ph-0.5);ctx.lineTo(x+w*0.35,-ph+h*0.6);ctx.lineTo(x+w*0.7,-ph+h-1);ctx.stroke()}}
+      if(tier==='concrete'&&up){ctx.strokeStyle='#2f3538';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-ph,-o-0.6);ctx.lineTo(ph,-o-0.6);ctx.stroke()}}   // steel lip
+    // gate
+    if(gate){ctx.fillStyle='#1e1a14';ctx.fillRect(-8,-o,16,T);
+      if(up){ctx.fillStyle=tier==='concrete'?'#59616a':'#6a4a26';ctx.fillRect(-7,-ph-1.4,14,2.8);ctx.strokeStyle=tier==='concrete'?'#e3b53c':'#2a1d10';ctx.lineWidth=0.6;
+        for(let k=-7;k<7;k+=2.8){ctx.beginPath();ctx.moveTo(k,-ph-1.4);ctx.lineTo(k+1.4,-ph+1.4);ctx.stroke()}}
+      ctx.fillStyle=P.side;ctx.fillRect(-10.5,-o-1,3,T+2);ctx.fillRect(7.5,-o-1,3,T+2);ctx.fillStyle=P.hi;ctx.fillRect(-10.5,-o-1,3,1.2);ctx.fillRect(7.5,-o-1,3,1.2)}
+    ctx.restore()}
+  // corner towers
+  const ts=T*1.05+2;
+  for(const[cx,cy]of[[-ph,-ph],[ph,-ph],[ph,ph],[-ph,ph]]){
+    if(!up&&hash(cx,cy)>0.5){ctx.fillStyle=P.side;for(let k=0;k<5;k++)ctx.fillRect(cx+(hash(k,cx)-.5)*ts*1.6,cy+(hash(cy,k)-.5)*ts*1.6,2.5,2.5);continue}
+    ctx.fillStyle='rgba(0,0,0,.4)';
+    if(tier==='stone'){ctx.beginPath();ctx.arc(cx+sh,cy+sh,ts,0,7);ctx.fill();ctx.fillStyle=P.side;ctx.beginPath();ctx.arc(cx+0.8,cy+1,ts,0,7);ctx.fill();
+      ctx.fillStyle=P.top;ctx.beginPath();ctx.arc(cx,cy,ts,0,7);ctx.fill();ctx.strokeStyle=P.line;ctx.lineWidth=0.7;ctx.stroke();
+      for(let k=0;k<8;k++){const a=k*Math.PI/4;ctx.fillStyle=k%2?P.hi:P.side;ctx.beginPath();ctx.arc(cx+Math.cos(a)*ts*0.8,cy+Math.sin(a)*ts*0.8,ts*0.2,0,7);ctx.fill()}
+      ctx.fillStyle=P.side;ctx.beginPath();ctx.arc(cx,cy,ts*0.5,0,7);ctx.fill()}
+    else{const oct=tier==='concrete';ctx.fillRect(cx-ts+sh,cy-ts+sh,ts*2,ts*2);ctx.fillStyle=P.side;ctx.fillRect(cx-ts+0.8,cy-ts+1,ts*2,ts*2);
+      ctx.fillStyle=P.top;ctx.fillRect(cx-ts,cy-ts,ts*2,ts*2);ctx.strokeStyle=P.line;ctx.lineWidth=0.7;ctx.strokeRect(cx-ts,cy-ts,ts*2,ts*2);
+      if(oct){ctx.fillStyle=P.side;ctx.fillRect(cx-ts*0.6,cy-ts*0.6,ts*1.2,ts*1.2);ctx.fillStyle='#1a1e20';ctx.fillRect(cx-ts,cy-0.7,ts*0.5,1.4);ctx.fillRect(cx+ts*0.5,cy-0.7,ts*0.5,1.4);ctx.fillRect(cx-0.7,cy-ts,1.4,ts*0.5);ctx.fillRect(cx-0.7,cy+ts*0.5,1.4,ts*0.5)}
+      else{ctx.strokeStyle=P.line;ctx.lineWidth=0.5;for(let k=-ts;k<ts;k+=2.5){ctx.beginPath();ctx.moveTo(cx+k,cy-ts);ctx.lineTo(cx+k,cy+ts);ctx.stroke()}
+        ctx.fillStyle=P.hi;ctx.fillRect(cx-ts,cy-ts,ts*2,0.8);ctx.fillStyle='#3a2a18';ctx.fillRect(cx-ts,cy-ts,1.2,1.2);ctx.fillRect(cx+ts-1.2,cy-ts,1.2,1.2);ctx.fillRect(cx-ts,cy+ts-1.2,1.2,1.2);ctx.fillRect(cx+ts-1.2,cy+ts-1.2,1.2,1.2)}}}
+  // wall health tint flash when hit recently
+  if(!up){ctx.fillStyle='rgba(255,60,40,.08)';ctx.beginPath();ctx.rect(-o,-o,o*2,o*2);ctx.rect(-inn,-inn,inn*2,inn*2);ctx.fill('evenodd')}
 }
 
 function draw(){
@@ -779,8 +841,7 @@ function draw(){
   for(const m of G.mines){ctx.fillStyle='#3a3a30';ctx.beginPath();ctx.arc(m.x,m.y,4,0,7);ctx.fill();if(Math.floor(G.time*2+m.blink)%2){ctx.fillStyle='#f33';ctx.fillRect(m.x-1,m.y-1,2,2)}}
   // fort
   const wlv=L('walls');
-  ctx.fillStyle='#6b5a3a';const ph=wlv?wallHalfAt(wlv):PLAT;ctx.fillRect(-ph,-ph,ph*2,ph*2);
-  ctx.strokeStyle='#4a3d27';ctx.lineWidth=1;for(let i=-ph;i<ph;i+=6){ctx.beginPath();ctx.moveTo(i,-ph);ctx.lineTo(i,ph);ctx.stroke()}
+  const ph=wlv?wallHalfAt(wlv):PLAT;drawFloor(ph,wlv);
   if(wlv)drawWalls(ph,wlv);
   // crates
   for(const c of G.crates){if(c.life<3&&Math.floor(c.life*6)%2)continue;ctx.fillStyle='#8a6a2a';ctx.fillRect(c.x-7,c.y-7,14,14);ctx.strokeStyle='#4a3510';ctx.lineWidth=1.5;ctx.strokeRect(c.x-7,c.y-7,14,14);
