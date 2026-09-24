@@ -2366,12 +2366,13 @@ function applyGfx(){GFX=GFX_PRESET[S.set.gfx]||GFX_PRESET.high;HQ=GFX===GFX_PRES
   for(const k in FXBASE)FXCAP[k]=Math.round(FXBASE[k]*(k==='smoke'?GFX.smoke:k==='lights'?+GFX.lights:GFX.fx));if(HQ)FXCAP.smoke=340;resize()}
 applyGfx();
 // Pre-rendered radial sprites: one gradient raster per look instead of createRadialGradient per object per frame.
+// Hot getters check the cache first so a cache hit allocates no stop arrays/strings (called ~200x per busy frame).
 // Stops are authored at full strength; per-object fade is applied through globalAlpha, which is equivalent since every stop scales linearly.
 const _spr={};
 function radialSprite(key,stops){let c=_spr[key];if(c)return c;c=_spr[key]=document.createElement('canvas');c.width=c.height=128;
   const x=c.getContext('2d'),g=x.createRadialGradient(64,64,0,64,64,64);for(const[o,col]of stops)g.addColorStop(o,col);x.fillStyle=g;x.fillRect(0,0,128,128);return c}
-const glowSprite=c=>radialSprite('l'+c,[[0,`rgba(${c},1)`],[1,`rgba(${c},0)`]]);
-const fireSprite=()=>radialSprite('fire',[[0,'rgba(255,255,235,1)'],[0.25,'rgba(255,215,110,.95)'],[0.6,'rgba(255,110,30,.6)'],[1,'rgba(160,30,0,0)']]);
+const glowSprite=c=>_spr['l'+c]||radialSprite('l'+c,[[0,`rgba(${c},1)`],[1,`rgba(${c},0)`]]);
+const fireSprite=()=>_spr.fire||radialSprite('fire',[[0,'rgba(255,255,235,1)'],[0.25,'rgba(255,215,110,.95)'],[0.6,'rgba(255,110,30,.6)'],[1,'rgba(160,30,0,0)']]);
 const scorchSprite=()=>radialSprite('scorch',[[0,'rgba(8,6,4,.6)'],[0.6,'rgba(20,15,10,.35)'],[1,'rgba(20,15,10,0)']]);
 function blit(img,x,y,r,a){if(a<=0||r<=0)return;ctx.globalAlpha=Math.min(1,a);ctx.drawImage(img,x-r,y-r,r*2,r*2)}
 const R=Math.random;
