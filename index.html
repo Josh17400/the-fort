@@ -215,6 +215,41 @@ body.mobile #prioBtn.on + #nadeBtn{right:calc(152px + env(safe-area-inset-right)
 body.mobile #nadeBtn kbd{display:none}body.mobile #nadeBtn .ic{width:20px;height:20px}body.mobile #nadeBtn b{font-size:9px;letter-spacing:1px}
 body.mobile #nadeBtn:not(.ready):not(.armed) b{font-size:12px}
 body.mobile #speedBtn{height:38px!important;min-width:44px;font-size:12px;right:calc(62px + env(safe-area-inset-right))!important}
+/* medals: home decorations panel + in-run toast */
+.medals{width:100%;max-width:1180px;margin-top:16px;padding:14px 16px}
+.mdh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mdh h3{font-family:Oxanium;margin:0;font-size:13px;letter-spacing:3px;color:var(--dim);display:flex;align-items:center;gap:7px}.mdh h3 .ic{color:var(--acc2)}
+.mcount{font-family:Oxanium;font-size:13px;color:var(--dim)}.mcount b{color:var(--text);font-size:15px}
+.mbon{font-size:12px;padding:3px 9px;border-radius:999px;color:var(--good);background:rgba(127,211,90,.08);border:1px solid rgba(127,211,90,.3)}
+.mtog{margin-left:auto;padding:6px 14px;font-size:12px}
+.mstrip{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;padding:0;background:none;border:0;cursor:pointer;font:inherit}
+.mdot{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:rgba(143,152,130,.55);background:rgba(255,255,255,.03);border:1px dashed var(--line2);transition:.15s}
+.mstrip:hover .mdot{border-color:rgba(190,210,150,.4)}
+.mdot.on,.medal.on .mi{color:#2a1d04;background:radial-gradient(circle at 50% 32%,#ffe7a0,#e3b53c 55%,#9c7418);border:1px solid #ffd76a;box-shadow:0 0 14px rgba(227,181,60,.3),inset 0 -2px 3px rgba(0,0,0,.25)}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-top:14px}
+.medal{display:flex;gap:11px;align-items:flex-start;padding:12px;border-radius:12px;background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line)}
+.medal.on{border-color:rgba(227,181,60,.4);background:linear-gradient(180deg,rgba(227,181,60,.07),var(--card))}
+.medal .mi{width:42px;height:42px;flex:none;border-radius:50%;display:grid;place-items:center;color:var(--dim);background:rgba(255,255,255,.03);border:1px dashed var(--line2)}
+.medal .mb{min-width:0;flex:1}.medal .mn{font:800 14px Oxanium,sans-serif;letter-spacing:.4px}.medal:not(.on) .mn{color:#c3c9b6}
+.medal .md{font-size:12px;color:var(--dim);line-height:1.4;margin-top:2px}
+.medal .mp{margin-top:8px;height:4px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}.medal .mp i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#e3b53c,#ffd76a)}
+.medal .mr{display:flex;justify-content:space-between;gap:6px;margin-top:5px;font:600 11px Oxanium,sans-serif;color:var(--dim);letter-spacing:.4px}.medal .mr span{display:flex;align-items:center;gap:4px}
+.medal.on .mr{color:var(--good);margin-top:8px}.medal.on .mr .ic{color:var(--acc2)}
+@media(max-width:600px){.mgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.medal{flex-direction:column;gap:8px;padding:11px}.medal .mi{width:36px;height:36px}.medal .mn{font-size:13px}.medal .md{font-size:11.5px}}
+.pperks.medal span .ic{color:var(--acc2)}
+#medalToast{position:fixed;left:50%;bottom:calc(128px + env(safe-area-inset-bottom));z-index:30;pointer-events:none;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);
+  padding:10px 18px 10px 10px;border-radius:16px;background:rgba(22,27,18,.93);border:1px solid rgba(227,181,60,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);overflow:hidden;
+  box-shadow:0 14px 36px rgba(0,0,0,.5),0 0 30px rgba(227,181,60,.18);opacity:0;visibility:hidden;transform:translate(-50%,18px) scale(.96);transition:opacity .25s ease,transform .4s cubic-bezier(.2,.9,.3,1.25),visibility .4s}
+#medalToast.on{opacity:1;visibility:visible;transform:translate(-50%,0)}
+#medalToast:after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,231,160,.18) 50%,transparent 65%);transform:translateX(-100%)}
+#medalToast.on:after{animation:mshine 1.1s .25s ease-out}@keyframes mshine{to{transform:translateX(100%)}}
+#medalToast .mti{width:44px;height:44px;flex:none;border-radius:50%;display:grid;place-items:center;color:#2a1d04;background:radial-gradient(circle at 50% 32%,#ffe7a0,#e3b53c 55%,#9c7418);border:1px solid #ffd76a;box-shadow:0 0 18px rgba(227,181,60,.45)}
+#medalToast.on .mti{animation:mpop .5s cubic-bezier(.2,.9,.3,1.5)}@keyframes mpop{from{transform:scale(.4) rotate(-25deg)}}
+#medalToast .mtb{display:flex;flex-direction:column;gap:1px;min-width:0}
+#medalToast .mtt{font:700 10px Oxanium,sans-serif;letter-spacing:2.5px;color:var(--acc);display:flex;align-items:center;gap:5px}
+#medalToast b{font:800 17px Oxanium,sans-serif;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#medalToast small{font-size:12px;color:var(--dim);white-space:nowrap}#medalToast em{font-style:normal;font-weight:600;color:var(--acc2)}
+body.mobile #medalToast{bottom:calc(236px + env(safe-area-inset-bottom))}
 </style>
 </head>
 <body>
@@ -229,6 +264,7 @@ body.mobile #speedBtn{height:38px!important;min-width:44px;font-size:12px;right:
   <button class="btn" id="airBtn"><span id="airTxt">AIRSTRIKE</span><div class="cd" id="airCd"></div></button>
   <div id="intel" role="status" aria-live="polite"><canvas id="intelCv" width="128" height="128"></canvas><div class="it"><div class="tag2">NEW CONTACT</div><div class="nm2"><span id="intelName"></span><span class="thr" id="intelThr"></span></div><div class="tip" id="intelTip"></div></div><div class="tm"></div></div>
 </div>
+<div id="medalToast" role="status" aria-live="polite"></div>
 <div class="modal" id="overlay"><div class="panel">
   <h2>PAUSED</h2>
   <button class="btn big" id="resumeBtn">RESUME</button>
@@ -268,6 +304,7 @@ body.mobile #speedBtn{height:38px!important;min-width:44px;font-size:12px;right:
       <div class="help" id="helpTxt"><kbd>Click</kbd> an enemy to lock on &nbsp;·&nbsp; <kbd>Hold</kbd> to keep firing<br><kbd>Click</kbd> <svg class="ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10M7.5 5l9 4"/></svg> crates: cash, munitions, repairs &nbsp;·&nbsp; <kbd>G</kbd> grenade at cursor &nbsp;·&nbsp; <kbd>Q</kbd> airstrike &nbsp;·&nbsp; <kbd>T</kbd> target priority &nbsp;·&nbsp; <kbd>Esc</kbd> pause<br>Hold waves 3, 5, 10, 15... to earn a Field Commendation: pick one of three directives for the run.<br>Some waves bring battlefield events (sandstorms, paratroopers, blitzes, armored columns) that pay a bonus when you clear them.<br>Upgrades unlock other upgrades, and reaching deeper waves opens new tech.</div>
     </div>
   </div>
+  <div class="panel medals" id="medals"></div>
   <div class="store"><div class="tabs" id="tabs"></div><div class="grid" id="store"></div></div>
 </div>
 
@@ -281,7 +318,7 @@ body.mobile #speedBtn{height:38px!important;min-width:44px;font-size:12px;right:
   <div class="set"><div>Pause on focus loss</div><input type="checkbox" class="sw" id="sBlur"></div>
   <div class="set"><div>Base game speed<small>Buy Command Tempo for faster speeds</small></div><select id="sSpeed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1×</option></select></div>
   <div class="set"><div>Graphics quality<small>Lower it if big battles stutter</small></div><select id="sGfx"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
-  <div class="set"><div>Reset progress<small>Wipes money and all upgrades</small></div><button class="btn danger" id="resetBtn">RESET</button></div>
+  <div class="set"><div>Reset progress<small>Wipes money, upgrades and medals</small></div><button class="btn danger" id="resetBtn">RESET</button></div>
   <div style="margin-top:16px;text-align:right"><button class="btn big" id="backBtn" style="padding:12px 30px;font-size:16px">DONE</button></div>
 </div></div>
 
@@ -414,7 +451,7 @@ function renderStartSel(){const c=checkpoints(),el=$('startSel');if(c.length<2){
 function renderHome(){renderStartSel();
   $('bank').textContent='$'+f1(S.bank);$('best').textContent=S.best;$('tkills').textContent=S.tkills;
   $('lastRun').innerHTML=lastRunMsg?`<h3>LAST RUN</h3><div class="lastrun">${lastRunMsg}${afterAction()}</div>`:'';
-  $('nextUnl').innerHTML=nextUnlockHtml();
+  $('nextUnl').innerHTML=nextUnlockHtml();$('medals').innerHTML=medalsHtml();
   $('loadout').innerHTML=[['HP',hpAt(L('hp'))],['DMG',f1(dmgAt(L('dmg')))],['Vision',Math.round(vision())+'m'],['Soldiers',1+L('squad')],['Walls',L('walls')?'Lv '+L('walls'):'crate']]
     .map(([k,v])=>`<span class="tag">${k} <b>${v}</b></span>`).join('');
   {const n=U.filter(u=>L(u.id)<u.max&&!lockWhy(u)&&S.bank>=costOf(u,L(u.id))).length;if(n)$('loadout').innerHTML+=`<span class="tag" style="border-color:rgba(127,211,90,.5);color:var(--good);cursor:pointer" onclick="document.querySelector('.store').scrollIntoView({behavior:'smooth'})">▲ <b style="color:var(--good)">${n}</b> upgrade${n>1?'s':''} ready</span>`}
@@ -454,7 +491,7 @@ $('sBlur').onchange=e=>{S.set.blurPause=e.target.checked;save()};
 $('sSpeed').onchange=e=>{S.set.speed=+e.target.value;save()};
 $('sGfx').onchange=e=>{S.set.gfx=e.target.value;applyGfx();save()};
 $('resetBtn').onclick=e=>{if(running)return;if(e.target.textContent==='RESET'){e.target.textContent='SURE? CLICK AGAIN';return}
-  const set=S.set;S={bank:0,best:0,tkills:0,lv:{},set};save();lastRunMsg='';e.target.textContent='DONE';};
+  const set=S.set;S={bank:0,best:0,tkills:0,lv:{},set};medalSync();save();lastRunMsg='';e.target.textContent='DONE';};
 
 // ================= AUDIO =================
 // One AudioContext. Graph: voices ---> sfx bus --+
@@ -614,7 +651,7 @@ function startRun(){
   G={wave:startWaveOk()-1,spawnLeft:0,spawnT:0,spawnInt:1,breakT:2,breakMax:2,enemies:[],fx:[],parts:[],floats:[],shells:[],bombs:[],planes:[],mines:[],crates:[],
     hp:hpAt(L('hp')),maxHp:hpAt(L('hp')),wallMax:wallMaxAt(L('walls')),wallHp:wallMaxAt(L('walls')),sold,kills:0,earned:0,time:0,shake:0,
     zoomV:vision()*0.3,artyT:3,airT:0,airArmed:false,nadeT:0,nadeArmed:false,nades:[],rapidT:0,crateT:10,banner:'',bannerT:0,hurtT:0,breached:false,pk:{},choosing:null,perkAt:0,startBest:S.best,threat:{},breachW:0,ev:null,evLast:0,evPrev:null,evN:0,fogK:0,drops:[],transports:[]};
-  {const w0=startWaveOk();if(w0>1){G.cp={i:0,n:Math.min(8,Math.floor(w0/10))};G.perkAt=0.5}}
+  {const w0=startWaveOk();if(w0>1){G.cp={i:0,n:Math.min(8,Math.floor(w0/10))};G.perkAt=0.5;medalMax('cp',1)}}
   G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=Math.min(S.set.lastSpeed||1,SPEEDS[L('speed')]);syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;initLogi();
   skyInit();syncPrioBtn();syncNadeBtn(true);$('hud').classList.toggle('air',L('air')>0);
   running=true;paused=false;mouse.down=false;$('overlay').classList.remove('on');showScreen('game');
@@ -628,7 +665,7 @@ const blockHalf=()=>wallsUp()?wallHalfAt(L('walls'))+wallThickAt(L('walls'))/2:P
 // sight(): the live sight line. A sandstorm pulls it in by up to STORM_CUT; radar still reaches the same distance past it.
 const STORM_CUT=0.27,sight=()=>vision()*(1-STORM_CUT*(G&&G.fogK||0));
 const visible=e=>Math.hypot(e.x,e.y)<=(e.air?skyVision()-vision()+sight():sight())-e.r*0.3;
-const money=v=>Math.round(v*(1+0.15*L('bounty'))*(1+0.25*pk('salvage')+0.4*pk('hazard')));
+const money=v=>Math.round(v*(1+0.15*L('bounty'))*(1+0.25*pk('salvage')+0.4*pk('hazard'))*medalMul());
 
 // Wave scaling. Every stat is exp(curve): its per-wave growth rate starts at d0 (+2b per wave), holds that climb until wave
 // 1+x0, then eases linearly over `ease` waves to a steady late rate dL that never stops. Toughness climbs hardest around
@@ -647,7 +684,7 @@ function spawn(type,at){if(SKY[type])return spawnSky(type);const d=ET[type],w=G.
     dmg:d.dmg*waveDmg(w),rate:d.rate,atk:0.5,rew:d.rew*waveRew(w),r:d.r,col:d.col,range:d.range||0,bomb:d.bomb,boss:d.boss,flash:0,wob:Math.random()*9});
   const e=G.enemies[G.enemies.length-1];if(d.boss)trackBoss(e);return e}
 function startWave(){
-  G.breakT=0;G.wave++;for(const k in G.threat)G.threat[k]*=0.6;G.spawnLeft=waveCount(G.wave);G.waveTotal=G.spawnLeft+(G.wave%10===0?1:0);G.spawnInt=Math.max(0.05,waveWindow(G.wave)/G.spawnLeft);G.spawnT=0.5;
+  G.breakT=0;G.wave++;G.wHit=0;for(const k in G.threat)G.threat[k]*=0.6;G.spawnLeft=waveCount(G.wave);G.waveTotal=G.spawnLeft+(G.wave%10===0?1:0);G.spawnInt=Math.max(0.05,waveWindow(G.wave)/G.spawnLeft);G.spawnT=0.5;
   if(G.wave%10===0)spawn('boss');
   layMines();
   if(G.wallMax){G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.25)}
@@ -696,8 +733,9 @@ function hurtEnemy(e,d,crit){if(e.dead)return;d*=1+0.2*pk('overwatch');e.hp-=d;e
 // each link adds +3% to ALL kill bounties (max +30% at 11), and the chain drops if the rifle goes quiet.
 const STREAK_T=3,STREAK_MAX=0.3,streakMul=()=>G.stk>1?1+Math.min(STREAK_MAX,0.03*(G.stk-1)):1;
 let _aimed=false;
-function streakKill(){G.stk=(G.stk||0)+1;G.stkT=STREAK_T;G.stkPop=1;if(G.stk>1&&G.stk<=11)tone(520+G.stk*60,0.07,'square',40,0.03)}
+function streakKill(){G.stk=(G.stk||0)+1;G.stkT=STREAK_T;G.stkPop=1;medalMax('streak',G.stk);if(G.stk>1&&G.stk<=11)tone(520+G.stk*60,0.07,'square',40,0.03)}
 function kill(e){e.dead=true;if(_mainHit&&_aimed)streakKill();const r=Math.round(money(e.rew)*streakMul());S.bank+=r;G.earned+=r;G.kills++;S.tkills++;(e.air?airDown:fxKill)(e);
+  if(e.chute>0)medalBump('chute');if(_nadeK)medalBump('nade');if(e.boss&&!e.air)medalBump('tank');if(S.tkills%25===0)medalCheck('kills');
   if(S.set.gfx==='high'&&!e.air)corpse(e);
   float(e.x,e.y-e.r-8,'+$'+r,'#7ddc5a',11);sfx('kill',e.x,e.y);
   if(e.boss){shake(10);banner('ENEMY TANK DESTROYED  +$'+r)}}
@@ -711,7 +749,7 @@ function fire(s,e,mult=1){
   const fl=L('frag');if(fl&&!e.air){const fr=Math.min(40,10+4*fl);for(const o of G.enemies)if(o!==e&&!o.dead&&Math.hypot(o.x-ex,o.y-ey)<fr+o.r)hurtEnemy(o,d*0.35,false);G.fx.push({k:'boom',x:ex,y:ey,r:fr,life:0.2,max:0.2})}
   fxMuzzle(s);sfx(s.main?'shot':'shot2',s.x,s.y);}
 // src = attacker type; G.threat keeps a decaying tally (x0.6 per wave) so the after-action report names what actually broke you
-function damageFort(d,src){if(src)G.threat[src]=(G.threat[src]||0)+d;
+function damageFort(d,src){if(src)G.threat[src]=(G.threat[src]||0)+d;G.wHit=1;
   if(wallsUp()){G.wallHp-=d*(1-Math.min(0.75,0.07*L('armor')));sfx('wall');if(G.wallHp<=0){G.wallHp=0;G.breachW=G.wave;banner('WALLS BREACHED!');sfx('breach');shake(8)}}
   else{G.hp-=d;G.hurtT=0.3;sfx('hurt');shake(3);if(G.hp<=0)endRun()}}
 function enemyAt(x,y,slack){let best=null,bd=1e9;for(const e of G.enemies.concat(G.sky)){if(e.dead||!visible(e))continue;const d=Math.hypot(e.x-x,e.y-y)-e.r;if(d<slack&&d<bd){bd=d;best=e}}return best}
@@ -738,7 +776,8 @@ function endRun(retreat){
   lastCause=retreat||!top.length?null:{top,breachW:G.breachW&&!wallsUp()?G.breachW:0,doc:top.some(t=>STANDOFF.has(t))&&prio()!=='threat'?prioShown()?'threat':'lock':''};
   const rec=G.wave>G.startBest&&G.startBest>0;if(G.wave>S.best)S.best=G.wave;save();
   lastRunMsg=[['Wave reached',G.wave+(rec?' <small style="font-size:11px;color:var(--good);letter-spacing:1px">NEW BEST</small>':'')],['Kills',G.kills],['Earned','$'+f1(G.earned)],['Survived',Math.floor(G.time/60)+'m '+Math.floor(G.time%60)+'s']].map(([k,v])=>`<div class="stat"><span>${k}</span><b>${v}</b></div>`).join('')
-    +(perkList().length?`<div class="stat" style="grid-column:1/-1"><span>DIRECTIVES</span><div class="pperks" style="justify-content:flex-start;margin-top:6px">${perkChips()}</div></div>`:'');
+    +(perkList().length?`<div class="stat" style="grid-column:1/-1"><span>DIRECTIVES</span><div class="pperks" style="justify-content:flex-start;margin-top:6px">${perkChips()}</div></div>`:'')
+    +(G.medals?`<div class="stat" style="grid-column:1/-1"><span>MEDALS EARNED</span><div class="pperks medal" style="justify-content:flex-start;margin-top:6px">${G.medals.map(id=>{const m=MEDALS.find(q=>q.id===id);return`<span>${ic(m.ic,14)}${m.name}</span>`}).join('')}</div></div>`:'');
   showScreen('home');
 }
 
@@ -749,7 +788,7 @@ function update(dt){
   // waves
   if(G.spawnLeft>0){G.spawnT-=dt;if(G.spawnT<=0){spawn(pickType(G.wave));G.spawnLeft--;G.spawnT=G.spawnInt*(0.6+Math.random()*0.8)}}
   else if(G.enemies.length===0&&!G.sky.length&&!G.drops.length&&!(G.uavT>0)){
-    if(G.breakT<=0){if(G.wave>0){let b=money(8*G.wave*waveRew(G.wave));if(G.ev)b+=evClear(b);S.bank+=b;G.earned+=b;float(0,-40,'WAVE CLEAR +$'+b,'#7ddc5a',14);save();if(perkWave(G.wave))G.perkAt=G.time+0.9}G.breakT=G.breakMax=G.wave<10?3:2}
+    if(G.breakT<=0){if(G.wave>0){medalMax('wave',G.wave);if(G.wave>=15&&!G.wHit)medalMax('flawless',1);let b=money(8*G.wave*waveRew(G.wave));if(G.ev)b+=evClear(b);S.bank+=b;G.earned+=b;float(0,-40,'WAVE CLEAR +$'+b,'#7ddc5a',14);save();if(perkWave(G.wave))G.perkAt=G.time+0.9}G.breakT=G.breakMax=G.wave<10?3:2}
     G.breakT-=dt;if(G.breakT<=0)startWave();}
   if(G.perkAt&&G.time>=G.perkAt){G.perkAt=0;offerPerks()}
   // regen
@@ -843,9 +882,10 @@ function throwNade(x,y){if(!running||paused||G.choosing)return;if(G.nadeT>0){sfx
   for(let i=0;i<n;i++){const a=Math.random()*TAU,o=i?r*(0.55+Math.random()*0.45):0,[tx,ty]=nadeClamp(x+Math.cos(a)*o,y+Math.sin(a)*o),d=Math.hypot(tx-m.x,ty-m.y);
     G.nades.push({sx:m.x,sy:m.y,x:tx,y:ty,t:-i*0.14,dur:0.4+d/560,h:Math.min(110,18+d*0.3),r,dmg,spin:(Math.random()<.5?-1:1)*(9+Math.random()*5)})}
   G.nadeT=nadeCdNow();G.nadeArmed=false;if(!seen().nade){seen().nade=1;save()}syncNadeBtn(true);sfx('toss',m.x,m.y)}
+let _nadeK=false;   // set while a grenade bursts, so kill() can credit Demolitions
 function updateNades(dt){if(G.nadeT>0)G.nadeT=Math.max(0,G.nadeT-dt);if(!G.nades.length)return;
   for(const g of G.nades){g.t+=dt;if(g.t<g.dur)continue;g.done=true;const{x,y,r}=g;
-    explode(x,y,r,g.dmg);fireball(x,y,r*0.55,0.32);ring(x,y,r*1.1,0.3,'255,226,170',2.2);spark(x,y,14,190,['#fff6d0','#ffc04a','#ff7a1a'],0.45,1.5);
+    _nadeK=true;explode(x,y,r,g.dmg);_nadeK=false;fireball(x,y,r*0.55,0.32);ring(x,y,r*1.1,0.3,'255,226,170',2.2);spark(x,y,14,190,['#fff6d0','#ffc04a','#ff7a1a'],0.45,1.5);
     puff(x,y,4,r*0.35,1.3,'64,58,50',20,0.5);decal(x,y,'scorch',r*0.5);light(x,y,r*2.4,'255,170,80',0.22)}
   G.nades=G.nades.filter(g=>!g.done)}
 function drawNades(){const k=Math.max(1,1.6/(sc*2.4));
@@ -2271,7 +2311,7 @@ function offerPerks(){if(!running)return;const pool=PERKS.filter(p=>!p.ok||p.ok(
   const m=$('perkModal');m.classList.remove('ready');m.classList.add('on');setTimeout(()=>{if(G&&G.choosing===pick)m.classList.add('ready')},650);   // brief lockout so taps meant for the battlefield can't pick by accident
   sfx('wave')}
 function pickPerk(i){const p=G&&G.choosing&&G.choosing[i];if(!p||performance.now()-perkOpenT<650)return;
-  G.pk[p.id]=(G.pk[p.id]||0)+1;if(p.go)p.go();G.choosing=null;$('perkModal').classList.remove('on','ready');
+  G.pk[p.id]=(G.pk[p.id]||0)+1;if(p.go)p.go();G.choosing=null;medalMax('dirs',Object.values(G.pk).reduce((a,b)=>a+b,0));$('perkModal').classList.remove('on','ready');
   if(G.breakT>0)G.breakT=G.breakMax=Math.max(G.breakT,1.6);   // a beat for the directive banner before the next wave's
   if(G.cp&&G.cp.i<G.cp.n&&++G.cp.i<G.cp.n)G.perkAt=G.time+0.3;
   banner(p.name.toUpperCase()+(G.pk[p.id]>1?' '+rank(G.pk[p.id]):''));sfx('buy');setTimeout(()=>tone(1320,0.14,'square',0,0.05),130)}
@@ -2368,7 +2408,7 @@ function evStart(){const w=G.wave,k=rollEvent(w);G.ev=k;if(!k)return;const E=EVE
   banner('WAVE '+w+' — '+E.name,E.sub,E.col);if(!seen()['ev_'+k])spotted('ev_'+k);evSting(k)}
 function evWeights(p){const k=G&&G.ev;if(k!=='blitz'&&k!=='armor')return;
   for(const q of p)q[1]*=k==='blitz'?(q[0]==='runner'?3:q[0]==='grunt'?0.7:q[0]==='brute'?0.3:1):(q[0]==='brute'?3:q[0]==='runner'?0.5:1)}
-function evClear(b){const E=EVENTS[G.ev],x=Math.round(b*E.bonus);G.ev=null;float(0,-60,E.name+' REPELLED  +$'+f1(x),'rgb('+E.col+')',12);
+function evClear(b){const E=EVENTS[G.ev],x=Math.round(b*E.bonus);medalBump(G.ev);G.ev=null;float(0,-60,E.name+' REPELLED  +$'+f1(x),'rgb('+E.col+')',12);
   setTimeout(()=>tone(660,0.08,'square',0,0.04),120);setTimeout(()=>tone(990,0.14,'square',0,0.04),230);return x}
 function evSting(k){
   if(k==='storm'){const v=voice(3.2,1,null,null,true);if(v){lNoise(v,'bandpass',260,700,0.7,0.26,1.1,2);lNoise(v,'highpass',2600,4200,0.5,0.07,1.4,1.6,0.4)}}
@@ -2646,7 +2686,7 @@ function skySuppress(e,k){if(e.type!=='airboss'&&e.type!=='gunheli')return;const
     light(e.x+bx*24,e.y+by*24,70,'255,220,150',0.35)}}
 function skyHit(e,crit){spark(e.x,e.y,crit?6:2,crit?150:100,crit?['#fff','#ffe07a']:['#ffe7a0','#c9ccd0'],0.25,1.3);if(crit)light(e.x,e.y,22,'255,230,140',0.1)}
 // shot down: the airframe tumbles out of the sky trailing smoke and burns in where it lands (no ground damage)
-function airDown(e){const big=e.type==='airboss'||e.type==='heavybomber';
+function airDown(e){const big=e.type==='airboss'||e.type==='heavybomber';medalBump('air');if(e.type==='uav')medalBump('uav');if(e.type==='airboss')medalBump('gunship');
   G.wrecks.push({type:e.type,x:e.x,y:e.y,alt:e.alt,alt0:e.alt,ang:e.ang,vx:e.vx*0.6,vy:e.vy*0.6,spin:(Math.random()-.5)*(e.type==='drone'?9:2.4),t:0,
     dur:e.type==='drone'?0.45:big?1.8:1.1,r:e.r,col:e.col,wob:e.wob,flash:0,fl:-9,bay:0,big});
   spark(e.x,e.y,e.type==='drone'?8:16,160,['#fff6d0','#ffc04a','#ff7a1a'],0.5,1.6);fireball(e.x,e.y,e.r*1.6,0.35);light(e.x,e.y,e.r*6,'255,170,80',0.3);
@@ -3349,6 +3389,59 @@ function bar(x,y,w,label,v,m,c1,c2,icon){panel(x-6,y-6,w+12,28);rrect(x,y,w,16,8
   ctx.fillStyle='#fff';ctx.font='700 11px Oxanium,sans-serif';ctx.textAlign='left';cIcon(icon,x+8,y+2,12,'#fff',2.4);ctx.fillText(label,x+26,y+12);ctx.textAlign='right';ctx.fillText(Math.ceil(Math.max(0,v))+' / '+Math.round(m),x+w-10,y+12)}
 function drawPlane(){if(S.set.gfx==='high'){drawPlaneHQ();return}ctx.scale(2.2,2.2);ctx.beginPath();ctx.moveTo(18,0);ctx.lineTo(-12,-3);ctx.lineTo(-14,0);ctx.lineTo(-12,3);ctx.fill();ctx.fillRect(-2,-16,7,32);ctx.fillRect(-14,-6,4,12)}
 
+// ================= MEDALS =================
+// Career decorations. S.ms keeps lifetime tallies, S.mg the medals won (id -> cash paid). Each medal pays a one-off award scaled to
+// how deep the career runs, and every medal held adds +1% to all cash (kills, crates, wave bonuses) for good. Wave stats count waves
+// held (cleared); a returning save is credited from S.best on load.
+Object.assign(IC,{medal:'M7 2l3.5 7.2M17 2l-3.5 7.2M7 2h10M12 15.5m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M12 12.6l.95 1.9 2.1.3-1.5 1.5.35 2.1-1.9-1-1.9 1 .35-2.1-1.5-1.5 2.1-.3z',
+  chute:'M3 11a9 7 0 0 1 18 0zM3 11l7.5 8M21 11l-7.5 8M12 11v8M10 19h4v3h-4z',
+  storm:'M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7M13 19h2',
+  uav:'M2 10.5h20M12 6v12M8.5 17.5h7M10 8.5h4M12 12m-1.5 0a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0'});
+const MEDALS=[
+ {id:'baptism',ic:'fort',name:'Baptism of Fire',desc:'Hold the fort through wave 5.',st:'wave',goal:5,cash:150},
+ {id:'hold',ic:'walls',name:'Hold the Line',desc:'Hold the fort through wave 25.',st:'wave',goal:25,cash:1500},
+ {id:'iron',ic:'armor',name:'Iron Curtain',desc:'Hold the fort through wave 50.',st:'wave',goal:50,cash:6000},
+ {id:'eagle',ic:'uav',name:'Eagle Eye',desc:'Shoot down 5 recon UAVs.',st:'uav',goal:5,cash:600},
+ {id:'storm',ic:'storm',name:'Storm Rider',desc:'Repel 5 sandstorms.',st:'storm',goal:5,cash:700},
+ {id:'canopy',ic:'chute',name:'Canopy Buster',desc:'Shoot 100 paratroopers before they land.',st:'chute',goal:100,cash:700},
+ {id:'stonewall',ic:'threat',name:'Stonewall',desc:'Repel 5 blitz waves.',st:'blitz',goal:5,cash:700},
+ {id:'tank',ic:'tank',name:'Tank Hunter',desc:'Destroy 10 enemy tanks.',st:'tank',goal:10,cash:900},
+ {id:'sky',ic:'aagun',name:'Sky Shield',desc:'Down 250 enemy aircraft.',st:'air',goal:250,cash:900},
+ {id:'giant',ic:'gunship',name:'Giant Killer',desc:'Bring down a heavy gunship.',st:'gunship',goal:1,cash:2000},
+ {id:'demo',ic:'nade',name:'Demolitions',desc:'Score 100 kills with hand grenades.',st:'nade',goal:100,cash:600},
+ {id:'streak',ic:'crit',name:'Hot Streak',desc:'Chain an 11-kill rifle streak for the full cash bonus.',st:'streak',goal:11,cash:400},
+ {id:'flawless',ic:'star',name:'Untouchable',desc:'Clear a wave from 15 on without the fort taking a hit.',st:'flawless',goal:1,cash:1200},
+ {id:'decorated',ic:'trophy',name:'Decorated',desc:'Hold 8 directive ranks in a single run.',st:'dirs',goal:8,cash:1000},
+ {id:'forward',ic:'play',name:'Forward Deployed',desc:'Deploy straight into a checkpoint wave.',st:'cp',goal:1,cash:500},
+ {id:'centurion',ic:'skull',name:'Centurion',desc:'Rack up 2,500 career kills.',st:'kills',goal:2500,cash:800}];
+const MS=()=>S.ms||(S.ms={}),MG=()=>S.mg||(S.mg={});
+let _mN=0;const medalMul=()=>1+0.01*_mN;
+const medalVal=m=>m.st==='kills'?S.tkills:MS()[m.st]||0,medalCash=m=>Math.round(m.cash*waveRew(Math.max(5,S.best)));
+function medalCheck(st){for(const m of MEDALS)if(m.st===st&&MG()[m.id]==null&&medalVal(m)>=m.goal)award(m)}
+function medalBump(st,n=1){MS()[st]=(MS()[st]||0)+n;medalCheck(st)}
+function medalMax(st,v){if(v>(MS()[st]||0)){MS()[st]=v;medalCheck(st)}}
+function award(m){const c=medalCash(m);MG()[m.id]=c;_mN=Object.keys(MG()).length;S.bank+=c;if(running&&G)(G.medals||(G.medals=[])).push(m.id);save();medalToast(m,c)}
+function medalSync(){const s=MS();s.wave=Math.max(s.wave||0,S.best-1);_mN=Object.keys(MG()).length;for(const st of new Set(MEDALS.map(m=>m.st)))medalCheck(st)}
+// toast: one at a time, non-blocking (pointer-events none), above the bars on desktop and clear of the thumb buttons on phones
+const _mtQ=[];let _mtOn=false;
+function medalToast(m,c){_mtQ.push([m,c]);if(!_mtOn)medalToastNext()}
+function medalToastNext(){const el=$('medalToast'),n=_mtQ.shift();if(!n){_mtOn=false;return}_mtOn=true;const[m,c]=n;
+  el.innerHTML=`<span class="mti">${ic(m.ic,22)}</span><span class="mtb"><span class="mtt">${ic('medal',12)}MEDAL EARNED</span><b>${m.name}</b><small><em>+$${f1(c)}</em> · +1% cash for good</small></span>`;
+  el.classList.remove('on');void el.offsetWidth;el.classList.add('on');
+  [784,988,1319].forEach((f,i)=>setTimeout(()=>tone(f,i<2?0.08:0.24,'square',0,0.045),i*110));
+  setTimeout(()=>{el.classList.remove('on');setTimeout(medalToastNext,400)},3600);
+  if(!running&&$('home').classList.contains('on'))renderHome()}
+function medalsHtml(){const got=MG(),n=Object.keys(got).length,open=!!S.set.medalsOpen;
+  const head=`<div class="mdh"><h3>${ic('medal',16)}DECORATIONS</h3><span class="mcount"><b>${n}</b> / ${MEDALS.length}</span>`
+    +(n?`<span class="mbon">+${n}% cash for good</span>`:'')+`<button class="btn mtog" data-mtog aria-expanded="${open}">${open?'HIDE':'VIEW ALL'}</button></div>`;
+  if(!open)return head+`<button class="mstrip" data-mtog aria-label="Show all medals">${MEDALS.map(m=>`<span class="mdot${got[m.id]!=null?' on':''}" title="${m.name}">${ic(m.ic,15)}</span>`).join('')}</button>`;
+  return head+`<div class="mgrid">${MEDALS.map(m=>{const on=got[m.id]!=null,v=Math.min(m.goal,medalVal(m));
+    return`<div class="medal${on?' on':''}"><span class="mi">${ic(m.ic,20)}</span><div class="mb"><div class="mn">${m.name}</div><div class="md">${m.desc}</div>`
+      +(on?`<div class="mr"><span>${ic('star',11)} EARNED</span><span>+$${f1(got[m.id])}</span></div>`
+          :`<div class="mp"><i style="width:${(100*v/m.goal).toFixed(1)}%"></i></div><div class="mr"><span>${f1(v)} / ${f1(m.goal)}</span><span>${ic('coin',11)} $${f1(medalCash(m))}</span></div>`)
+      +`</div></div>`}).join('')}</div>`}
+$('medals').addEventListener('click',e=>{if(!e.target.closest('[data-mtog]'))return;S.set.medalsOpen=!S.set.medalsOpen;save();$('medals').innerHTML=medalsHtml()});
+
 // ================= INPUT =================
 const MOBILE=matchMedia('(pointer:coarse)').matches&&matchMedia('(hover:none)').matches;
 if(MOBILE){document.body.classList.add('mobile');
@@ -3413,7 +3506,7 @@ function loop(now){acc+=Math.min((now-last)/1000,0.25)*S.set.speed*(G&&running?G
   if(running&&!paused&&!G.choosing){while(acc>=STEP&&running&&!G.choosing){update(STEP);acc-=STEP}}else acc=0;
   if(running)draw();audioFrame();requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
-renderHome();
+medalSync();renderHome();
 </script>
 </body>
 </html>
