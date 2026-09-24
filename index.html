@@ -626,7 +626,7 @@ const vision=()=>{if(running&&G===_visG&&G.time===_visT)return _visV;_visG=runni
 const wallsUp=()=>L('walls')>0&&G.wallHp>0;
 const blockHalf=()=>wallsUp()?wallHalfAt(L('walls'))+wallThickAt(L('walls'))/2:PLAT;
 // sight(): the live sight line. A sandstorm pulls it in by up to STORM_CUT; radar still reaches the same distance past it.
-const STORM_CUT=0.32,sight=()=>vision()*(1-STORM_CUT*(G&&G.fogK||0));
+const STORM_CUT=0.27,sight=()=>vision()*(1-STORM_CUT*(G&&G.fogK||0));
 const visible=e=>Math.hypot(e.x,e.y)<=(e.air?skyVision()-vision()+sight():sight())-e.r*0.3;
 const money=v=>Math.round(v*(1+0.15*L('bounty'))*(1+0.25*pk('salvage')+0.4*pk('hazard')));
 
@@ -689,7 +689,7 @@ function dmgFloat(e,d,crit){const f=e._df;
   G.floats.push(e._df={x:e.x+(Math.random()-.5)*8,y:e.y-e.r,t:crit?f1(d)+'!':f1(d),c:crit?'#ffd23f':'#eee',s:crit?12:9,life:0.9,v:d,crit})}
 function shake(n){if(S.set.shake)G.shake=Math.min(12,G.shake+n)}
 
-function hurtEnemy(e,d,crit){if(e.dead)return;d*=1+0.15*pk('overwatch');e.hp-=d;e.flash=0.08;(e.air?skyHit:fxHit)(e,crit);
+function hurtEnemy(e,d,crit){if(e.dead)return;d*=1+0.2*pk('overwatch');e.hp-=d;e.flash=0.08;(e.air?skyHit:fxHit)(e,crit);
   if(S.set.dmgNums&&visible(e)&&(crit||_mainHit||S.set.gfx!=='high'))dmgFloat(e,d,crit);
   if(e.hp<=0)kill(e)}
 // Kill streak: kills from the player's own aimed rifle (a tapped/clicked lock, not auto-fire) chain within STREAK_T seconds;
@@ -704,7 +704,7 @@ function kill(e){e.dead=true;if(_mainHit&&_aimed)streakKill();const r=Math.round
 let _mainHit=false;
 function fire(s,e,mult=1){
   if(e.air&&!s.main)mult*=AIR_BONUS.squad;
-  let d=dmgAt(L('dmg'))*mult*(1+0.3*pk('hollow'));const crit=Math.random()<critChance();if(crit)d*=2.5+Math.max(0,L('crit')-15)*0.1;
+  let d=dmgAt(L('dmg'))*mult*(1+0.25*pk('hollow'));const crit=Math.random()<critChance();if(crit)d*=2.5+Math.max(0,L('crit')-15)*0.1;
   s.ang=Math.atan2(e.y-s.y,e.x-s.x);s.fl=G.time;
   G.fx.push({k:'tracer',x:s.x+Math.cos(s.ang)*6,y:s.y+Math.sin(s.ang)*6,x2:e.x,y2:e.y,life:0.07,max:0.07,c:crit?'#ffd23f':'#fff2b0'});
   const ex=e.x,ey=e.y;_mainHit=!!s.main;hurtEnemy(e,d,crit);_mainHit=false;
@@ -728,8 +728,9 @@ const prio=()=>S.set.prio;
 const threatK=e=>e.air||e.bomb||(e.range&&e.moving===false)?0.25:e.moving===false?0.5:1;
 // lower score = engaged first
 const tScore=(e,d,heavy)=>{const p=S.set.prio;return p==='threat'?d*threatK(e):p==='tough'&&heavy?-e.hp:d};
-function bestTarget(list,f,heavy){let best=null,bs=Infinity;for(const e of list){if(e.dead||!visible(e))continue;const s=tScore(e,Math.hypot(e.x-f.x,e.y-f.y),heavy);if(s<bs){bs=s;best=e}}return best}
-function topTargets(list,f,n){const out=[];for(const e of list){if(e.dead||!visible(e))continue;e._s=tScore(e,Math.hypot(e.x-f.x,e.y-f.y),false);out.push(e)}return out.sort((a,b)=>a._s-b._s).slice(0,n)}
+// e.hi (recon UAV at altitude) is out of small-arms reach: auto-fire, squad and MG nests skip it; only an aimed rifle shot or dedicated air defence (hi=true) engages it.
+function bestTarget(list,f,heavy,hi){let best=null,bs=Infinity;for(const e of list){if(e.dead||e.hi&&!hi||!visible(e))continue;const s=tScore(e,Math.hypot(e.x-f.x,e.y-f.y),heavy);if(s<bs){bs=s;best=e}}return best}
+function topTargets(list,f,n){const out=[];for(const e of list){if(e.dead||e.hi||!visible(e))continue;e._s=tScore(e,Math.hypot(e.x-f.x,e.y-f.y),false);out.push(e)}return out.sort((a,b)=>a._s-b._s).slice(0,n)}
 const nearestVisible=f=>bestTarget(G.enemies.concat(G.sky),f,true);
 function endRun(retreat){
   running=false;sfx('die');closePerks();G.choosing=null;
@@ -758,7 +759,7 @@ function update(dt){
   const half=blockHalf(),n=G.sold.length;
   for(const s of G.sold)s.cd-=dt;
   if(G.rapidT>0)G.rapidT-=dt;
-  const m=G.sold[0],cd=cdAt(L('rate'))/(1+0.2*pk('drill'))/(G.rapidT>0?1.5:1);
+  const m=G.sold[0],cd=cdAt(L('rate'))/(1+0.15*pk('drill'))/(G.rapidT>0?1.5:1);
   if(m.tgt&&(m.tgt.dead||!visible(m.tgt)))m.tgt=null;
   if(!m.tgt&&mouse.down&&!G.airArmed&&!G.nadeArmed)m.tgt=enemyAt(mouse.wx,mouse.wy,Math.max(24,(MOBILE?36:18)/sc));
   let t=m.tgt,rm=1;if(!t&&L('auto')){t=nearestVisible(m);rm=autoAt(L('auto'))}
@@ -945,7 +946,7 @@ function buildUnits(){const u=[],ph=wallHalfAt(L('walls'));
   return u}
 const HEAVY={apc:1,tank:1,tesla:1,mlaunch:1};   // TOUGHEST doctrine applies to these; MG-class guns keep sweeping the nearest
 function nearestTo(u){const aa=AA_UNIT[u.k]||0,h=!!HEAVY[u.k],b=bestTarget(aa===1?G.enemies.concat(G.sky):G.enemies,u,h);
-  return aa===2&&bestTarget(G.sky,u,h)||b}
+  return aa===2&&bestTarget(G.sky,u,h,true)||b}
 function updateUnits(dt,ph){
   const fl=L('flame');if(fl&&L('walls')){G.flameT-=dt;if(G.flameT<=0){G.flameT=0.1;const reach=ph+Math.min(60,26+4*fl);
     for(const e of G.enemies){if(e.dead||Math.max(Math.abs(e.x),Math.abs(e.y))>reach)continue;hurtEnemy(e,flameDps(fl)*0.1,false);
@@ -2240,10 +2241,10 @@ const artyCdNow=()=>artyCd(L('arty'))/(1+0.35*pk('firemission')),airCdNow=()=>ai
 const perkWave=w=>w===3||w%5===0;
 const hasFuel=()=>G.units.some(u=>u.fuel!=null)||G.fleet.length>0;
 const PERKS=[
- {id:'hollow',ic:'dmg',name:'Hollow-Point Rounds',desc:'Rifle damage +30% for you and your squad.'},
- {id:'drill',ic:'rate',name:'Rapid Reload Drill',desc:'Every rifleman fires 20% faster.'},
+ {id:'hollow',ic:'dmg',name:'Hollow-Point Rounds',desc:'Rifle damage +25% for you and your squad.'},
+ {id:'drill',ic:'rate',name:'Rapid Reload Drill',desc:'Every rifleman fires 15% faster.'},
  {id:'eagle',ic:'crit',name:'Eagle Eye',desc:'+15% critical-hit chance on rifle shots.',ok:()=>critChance()<0.9},
- {id:'overwatch',ic:'vision',name:'Overwatch',desc:'Every gun, shell, missile and bomb you own deals +15% damage.'},
+ {id:'overwatch',ic:'vision',name:'Overwatch',desc:'Every gun, shell, missile and bomb you own deals +20% damage.'},
  {id:'masons',ic:'walls',name:'Combat Engineers',desc:'Walls +35% max HP and fully rebuilt right now, even if breached.',ok:()=>G.wallMax>0,go:()=>{G.wallMax*=1.35;G.wallHp=G.wallMax}},
  {id:'medevac',ic:'medic',name:'Medevac',desc:'Max health +35% and fully healed right now.',go:()=>{G.maxHp*=1.35;G.hp=G.maxHp}},
  {id:'salvage',ic:'bounty',name:'Battlefield Salvage',desc:'+25% cash from kills, crates and wave bonuses.'},
@@ -2344,29 +2345,29 @@ function drawPreview(type){if(SKY[type])return skyPreview(type);if(type.startsWi
 // Never on MBT / gunship waves, never two waves running, never the same event twice in a row; the first of a run comes early.
 //  storm  sight line pulls in by STORM_CUT (radar keeps its reach past it), standoff aircraft hold inside the dust edge
 //  para   transports cross the fort and drop part of the wave just outside the wire; troopers can't act under the canopy
-//  blitz  +30% hostiles, runner-heavy, delivered in 65% of the usual window
-//  armor  a 55%-HP MBT leads a brute-heavy column
+//  blitz  +20% hostiles, runner-heavy, delivered in 80% of the usual window
+//  armor  an MBT at 40% HP (rising to 55% by wave 23) leads a brute-heavy column
 const EVENTS={
- storm:{name:'SANDSTORM',tag:'STORM',from:6,bonus:0.5,col:'226,186,118',sub:'Sight line cut by a third · radar still tracks aircraft'},
+ storm:{name:'SANDSTORM',tag:'STORM',from:6,bonus:0.5,col:'226,186,118',sub:'Sight line cut by a quarter · radar still tracks aircraft'},
  para:{name:'AIRBORNE ASSAULT',tag:'AIRBORNE',from:8,bonus:0.5,col:'150,200,255',sub:'Paratroopers dropping at the walls · shoot the canopies'},
- blitz:{name:'BLITZ',tag:'BLITZ',from:5,bonus:0.4,col:'255,150,95',sub:'Light infantry rush · more hostiles, arriving faster'},
- armor:{name:'ARMORED COLUMN',tag:'ARMOR',from:12,bonus:0.6,col:'205,215,140',sub:'An enemy tank leads a heavy trooper column'}};
+ blitz:{name:'BLITZ',tag:'BLITZ',from:5,bonus:0.5,col:'255,150,95',sub:'Light infantry rush · more hostiles, arriving faster'},
+ armor:{name:'ARMORED COLUMN',tag:'ARMOR',from:13,bonus:0.6,col:'205,215,140',sub:'An enemy tank leads a heavy trooper column'}};
 Object.assign(INTEL,{
- ev_storm:['Sandstorm',2,'Dust rolls over the base and cuts your sight line by a third, so your guns engage late. Radar still tracks aircraft. Clearing the wave pays +50%.'],
+ ev_storm:['Sandstorm',2,'Dust rolls over the base and cuts your sight line by a quarter, so your guns engage late. Radar still tracks aircraft. Clearing the wave pays +50%.'],
  ev_para:['Airborne Assault',3,'Transports drop paratroopers just outside your wire. They can\'t fight under the canopy: shoot them before they land. Clearing the wave pays +50%.'],
- ev_blitz:['Blitz',2,'A mass rush of light infantry: 30% more hostiles, arriving much faster. Auto-fire, wire and frag rounds shine. Clearing the wave pays +40%.'],
+ ev_blitz:['Blitz',2,'A mass rush of light infantry: 20% more hostiles, arriving faster. Auto-fire, wire and frag rounds shine. Clearing the wave pays +50%.'],
  ev_armor:['Armored Column',4,'An enemy tank leads a column of heavy troopers. Artillery, armor and airstrikes crack it open. Clearing the wave pays +60%.']});
-const CHUTE_T=2.6,LAND_T=0.7,TRANS_V=150,TRANS_ALT=90;
+const CHUTE_T=2.1,LAND_T=0.7,TRANS_V=150,TRANS_ALT=90;
 function rollEvent(w){if(w<5||w%10===0||(w>=SKY_WAVE.airboss&&w%10===5)||w-G.evLast<2)return null;
   if(Math.random()>(G.evN?0.3:0.6))return null;
   const ok=Object.keys(EVENTS).filter(k=>w>=EVENTS[k].from&&k!==G.evPrev);return ok.length?ok[Math.random()*ok.length|0]:null}
 function evStart(){const w=G.wave,k=rollEvent(w);G.ev=k;if(!k)return;const E=EVENTS[k];G.evLast=w;G.evPrev=k;G.evN++;
-  if(k==='blitz'){const n=Math.round(G.spawnLeft*0.3);G.spawnLeft+=n;G.waveTotal+=n;G.spawnInt=Math.max(0.05,waveWindow(w)*0.65/G.spawnLeft)}
-  else if(k==='armor'){const t=spawn('boss');t.hp=t.max*=0.55;G.waveTotal++}
+  if(k==='blitz'){const n=Math.round(G.spawnLeft*0.2);G.spawnLeft+=n;G.waveTotal+=n;G.spawnInt=Math.max(0.05,waveWindow(w)*0.8/G.spawnLeft)}
+  else if(k==='armor'){const t=spawn('boss');t.hp=t.max*=Math.min(0.55,0.4+0.015*(w-13));G.waveTotal++}
   else if(k==='para')airborne(w);
   banner('WAVE '+w+' — '+E.name,E.sub,E.col);if(!seen()['ev_'+k])spotted('ev_'+k);evSting(k)}
 function evWeights(p){const k=G&&G.ev;if(k!=='blitz'&&k!=='armor')return;
-  for(const q of p)q[1]*=k==='blitz'?(q[0]==='runner'?4:q[0]==='grunt'?0.7:q[0]==='brute'?0.3:1):(q[0]==='brute'?4:q[0]==='runner'?0.5:1)}
+  for(const q of p)q[1]*=k==='blitz'?(q[0]==='runner'?3:q[0]==='grunt'?0.7:q[0]==='brute'?0.3:1):(q[0]==='brute'?3:q[0]==='runner'?0.5:1)}
 function evClear(b){const E=EVENTS[G.ev],x=Math.round(b*E.bonus);G.ev=null;float(0,-60,E.name+' REPELLED  +$'+f1(x),'rgb('+E.col+')',12);
   setTimeout(()=>tone(660,0.08,'square',0,0.04),120);setTimeout(()=>tone(990,0.14,'square',0,0.04),230);return x}
 function evSting(k){
@@ -2375,7 +2376,7 @@ function evSting(k){
 function paraType(w){const r=Math.random();return w>=15&&r<0.12?'brute':w>=8&&r<0.3?'bomber':r<0.58?'runner':'grunt'}
 // Each transport flies a straight line across the fort (offset o from centre) and spaces its stick over the two stretches of the
 // line that cross the drop ring just outside the wire, so the canopies bloom on both sides of the base as it passes over.
-function airborne(w){const n=Math.min(18,Math.max(5,Math.round(G.spawnLeft*0.35))),planes=w>=20?2:1,a0=Math.random()*TAU,
+function airborne(w){const n=Math.min(26,Math.max(6,Math.round(G.spawnLeft*0.45))),planes=w>=14?2:1,a0=Math.random()*TAU,
     rIn=fortHalf()+wallThick()/2+wireOut()+24,rOut=Math.max(rIn+30,Math.min(vision()*0.9,rIn+110)),S0=skyVision()+260;
   G.spawnLeft=Math.max(0,G.spawnLeft-n);
   for(let p=0,left=n;p<planes;p++){const m=p===planes-1?left:Math.ceil(n/planes),a=a0+p*(1.6+Math.random()*1.2),o=(Math.random()-.5)*rIn*0.9,t0=2.2+p*2.8,
@@ -2427,8 +2428,8 @@ function drawStorm(){const k=G.fogK;if(!(k>0.005))return;const Vs=sight(),out=vi
 // ---- recon UAV side objective ---------------------------------------------------------------------------------------
 const UAV_COL='255,214,90';
 function launchUav(){const e=spawnSky('uav'),R0=Math.hypot(e.x,e.y),d=vision()*(0.45+Math.random()*0.25);   // a chord that skirts the fort, so it is never simply the nearest target
-  e.ang+=(Math.random()<.5?1:-1)*Math.asin(Math.min(0.95,d/R0));G.waveTotal++;
-  banner('RECON UAV OVERHEAD','Shoot it down before it escapes · bounty +$'+f1(money(e.rew)),UAV_COL);
+  e.ang+=(Math.random()<.5?1:-1)*Math.asin(Math.min(0.95,d/R0));e.hi=true;G.waveTotal++;
+  banner('RECON UAV OVERHEAD',(MOBILE?'Tap':'Click')+' it: too high for auto-fire · bounty +$'+f1(money(e.rew)),UAV_COL);
   for(let i=0;i<2;i++)setTimeout(()=>tone(1240,0.06,'square',0,0.035),i*160)}
 // Escaped: its spotter calls a barrage. Red target rings mark each impact for ~1.6s before the shells land.
 function uavEscaped(e){const h=blockHalf(),n=Math.min(8,4+Math.floor(G.wave/15)),a=Math.atan2(e.y,e.x),R=skyVision()+80;
@@ -2472,7 +2473,7 @@ Object.assign(INTEL,{
  gunheli:['Attack Helicopter',3,'Hovers at standoff range raking your walls with cannon and rockets. Ground weapons can\'t reach it: lock on, set TARGET to THREATS, or build AA.'],
  strikejet:['Strike Jet',4,'Strafing runs across the fort, then loops back for more. Too fast for most guns: flak, SAMs and CIWS track it.'],
  heavybomber:['Heavy Bomber',4,'Carpets the fort with bombs on every pass. Tough airframe: kill it before it lines up its run.'],
- uav:['Recon UAV',2,'Unarmed spotter drone crossing the battlefield at altitude. Shoot it down for a big bounty. If it escapes, it calls an artillery barrage onto the fort.'],
+ uav:['Recon UAV',2,'Unarmed spotter drone crossing at altitude, above the reach of auto-fire and MG nests. Lock on with your rifle (AA guns and SAMs reach it too) for a big bounty. If it escapes, it calls an artillery barrage onto the fort.'],
  airboss:['Heavy Gunship',5,'Armored flying battery circling the fort with a 105mm gun. Flak and SAMs tear through its armor and suppress its guns. No AA? Lock on and set TARGET to THREATS.']});
 Object.assign(IC,{aagun:'M4 21h16M7 21l2-5h6l2 5M9 16l6-11M12 16l6-9M14 5l2-1.5M17 7l2-1',
   sam:'M4 21h16M6 21l3-5h6l3 5M8.5 16l8-11 2.5 2-8 10.5zM16.5 5l3-2-1 3.5',
@@ -2602,7 +2603,7 @@ function updateSky(dt,h){
   G.wrecks=G.wrecks.filter(w=>!w.done)}
 function updateAAD(dt){const tg=G.sky.length?skyTargets():[];
   for(const u of G.aa){
-    if(u.k==='aagun'){const t=bestTarget(tg,u,false);if(!t){u.burst=0;continue}
+    if(u.k==='aagun'){const t=bestTarget(tg,u,false,true);if(!t){u.burst=0;continue}
       u.ang+=Math.max(-7*dt,Math.min(7*dt,angTo(u.ang,Math.atan2(t.y-u.y,t.x-u.x))));
       u.cd-=dt;if(u.cd<=0&&!u.burst){u.burst=4;u.bt=0}
       if(u.burst){u.bt-=dt;if(u.bt<=0){u.bt=0.11;if(!--u.burst)u.cd=0.55;
