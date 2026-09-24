@@ -1241,7 +1241,7 @@ function shake(n){if(S.set.shake)G.shake=Math.min(12,G.shake+n)}
 let _dk='',_pen=0;
 function armMul(e){if(_dk==='m')return e.veh||e.boss?2.2:1;if(!e.arm)return 1;
   return _dk==='s'?1-e.arm*(1-Math.min(1,_pen+0.15*pk('tungsten'))):_dk==='p'?1-e.arm*(1-Math.max(0.55,_pen)):_dk==='f'?(1-e.arm)*0.5:1}
-function hurtEnemy(e,d,crit){if(e.dead)return;d*=(1+0.2*pk('overwatch'))*armMul(e)*(e.mkT>G.time?1+e.mkB:1);   // mkT/mkB: research mark (sgMark)e.hp-=d;e.flash=0.08;(e.air?skyHit:fxHit)(e,crit);
+function hurtEnemy(e,d,crit){if(e.dead)return;d*=(1+0.2*pk('overwatch'))*armMul(e)*(e.mkT>G.time?1+e.mkB:1);e.hp-=d;e.flash=0.08;(e.air?skyHit:fxHit)(e,crit);   // e.mkT/e.mkB: research mark (sgMark)
   if(S.set.dmgNums&&visible(e)&&(crit||_mainHit||S.set.gfx!=='high'))dmgFloat(e,d,crit);
   if(e.hp<=0)kill(e)}
 // Kill streak: kills from the player's own aimed rifle (a tapped/clicked lock, not auto-fire) chain within STREAK_T seconds;
@@ -1795,7 +1795,7 @@ function jetFly(j,tx,ty,v,turn,dt){j.ang=turnTo(j.ang,Math.atan2(ty-j.y,tx-j.x),
 function jetFollow(j,v,dt){while(j.path.length){const p=j.path[0];j.spd=v;if(!moveTo(j,p.x,p.y,v,dt,3.5))return false;j.path.shift()}j.spd=0;return true}
 function jetSfx(){if(G.jetSfxT<=0){G.jetSfxT=1.4;sfx('jet')}}
 function updateJets(dt){G.jets=[];G.jetSfxT-=dt;if(!G.fleet.length)return;
-  const g=rwyGeo(),fl=L('fighter'),cdBase=Math.max(5,20*Math.pow(0.9,fl-1))*stripMul()*(sg('fighter','stealth')?0.65:1),   // stealth: shorter loiter between gun runscombat=combatOn(),W1={x:g.x0-340,y:g.cy},T={x:g.x0+24,y:g.cy},
+  const g=rwyGeo(),fl=L('fighter'),cdBase=Math.max(5,20*Math.pow(0.9,fl-1))*stripMul()*(sg('fighter','stealth')?0.65:1),combat=combatOn(),W1={x:g.x0-340,y:g.cy},T={x:g.x0+24,y:g.cy},
     vis=G.enemies.filter(e=>!e.dead&&visible(e)),orbit=Math.max(fortHalf()+170,vision()*0.6),holding=G.fleet.some(j=>j.fs==='hold'||j.fs==='final');
   for(const j of G.fleet){
     if(j.alt>0||j.fs==='roll')j.fuel=Math.max(j.fs==='air'||j.fs==='strafe'?0:RESERVE,j.fuel-burnRate('jet')*dt);
@@ -2127,7 +2127,7 @@ function sgDps(id){switch(id){
   case'gunship':return gsDmg(L('gunship'))/2.4+gsGun(L('gunship'))/0.22;
   case'fighter':return jetDmg(L('fighter'))*0.6}return 0}
 // ---- run setup (end of startRun): escort drones, extra gunships, APC dismount teams, fuel-free vehicles ----
-function sigInit(){G._sg=null;G.sgfx=[];G.drones=[];G.sgl=[];G.aps=0;G.shT=0;G.shW=-1;G.cca=null;G._bf=0;
+function sigInit(){G._sg=null;G.sgfx=[];G.drones=[];G.sgl=[];G.shT=0;G.shW=-1;G.cca=null;G._bf=0;
   let p;const drones=(o,id,p)=>{for(let i=0;i<p[0];i++)G.drones.push({o,id,frac:p[1],i,n:p[0],ph:R()*TAU,rr:(o.k?22:15)+i*3,x:o.x,y:o.y,cd:0.3+R()*0.4,ang:0,fl:-9})};
   if(L('apc')&&(p=sg('apc','dismount'))){const r=laneHalf(0)-16;   // rifle teams dig in at the lane corners, clear of the vehicle tracks
     for(let i=0;i<p;i++){const a=-Math.PI/4+i*Math.PI,cx=Math.cos(a)*r,cy=Math.sin(a)*r;for(const s of[-1,1])G.sold.push({x:cx-Math.sin(a)*5*s,y:cy+Math.cos(a)*5*s,cd:R(),ang:a,tgt:null,dm:1})}}
@@ -2147,9 +2147,10 @@ function sigUpdate(dt){G._bf=Math.round(14*GFX.fx);
   if(L('walls')){let p;if(G.wallHp>0&&(p=sg('walls','regen')))G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*p*dt);
     if(G.shT>0){G.shT-=dt;G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.3*dt/SHIELD_T);if(G.shT<=0)float(0,-fortHalf()-30,'BREACH SEALED','#9fe8ff',13)}
     if((p=sg('walls','intercept'))&&G.wallHp>0)sgAps(G,0,0,170,p,3,dt,'170,230,255',1)}
-  for(const u of G.units){if(u.stun>0)continue;let p;
+  for(const u of G.units){let p;   // active protection is automatic: it keeps working while the crew is knocked out
     if(u.k==='tesla'&&(p=sg('tesla','intercept')))sgAps(u,u.x,u.y,Math.min(360,sight()),p,3,dt,'255,210,140');
     if(u.k==='tank'&&(p=sg('tank','intercept')))sgAps(u,u.x,u.y,70,p,1,dt,'255,230,190',2);
+    if(u.stun>0)continue;
     if(u.k==='heli'&&u.fs==='air'&&(p=sg('heli','speed')))u.orb+=0.35*(p-1)*dt;   // compound helo: faster orbit
     if((p=sg(u.k,'atgm'))&&armed(u))sgAtgm(u,u.k,p,dt)}
   for(const u of G.air){const p=u.k==='gunship'&&sg('gunship','atgm');if(p)sgAtgm(u,'gunship',p,dt)}
@@ -2169,7 +2170,7 @@ function sigUpdate(dt){G._bf=Math.round(14*GFX.fx);
 // ---- intercept (wall APS / C-RAM / Trophy): charges build at `rate` a second up to `cap`; each kills the inbound round nearest impact
 // within R0 of the emitter. mode 1 = wall launchers (rounds falling on the fort or a unit; emitter = nearest wall point), 2 = only
 // rounds aimed at this vehicle
-function sgAps(o,x,y,R0,rate,cap,dt,col,mode){o.aps=Math.min(cap,(o.aps||0)+rate*dt);if(o.aps<1)return 0;
+function sgAps(o,x,y,R0,rate,cap,dt,col,mode){o.aps=Math.min(cap,(o.aps??cap)+rate*dt);if(o.aps<1)return 0;   // deploys fully charged
   const h=blockHalf(),cl=v=>Math.max(-h,Math.min(h,v));let best=null,bk=-1,bx=0,by=0,ex=x,ey=y,sky=false;
   const test=(s,air)=>{if(s.t<0)return;const k=Math.min(1,s.t/s.dur),px=s.x+(s.tx-s.x)*k,py=s.y+(s.ty-s.y)*k;
     if(mode===1&&!s.u&&boxD(s.tx,s.ty)>h+4)return;if(mode===2&&s.u!==o&&Math.hypot(s.tx-x,s.ty-y)>30)return;
