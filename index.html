@@ -330,7 +330,7 @@ body.mobile #medalToast{bottom:calc(236px + env(safe-area-inset-bottom))}
   font:800 16px Oxanium,sans-serif;letter-spacing:1.5px;cursor:pointer;touch-action:manipulation;color:var(--dim);background:rgba(28,34,24,.97);border:1px solid var(--line2);box-shadow:0 12px 30px rgba(0,0,0,.55)}
 .rsgo.go{background:linear-gradient(135deg,#8fe06a,#4fae34);color:#0b1a05;border:0}.rsgo.rf{background:linear-gradient(135deg,#a6ddff,#4aa3e0);color:#06131d;border:0}
 .rsgo small{font:600 12px Inter,sans-serif;letter-spacing:0}
-.rsw.nar .rsh{padding:12px 14px;gap:10px 14px}.rsw.nar .rsh .rpb b{font-size:24px}.rsw.nar .rsh p{min-width:0;font-size:12.5px}.rsw.nar .rsdh{padding:12px}.rsw.nar .rsdh .ico{width:44px;height:44px}.rsw.nar .rsdh h3{font-size:17px}
+.rsw.nar .rsh{padding:12px 14px;gap:10px 14px}.rsw.nar .rsh .rpb b{font-size:24px}.rsw.nar .rsh p{flex:1 1 100%;min-width:0;font-size:12.5px}.rsw.nar .rsdh{padding:12px}.rsw.nar .rsdh .ico{width:44px;height:44px}.rsw.nar .rsdh h3{font-size:17px}
 </style>
 </head>
 <body>
@@ -742,7 +742,7 @@ function buyResearch(id){const r=RLINES[id];if(!r)return false;
 // Per wave held: 1 + floor(w/25); every 10th (armor) wave +3 + floor(w/25) more; +2 per wave beyond your previous best;
 // +10 per medal. A checkpoint start pays 50% of the waves it skipped, once the run holds at least 5 waves.
 const rpWave=w=>1+Math.floor(w/25)+(w%10===0?3+Math.floor(w/25):0);
-function rpGain(n){S.rp+=n;if(running&&G)G.rp=(G.rp||0)+n}
+function rpGain(n){S.rp+=n;if(G&&!G.over)G.rp=(G.rp||0)+n}   // G.over: the run's tally is closed (set in endRun)
 function rpClear(w){G.cleared=(G.cleared||0)+1;const n=rpWave(w)+(w>G.startBest?2:0);rpGain(n);return n}
 function rpCheckpoint(){const w0=G.startWave||1;if(w0<=1||(G.cleared||0)<5)return 0;let n=0;for(let w=1;w<w0;w++)n+=rpWave(w);n=Math.floor(n*0.5);rpGain(n);return n}
 // Plain-language signature lines for the research cards
@@ -1121,8 +1121,8 @@ function startRun(){
   G={wave:startWaveOk()-1,spawnLeft:0,spawnT:0,spawnInt:1,breakT:2,breakMax:2,enemies:[],fx:[],parts:[],floats:[],shells:[],bombs:[],planes:[],mines:[],crates:[],
     hp:hpAt(L('hp')),maxHp:hpAt(L('hp')),wallMax:wallMaxAt(L('walls')),wallHp:wallMaxAt(L('walls')),sold,kills:0,earned:0,time:0,shake:0,
     zoomV:vision()*0.3,artyT:3,airT:0,airArmed:false,nadeT:0,nadeArmed:false,nades:[],rapidT:0,crateT:10,banner:'',bannerT:0,hurtT:0,breached:false,pk:{},choosing:null,perkAt:0,startBest:S.best,threat:{},breachW:0,ev:null,evLast:0,evPrev:null,evN:0,fogK:0,drops:[],transports:[],vq:[],eshots:[],vwrecks:[]};
+  G.rs=Object.assign({},S.rs);G.rf=Object.assign({},S.rf);G.rp=0;G.cleared=0;G.rsNew=rsFieldNew();   // research is frozen for the whole run
   {const w0=startWaveOk();G.startWave=w0;if(w0>1){G.cp={i:0,n:Math.min(8,Math.floor(w0/10))};G.perkAt=0.5;medalMax('cp',1)}}
-  G.rs=Object.assign({},S.rs);G.rf=Object.assign({},S.rf);G.rp=0;G.cleared=0;G.rsNew=rsFieldNew();
   G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=Math.min(S.set.lastSpeed||1,SPEEDS[L('speed')]);syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;initLogi();
   skyInit();syncPrioBtn();syncNadeBtn(true);$('hud').classList.toggle('air',L('air')>0);
   running=true;paused=false;mouse.down=false;$('overlay').classList.remove('on');showScreen('game');
@@ -1348,7 +1348,7 @@ function endRun(retreat){
   running=false;sfx('die');closePerks();G.choosing=null;
   const tot=Object.values(G.threat).reduce((a,b)=>a+b,0),top=Object.entries(G.threat).filter(([,v])=>v>=tot*0.2).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>k);
   lastCause=retreat||!top.length?null:{top,breachW:G.breachW&&!wallsUp()?G.breachW:0,doc:top.some(t=>STANDOFF.has(t))&&prio()!=='threat'?prioShown()?'threat':'lock':''};
-  rpCheckpoint();S.rpLast=G.rp||0;
+  rpCheckpoint();S.rpLast=G.rp||0;G.over=true;
   const rec=G.wave>G.startBest&&G.startBest>0;if(G.wave>S.best)S.best=G.wave;save();
   lastRunMsg=[['Wave reached',G.wave+(rec?' <small style="font-size:11px;color:var(--good);letter-spacing:1px">NEW BEST</small>':'')],['Kills',G.kills],['Earned','$'+f1(G.earned)],['Survived',Math.floor(G.time/60)+'m '+Math.floor(G.time%60)+'s']].map(([k,v])=>`<div class="stat"><span>${k}</span><b>${v}</b></div>`).join('')
     +`<button class="stat rpst" data-rsgo style="grid-column:1/-1"><span>${ic('research',14)}RESEARCH POINTS</span><b>+${f1(S.rpLast)} RP</b><i>${f1(S.rp)} RP banked${rsReady().length?' · '+rsReady().length+' tier'+(rsReady().length>1?'s':'')+' ready':''}</i></button>`
