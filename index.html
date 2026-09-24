@@ -1828,7 +1828,8 @@ function updateJets(dt){G.jets=[];G.jetSfxT-=dt;if(!G.fleet.length)return;
     case'climb':j.spd=Math.min(JET_V.patrol,j.spd+60*dt);j.x+=j.spd*dt;j.alt=Math.min(1,j.alt+dt/2.2);
       if(G.rwy===j&&j.x>g.x1+20)G.rwy=null;if(j.alt>=1){j.fs='air';if(G.rwy===j)G.rwy=null}break;
     case'air':if(j.fuel<AIR_LOW||(!combat&&j.fuel<0.6)){j.fs='rtb';break}
-      j.cd-=dt;if(j.cd<=0&&vis.length){j.tgt=vis[Math.floor(Math.random()*vis.length)];j.fs='strafe';j.lock=null;j.hit=new Set();j.st=0;jetSfx();break}
+      j.cd-=dt;if(j.cd<=0&&vis.length){j.tgt=bestCluster(45,vis);   // gun run lines up on the densest pack, not a random straggler
+      j.fs='strafe';j.lock=null;j.hit=new Set();j.st=0;jetSfx();break}
       {const a=Math.atan2(j.y,j.x)+0.6;jetFly(j,Math.cos(a)*orbit,Math.sin(a)*orbit,JET_V.patrol,1.6,dt)}break;
     case'strafe':j.st+=dt;
       if(!j.lock){if(!j.tgt||j.tgt.dead){j.tgt=vis.length?vis.reduce((b,e)=>Math.hypot(e.x-j.x,e.y-j.y)<Math.hypot(b.x-j.x,b.y-j.y)?e:b):null;if(!j.tgt){j.fs='air';j.cd=1;break}}
