@@ -5520,7 +5520,8 @@ function drawDayDial(cx,cy,r){const h=DN.h,a=_amb,nk=DN.nk;
 function draw(){
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#161a12';ctx.fillRect(0,0,VW,VH);
   if(!G)return;
-  G.zoomV+=(vision()-G.zoomV)*0.035;sc=Math.min(VW,VH)/(2*(40+G.zoomV*1.12))*(G.uZoom||1);
+  G.zoomV+=(vision()-G.zoomV)*0.035;const pf=VH>VW*1.2?Math.min(1.35,1+(VH/VW-1.2)*0.45):1;   // portrait fill
+  sc=Math.min(VW,VH)/(2*(40+G.zoomV*1.12))*pf*(G.uZoom||1);
   const sx=(Math.random()-.5)*G.shake,sy=(Math.random()-.5)*G.shake;
   ctx.setTransform(dpr*sc,0,0,dpr*sc,dpr*(VW/2+sx),dpr*(VH/2+sy));
   dayFrame();
@@ -5561,7 +5562,8 @@ function draw(){
   if(S.set.ring){ctx.strokeStyle='rgba(200,220,150,.15)';ctx.lineWidth=1;ctx.setLineDash([6,6]);ctx.beginPath();ctx.arc(0,0,V,0,7);ctx.stroke();ctx.setLineDash([])}
   // threat indicators
   const ta=Math.max(1,1/sc),Vs=sight();for(const e of G.enemies)if(!visible(e)){const a=Math.atan2(e.y,e.x),d=Math.hypot(e.x,e.y),al=Math.max(0.15,1-(d-Vs)/300);
-    ctx.save();ctx.translate(Math.cos(a)*(Vs+10*ta),Math.sin(a)*(Vs+10*ta));ctx.rotate(a+Math.PI);ctx.scale(ta,ta);ctx.fillStyle=`rgba(255,70,50,${al*0.8})`;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(7,-4);ctx.lineTo(7,4);ctx.fill();ctx.restore()}
+    let tx=Math.cos(a)*(Vs+10*ta),ty=Math.sin(a)*(Vs+10*ta);const hw=VW/2/sc-14*ta,hh=VH/2/sc-14*ta,kk=Math.min(1,hw/Math.max(1e-6,Math.abs(tx)),hh/Math.max(1e-6,Math.abs(ty)));tx*=kk;ty*=kk;
+    ctx.save();ctx.translate(tx,ty);ctx.rotate(a+Math.PI);ctx.scale(ta,ta);ctx.fillStyle=`rgba(255,70,50,${al*0.8})`;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(7,-4);ctx.lineTo(7,4);ctx.fill();ctx.restore()}
   drawUavMarks();drawFuelBars();
   drawFloats();drawNadeAim();
   if(G.airArmed||G.airAim){const lw=Math.max(1.5,2/sc);ctx.strokeStyle='#ff6a3a';ctx.fillStyle='rgba(255,106,58,.25)';ctx.lineWidth=lw;
