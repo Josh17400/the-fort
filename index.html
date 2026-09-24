@@ -33,6 +33,7 @@ html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webk
 .logo small{display:block;color:var(--dim);font-size:11px;letter-spacing:2px}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{background:var(--glass);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:13px;color:var(--dim);display:flex;gap:6px;align-items:center}
+@media(max-width:430px){.chips{gap:6px}.chip{padding:7px 10px;font-size:12px;gap:5px}.chip .ic{width:16px;height:16px}}
 .chip b{font-family:Oxanium;color:var(--text);font-size:15px}.chip.money b{color:var(--acc2)}
 .icon-btn{background:var(--glass);border:1px solid var(--line);color:var(--text);border-radius:999px;width:38px;height:38px;cursor:pointer;font-size:16px;transition:.15s}
 .icon-btn:hover{border-color:var(--line2);transform:rotate(30deg)}
@@ -154,7 +155,7 @@ body:not(.mobile) #hud.air #nadeBtn{bottom:calc(84px + env(safe-area-inset-botto
 #prioBtn.hint{animation:pulse 1s infinite;border-color:#ff7a4a}
 #pauseBtn{right:calc(16px + env(safe-area-inset-right));top:calc(16px + env(safe-area-inset-top));width:44px;height:44px;padding:0;border-radius:12px;background:rgba(22,27,18,.7);backdrop-filter:blur(6px)}
 /* first-encounter intel card */
-#intel{position:fixed;left:calc(20px + env(safe-area-inset-left));top:calc(120px + env(safe-area-inset-top));width:320px;pointer-events:none;display:flex;gap:12px;align-items:center;
+#intel{position:fixed;left:calc(20px + env(safe-area-inset-left));top:calc(max(120px,var(--logi-y,0px)) + env(safe-area-inset-top));width:320px;pointer-events:none;display:flex;gap:12px;align-items:center;
   padding:12px 14px 14px 12px;border-radius:var(--r);background:var(--glass);border:1px solid var(--line2);border-left:3px solid var(--acc);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   box-shadow:0 12px 30px rgba(0,0,0,.4);overflow:hidden;opacity:0;transform:translateX(-24px);transition:opacity .3s ease,transform .35s cubic-bezier(.2,.9,.3,1.2);visibility:hidden}
 #intel.on{opacity:1;transform:none;visibility:visible}
@@ -1287,11 +1288,13 @@ function drawFuelBars(){if(!G.fleet)return;const px=1/sc,w=Math.max(16,20*px),h=
     if(st==='dry'&&blink){ctx.font=`700 ${Math.round(Math.max(6,8*px))}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle='#ef5a4f';ctx.fillText('NO FUEL',x,y-2*px)}};
   for(const u of G.units)if(u.fuel!=null)one(u.x,u.y-(u.k==='heli'?(0.84+0.16*u.alt)*20:(US[u.k]||2)*9)-4,u.fuel,u.fs);
   for(const j of G.fleet)one(j.x,j.y-(2.1+0.4*j.alt)*12-4,j.fuel,j.fs)}
+let _logiY=-1;
 function drawLogiHud(){const D=G.depot,nar=VW<640;
   if(G.depotWarnT>0){const a=Math.min(1,G.depotWarnT),w=Math.min(540,VW-32),x=VW/2-w/2,y=nar?VH*0.3:VH*0.3,p=0.5+0.5*Math.sin(G.time*10);ctx.globalAlpha=a;
     rrect(x,y,w,70,12,'rgba(60,10,6,.88)');ctx.strokeStyle=`rgba(255,90,70,${0.5+0.5*p})`;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(x+1,y+1,w-2,68,12);ctx.stroke();
     cIcon('depot',x+18,y+22,26,'#ff8a70',2.2);ctx.textAlign='left';ctx.fillStyle='#ffd0c4';ctx.font=`800 ${nar?19:24}px Oxanium,sans-serif`;ctx.fillText('FUEL DEPOT DESTROYED',x+56,y+36);
     ctx.fillStyle='#ff9d8a';ctx.font='500 12px Inter,sans-serif';ctx.fillText('No refuelling for the rest of the run. Fuel is now finite.',x+56,y+55);ctx.globalAlpha=1}
+  const iy=D&&!nar?180:0;if(iy!==_logiY){_logiY=iy;$('intel').style.setProperty('--logi-y',iy+'px')}   // desktop: the intel card drops below the depot chip
   if(!D)return;
   const x=20,w=230,h=58,y=nar?180:114,hit=D.hitT>0&&!D.dead;
   panel(x,y,w,h);if(hit){ctx.strokeStyle=`rgba(239,90,79,${0.4+0.4*Math.sin(G.time*14)})`;ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(x+.5,y+.5,w-1,h-1,12);ctx.stroke()}
