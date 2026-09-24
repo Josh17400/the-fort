@@ -167,6 +167,7 @@ body.mobile .card:hover,body.mobile .btn:hover{transform:none}
   <div class="set"><div>Vision ring<small>Dashed outline of your sight range</small></div><input type="checkbox" class="sw" id="sRing"></div>
   <div class="set"><div>Pause on focus loss</div><input type="checkbox" class="sw" id="sBlur"></div>
   <div class="set"><div>Base game speed<small>Buy Command Tempo for faster speeds</small></div><select id="sSpeed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1×</option></select></div>
+  <div class="set"><div>Graphics quality<small>Lower it if big battles stutter</small></div><select id="sGfx"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
   <div class="set"><div>Reset progress<small>Wipes money and all upgrades</small></div><button class="btn danger" id="resetBtn">RESET</button></div>
   <div style="margin-top:16px;text-align:right"><button class="btn big" id="backBtn" style="padding:12px 30px;font-size:16px">DONE</button></div>
 </div></div>
@@ -178,10 +179,11 @@ IC.speed='M4 5l8 7-8 7zM12 5l8 7-8 7z';
 function ic(n,s=20){return`<svg class="ic" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[n]}"/></svg>`}
 const _p2={};function cIcon(n,x,y,s,c,lw=2){const p=_p2[n]||(_p2[n]=new Path2D(IC[n]));ctx.save();ctx.translate(x,y);ctx.scale(s/24,s/24);ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke(p);ctx.restore()}
 // ================= SAVE =================
+const GFX_DEF=matchMedia('(pointer:coarse)').matches&&matchMedia('(hover:none)').matches?'medium':'high';
 const DEF_SET={vol:60,shake:true,dmgNums:true,ring:true,blurPause:true,speed:1};
 let S;
 function loadSave(){try{S=JSON.parse(localStorage.getItem('theFortSave'))}catch(e){}
-  if(!S||typeof S!=='object')S={};S.bank=S.bank||0;S.best=S.best||0;S.tkills=S.tkills||0;S.lv=S.lv||{};S.set=Object.assign({},DEF_SET,S.set||{});if(S.set.speed>1)S.set.speed=1}
+  if(!S||typeof S!=='object')S={};S.bank=S.bank||0;S.best=S.best||0;S.tkills=S.tkills||0;S.lv=S.lv||{};S.set=Object.assign({},DEF_SET,S.set||{});if(S.set.speed>1)S.set.speed=1;if(!['high','medium','low'].includes(S.set.gfx))S.set.gfx=GFX_DEF}
 function save(){try{localStorage.setItem('theFortSave',JSON.stringify(S))}catch(e){}}
 loadSave();
 const L=id=>S.lv[id]||0;
@@ -267,13 +269,14 @@ $('store').addEventListener('click',e=>{const id=e.target.closest('[data-id]')?.
 $('deployBtn').onclick=()=>{startRun();};
 $('settingsBtn').onclick=()=>{syncSettings();showScreen('settings')};
 $('backBtn').onclick=()=>showScreen('home');$('settings').addEventListener('mousedown',e=>{if(e.target.id==='settings')showScreen('home')});
-function syncSettings(){$('sVol').value=S.set.vol;$('sShake').checked=S.set.shake;$('sDmg').checked=S.set.dmgNums;$('sRing').checked=S.set.ring;$('sBlur').checked=S.set.blurPause;$('sSpeed').value=String(S.set.speed);$('resetBtn').textContent='RESET';}
+function syncSettings(){$('sVol').value=S.set.vol;$('sShake').checked=S.set.shake;$('sDmg').checked=S.set.dmgNums;$('sRing').checked=S.set.ring;$('sBlur').checked=S.set.blurPause;$('sSpeed').value=String(S.set.speed);$('sGfx').value=S.set.gfx;$('resetBtn').textContent='RESET';}
 $('sVol').oninput=e=>{S.set.vol=+e.target.value;save()};$('sVol').onchange=()=>sfx('buy');
 $('sShake').onchange=e=>{S.set.shake=e.target.checked;save()};
 $('sDmg').onchange=e=>{S.set.dmgNums=e.target.checked;save()};
 $('sRing').onchange=e=>{S.set.ring=e.target.checked;save()};
 $('sBlur').onchange=e=>{S.set.blurPause=e.target.checked;save()};
 $('sSpeed').onchange=e=>{S.set.speed=+e.target.value;save()};
+$('sGfx').onchange=e=>{S.set.gfx=e.target.value;applyGfx();save()};
 $('resetBtn').onclick=e=>{if(e.target.textContent==='RESET'){e.target.textContent='SURE? CLICK AGAIN';return}
   const set=S.set;S={bank:0,best:0,tkills:0,lv:{},set};save();lastRunMsg='';e.target.textContent='DONE';};
 
@@ -303,8 +306,14 @@ function sfx(n){switch(n){
 // ================= CANVAS =================
 const cv=$('cv'),ctx=cv.getContext('2d');let VW,VH,dpr,sc;
 const WORLD_R=540,SPAWN_R=590,PLAT=10;
-function resize(){dpr=devicePixelRatio||1;VW=innerWidth;VH=innerHeight;cv.width=VW*dpr;cv.height=VH*dpr;cv.style.width=VW+'px';cv.style.height=VH+'px';sc=Math.min(VW,VH)/(2*WORLD_R)}
+// Graphics presets: dpr caps the backing-store resolution; fx/smoke scale VFX budgets; lights/vig toggle additive glow + screen vignette;
+// lod = on-screen enemy radius (px) below which the detailed sprite is swapped for a silhouette nobody could tell apart at that size
+const GFX_PRESET={high:{dpr:3,fx:1,smoke:1,lights:true,vig:true,lod:0},medium:{dpr:1.5,fx:0.65,smoke:0.5,lights:true,vig:true,lod:1.6},low:{dpr:1,fx:0.35,smoke:0.3,lights:false,vig:false,lod:2.4}};
+let GFX=GFX_PRESET[S.set.gfx]||GFX_PRESET.high;
+function resize(){dpr=Math.min(devicePixelRatio||1,GFX.dpr);VW=innerWidth;VH=innerHeight;cv.width=VW*dpr;cv.height=VH*dpr;cv.style.width=VW+'px';cv.style.height=VH+'px';sc=Math.min(VW,VH)/(2*WORLD_R)}
 addEventListener('resize',resize);resize();
+let _gnd=null;
+const groundPaths=()=>_gnd||(_gnd=decals.reduce((m,d)=>((m[d.c]||(m[d.c]=new Path2D())).rect(d.x,d.y,d.s,d.s*0.6),m),{}));
 const decals=Array.from({length:1400},()=>{const a=Math.random()*7,r=Math.sqrt(Math.random())*1500;return{x:Math.cos(a)*r,y:Math.sin(a)*r,s:2+Math.random()*9,c:Math.random()<.5?'#2a3120':'#1f2518'}});
 
 // ================= GAME =================
@@ -327,7 +336,10 @@ function startRun(){
   G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=Math.min(S.set.lastSpeed||1,SPEEDS[L('speed')]);syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;
   running=true;paused=false;$('overlay').classList.remove('on');showScreen('game');
 }
-const vision=()=>Math.max(visionAt(L('vision')),fortHalf()+wallThick()+120);
+// vision() is hit thousands of times a frame via visible(); levels can't change mid-run, so memoise it per sim tick.
+const TAU=Math.PI*2;
+let _visG=null,_visT=-1,_visV=0;
+const vision=()=>{if(running&&G===_visG&&G.time===_visT)return _visV;_visG=running?G:null;_visT=running?G.time:-1;return _visV=Math.max(visionAt(L('vision')),fortHalf()+wallThick()+120)};
 const wallsUp=()=>L('walls')>0&&G.wallHp>0;
 const blockHalf=()=>wallsUp()?wallHalfAt(L('walls'))+wallThickAt(L('walls'))/2:PLAT;
 const visible=e=>Math.hypot(e.x,e.y)<=vision()-e.r*0.3;
@@ -346,11 +358,19 @@ function startWave(){
   banner(G.wave%10===0?'WAVE '+G.wave+' — ENEMY ARMOR INCOMING':'WAVE '+G.wave);sfx('wave');
 }
 function banner(t){G.banner=t;G.bannerT=2.5}
-function float(x,y,t,c,s=10){G.floats.push({x,y,t,c,s,life:0.9})}
+// Floating text budget: kill cash (+$) stops spawning past FLOAT_SOFT; headline text (wave clear, crate cash) always spawns.
+const FLOAT_SOFT=40,FLOAT_HARD=90;
+function float(x,y,t,c,s=10){if(s<13&&G.floats.length>=(s<11?FLOAT_HARD:FLOAT_SOFT))return;G.floats.push({x,y,t,c,s,life:0.9})}
+// Damage numbers: rapid hits on one enemy merge into a single ticking number. Under load (or with the camera far out,
+// where dozens of tiny numbers read as noise) plain hits are dropped and only crits get a new number.
+function dmgFloat(e,d,crit){const f=e._df;
+  if(f&&f.life>0.6&&f.crit===crit){f.v+=d;f.t=crit?f1(f.v)+'!':f1(f.v);return}
+  const n=G.floats.length;if(n>=FLOAT_HARD||(!crit&&n>=(sc<0.35?FLOAT_SOFT/2:FLOAT_SOFT)))return;
+  G.floats.push(e._df={x:e.x+(Math.random()-.5)*8,y:e.y-e.r,t:crit?f1(d)+'!':f1(d),c:crit?'#ffd23f':'#eee',s:crit?12:9,life:0.9,v:d,crit})}
 function shake(n){if(S.set.shake)G.shake=Math.min(12,G.shake+n)}
 
 function hurtEnemy(e,d,crit){if(e.dead)return;e.hp-=d;e.flash=0.08;fxHit(e,crit);
-  if(S.set.dmgNums&&visible(e))float(e.x+(Math.random()-.5)*8,e.y-e.r,crit?f1(d)+'!':f1(d),crit?'#ffd23f':'#eee',crit?12:9);
+  if(S.set.dmgNums&&visible(e))dmgFloat(e,d,crit);
   if(e.hp<=0)kill(e)}
 function kill(e){e.dead=true;const r=money(e.rew);S.bank+=r;G.earned+=r;G.kills++;S.tkills++;fxKill(e);
   float(e.x,e.y-e.r-8,'+$'+r,'#7ddc5a',11);sfx('kill');
@@ -398,9 +418,11 @@ function update(dt){
   if(!m.tgt&&mouse.down&&!G.airArmed)m.tgt=enemyAt(mouse.wx,mouse.wy,Math.max(24,(MOBILE?36:18)/sc));
   let t=m.tgt,rm=1;if(!t&&L('auto')){t=nearestVisible(m);rm=autoAt(L('auto'))}
   if(t&&m.cd<=0){fire(m,t);m.cd=cd/rm}else if(t)m.ang=Math.atan2(t.y-m.y,t.x-m.x);
+  let near=null;   // visible enemies by distance to the fort, built at most once per tick and shared by the squad
   for(let i=1;i<n;i++){const s=G.sold[i];if(s.cd>0)continue;
-    const vis=G.enemies.filter(e=>!e.dead&&visible(e));if(!vis.length)continue;
-    vis.sort((a,b)=>Math.hypot(a.x,a.y)-Math.hypot(b.x,b.y));fire(s,vis[Math.floor(Math.random()*Math.min(3,vis.length))],0.7*(1+0.12*Math.max(0,L('squad')-8)));s.cd=cd*1.5}
+    if(!near){near=G.enemies.filter(e=>!e.dead&&visible(e));for(const e of near)e._d=Math.hypot(e.x,e.y);near.sort((a,b)=>a._d-b._d)}
+    const pick=[];for(const e of near){if(!e.dead&&pick.push(e)===3)break}if(!pick.length)continue;
+    fire(s,pick[Math.floor(Math.random()*pick.length)],0.7*(1+0.12*Math.max(0,L('squad')-8)));s.cd=cd*1.5}
   updateUnits(dt,half);updateAir(dt,half);
   // enemies
   const wl=L('wire'),wireR=fortHalf()+wallThick()/2+wireOut(),slow=1-(Math.min(0.7,0.25+0.06*wl));
@@ -420,8 +442,7 @@ function update(dt){
   }
   G.mines=G.mines.filter(m=>!m.used);
   // separation
-  const es=G.enemies;for(let i=0;i<es.length;i++)for(let j=i+1;j<es.length;j++){const a=es[i],b=es[j],dx=b.x-a.x,dy=b.y-a.y,dd=dx*dx+dy*dy,rr=a.r+b.r;
-    if(dd<rr*rr&&dd>0.01){const dl=Math.sqrt(dd),p=(rr-dl)/2/dl;a.x-=dx*p;a.y-=dy*p;b.x+=dx*p;b.y+=dy*p}}
+  separate(G.enemies);
   G.enemies=G.enemies.filter(e=>!e.dead);
   // artillery
   const al=L('arty');if(al){G.artyT-=dt;if(G.artyT<=0){const vis=G.enemies.filter(visible);if(vis.length){let best=vis[0],bc=-1,R=artyR(al);
@@ -445,6 +466,14 @@ function update(dt){
   const ab=$('airBtn'),alv=L('air');ab.style.display=alv?'block':'none';
   if(alv){const txt=G.airArmed?ic('dmg',18)+(MOBILE?'TAP TARGET · cancel':'CLICK TARGET · Esc'):ic('air',18)+(G.airT>0?'READY IN '+Math.ceil(G.airT)+'s':(MOBILE?'AIRSTRIKE':'AIRSTRIKE · Q'));if(ab._t!==txt){ab._t=txt;$('airTxt').innerHTML=txt}ab.disabled=G.airT>0&&!G.airArmed;ab.classList.toggle('armed',G.airArmed);ab.classList.toggle('ready',G.airT<=0&&!G.airArmed);$('airCd').style.width=(G.airT>0?100*(1-G.airT/airCd(alv)):100)+'%'}
 }
+// Enemy separation on a uniform grid (cell = largest diameter), so only neighbouring cells are tested instead of all O(n^2) pairs.
+const _grid=new Map();
+function separate(es){let C=1;for(const e of es)if(e.r*2>C)C=e.r*2;_grid.clear();
+  for(let i=0;i<es.length;i++){const e=es[i],k=(Math.floor(e.x/C)+2048)*4096+Math.floor(e.y/C)+2048;let c=_grid.get(k);if(!c)_grid.set(k,c=[]);c.push(i)}
+  for(let i=0;i<es.length;i++){const a=es[i],cx=Math.floor(a.x/C)+2048,cy=Math.floor(a.y/C)+2048;
+    for(let ox=-1;ox<=1;ox++)for(let oy=-1;oy<=1;oy++){const c=_grid.get((cx+ox)*4096+cy+oy);if(!c)continue;
+      for(const j of c){if(j<=i)continue;const b=es[j],dx=b.x-a.x,dy=b.y-a.y,dd=dx*dx+dy*dy,rr=a.r+b.r;
+        if(dd<rr*rr&&dd>0.01){const dl=Math.sqrt(dd),p=(rr-dl)/2/dl;a.x-=dx*p;a.y-=dy*p;b.x+=dx*p;b.y+=dy*p}}}}}
 function callAir(x,y){
   const l=L('air'),n=Math.min(16,5+l),a=Math.random()*Math.PI*2,dx=Math.cos(a),dy=Math.sin(a);
   G.planes.push({x,y,dx,dy,t:0});sfx('plane');
@@ -678,10 +707,23 @@ function drawAirTop(){
 
 // ================= VFX =================
 const FXCAP={parts:700,smoke:260,decals:160,lights:70};
+const FXBASE=Object.assign({},FXCAP);
+function applyGfx(){GFX=GFX_PRESET[S.set.gfx]||GFX_PRESET.high;
+  for(const k in FXBASE)FXCAP[k]=Math.round(FXBASE[k]*(k==='smoke'?GFX.smoke:k==='lights'?+GFX.lights:GFX.fx));resize()}
+applyGfx();
+// Pre-rendered radial sprites: one gradient raster per look instead of createRadialGradient per object per frame.
+// Stops are authored at full strength; per-object fade is applied through globalAlpha, which is equivalent since every stop scales linearly.
+const _spr={};
+function radialSprite(key,stops){let c=_spr[key];if(c)return c;c=_spr[key]=document.createElement('canvas');c.width=c.height=128;
+  const x=c.getContext('2d'),g=x.createRadialGradient(64,64,0,64,64,64);for(const[o,col]of stops)g.addColorStop(o,col);x.fillStyle=g;x.fillRect(0,0,128,128);return c}
+const glowSprite=c=>radialSprite('l'+c,[[0,`rgba(${c},1)`],[1,`rgba(${c},0)`]]);
+const fireSprite=()=>radialSprite('fire',[[0,'rgba(255,255,235,1)'],[0.25,'rgba(255,215,110,.95)'],[0.6,'rgba(255,110,30,.6)'],[1,'rgba(160,30,0,0)']]);
+const scorchSprite=()=>radialSprite('scorch',[[0,'rgba(8,6,4,.6)'],[0.6,'rgba(20,15,10,.35)'],[1,'rgba(20,15,10,0)']]);
+function blit(img,x,y,r,a){if(a<=0||r<=0)return;ctx.globalAlpha=Math.min(1,a);ctx.drawImage(img,x-r,y-r,r*2,r*2)}
 const R=Math.random;
 function spark(x,y,n,spd,cols,life=0.5,sz=1.6){for(let i=0;i<n&&G.parts.length<FXCAP.parts;i++){const a=R()*6.283,s=spd*(0.3+R()*0.9);G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:life*(0.5+R()*0.7),max:life,c:cols[i%cols.length],sz,glow:1})}}
 function gib(x,y,n,spd,c,life=0.7,sz=2){for(let i=0;i<n&&G.parts.length<FXCAP.parts;i++){const a=R()*6.283,s=spd*(0.3+R()*0.9);G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:life*(0.6+R()*0.6),max:life,c,sz:sz*(0.6+R()*0.8),rot:R()*6})}}
-function puff(x,y,n,r,life,col='60,60,60',spd=15,a=0.5){for(let i=0;i<n&&G.smoke.length<FXCAP.smoke;i++){const an=R()*6.283,s=spd*R();
+function puff(x,y,n,r,life,col='60,60,60',spd=15,a=0.5){for(let i=0;i<n&&G.smoke.length<FXCAP.smoke;i++){if(GFX.smoke<1&&R()>GFX.smoke)continue;const an=R()*6.283,s=spd*R();
   G.smoke.push({x:x+(R()-.5)*r*.6,y:y+(R()-.5)*r*.6,vx:Math.cos(an)*s,vy:Math.sin(an)*s,r:r*(0.5+R()*0.5),grow:r*(0.6+R()*0.6),life:life*(0.7+R()*0.5),max:life,col,a})}}
 function light(x,y,r,c,life){if(G.lights.length<FXCAP.lights)G.lights.push({x,y,r,c,life,max:life})}
 function decal(x,y,kind,r,c){G.decals.push({x,y,kind,r,c,rot:R()*6.3,life:45,seed:R()*99});if(G.decals.length>FXCAP.decals)G.decals.shift()}
@@ -711,8 +753,7 @@ function fxUpdate(dt){
 }
 function drawDecals(){
   for(const d of G.decals){const a=Math.min(1,d.life/6);
-    if(d.kind==='scorch'){const g=ctx.createRadialGradient(d.x,d.y,0,d.x,d.y,d.r);g.addColorStop(0,`rgba(8,6,4,${0.6*a})`);g.addColorStop(0.6,`rgba(20,15,10,${0.35*a})`);g.addColorStop(1,'rgba(20,15,10,0)');
-      ctx.fillStyle=g;ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,7);ctx.fill()}
+    if(d.kind==='scorch'){blit(scorchSprite(),d.x,d.y,d.r,a);ctx.globalAlpha=1}
     else{ctx.fillStyle=`rgba(90,10,10,${0.55*a})`;for(let i=0;i<6;i++){const an=d.seed*i*1.7,rr=d.r*(0.25+((d.seed*(i+3))%1)*0.6),o=i?d.r*0.55:0;
       ctx.beginPath();ctx.ellipse(d.x+Math.cos(an)*o,d.y+Math.sin(an)*o,rr,rr*0.7,an,0,7);ctx.fill()}}}}
 function drawSmoke(){for(const s of G.smoke){const k=s.life/s.max;ctx.fillStyle=`rgba(${s.col},${s.a*k*Math.min(1,(1-k)*6)})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fill()}}
@@ -734,17 +775,16 @@ function drawFx(){
       ctx.strokeStyle=`rgba(90,170,255,${k*0.45})`;ctx.lineWidth=6;ctx.stroke(path);ctx.strokeStyle=`rgba(190,235,255,${k})`;ctx.lineWidth=2;ctx.stroke(path);
       ctx.strokeStyle=`rgba(255,255,255,${k})`;ctx.lineWidth=0.8;ctx.stroke(path);ctx.globalCompositeOperation='source-over'}
     else if(f.k==='ring'){ctx.strokeStyle=`rgba(${f.c},${k*0.8})`;ctx.lineWidth=f.w*k+0.5;ctx.beginPath();ctx.arc(f.x,f.y,f.r*(0.15+0.85*Math.sqrt(t)),0,7);ctx.stroke()}
-    else{const r=f.r*(0.35+0.75*Math.sqrt(t))*(f.k==='boom'?0.8:1);ctx.globalCompositeOperation='lighter';const g=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,r);
-      g.addColorStop(0,`rgba(255,255,235,${k})`);g.addColorStop(0.25,`rgba(255,215,110,${k*0.95})`);g.addColorStop(0.6,`rgba(255,110,30,${k*0.6})`);g.addColorStop(1,'rgba(160,30,0,0)');
-      ctx.fillStyle=g;ctx.beginPath();ctx.arc(f.x,f.y,r,0,7);ctx.fill();ctx.globalCompositeOperation='source-over'}}
+    else{const r=f.r*(0.35+0.75*Math.sqrt(t))*(f.k==='boom'?0.8:1);ctx.globalCompositeOperation='lighter';blit(fireSprite(),f.x,f.y,r,k);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}}
 }
-function drawLights(){ctx.globalCompositeOperation='lighter';
-  for(const l of G.lights){const k=l.life/l.max,g=ctx.createRadialGradient(l.x,l.y,0,l.x,l.y,l.r);g.addColorStop(0,`rgba(${l.c},${0.45*k})`);g.addColorStop(1,`rgba(${l.c},0)`);
-    ctx.fillStyle=g;ctx.beginPath();ctx.arc(l.x,l.y,l.r,0,7);ctx.fill()}
-  ctx.globalCompositeOperation='source-over'}
+function drawLights(){if(!GFX.lights||!G.lights.length)return;ctx.globalCompositeOperation='lighter';
+  for(const l of G.lights)blit(glowSprite(l.c),l.x,l.y,l.r,0.45*l.life/l.max);
+  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
 let _vig=null,_vigK='';
-function drawVignette(){const key=VW+'x'+VH;if(_vigK!==key){_vigK=key;_vig=ctx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.35,VW/2,VH/2,Math.hypot(VW,VH)*0.6);
-  _vig.addColorStop(0,'rgba(0,0,0,0)');_vig.addColorStop(1,'rgba(0,0,0,.55)')}ctx.fillStyle=_vig;ctx.fillRect(0,0,VW,VH)}
+// Vignette is baked once per viewport size into a quarter-res canvas (a smooth gradient upscales invisibly) and blitted each frame.
+function drawVignette(){if(!GFX.vig)return;const key=VW+'x'+VH;if(_vigK!==key){_vigK=key;const q=4,w=Math.ceil(VW/q),h=Math.ceil(VH/q);
+  _vig=document.createElement('canvas');_vig.width=w;_vig.height=h;const x=_vig.getContext('2d'),g=x.createRadialGradient(w/2,h/2,Math.min(w,h)*0.35,w/2,h/2,Math.hypot(w,h)*0.6);
+  g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.55)');x.fillStyle=g;x.fillRect(0,0,w,h)}ctx.drawImage(_vig,0,0,VW,VH)}
 
 // ================= RENDER =================
 // ================= SPRITES =================
@@ -898,6 +938,28 @@ function drawWalls(ph,wlv){
   if(!up){ctx.fillStyle='rgba(255,60,40,.08)';ctx.beginPath();ctx.rect(-o,-o,o*2,o*2);ctx.rect(-inn,-inn,inn*2,inn*2);ctx.fill('evenodd')}
 }
 
+// Enemies. Far-zoom readability: anything under ~6px across gets a dark-rimmed hostile marker underneath so it never
+// melts into the ground. On Medium/Low, enemies below GFX.lod px radius skip the ~20-op sprite for a batched silhouette.
+// Markers, silhouettes and health bars are each built into one path per colour, so 200 enemies cost a handful of fills.
+function drawEnemies(){
+  const es=G.enemies,px=1/sc,mk=3*px,lod=GFX.lod*px,rims={},sil={},bars=[new Path2D(),new Path2D(),new Path2D()];let nb=0;
+  for(const e of es){let x=e.x,y=e.y;if(e.lunge>0){const d=Math.hypot(x,y);x-=x/d*3;y-=y/d*3}
+    let top=e.r;
+    if(e.r<mk){const a=Math.min(1,(mk-e.r)*sc*0.8+0.35).toFixed(1),R1=Math.max(e.r,2.4*px)+px;top=R1;
+      const g=rims[a]||(rims[a]={o:new Path2D(),i:new Path2D()});g.o.moveTo(x+R1,y);g.o.arc(x,y,R1,0,7);g.i.moveTo(x+R1-px,y);g.i.arc(x,y,R1-px,0,7)}
+    e._sx=x;e._sy=y;e._top=top}
+  for(const a in rims){ctx.globalAlpha=+a;ctx.fillStyle='rgba(12,8,6,.9)';ctx.fill(rims[a].o);ctx.fillStyle='#e8553f';ctx.fill(rims[a].i)}ctx.globalAlpha=1;
+  for(const e of es){const x=e._sx,y=e._sy;
+    if(e.r<lod){const c=e.flash>0?'#fff':e.col,p=sil[c]||(sil[c]=new Path2D()),r=e.r*0.65;p.moveTo(x+r,y);p.arc(x,y,r,0,7)}
+    else drawEnemy(e,x,y);
+    if(e.hp<e.max){const w=Math.max(12,e.r*2),bh=Math.max(2.5,1.5*px),by=y-Math.max(e.r+7,e._top+bh+1.5*px);nb++;
+      bars[0].rect(x-w/2,by,w,bh);bars[e.boss?2:1].rect(x-w/2,by,w*Math.max(0,e.hp/e.max),bh)}}
+  for(const c in sil){ctx.fillStyle=c;ctx.fill(sil[c])}
+  if(nb){ctx.fillStyle='#000';ctx.fill(bars[0]);ctx.fillStyle='#6c4';ctx.fill(bars[1]);ctx.fillStyle='#f44';ctx.fill(bars[2])}}
+// Floating text is authored in world units; when the camera pulls back it is clamped to ~85% of its authored pixel size so it stays legible.
+function drawFloats(){if(!G.floats.length)return;const k=Math.max(1,0.85/sc);let font='';ctx.textAlign='center';
+  for(const f of G.floats){const fs=`bold ${Math.round(f.s*k)}px monospace`;if(fs!==font){font=fs;ctx.font=fs}ctx.globalAlpha=Math.min(1,f.life*2);ctx.fillStyle=f.c;ctx.fillText(f.t,f.x,f.y)}
+  ctx.globalAlpha=1}
 function draw(){
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#161a12';ctx.fillRect(0,0,VW,VH);
   if(!G)return;
@@ -906,7 +968,7 @@ function draw(){
   ctx.setTransform(dpr*sc,0,0,dpr*sc,dpr*(VW/2+sx),dpr*(VH/2+sy));
   // ground
   ctx.fillStyle='#252b1d';ctx.fillRect(-3000,-3000,6000,6000);
-  for(const d of decals){ctx.fillStyle=d.c;ctx.fillRect(d.x,d.y,d.s,d.s*0.6)}
+  const gp=groundPaths();for(const c in gp){ctx.fillStyle=c;ctx.fill(gp[c])}
   drawDecals();
   const half=blockHalf(),wl=L('wire'),V=vision();
   // wire
@@ -918,16 +980,13 @@ function draw(){
   const ph=wlv?wallHalfAt(wlv):PLAT;drawFloor(ph,wlv);
   if(wlv)drawWalls(ph,wlv);
   // crates
-  for(const c of G.crates){if(c.life<3&&Math.floor(c.life*6)%2)continue;ctx.fillStyle='#8a6a2a';ctx.fillRect(c.x-7,c.y-7,14,14);ctx.strokeStyle='#4a3510';ctx.lineWidth=1.5;ctx.strokeRect(c.x-7,c.y-7,14,14);
-    ctx.fillStyle='#ffe066';ctx.font='bold 10px monospace';ctx.textAlign='center';ctx.fillText('$',c.x,c.y+4)}
+  const cz=Math.max(1,9/(14*sc));   // crates never shrink below ~9px on screen: they're tap targets
+  for(const c of G.crates){if(c.life<3&&Math.floor(c.life*6)%2)continue;const h=7*cz;ctx.fillStyle='#8a6a2a';ctx.fillRect(c.x-h,c.y-h,h*2,h*2);ctx.strokeStyle='#4a3510';ctx.lineWidth=1.5*cz;ctx.strokeRect(c.x-h,c.y-h,h*2,h*2);
+    ctx.fillStyle='#ffe066';ctx.font=`bold ${10*cz}px monospace`;ctx.textAlign='center';ctx.fillText('$',c.x,c.y+4*cz)}
   // enemies
-  for(const e of G.enemies){
-    let x=e.x,y=e.y;if(e.lunge>0){const d=Math.hypot(x,y);x-=x/d*3;y-=y/d*3}
-    drawEnemy(e,x,y);
-    if(e.hp<e.max){const w=Math.max(12,e.r*2);ctx.fillStyle='#000';ctx.fillRect(x-w/2,y-e.r-7,w,2.5);ctx.fillStyle=e.boss?'#f44':'#6c4';ctx.fillRect(x-w/2,y-e.r-7,w*Math.max(0,e.hp/e.max),2.5)}
-  }
-  const tg=G.sold[0].tgt;if(tg){ctx.strokeStyle='#ffd23f';ctx.lineWidth=1.2;const r=tg.r+5+Math.sin(G.time*10);ctx.beginPath();ctx.arc(tg.x,tg.y,r,0,7);ctx.stroke();
-    for(let i=0;i<4;i++){const a=i*Math.PI/2;ctx.beginPath();ctx.moveTo(tg.x+Math.cos(a)*r,tg.y+Math.sin(a)*r);ctx.lineTo(tg.x+Math.cos(a)*(r+4),tg.y+Math.sin(a)*(r+4));ctx.stroke()}}
+  drawEnemies();
+  const tg=G.sold[0].tgt;if(tg){ctx.strokeStyle='#ffd23f';ctx.lineWidth=Math.max(1.2,1.5/sc);const r=Math.max(tg.r+5,(tg.r*sc+6)/sc)+Math.sin(G.time*10);ctx.beginPath();ctx.arc(tg.x,tg.y,r,0,7);ctx.stroke();
+    const tk=Math.max(4,5/sc);for(let i=0;i<4;i++){const a=i*Math.PI/2;ctx.beginPath();ctx.moveTo(tg.x+Math.cos(a)*r,tg.y+Math.sin(a)*r);ctx.lineTo(tg.x+Math.cos(a)*(r+tk),tg.y+Math.sin(a)*(r+tk));ctx.stroke()}}
   // soldiers
   drawAirGround();drawUnits();drawArtyGun();
   for(const s of G.sold)drawSoldier(s);
@@ -937,19 +996,20 @@ function draw(){
   drawArtyShells();
   for(const b of G.bombs){ctx.fillStyle='rgba(255,60,40,.35)';ctx.beginPath();ctx.arc(b.x,b.y,6,0,7);ctx.fill()}
   // fog
-  const fg=ctx.createRadialGradient(0,0,V,0,0,V*1.06+6);fg.addColorStop(0,'rgba(5,7,4,0)');fg.addColorStop(1,'rgba(5,7,4,1)');
-  ctx.fillStyle=fg;ctx.fillRect(-4000,-4000,8000,8000);
+  const Vo=V*1.06+6,ext=Math.max(4000,(Math.max(VW,VH)/2+20)/sc),fg=ctx.createRadialGradient(0,0,V,0,0,Vo);fg.addColorStop(0,'rgba(5,7,4,0)');fg.addColorStop(1,'rgba(5,7,4,1)');
+  ctx.fillStyle=fg;ctx.beginPath();ctx.arc(0,0,Vo,0,TAU);ctx.moveTo(V,0);ctx.arc(0,0,V,0,TAU,true);ctx.fill();
+  ctx.fillStyle='rgb(5,7,4)';ctx.beginPath();ctx.rect(-ext,-ext,ext*2,ext*2);ctx.moveTo(Vo-1/sc,0);ctx.arc(0,0,Vo-1/sc,0,TAU,true);ctx.fill();
   drawLights();
   if(S.set.ring){ctx.strokeStyle='rgba(200,220,150,.15)';ctx.lineWidth=1;ctx.setLineDash([6,6]);ctx.beginPath();ctx.arc(0,0,V,0,7);ctx.stroke();ctx.setLineDash([])}
   // threat indicators
-  for(const e of G.enemies)if(!visible(e)){const a=Math.atan2(e.y,e.x),d=Math.hypot(e.x,e.y),al=Math.max(0.15,1-(d-V)/300);
-    ctx.save();ctx.translate(Math.cos(a)*(V+10),Math.sin(a)*(V+10));ctx.rotate(a+Math.PI);ctx.fillStyle=`rgba(255,70,50,${al*0.8})`;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(7,-4);ctx.lineTo(7,4);ctx.fill();ctx.restore()}
+  const ta=Math.max(1,1/sc);for(const e of G.enemies)if(!visible(e)){const a=Math.atan2(e.y,e.x),d=Math.hypot(e.x,e.y),al=Math.max(0.15,1-(d-V)/300);
+    ctx.save();ctx.translate(Math.cos(a)*(V+10*ta),Math.sin(a)*(V+10*ta));ctx.rotate(a+Math.PI);ctx.scale(ta,ta);ctx.fillStyle=`rgba(255,70,50,${al*0.8})`;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(7,-4);ctx.lineTo(7,4);ctx.fill();ctx.restore()}
   // planes (above fog)
   for(const p of G.planes){const s=-800+500*p.t,x=p.x+p.dx*s,y=p.y+p.dy*s,a=Math.atan2(p.dy,p.dx);
     ctx.save();ctx.translate(x+34,y+34);ctx.rotate(a);ctx.fillStyle='rgba(0,0,0,.35)';drawPlane();ctx.restore();
     ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.fillStyle='#8a9a7a';drawPlane();ctx.restore()}
   drawHelis();drawAirTop();
-  for(const f of G.floats){ctx.globalAlpha=Math.min(1,f.life*2);ctx.fillStyle=f.c;ctx.font=`bold ${f.s}px monospace`;ctx.textAlign='center';ctx.fillText(f.t,f.x,f.y)}ctx.globalAlpha=1;
+  drawFloats();
   if(G.airArmed){ctx.strokeStyle='#ff6a3a';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.beginPath();ctx.arc(mouse.wx,mouse.wy,40,0,7);ctx.stroke();ctx.setLineDash([])}
   // HUD
   ctx.setTransform(dpr,0,0,dpr,0,0);
