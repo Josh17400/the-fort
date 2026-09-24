@@ -255,7 +255,7 @@ body.mobile #medalToast{bottom:calc(236px + env(safe-area-inset-bottom))}
 .chip.rp{cursor:pointer;font:inherit;font-size:13px;border-color:rgba(110,195,255,.3);transition:.15s}.chip.rp b{color:var(--blue)}.chip.rp .ic{color:var(--blue)}.chip.rp:hover{border-color:var(--blue)}
 .chip.rp .n{background:var(--good);color:#0b1a05;border-radius:999px;font:700 11px Inter,sans-serif;padding:0 6px}.chip.rp .n:empty{display:none}
 .card .nm .tn{display:flex;align-items:center;gap:4px;margin-top:2px;font:600 11.5px Oxanium,sans-serif;letter-spacing:.3px;color:var(--blue)}
-.rtk{position:relative}
+.rtk{position:relative;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent);padding-right:40px!important}
 .tab.rst{border-color:rgba(110,195,255,.4);color:#bfe3ff}.tab.rst .ic{color:var(--blue)}.tab.rst:hover{border-color:var(--blue);color:var(--text)}
 .tab.rst.on{background:var(--blue);border-color:var(--blue);color:#06131d}.tab.rst.on .ic{color:#06131d}.tab.rst.on .n{background:#06131d;color:var(--good)}
 .stat.rpst{font:inherit;color:var(--text);text-align:left;cursor:pointer;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;border-color:rgba(110,195,255,.3);background:linear-gradient(135deg,rgba(110,195,255,.08),rgba(255,255,255,.02));transition:.15s}
@@ -454,7 +454,7 @@ const SUF=['','k','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc'];
 const f1=n=>{if(!isFinite(n))return'∞';if(n<1e4)return n>=100?Math.round(n)+'':(Math.round(n*10)/10)+'';const e=Math.min(SUF.length-1,Math.floor(Math.log10(n)/3));return e===SUF.length-1&&n>=1e36?n.toExponential(2):(n/Math.pow(10,e*3)).toFixed(n/Math.pow(10,e*3)>=100?0:1)+SUF[e]};
 const pct=n=>Math.round(n*100)+'%';
 const U=[
- {id:'dmg',late:1,knee:20,cat:'WEAPONS',name:'Rifle Damage',max:Infinity,cost:15,g:1.33,desc:'Harder-hitting rounds for every soldier.',val:l=>f1(dmgAt(l))+' dmg'},
+ {id:'dmg',late:1,knee:20,cat:'WEAPONS',name:'Rifle Damage',max:Infinity,cost:15,g:1.33,desc:'Harder-hitting rounds for every soldier.',val:l=>f1(dmgAt(l)*rMult('dmg'))+' dmg'},
  {id:'rate',cat:'WEAPONS',name:'Rate of Fire',max:20,cost:20,g:1.38,desc:'Faster bolt cycling.',val:l=>(1/cdAt(l)).toFixed(2)+' shots/s'},
  {id:'crit',wave:2,need:[["dmg", 3]],cat:'WEAPONS',name:'Marksmanship',max:Infinity,cost:40,g:1.45,desc:'Chance for a critical hit (x2.5 damage).',val:l=>pct(Math.min(0.6,l*0.04))+' crit'+(l>15?' · x'+(2.5+(l-15)*0.1).toFixed(1):'')},
  {id:'frag',wave:6,need:[["dmg", 5]],cat:'WEAPONS',name:'Frag Rounds',max:8,cost:120,g:1.7,desc:'Bullets burst, splashing 35% damage nearby.',val:l=>l?Math.min(40,10+4*l)+'px splash':'none'},
@@ -469,7 +469,7 @@ const U=[
  {id:'hp',late:1,cat:'SQUAD',name:'Body Armor',max:Infinity,cost:20,g:1.4,desc:'More soldier health.',val:l=>hpAt(l)+' HP'},
  {id:'medic',wave:3,need:[["hp", 3]],cat:'SQUAD',name:'Field Medic',max:Infinity,cost:60,g:1.6,desc:'Regenerate health over time.',val:l=>(0.4*l).toFixed(1)+' HP/s'},
  {id:'squad',wave:4,need:[["walls", 2]],cat:'SQUAD',name:'Recruit Soldier',max:Infinity,cost:200,g:1.85,desc:'Another rifleman who auto-fires (70% dmg).',val:l=>Math.min(8,l)+' extra soldiers'+(l>8?' · +'+pct(0.12*(l-8))+' dmg':'')},
- {id:'arty',late:1,wave:6,need:[["walls", 2], ["vision", 3]],cat:'SUPPORT',name:'Artillery',max:Infinity,cost:250,g:1.55,desc:'A gun emplaced in your fort shells the biggest enemy cluster. Mortar pit, upgrades to a Howitzer at Walls 5 and Rocket Artillery (3-shell salvos) at Walls 8.',val:l=>l?f1(artyDmg(l))+' dmg / '+artyCd(l).toFixed(1)+'s':'none'},
+ {id:'arty',late:1,wave:6,need:[["walls", 2], ["vision", 3]],cat:'SUPPORT',name:'Artillery',max:Infinity,cost:250,g:1.55,desc:'A gun emplaced in your fort shells the biggest enemy cluster. Starts as a mortar pit; research the M777 Howitzer and HIMARS rocket salvos in R&D.',val:l=>l?f1(artyDmg(l))+' dmg / '+artyCd(l).toFixed(1)+'s':'none'},
  {id:'mines',late:1,wave:3,need:[["vision", 2]],cat:'SUPPORT',name:'Minefield',max:Infinity,cost:120,g:1.55,desc:'Mines are laid at the start of each wave.',val:l=>l?Math.min(30,2*l)+' mines · '+f1(mineDmg(l))+' dmg':'none'},
  {id:'air',late:1,wave:10,need:[["vision", 4]],cat:'SUPPORT',name:'Air Support',max:Infinity,cost:400,g:1.6,desc:'Call a bombing run anywhere (Q, then click).',val:l=>l?Math.min(16,5+l)+' bombs · '+f1(airDmg(l))+' dmg · '+Math.round(airCd(l))+'s cd':'none'},
  {id:'bounty',wave:5,cat:'ECONOMY',name:'War Bonds',max:Infinity,cost:60,g:1.62,desc:'More money per kill and per wave.',val:l=>'+'+pct(l*0.15)+' money'},
@@ -539,7 +539,11 @@ function counterPick(){if(!lastCause)return null;const ids=[...(lastCause.breach
 function afterAction(){if(!lastCause)return'';const u=counterPick(),c=u&&costOf(u,L(u.id)),can=u&&S.bank>=c;
   return`<div class="stat aar" style="grid-column:1/-1"><span>OVERRUN BY</span><b>${lastCause.top.map(t=>INTEL[t]?INTEL[t][0]:t).join(' · ')}</b>`
     +(lastCause.breachW?`<small>Walls breached on wave ${lastCause.breachW}</small>`:'')+doctrineTip(lastCause.doc)
-    +(u?`<button class="aarfix${can?' can':''}" data-goto="${u.id}">${ic(u.id,16)}<span>Counter with <b>${u.name}</b> Lv ${L(u.id)+1}</span><i>${can?'$'+f1(c)+' · ready':'save $'+f1(c-S.bank)+' more'}</i></button>`:'')+`</div>`}
+    +(u?`<button class="aarfix${can?' can':''}" data-goto="${u.id}">${ic(u.id,16)}<span>Counter with <b>${u.name}</b> Lv ${L(u.id)+1}</span><i>${can?'$'+f1(c)+' · ready':'save $'+f1(c-S.bank)+' more'}</i></button>`:'')+rsCounter()+`</div>`}
+// armor broke the fort and the rifle still can't pierce it: point at the next commander tier with armor-piercing rounds
+function rsCounter(){if(!lastCause.top.some(t=>ARMOR_KILL[t]||t==='technical')||rPen('dmg')>=0.4)return'';const t=RLINES.dmg.t.find(x=>x.i>rsOwned('dmg')&&x.pen>rPen('dmg'));if(!t)return'';
+  const w=t.i===rsOwned('dmg')+1?rsWhy('dmg',t.i):'Research '+RLINES.dmg.t[rsOwned('dmg')+1].n+' first';
+  return`<button class="aarfix${w?'':' can'}" data-rsgo="dmg">${ic('research',16)}<span>Research <b>${t.n}</b>: AP rounds ignore ${pct(t.pen)} of armor</span><i>${w?(S.best<t.g?'wave '+t.g:t.cost+' RP'):t.cost+' RP · ready'}</i></button>`}
 
 // ================= RESEARCH =================
 // Research Points (RP, S.rp) are earned by holding waves and buy unit tiers: new weapons, a cumulative damage multiplier (mul,
@@ -879,7 +883,7 @@ function rsHead(r){const k=rsOwned(r.id),t=r.t[k],n=S.rf[r.id]||0,lock=rsLineLoc
     +(lock?`<div class="rlock">${ic('lock',14)}<span>${lock}</span><button data-goto="${r.u}">View ${UB[r.u].name}</button></div>`:'')}
 function rsCard(r,k){const t=r.t[k],st=rsSt(r.id,k);
   return`<div class="rtc ${st}" data-k="${k}" style="${rsEraVars(t)}"><div class="rth"><canvas data-th="${r.id}:${k}" width="192" height="192"></canvas></div>`
-    +`<div class="rtl2"><span>TIER ${rank(k+1)}</span><span class="rsb2 ${st}">${RS_STL[st]}</span></div><div class="rtn">${t.n}</div><div class="rtw">${t.w||'&nbsp;'}</div>`
+    +`<div class="rtl2"><span>TIER ${rank(k+1)}</span><span class="rsb2 ${st}">${RS_STL[st]}</span></div><div class="rtn">${t.n}</div>${t.w?`<div class="rtw">${t.w}</div>`:''}`
     +rsStats(r,k)+rsSigHtml(t)+(st==='lk'?rsGate(t):'')+rsBtn(r,k)+'</div>'}
 function rsRefitCard(r){const{n,c,ok,tot}=rsRefit(r),t=r.t[r.t.length-1];
   return`<div class="rtc rfc" style="${rsEraVars(t)}"><div class="rth"><canvas data-th="${r.id}:${r.t.length-1}" width="192" height="192"></canvas></div>`
@@ -909,7 +913,7 @@ function renderResearch(){const nar=_rsNar=rsNarrow(),r=rsLine(),el=$('store');e
   el.innerHTML=h+'</div>';
   for(const c of el.querySelectorAll('canvas[data-th]'))paintThumb(c);
   const nr=el.querySelector('.rsl');if(nr)nr.scrollTop=railY;
-  const tk=el.querySelector('.rtk');if(tk){const c=tk.children[Math.max(0,rsOwned(r.id))];if(c)tk.scrollLeft=Math.max(0,c.offsetLeft-4)}
+  const tk=el.querySelector('.rtk');if(tk){const c=tk.children[Math.max(0,rsOwned(r.id)-1)];if(c)tk.scrollLeft=Math.max(0,c.offsetLeft-4)}   // the tier before the one in service stays in view for context
   const cr=el.querySelector('.rsc'),ch=cr&&cr.querySelector('.rch.on');if(ch)cr.scrollLeft=Math.max(0,ch.offsetLeft-16)}
 function researchClick(e){const q=s=>e.target.closest(s);let b;
   if(b=q('[data-rsbuy]')){const id=b.dataset.rsbuy,k0=rsOwned(id);if(buyResearch(id)){renderHome();const k=rsOwned(id)>k0?rsOwned(id):null;
