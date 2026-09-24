@@ -147,6 +147,7 @@ body.mobile .card:hover,body.mobile .btn:hover{transform:none}
 <div class="modal" id="overlay"><div class="panel">
   <h2>PAUSED</h2>
   <button class="btn big" id="resumeBtn">RESUME</button>
+  <button class="btn" id="pauseSetBtn">SETTINGS</button>
   <button class="btn danger" id="abandonBtn">Retreat — end run</button>
   <div class="help" id="pauseHelp">Esc / P to resume</div>
 </div></div>
@@ -287,7 +288,9 @@ $('store').addEventListener('click',e=>{const id=e.target.closest('[data-id]')?.
   if(l<u.max&&S.bank>=c&&!lockWhy(u)){S.bank-=c;S.lv[id]=l+1;save();sfx('buy');renderHome();const b=document.querySelector(`[data-id="${id}"]`);if(b)b.classList.add('pop')}else sfx('deny')});
 $('deployBtn').onclick=()=>{startRun();};
 $('settingsBtn').onclick=()=>{syncSettings();showScreen('settings')};
-$('backBtn').onclick=()=>showScreen('home');$('settings').addEventListener('mousedown',e=>{if(e.target.id==='settings')showScreen('home')});
+const closeSettings=()=>{if(running)$('settings').classList.remove('on');else showScreen('home')};
+$('backBtn').onclick=closeSettings;
+$('pauseSetBtn').onclick=()=>{syncSettings();$('settings').classList.add('on')};$('settings').addEventListener('mousedown',e=>{if(e.target.id==='settings')closeSettings()});
 function syncSettings(){$('sVol').value=S.set.vol;$('sShake').checked=S.set.shake;$('sDmg').checked=S.set.dmgNums;$('sRing').checked=S.set.ring;$('sBlur').checked=S.set.blurPause;$('sSpeed').value=String(S.set.speed);$('sGfx').value=S.set.gfx;$('resetBtn').textContent='RESET';}
 $('sVol').oninput=e=>{S.set.vol=+e.target.value;save()};$('sVol').onchange=()=>sfx('buy');
 $('sShake').onchange=e=>{S.set.shake=e.target.checked;save()};
