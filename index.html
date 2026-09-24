@@ -151,7 +151,7 @@ body.mobile #hud #zoomBtn{display:grid}
 #hud .dpill{top:calc(var(--mt) + 52px + var(--bsT));right:calc(var(--m) + 52px + var(--bsR));height:44px;min-width:44px;padding:0 10px;border-radius:999px;
   display:flex;align-items:center;justify-content:center;gap:6px;font:600 11px/1 var(--fd);letter-spacing:.16em;color:var(--dm);white-space:nowrap}
 #hud[data-mode=desk] .dpill{height:36px;right:calc(var(--m) + var(--bsR))}
-body.mobile #hud[data-mode=desk] .dpill{right:calc(var(--m) + 52px + var(--bsR))}
+body.mobile #hud[data-mode=desk] .dpill{right:calc(var(--m) + 52px + var(--bsR));height:44px}
 #hud .dpill .ic{color:var(--gh)}
 #hud .dpill b{font:800 13px/1 var(--fd);letter-spacing:0;color:var(--tx)}
 #hud .dpill .dl,#hud .dpill .dmi{display:none}
@@ -1431,7 +1431,7 @@ function kill(e){e.dead=true;if(_mainHit&&_aimed)streakKill();
   if(S.set.gfx==='high'&&!e.air)corpse(e);else if(e.veh)G.vwrecks.push({type:e.type,x:e.x,y:e.y,r:e.r,a:Math.atan2(-e.y,-e.x),t0:G.time});
   float(e.x,e.y-e.r-8,'+$'+r,'#7ddc5a',e.veh?13:11);sfx('kill',e.x,e.y);
   if(bonus)float(e.x,e.y-e.r-24,'CARRIER KILLED LOADED','#ffcf5a',12);
-  if(e.boss){shake(10);banner('ENEMY TANK DESTROYED · +$'+f1(r),'','255,207,90','feed')}}
+  if(e.boss){shake(10);banner('ENEMY MBT DESTROYED · +$'+f1(r),'MBT DOWN · +$'+f1(r),'255,207,90','feed')}}
 let _mainHit=false;
 function fire(s,e,mult=1){const m0=mult;
   // research signatures: every Nth round can be a 40mm airburst (Commander) or a Carl Gustaf HEAT round that seeks armor (squad)
@@ -1564,7 +1564,7 @@ function update(dt){
   // waves
   if(G.spawnLeft>0){G.spawnT-=dt;if(G.spawnT<=0){spawn(nextType());G.spawnLeft--;G.spawnT=G.spawnInt*(0.6+Math.random()*0.8)}}
   else if(G.enemies.length===0&&!G.sky.length&&!G.drops.length&&!(G.uavT>0)){
-    if(G.breakT<=0){if(G.wave>0){medalMax('wave',G.wave);if(G.wave>=15&&!G.wHit)medalMax('flawless',1);let b=money(8*G.wave*waveRew(G.wave));if(G.ev)b+=evClear(b);S.bank+=b;G.earned+=b;{const rp=rpClear(G.wave);feed('WAVE '+G.wave+' CLEAR · +$'+f1(b)+(rp>0?' · +'+rp+' RP':''),'255,207,90','coin')}sfx('cash');setTimeout(()=>{tone(784,0.1,'square',0,0.04);setTimeout(()=>tone(1175,0.18,'square',0,0.04),90)},140);save();if(perkWave(G.wave))G.perkAt=G.time+0.9}G.breakT=G.breakMax=G.wave<10?3:2}
+    if(G.breakT<=0){if(G.wave>0){medalMax('wave',G.wave);if(G.wave>=15&&!G.wHit)medalMax('flawless',1);let b=money(8*G.wave*waveRew(G.wave));if(G.ev)b+=evClear(b);S.bank+=b;G.earned+=b;{const rp=rpClear(G.wave),pay=' · +$'+f1(b)+(rp>0?' · +'+rp+' RP':'');feed('WAVE '+G.wave+' CLEAR'+pay,'255,207,90','coin','W'+G.wave+' CLEAR'+pay)}sfx('cash');setTimeout(()=>{tone(784,0.1,'square',0,0.04);setTimeout(()=>tone(1175,0.18,'square',0,0.04),90)},140);save();if(perkWave(G.wave))G.perkAt=G.time+0.9}G.breakT=G.breakMax=G.wave<10?3:2}
     G.breakT-=dt;if(G.breakT<=0)startWave();}
   if(G.perkAt&&G.time>=G.perkAt){G.perkAt=0;offerPerks()}
   // regen
@@ -4874,8 +4874,8 @@ function airDown(e){const big=e.type==='airboss'||e.type==='heavybomber';medalBu
   G.wrecks.push({type:e.type,x:e.x,y:e.y,alt:e.alt,alt0:e.alt,ang:e.ang,vx:e.vx*0.6,vy:e.vy*0.6,spin:(Math.random()-.5)*(e.type==='drone'?9:2.4),t:0,
     dur:e.type==='drone'?0.45:big?1.8:1.1,r:e.r,col:e.col,wob:e.wob,flash:0,fl:-9,bay:0,big});
   spark(e.x,e.y,e.type==='drone'?8:16,160,['#fff6d0','#ffc04a','#ff7a1a'],0.5,1.6);fireball(e.x,e.y,e.r*1.6,0.35);light(e.x,e.y,e.r*6,'255,170,80',0.3);
-  if(e.type==='uav'){banner('RECON UAV DOWN · SPOTTER BLINDED · +$'+f1(money(e.rew)),'','255,207,90','feed');tone(880,0.08,'square',0,0.04);setTimeout(()=>tone(1320,0.16,'square',0,0.04),110)}
-  if(e.type==='airboss'){banner('ENEMY GUNSHIP DOWN · +$'+f1(money(e.rew)),'','255,207,90','feed');shake(10);sfx('boom',e.x,e.y,2.4)}else sfx('boom',e.x,e.y,e.type==='drone'?0.5:1.1)}
+  if(e.type==='uav'){banner('RECON UAV DOWN · +$'+f1(money(e.rew)),'UAV DOWN · +$'+f1(money(e.rew)),'255,207,90','feed');tone(880,0.08,'square',0,0.04);setTimeout(()=>tone(1320,0.16,'square',0,0.04),110)}
+  if(e.type==='airboss'){banner('ENEMY GUNSHIP DOWN · +$'+f1(money(e.rew)),'GUNSHIP DOWN · +$'+f1(money(e.rew)),'255,207,90','feed');shake(10);sfx('boom',e.x,e.y,2.4)}else sfx('boom',e.x,e.y,e.type==='drone'?0.5:1.1)}
 // ---- sprites: top-down, nose along +x, authored in world units at the type's reference radius ------------------------
 const DRONE_ARMS=[[4.2,4.2],[4.2,-4.2],[-4.2,4.2],[-4.2,-4.2]];
 const JET_TOP=[[22,0],[14,-2.4],[6,-3.2],[-2,-15],[-7,-15.5],[-6,-4],[-14,-4.2],[-19,-9.5],[-22,-9.5],[-20,-2.2],[-23,-1.2]];
@@ -5755,7 +5755,7 @@ function hudGrid(){const r=_hr.splice(0);
   const cx0=VW*.3,cy0=VH*.3,cw=VW*.4,ch=VH*.4,cen=top.filter(a=>a[0]<cx0+cw&&a[0]+a[2]>cx0&&a[1]<cy0+ch&&a[1]+a[3]>cy0).map(a=>a[4]);
   ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(255,255,255,.5)';ctx.strokeRect(cx0,cy0,cw,ch);ctx.setLineDash([]);
   for(const a of top){ctx.strokeStyle='rgba(0,255,255,.7)';ctx.strokeRect(a[0]+.5,a[1]+.5,a[2]-1,a[3]-1)}
-  window.__hudOverlaps={bad,center:cen,n:top.length}}
+  window.__hudOverlaps={bad,center:cen,n:top.length,rects:top.map(a=>a.map(v=>typeof v==='number'?Math.round(v):v).join(','))}}
 // ---- primitives (sizes in CSS px; never shadowBlur; nothing below 11px)
 function hudPanel(x,y,w,h,v,r){r=r||HL.rad;hRec(x,y,w,h,'panel');ctx.fillStyle=v==='warn'?HT.redBg:HT.hud;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();
   const s=v==='alert'?`rgba(239,90,79,${HL.rm?.7:(.4+.45*(.5+.5*Math.sin(HL.now*.011))).toFixed(2)})`:v==='warn'?'rgba(239,90,79,.8)':HT.line;
@@ -5765,6 +5765,9 @@ function hText(t,x,y,font,c,al){ctx.font=font;ctx.textAlign=al||'left';ctx.fillS
 function fitText(t,maxW,font){const k=font+'|'+maxW+'|'+t,m=HL.fit;let v=m.get(k);if(v!==undefined)return v;const ls=ctx.letterSpacing;ctx.letterSpacing='0px';ctx.font=font;v=t;
   if(ctx.measureText(t).width>maxW){let s=t;while(s.length>1&&ctx.measureText(s+'…').width>maxW)s=s.slice(0,-1);v=s.trimEnd()+'…'}
   if(ls)ctx.letterSpacing=ls;if(m.size>400)m.clear();m.set(k,v);return v}
+function fitTail(t,maxW,font){if(hMeasure(t,font)<=maxW)return t;const sg=t.split(' · ');for(let n=sg.length-1;n>=2;n--){const c=sg.slice(0,n).join(' · ');if(hMeasure(c,font)<=maxW)return c}   // drop trailing extras first
+  const i=t.indexOf(' · ');if(i<0)return fitText(t,maxW,font);
+  const tail=t.slice(i),room=maxW-hMeasure(tail,font);return room>40?fitText(t.slice(0,i),room,font)+tail:fitText(t,maxW,font)}
 function hMeasure(t,font){const k=font+'|w|'+t,m=HL.fit;let v=m.get(k);if(v===undefined){const ls=ctx.letterSpacing;ctx.letterSpacing='0px';ctx.font=font;v=ctx.measureText(t).width;if(ls)ctx.letterSpacing=ls;if(m.size>400)m.clear();m.set(k,v)}return v}   // measured without letter-spacing (callers add their own)
 // pill: h 24, radius 12, Oxanium 11/800; fill/stroke/text in one role colour ('r,g,b'); optional 12px icon and a drain underline
 function hPill(x,y,t,rgb,o){o=o||{};const f='800 11px Oxanium,sans-serif',tw=t?hMeasure(t,f)+t.length:0,iw=o.ic?(t?16:12):0,w=o.w||Math.round(tw+iw+20);
@@ -5781,7 +5784,7 @@ function hTrack(x,y,w,h,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(x,y,M
 // ---- state helpers
 function waveLeft(){return G.spawnLeft+G.enemies.length+G.sky.length+G.drops.length+(G.uavT>0?1:0)}
 function bossWarnLive(){const bs=G&&G.bosses;if(!bs)return false;for(const b of bs)if(!b.e.dead&&b.t<BOSS_WARN+(bossHint(b.e,true)?2:0))return true;return false}
-const hintLive=()=>!!G&&G.wave===1&&G.time>2.6&&G.time<11&&S.best<10;
+const hintLive=()=>!!G&&G.wave===1&&G.time>2.6&&G.time<11;
 // laneBusy: something already owns the notification lane (or the player is in a menu); intel cards, medal toasts and tips wait
 function laneBusy(){if(!G||!running)return false;const q=G.bq;return paused||!!G.choosing||!!(q&&(q.cur||q.q.length))||bossWarnLive()||hintLive()}
 const laneDom=()=>HL.mode!=='desk'&&(!!intelCur||!!_mtCur);
@@ -5790,7 +5793,7 @@ const laneFreeFor=ms=>performance.now()-HL.busyT>=ms;
 let _srT=0,_srQ='';
 function srSay(t){_srQ=t;const now=performance.now();if(now-_srT<1000){clearTimeout(srSay._w);srSay._w=setTimeout(()=>srSay(_srQ),1000-(now-_srT)+20);return}_srT=now;const el=$('srLive')||$('hudLive');if(el)el.textContent=t}
 // ---- notification lane. P1 crit preempts P2 wave (which resumes if >=1s was left); waves queue FIFO (max 2); 'feed' goes to the ticker.
-function banner(t,sub='',col='',kind='wave'){if(!G)return;if(kind==='feed')return feed(t,col);
+function banner(t,sub='',col='',kind='wave'){if(!G)return;if(kind==='feed')return feed(t,col,'',sub);   // for 'feed', sub is the short form
   const q=G.bq||(G.bq={cur:null,q:[]}),it={t,sub,col,kind,dur:kind==='crit'?(sub?4:3.2):(sub?4:2.5),age:0},c=q.cur;
   G.banner=t;G.bannerSub=sub;G.bannerCol=col;G.bannerT=it.dur;
   if(kind==='crit'){srSay(t.replace(/!$/,''));
@@ -5798,7 +5801,9 @@ function banner(t,sub='',col='',kind='wave'){if(!G)return;if(kind==='feed')retur
     else{const rem=c.dur-c.age;if(rem>=1){c.dur=rem;c.age=0;c.plate=null;q.q.unshift(c)}q.cur=it}
     hudPreempt();return}
   if(/^WAVE \d+/.test(t))srSay(t.replace(' —',':').replace(/^WAVE/,'Wave'));
-  if(c&&c.kind==='wave'&&c.age<0.05){if(sub&&c.sub&&sub!==c.sub)feed(c.sub,c.col||'110,195,255','research');c.t=t;if(sub||!c.sub){c.sub=sub;c.col=col}c.dur=Math.max(c.dur,it.dur);c.plate=null;return}   // same-tick banners merge: 'WAVE n' then 'WAVE n — EVENT'
+  const lw=q.last;if(lw&&lw.kind==='wave'&&lw.at===G.time&&(lw===c||q.q.includes(lw))){   // same-tick wave banners merge: 'WAVE n' + 'WAVE n — EVENT' / '— GUNSHIP INBOUND'
+    if(sub&&lw.sub&&sub!==lw.sub)feed(lw.sub,lw.col||'110,195,255','research');lw.t=t;if(sub||!lw.sub){lw.sub=sub;lw.col=col}lw.dur=Math.max(lw.dur,it.dur);lw.plate=null;return}
+  it.at=G.time;q.last=it;
   if(!c&&!laneDom())q.cur=it;else{const w=q.q.filter(x=>x.kind==='wave');if(w.length>=2)q.q.splice(q.q.indexOf(w[0]),1);q.q.push(it)}}
 function laneTick(dt){const q=G.bq;if(G.depotWarnT>0&&!G.bqDepot){G.bqDepot=1;banner('FUEL DEPOT DESTROYED','No refuelling for the rest of the run: fuel is now finite','239,90,79','crit')}
   if(!q)return;if(q.cur){q.cur.age+=dt;if(q.cur.age>=q.cur.dur)q.cur=null}
@@ -5808,14 +5813,15 @@ function hudPreempt(){if(HL.mode==='desk')return;const now=performance.now();
   if(intelCur){intelQ.unshift(intelCur);intelCur=null;$('intel').classList.remove('on');intelEnd=now+450}
   if(_mtCur){_mtQ.unshift(_mtCur);_mtCur=null;clearTimeout(_mtHide);$('medalToast').classList.remove('on');clearTimeout(_mtW);_mtW=setTimeout(medalToastNext,600)}}
 // ---- feed: routine confirmations, stacked above the artillery chip; identical lines within 3s coalesce into "×3"
-function feed(t,col,icon){if(!G||!t)return;const f=G.feedL||(G.feedL=[]),sn=G.feedS||(G.feedS={}),now=G.time,s=sn[t];
+function feed(t,col,icon,short){if(!G||!t)return;const f=G.feedL||(G.feedL=[]),sn=G.feedS||(G.feedS={}),now=G.time,s=sn[t];
   const n=s&&now-s.at<3?s.n+1:1;sn[t]={at:now,n};const ex=f.find(l=>l.t===t);
   if(ex){ex.n=n;ex.age=0;f.splice(f.indexOf(ex),1);f.push(ex);return}
-  f.push({t,col:hRGB(col),icon:icon||'',age:0,n,dy:-1});const max=HL.mode==='desk'?4:HL.mode==='land'?3:2;while(f.length>max)f.shift()}
+  f.push({t,s:short||'',col:hRGB(col),icon:icon||'',age:0,n,dy:-1});const max=HL.mode==='desk'?4:HL.mode==='land'?3:2;while(f.length>max)f.shift()}
 function feedTick(dt){const f=G.feedL;if(!f||!f.length)return;for(const l of f)l.age+=dt;if(f.some(l=>l.age>=2.6))G.feedL=f.filter(l=>l.age<2.6)}
 function drawFeed(o,x,yb,maxW,right,maxLines){const f=G.feedL;if(!f||!f.length)return;const fs=o.mode==='desk'?13:12,font=`600 ${fs}px Inter,sans-serif`,n=Math.min(f.length,maxLines),icons=o.mode!=='port';
   for(let i=0;i<n;i++){const l=f[f.length-1-i],tgt=i;l.dy=l.dy<0?tgt:l.dy+(tgt-l.dy)*Math.min(1,o.rdt*16);
-    const li=icons&&l.icon,t=fitText(l.t+(l.n>1?' ×'+l.n:''),maxW-20-(li?16:0),font),tw=hMeasure(t,font),w=Math.round(tw+20+(li?16:0)),y=yb-24-l.dy*28,
+    const xn=l.n>1?' ×'+l.n:'',av=maxW-20;let li=icons&&l.icon,tx=l.t+xn;if(hMeasure(tx,font)+(li?16:0)>av){li=false;if(l.s&&hMeasure(tx,font)>av)tx=l.s+xn}
+    const t=fitTail(tx,av-(li?16:0),font),tw=hMeasure(t,font),w=Math.round(tw+20+(li?16:0)),y=yb-24-l.dy*28,
       a=Math.min(1,l.age/0.12,(2.6-l.age)/0.4),px=right?x-w:x;if(a<=0)continue;
     ctx.globalAlpha=a;hRec(px,y,w,24,'feed');ctx.fillStyle='rgba(18,22,14,.78)';ctx.beginPath();ctx.roundRect(px,y,w,24,12);ctx.fill();
     ctx.strokeStyle=HT.line;ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(px+.5,y+.5,w-1,23,11.5);ctx.stroke();
@@ -5854,9 +5860,9 @@ function drawHud(){let o=HL;const lefty=document.body.classList.contains('lefty'
     laneY=land?HS.t+8:(bb||HS.t+104)+10;
     barsX=o.lefty?o.Rx-bw:o.Lx;barsY=o.By-bh;hudBars(o,barsX,barsY,bw,bh);let ay=barsY;
     if(L('arty')){ay-=8+32;hudArty(o,o.lefty?o.Rx-132:o.Lx,ay,132,32)}
-    feedR=o.lefty;feedX=o.lefty?o.Rx:o.Lx;feedB=ay-8;feedW=land?Math.max(bw,VW*0.4-o.Lx-8):bw;
-    if(!land){const ct=VH-HS.b-12-156-8;if(feedB>ct){feedB=ct;feedW=o.Rx-o.Lx}}   // phones: the ticker rides above the thumb cluster, so it can use the full width
-    feedN=land?Math.max(0,Math.min(3,Math.floor((feedB-(bb||pb)-8)/28))):(G.nadeArmed||G.airArmed)&&!o.lefty?0:2}
+    feedR=o.lefty;feedX=o.lefty?o.Rx:o.Lx;feedB=ay-8;feedW=land?Math.max(bw,VW*0.3-o.Lx-8):bw;
+    if(!land&&VH>=700){const ct=VH-HS.b-12-156-8;if(feedB>ct){feedB=ct;feedW=o.Rx-o.Lx}}   // tall phones: the ticker rides above the thumb cluster at full width (short phones keep it in the left column, clear of the fort)
+    feedN=land?Math.max(0,Math.min(3,Math.floor((feedB-(bb||pb)-8)/28))):G.nadeArmed||G.airArmed?0:2}
   if(!desk)o.avoid=null;
   hudDomVar('--bars-h',bh,$('hud'));hudDomVar('--lane-y',laneY,document.documentElement);o.laneY=laneY;
   drawFeed(o,feedX,feedB,feedW,feedR,feedN);
@@ -5969,7 +5975,7 @@ function hWrap(t,maxW,font,maxLines){ctx.font=font;const words=t.split(' '),out=
   if(out.length>maxLines){const keep=out.slice(0,maxLines);keep[maxLines-1]=fitText(out.slice(maxLines-1).join(' '),maxW,font);return keep}return out}
 function hudBosses(o,x,y,w){const bs=G.bosses||[];let hintOn=false;if(!bs.length){hudPrioHint(false);return 0}
   const desk=o.mode==='desk',land=o.mode==='land';let list=bs.slice(0,2),more=0;
-  if(o.mode==='port'&&VH<700&&list.length>1){more=bs.length;list=list.slice(0,1)}
+  if(o.mode==='port'&&VH<700&&list.length>1){const live=bs.filter(b=>!b.e.dead),w=live.find(b=>b.t<BOSS_WARN+(bossHint(b.e,true)?2:0));more=live.length;list=[w||live[0]||bs[0]]}   // short phones: one item (a fresh WARNING wins) plus a xN chip
   const gap=desk?8:6;let yy=y;
   for(const b of list){const e=b.e,name=BOSS_NAME[e.type],long=bossHint(e,false),short=bossHint(e,true),warn=b.t<BOSS_WARN+(short?2:0)&&!e.dead;
     if(!b.said){b.said=1;srSay('Warning: '+name.toLowerCase()+' inbound')}
@@ -5980,7 +5986,7 @@ function hudBosses(o,x,y,w){const bs=G.bosses||[];let hintOn=false;if(!bs.length
     yy+=h+gap}
   ctx.globalAlpha=1;hudPrioHint(hintOn);return yy-gap}
 function hudPrioHint(on){if(on!==_prioHint){_prioHint=on;$('prioBtn').classList.toggle('hint',on)}}
-function hudBossWarn(o,x,y,w,h,b,name,long,short){hRec(x,y,w,h,'bosswarn');const desk=o.mode==='desk',land=o.mode==='land',p=o.rm?1:0.5+0.5*Math.sin(b.t*12),off=o.rm?0:(b.t*28)%18;
+function hudBossWarn(o,x,y,w,h,b,name,long,short){hRec(x,y,w,h,'bosswarn');if(o.mode==='land')name=name.replace(/^(ENEMY|HEAVY) /,'');const desk=o.mode==='desk',land=o.mode==='land',p=o.rm?1:0.5+0.5*Math.sin(b.t*12),off=o.rm?0:(b.t*28)%18;
   ctx.fillStyle=HT.redBg;ctx.beginPath();ctx.roundRect(x,y,w,h,10);ctx.fill();
   ctx.save();ctx.beginPath();ctx.roundRect(x,y,w,h,10);ctx.clip();ctx.fillStyle='rgba(227,181,60,.13)';
   for(let sx=x-h-18+off;sx<x+w;sx+=18){ctx.beginPath();ctx.moveTo(sx,y+h);ctx.lineTo(sx+9,y+h);ctx.lineTo(sx+9+h,y);ctx.lineTo(sx+h,y);ctx.fill()}ctx.restore();
