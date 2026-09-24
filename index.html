@@ -1225,8 +1225,9 @@ function draw(){
   drawHelis();drawAirTop();
   drawFloats();
   if(G.airArmed){ctx.strokeStyle='#ff6a3a';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.beginPath();ctx.arc(mouse.wx,mouse.wy,40,0,7);ctx.stroke();ctx.setLineDash([])}
-  // HUD
-  ctx.setTransform(dpr,0,0,dpr,0,0);
+  // HUD (scaled down on phones so panels/bars don't dominate a small screen)
+  const hk=VW<640?0.82:1,_VW=VW,_VH=VH;VW/=hk;VH/=hk;
+  ctx.setTransform(dpr*hk,0,0,dpr*hk,0,0);
   drawVignette();
   if(G.hurtT>0){const vg=ctx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.3,VW/2,VH/2,Math.max(VW,VH)*0.7);vg.addColorStop(0,'rgba(200,0,0,0)');vg.addColorStop(1,`rgba(200,0,0,${G.hurtT*1.5})`);ctx.fillStyle=vg;ctx.fillRect(0,0,VW,VH)}
   if(G.hp/G.maxHp<0.3){ctx.strokeStyle=`rgba(239,90,79,${0.3+0.3*Math.sin(G.time*6)})`;ctx.lineWidth=6;ctx.strokeRect(0,0,VW,VH)}
@@ -1256,6 +1257,7 @@ function draw(){
     ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillText(G.banner,VW/2+2,y+3);ctx.fillStyle='#ffd76a';ctx.fillText(G.banner,VW/2,y);
     const w=ctx.measureText(G.banner).width;rrect(VW/2-w/2,y+12,w*a,3,2,'#e3b53c');ctx.globalAlpha=1}
   if(G.wave===1&&G.time<9){ctx.fillStyle='#e6ead9';ctx.font='500 15px Inter,sans-serif';ctx.textAlign='center';ctx.fillText(MOBILE?'Tap an enemy, or the NEAREST button, to shoot':'Click an enemy to lock on · hold to keep firing',VW/2,(VW<640?VH*0.44:VH*0.22)+40)}
+  VW=_VW;VH=_VH;
 }
 function rrect(x,y,w,h,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(x,y,Math.max(0,w),h,r);ctx.fill()}
 function panel(x,y,w,h){rrect(x,y,w,h,12,'rgba(22,27,18,.78)');ctx.strokeStyle='rgba(190,210,150,.14)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(x+.5,y+.5,w-1,h-1,12);ctx.stroke()}
