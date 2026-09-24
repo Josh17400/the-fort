@@ -1172,7 +1172,7 @@ const money=v=>Math.round(v*(1+0.15*L('bounty'))*(1+0.25*pk('salvage')+0.4*pk('h
 // 1+x0, then eases linearly over `ease` waves to a steady late rate dL that never stops. Toughness climbs hardest around
 // wave 20 so every run ends in a last stand, then settles to a pace that bounty growth plus upgrades can chase: endless
 // waves keep escalating, and a fort that keeps investing keeps pushing deeper.
-const EARLY=w=>w<=3?0.6+0.13*(w-1):1;  // gentler first waves so a brand-new player gets a foothold
+const EARLY=w=>w<=5?0.4+0.12*(w-1):1;  // gentler waves 1-5 (0.4 -> 0.88) so a brand-new player on the Recruit sidearm (x0.6 dmg) gets a foothold
 function curve(w,d0,b,x0,ease,dL){const x=w-1;if(x<=x0)return d0*x+b*x*x;const d1=d0+2*b*x0,t=Math.min(x-x0,ease);
   return d0*x0+b*x0*x0+d1*t+(dL-d1)*t*t/(2*ease)+dL*Math.max(0,x-x0-ease)}
 const HPC=[Math.log(1.14),Math.log(1.003),26,30,Math.log(1.11)],DMC=[Math.log(1.1),0,26,30,Math.log(1.075)],RWC=[Math.log(1.045),0,26,30,Math.log(1.075)];
