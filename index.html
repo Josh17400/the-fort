@@ -255,7 +255,7 @@ const U=[
 
  {id:'truck',wave:6,need:[["walls", 3], ["squad", 1]],cat:'HEAVY ARMOR',name:'Gun Trucks',max:Infinity,cost:350,g:1.9,desc:'Pickup trucks with mounted machine guns patrol around the fort. Your first vehicles.',val:l=>l?Math.min(3,Math.ceil(l/2))+' trucks · '+f1(truckDmg(l))+' dmg · 5/s':'none'},
  {id:'apc',wave:10,need:[["walls", 4], ["truck", 2]],cat:'HEAVY ARMOR',name:'APC Squadron',max:Infinity,cost:1100,g:1.85,desc:'8-wheeled armored carriers lobbing grenade bursts.',val:l=>l?Math.min(2,Math.ceil(l/3))+' APCs · '+f1(apcDmg(l))+' splash':'none'},
- {id:'turret',wave:8,need:[["walls", 3], ["squad", 2]],cat:'HEAVY ARMOR',name:'MG Nests',max:Infinity,cost:500,g:1.75,desc:'Machine-gun nests on the fort corners (up to 4), then heavier guns.',val:l=>l?Math.min(4,l)+' nests · '+f1(turretDmg(l)*(l>4?1+0.25*(l-4):1))+' dmg · 5/s':'none'},
+ {id:'turret',wave:8,need:[["walls", 3], ["squad", 2]],cat:'HEAVY ARMOR',name:'MG Nests',max:Infinity,cost:500,g:1.75,desc:'Machine-gun nests on the fort corners (up to 4), then heavier guns. They can hit aircraft.',val:l=>l?Math.min(4,l)+' nests · '+f1(turretDmg(l)*(l>4?1+0.25*(l-4):1))+' dmg · 5/s':'none'},
  {id:'sniper',wave:10,need:[["walls", 4], ["vision", 5], ["crit", 2]],cat:'HEAVY ARMOR',name:'Sniper Tower',max:Infinity,cost:900,g:1.6,desc:'A marksman who always picks off the toughest enemy.',val:l=>l?f1(sniperDmg(l))+' dmg / '+sniperCd(l).toFixed(1)+'s':'none'},
  {id:'tank',wave:15,need:[["walls", 5], ["apc", 1]],cat:'HEAVY ARMOR',name:'Tank Platoon',max:Infinity,cost:1800,g:1.9,desc:'Tanks patrol outside the walls firing explosive shells.',val:l=>l?Math.min(3,Math.ceil(l/2))+' tanks · '+f1(tankDmg(l))+' dmg':'none'},
  {id:'depot',wave:6,need:[["truck", 1], ["vision", 4]],cat:'LOGISTICS',name:'Fuel Depot',max:1,cost:900,g:1,desc:'A fuel farm beyond the vehicle lanes. Vehicles and aircraft refuel here far faster than from field cans, several at once. Enemies will try to torch it: if it burns, nothing refuels for the rest of the run.',val:l=>l?depotSlots(L('dcap'))+' bays · '+depotRefuelT(L('dcap')).toFixed(0)+'s full tank':'field cans · '+FIELD_T+'s full tank'},
@@ -265,9 +265,12 @@ const U=[
  {id:'feff',wave:8,need:[["truck", 2]],cat:'LOGISTICS',name:'Fuel Efficiency',max:10,cost:400,g:1.65,desc:'Tuned engines and disciplined crews. Vehicles and aircraft burn less fuel and stay in the fight longer.',val:l=>'-'+pct(1-burnMul(l))+' fuel burn'},
  {id:'flame',wave:18,need:[["walls", 6], ["wire", 2]],cat:'HEAVY ARMOR',name:'Flame Bunkers',max:Infinity,cost:2500,g:1.8,desc:'Flamethrowers roast anything hugging the walls.',val:l=>l?f1(flameDps(l))+' dps · '+Math.min(60,26+4*l)+'m reach':'none'},
  {id:'heli',wave:22,need:[["walls", 7], ["tank", 1]],cat:'HEAVY ARMOR',name:'Attack Helicopter',max:Infinity,cost:4000,g:1.95,desc:'Gunships circle the fort with chainguns and rockets.',val:l=>l?Math.min(2,Math.ceil(l/3))+' helis · '+f1(heliDmg(l))+' gun / '+f1(rocketDmg(l))+' rocket':'none'},
- {id:'tesla',wave:30,need:[["walls", 9], ["flame", 1]],cat:'HEAVY ARMOR',name:'CIWS Point Defense',max:Infinity,cost:8000,g:1.9,desc:'Radar-guided rotary autocannon. Rips bursts through packed enemies, hopping target to target.',val:l=>l?f1(teslaDmg(l))+' dmg · '+Math.min(12,3+l)+' targets':'none'},
+ {id:'tesla',wave:30,need:[["walls", 9], ["flame", 1]],cat:'HEAVY ARMOR',name:'CIWS Point Defense',max:Infinity,cost:8000,g:1.9,desc:'Radar-guided rotary autocannon. Rips bursts through packed enemies, hopping target to target. Engages aircraft first (+75% vs air).',val:l=>l?f1(teslaDmg(l))+' dmg · '+Math.min(12,3+l)+' targets':'none'},
+ {id:'aagun',wave:7,need:[["walls", 3], ["squad", 1]],cat:'AIR DEFENSE',name:'AA Gun',max:Infinity,cost:450,g:1.6,desc:'Twin 35mm flak cannon. Radar-laid bursts shred drones and aircraft (air targets only). A second gun joins at Lv 4.',val:l=>l?aaGuns(l)+(aaGuns(l)>1?' guns':' gun')+' · '+f1(aaDmg(l))+' flak dmg':'none'},
+ {id:'radar',wave:12,need:[["aagun", 2], ["vision", 5]],cat:'AIR DEFENSE',name:'Air-Search Radar',max:10,cost:900,g:1.7,desc:'Tracks aircraft beyond your sight line so every gun can engage them early, and cues air-defence fire for extra damage.',val:l=>l?'+'+radarR(l)+'m air picture · +'+pct(0.06*l)+' AA dmg':'none'},
+ {id:'sam',wave:20,need:[["aagun", 4], ["walls", 6], ["mlaunch", 1]],cat:'AIR DEFENSE',name:'SAM Site',max:Infinity,cost:5000,g:1.8,desc:'Long-range surface-to-air missiles that hunt the toughest aircraft in the sky. Air targets only.',val:l=>l?samN(l)+(samN(l)>1?' missiles · ':' missile · ')+f1(samDmg(l))+' dmg / '+samCd(l).toFixed(1)+'s':'none'},
 
- {id:'mlaunch',wave:20,need:[["walls", 6], ["arty", 3]],cat:'AIR & MISSILES',name:'Missile Launcher',max:Infinity,cost:3500,g:1.9,desc:'Fires salvos of homing missiles at the toughest targets.',val:l=>l?Math.min(8,1+Math.floor(l/2))+' missiles · '+f1(mslDmg(l))+' dmg':'none'},
+ {id:'mlaunch',wave:20,need:[["walls", 6], ["arty", 3]],cat:'AIR & MISSILES',name:'Missile Launcher',max:Infinity,cost:3500,g:1.9,desc:'Fires salvos of homing missiles at the toughest targets, aircraft first (+50% vs air).',val:l=>l?Math.min(8,1+Math.floor(l/2))+' missiles · '+f1(mslDmg(l))+' dmg':'none'},
  {id:'airstrip',wave:24,need:[["walls", 7], ["air", 2]],cat:'AIR & MISSILES',name:'Air Strip',max:3,cost:6000,g:2.2,desc:'A runway inside the fort. Unlocks aircraft; higher levels speed up sorties.',val:l=>l?'Lv '+l+' · sorties -'+pct(1-Math.pow(0.85,l-1)):'no runway'},
  {id:'fighter',wave:26,need:[["airstrip", 1]],cat:'AIR & MISSILES',name:'Fighter Jets',max:Infinity,cost:8000,g:1.95,desc:'Jets scramble from the strip and strafe enemy columns with cannons.',val:l=>l?Math.min(4,1+Math.floor(l/2))+' jets · '+f1(jetDmg(l))+' dmg/pass':'none'},
  {id:'silo',wave:30,need:[["walls", 9], ["mlaunch", 3]],cat:'AIR & MISSILES',name:'Missile Silo',max:Infinity,cost:15000,g:2.0,desc:'A ballistic missile that levels the biggest enemy concentration on the map.',val:l=>l?f1(siloDmg(l))+' dmg · every '+Math.round(siloCd(l))+'s':'none'},
@@ -440,7 +443,7 @@ function audioFrame(){const c=AU.ctx;if(!c||c.state!=='running')return;const t=c
   AU.amb.gain.setTargetAtTime(live?0.1:0.04,t,0.8);
   const helis=live&&G.units?G.units.reduce((n,u)=>n+(u.k==='heli'&&(u.spin??1)>0.2),0):0;
   AU.rotor.g.gain.setTargetAtTime(helis?0.5+0.25*helis:0,t,0.4);AU.rotor.lfo.frequency.setTargetAtTime(10.5+helis*0.6,t,0.5);
-  const want=S.set.music&&live&&(G.spawnLeft>0||G.enemies.length>0)?0.16:0;AU.mus.gain.setTargetAtTime(want,t,want?1.2:2.2);
+  const want=S.set.music&&live&&(G.spawnLeft>0||G.enemies.length>0||G.sky.length>0)?0.16:0;AU.mus.gain.setTargetAtTime(want,t,want?1.2:2.2);
   if(want)AU.musOn=t+7;if(t>AU.musOn)return;                                                         // keep scheduling only while audible
   const step=60/96/2;if(AU.next<t)AU.next=t+0.05;
   const inten=live?Math.min(1,G.enemies.length/70+(G.wave%10===0?0.4:0)):0;
@@ -484,6 +487,7 @@ function startRun(){
     hp:hpAt(L('hp')),maxHp:hpAt(L('hp')),wallMax:wallMaxAt(L('walls')),wallHp:wallMaxAt(L('walls')),sold,kills:0,earned:0,time:0,shake:0,
     zoomV:vision()*0.3,artyT:3,airT:0,airArmed:false,crateT:10,banner:'',bannerT:0,hurtT:0,breached:false};
   G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=Math.min(S.set.lastSpeed||1,SPEEDS[L('speed')]);syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;initLogi();
+  skyInit();
   running=true;paused=false;mouse.down=false;$('overlay').classList.remove('on');showScreen('game');
 }
 // vision() is hit thousands of times a frame via visible(); levels can't change mid-run, so memoise it per sim tick.
@@ -492,16 +496,16 @@ let _visG=null,_visT=-1,_visV=0;
 const vision=()=>{if(running&&G===_visG&&G.time===_visT)return _visV;_visG=running?G:null;_visT=running?G.time:-1;return _visV=Math.max(visionAt(L('vision')),fortHalf()+wallThick()+120)};
 const wallsUp=()=>L('walls')>0&&G.wallHp>0;
 const blockHalf=()=>wallsUp()?wallHalfAt(L('walls'))+wallThickAt(L('walls'))/2:PLAT;
-const visible=e=>Math.hypot(e.x,e.y)<=vision()-e.r*0.3;
+const visible=e=>Math.hypot(e.x,e.y)<=(e.air?skyVision():vision())-e.r*0.3;
 const money=v=>Math.round(v*(1+0.15*L('bounty')));
 
 // Wave scaling. Toughness accelerates past wave 12 so every run ends in a last stand instead of a stalemate.
 const EARLY=w=>w<=3?0.6+0.13*(w-1):1;  // gentler first waves so a brand-new player gets a foothold
 const waveHp=w=>Math.min(1e200,Math.pow(1.14,w-1)*Math.pow(1.003,(w-1)*(w-1))*EARLY(w)), waveDmg=w=>Math.pow(1.1,w-1)*EARLY(w), waveRew=w=>Math.pow(1.045,w-1);
 const waveCount=w=>Math.round((6+2.6*w)*(1+0.04*L('vision'))), waveWindow=w=>Math.max(6,Math.min(12,6+0.3*w)-Math.max(0,w-24)*0.3);
-function pickType(w){const p=[['grunt',10]];if(w>=3)p.push(['runner',4+w*.3]);if(w>=4)p.push(['shooter',2+w*.2]);if(w>=6)p.push(['brute',1+w*.15]);if(w>=8)p.push(['bomber',2+w*.15]);
+function pickType(w){const p=[['grunt',10]];if(w>=3)p.push(['runner',4+w*.3]);if(w>=4)p.push(['shooter',2+w*.2]);if(w>=6)p.push(['brute',1+w*.15]);if(w>=8)p.push(['bomber',2+w*.15]);skyWeights(w,p);
   let t=p.reduce((a,b)=>a+b[1],0)*Math.random();for(const[k,v]of p){if((t-=v)<=0)return k}return'grunt'}
-function spawn(type){const d=ET[type],w=G.wave,a=Math.random()*Math.PI*2,hs=waveHp(w);
+function spawn(type){if(SKY[type])return spawnSky(type);const d=ET[type],w=G.wave,a=Math.random()*Math.PI*2,hs=waveHp(w);
   G.enemies.push({type,x:Math.cos(a)*(vision()+80),y:Math.sin(a)*(vision()+80),hp:d.hp*hs,max:d.hp*hs,spd:d.spd*(1+Math.min(.7,w*.014))*(0.9+Math.random()*.2),
     dmg:d.dmg*waveDmg(w),rate:d.rate,atk:0.5,rew:d.rew*waveRew(w),r:d.r,col:d.col,range:d.range||0,bomb:d.bomb,boss:d.boss,flash:0,wob:Math.random()*9})}
 function startWave(){
@@ -510,6 +514,7 @@ function startWave(){
   const ml=L('mines');if(ml){const half=fortHalf()+wallThick()/2+wireOut(),n=Math.min(30,2*ml);for(let i=0;i<n&&G.mines.length<n*3;i++){const a=Math.random()*7,r=half+18+Math.random()*(Math.max(50,vision()*0.95-half-18));G.mines.push({x:Math.cos(a)*r,y:Math.sin(a)*r,blink:Math.random()*3})}}
   if(G.wallMax){G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.25)}
   banner(G.wave%10===0?'WAVE '+G.wave+' — ENEMY ARMOR INCOMING':'WAVE '+G.wave);sfx('wave');
+  skyWaveStart();
 }
 function banner(t){G.banner=t;G.bannerT=2.5}
 // Floating text budget: kill cash (+$) stops spawning past FLOAT_SOFT; headline text (wave clear, crate cash) always spawns.
@@ -523,11 +528,11 @@ function dmgFloat(e,d,crit){const f=e._df;
   G.floats.push(e._df={x:e.x+(Math.random()-.5)*8,y:e.y-e.r,t:crit?f1(d)+'!':f1(d),c:crit?'#ffd23f':'#eee',s:crit?12:9,life:0.9,v:d,crit})}
 function shake(n){if(S.set.shake)G.shake=Math.min(12,G.shake+n)}
 
-function hurtEnemy(e,d,crit){if(e.dead)return;e.hp-=d;e.flash=0.08;fxHit(e,crit);
+function hurtEnemy(e,d,crit){if(e.dead)return;e.hp-=d;e.flash=0.08;(e.air?skyHit:fxHit)(e,crit);
   if(S.set.dmgNums&&visible(e)&&(crit||_mainHit||S.set.gfx!=='high'))dmgFloat(e,d,crit);
   if(e.hp<=0)kill(e)}
-function kill(e){e.dead=true;const r=money(e.rew);S.bank+=r;G.earned+=r;G.kills++;S.tkills++;fxKill(e);
-  if(S.set.gfx==='high')corpse(e);
+function kill(e){e.dead=true;const r=money(e.rew);S.bank+=r;G.earned+=r;G.kills++;S.tkills++;(e.air?airDown:fxKill)(e);
+  if(S.set.gfx==='high'&&!e.air)corpse(e);
   float(e.x,e.y-e.r-8,'+$'+r,'#7ddc5a',11);sfx('kill',e.x,e.y);
   if(e.boss){shake(10);banner('ENEMY TANK DESTROYED  +$'+r)}}
 function explode(x,y,r,dmg,big=true){
@@ -537,17 +542,18 @@ function explode(x,y,r,dmg,big=true){
   if(big){sfx('boom',x,y,r/30);shake(4)}}
 let _mainHit=false;
 function fire(s,e,mult=1){
+  if(e.air&&!s.main)mult*=AIR_BONUS.squad;
   let d=dmgAt(L('dmg'))*mult;const crit=Math.random()<Math.min(0.6,L('crit')*0.04);if(crit)d*=2.5+Math.max(0,L('crit')-15)*0.1;
   s.ang=Math.atan2(e.y-s.y,e.x-s.x);s.fl=G.time;
   G.fx.push({k:'tracer',x:s.x+Math.cos(s.ang)*6,y:s.y+Math.sin(s.ang)*6,x2:e.x,y2:e.y,life:0.07,max:0.07,c:crit?'#ffd23f':'#fff2b0'});
   const ex=e.x,ey=e.y;_mainHit=!!s.main;hurtEnemy(e,d,crit);_mainHit=false;
-  const fl=L('frag');if(fl){const fr=Math.min(40,10+4*fl);for(const o of G.enemies)if(o!==e&&!o.dead&&Math.hypot(o.x-ex,o.y-ey)<fr+o.r)hurtEnemy(o,d*0.35,false);G.fx.push({k:'boom',x:ex,y:ey,r:fr,life:0.2,max:0.2})}
+  const fl=L('frag');if(fl&&!e.air){const fr=Math.min(40,10+4*fl);for(const o of G.enemies)if(o!==e&&!o.dead&&Math.hypot(o.x-ex,o.y-ey)<fr+o.r)hurtEnemy(o,d*0.35,false);G.fx.push({k:'boom',x:ex,y:ey,r:fr,life:0.2,max:0.2})}
   fxMuzzle(s);sfx(s.main?'shot':'shot2',s.x,s.y);}
 function damageFort(d){
   if(wallsUp()){G.wallHp-=d*(1-Math.min(0.75,0.07*L('armor')));sfx('wall');if(G.wallHp<=0){G.wallHp=0;banner('WALLS BREACHED!');sfx('breach');shake(8)}}
   else{G.hp-=d;G.hurtT=0.3;sfx('hurt');shake(3);if(G.hp<=0)endRun()}}
-function enemyAt(x,y,slack){let best=null,bd=1e9;for(const e of G.enemies){if(e.dead||!visible(e))continue;const d=Math.hypot(e.x-x,e.y-y)-e.r;if(d<slack&&d<bd){bd=d;best=e}}return best}
-function nearestVisible(from){let best=null,bd=1e9;for(const e of G.enemies){if(e.dead||!visible(e))continue;const d=Math.hypot(e.x-from.x,e.y-from.y);if(d<bd){bd=d;best=e}}return best}
+function enemyAt(x,y,slack){let best=null,bd=1e9;for(const e of G.enemies.concat(G.sky)){if(e.dead||!visible(e))continue;const d=Math.hypot(e.x-x,e.y-y)-e.r;if(d<slack&&d<bd){bd=d;best=e}}return best}
+function nearestVisible(from){let best=null,bd=1e9;for(const e of G.enemies.concat(G.sky)){if(e.dead||!visible(e))continue;const d=Math.hypot(e.x-from.x,e.y-from.y);if(d<bd){bd=d;best=e}}return best}
 function endRun(){
   running=false;sfx('die');
   if(G.wave>S.best)S.best=G.wave;save();
@@ -560,7 +566,7 @@ function update(dt){
   if(G.bannerT>0)G.bannerT-=dt;if(G.hurtT>0)G.hurtT-=dt;G.shake*=0.88;
   // waves
   if(G.spawnLeft>0){G.spawnT-=dt;if(G.spawnT<=0){spawn(pickType(G.wave));G.spawnLeft--;G.spawnT=G.spawnInt*(0.6+Math.random()*0.8)}}
-  else if(G.enemies.length===0){
+  else if(G.enemies.length===0&&!G.sky.length){
     if(G.breakT<=0){if(G.wave>0){const b=money(8*G.wave);S.bank+=b;G.earned+=b;float(0,-40,'WAVE CLEAR +$'+b,'#7ddc5a',14);save()}G.breakT=G.wave<10?3:2}
     G.breakT-=dt;if(G.breakT<=0)startWave();}
   // regen
@@ -576,7 +582,7 @@ function update(dt){
   if(t&&m.cd<=0){fire(m,t);m.cd=cd/rm}else if(t)m.ang=Math.atan2(t.y-m.y,t.x-m.x);
   let near=null;   // visible enemies by distance to the fort, built at most once per tick and shared by the squad
   for(let i=1;i<n;i++){const s=G.sold[i];if(s.cd>0)continue;
-    if(!near){near=G.enemies.filter(e=>!e.dead&&visible(e));for(const e of near)e._d=Math.hypot(e.x,e.y);near.sort((a,b)=>a._d-b._d)}
+    if(!near){near=G.enemies.concat(G.sky).filter(e=>!e.dead&&visible(e));for(const e of near)e._d=Math.hypot(e.x,e.y);near.sort((a,b)=>a._d-b._d)}
     const pick=[];for(const e of near){if(!e.dead&&pick.push(e)===3)break}if(!pick.length)continue;
     fire(s,pick[Math.floor(Math.random()*pick.length)],0.7*(1+0.12*Math.max(0,L('squad')-8)));s.cd=cd*1.5}
   updateUnits(dt,half);updateAir(dt,half);updateLogi(dt);
@@ -603,6 +609,7 @@ function update(dt){
   // separation
   separate(G.enemies);
   G.enemies=G.enemies.filter(e=>!e.dead);
+  updateSky(dt,half);if(!running)return;
   // artillery
   const al=L('arty');if(al){G.artyT-=dt;if(G.artyT<=0){const vis=G.enemies.filter(visible);if(vis.length){let best=vis[0],bc=-1,R=artyR(al);
     for(const c of vis.slice(0,25)){let k=0;for(const o of vis)if(Math.hypot(o.x-c.x,o.y-c.y)<R)k++;if(k>bc){bc=k;best=c}}
@@ -692,7 +699,7 @@ function driveLane(u,lane,speed,dt){const H=laneHalf(lane),B=H+laneSouth(),rad=1
 // riflemen stand on the ramparts, two per side at most, clear of towers, gate and flame bunkers
 function placeSquad(){const ph=fortHalf(),sq=G.sold.slice(1),n=sq.length;if(!n)return;
   if(L('walls')<2){sq.forEach((s,i)=>{const a=i/n*Math.PI*2-Math.PI/2,r=ph+8;s.x=Math.cos(a)*r;s.y=Math.sin(a)*r;s.ang=a});return}
-  if(L('walls')<RAMPART_LV){const inner=ph-wallThick()/2-7,res=[{x:0,y:0,r:15}];
+  if(L('walls')<RAMPART_LV){const inner=ph-wallThick()/2-7,res=[{x:0,y:0,r:15},...skyReserve()];
     if(L('arty'))res.push(Object.assign(artyPos(),{r:ARTY_R[artyTier()]+3}));if(L('sniper'))res.push({x:0,y:-ph*0.6,r:14});
     const cand=[];for(let x=-inner;x<=inner+0.01;x+=4)for(let y=-inner;y<=inner+0.01;y+=4)if(res.every(q=>Math.hypot(x-q.x,y-q.y)>=q.r+7))cand.push({x,y});
     const pick=[];for(const s of sq){let best=null,bs=-1e9;for(const c of cand){const md=pick.length?Math.min(...pick.map(q=>Math.hypot(c.x-q.x,c.y-q.y))):60;if(md<13)continue;
@@ -716,7 +723,9 @@ function buildUnits(){const u=[],ph=wallHalfAt(L('walls'));
   const nt=Math.min(3,Math.ceil(L('tank')/2));for(let i=0;i<nt;i++)u.push({k:'tank',orb:i/nt*Math.PI*2,x:0,y:0,cd:1+Math.random(),ang:0,tur:0,tr:0});
   const nh=Math.min(2,Math.ceil(L('heli')/3));for(let i=0;i<nh;i++)u.push({k:'heli',orb:i*Math.PI,x:0,y:0,cd:0,rk:2+i,ang:0,gun:0,rot:0});
   return u}
-function nearestTo(u){let b=null,bd=1e9;for(const e of G.enemies){if(e.dead||!visible(e))continue;const d=Math.hypot(e.x-u.x,e.y-u.y);if(d<bd){bd=d;b=e}}return b}
+function nearestTo(u){const aa=AA_UNIT[u.k]||0;let b=null,bd=1e9,ba=null,bad=1e9;for(const e of G.enemies){if(e.dead||!visible(e))continue;const d=Math.hypot(e.x-u.x,e.y-u.y);if(d<bd){bd=d;b=e}}
+  if(aa)for(const e of G.sky){if(e.dead||!visible(e))continue;const d=Math.hypot(e.x-u.x,e.y-u.y);if(d<bd){bd=d;b=e}if(d<bad){bad=d;ba=e}}
+  return aa===2&&ba?ba:b}
 function updateUnits(dt,ph){
   const fl=L('flame');if(fl&&L('walls')){G.flameT-=dt;if(G.flameT<=0){G.flameT=0.1;const reach=ph+Math.min(60,26+4*fl);
     for(const e of G.enemies){if(e.dead||Math.max(Math.abs(e.x),Math.abs(e.y))>reach)continue;hurtEnemy(e,flameDps(fl)*0.1,false);
@@ -741,11 +750,11 @@ function updateUnits(dt,ph){
     else if(u.k==='tank'){u.tur=face;if(u.cd<=0){u.cd=2.2;u.fl=G.time;const d=Math.hypot(t.x-u.x,t.y-u.y);
       G.tshells.push({x:u.x+Math.cos(face)*40,y:u.y+Math.sin(face)*40,tx:t.x,ty:t.y,t:0,dur:Math.max(0.05,d/400),dmg:tankDmg(L('tank')),r:26,kind:'shell'});sfx('tank',u.x,u.y)}}
     else if(u.k==='heli'){u.gun=face;if(u.cd<=0){u.cd=0.12;G.fx.push({k:'tracer',x:u.x,y:u.y,x2:t.x+(Math.random()-.5)*6,y2:t.y+(Math.random()-.5)*6,life:0.05,max:0.05,c:'#ffcf6a'});hurtEnemy(t,heliDmg(L('heli')),false);sfx('mg',u.x,u.y)}
-      if(u.rk<=0){u.rk=3;const d=Math.hypot(t.x-u.x,t.y-u.y);G.tshells.push({x:u.x,y:u.y,tx:t.x,ty:t.y,t:0,dur:Math.max(0.05,d/300),dmg:rocketDmg(L('heli')),r:30,kind:'rocket'});sfx('rocket',u.x,u.y)}}
+      if(u.rk<=0&&!t.air){u.rk=3;const d=Math.hypot(t.x-u.x,t.y-u.y);G.tshells.push({x:u.x,y:u.y,tx:t.x,ty:t.y,t:0,dur:Math.max(0.05,d/300),dmg:rocketDmg(L('heli')),r:30,kind:'rocket'});sfx('rocket',u.x,u.y)}}
     else if(u.k==='tesla'){if(!u.burst||!u.burst.length)u.ang=face;
       if(u.cd<=0){u.cd=Math.max(0.4,1.6*Math.pow(0.9,L('tesla')-1));const hit=new Set();let cur=t;const pts=[];
-      for(let j=0;j<Math.min(12,3+L('tesla'))&&cur;j++){hit.add(cur);pts.push([cur.x,cur.y]);const cx=cur.x,cy=cur.y;hurtEnemy(cur,teslaDmg(L('tesla')),false);let nb=null,nd=80;
-        for(const e of G.enemies){if(e.dead||hit.has(e)||!visible(e))continue;const d=Math.hypot(e.x-cx,e.y-cy);if(d<nd){nd=d;nb=e}}cur=nb}
+      for(let j=0;j<Math.min(12,3+L('tesla'))&&cur;j++){hit.add(cur);pts.push([cur.x,cur.y]);const cx=cur.x,cy=cur.y;hurtEnemy(cur,teslaDmg(L('tesla'))*(cur.air?AIR_BONUS.ciws*aaMul():1),false);let nb=null,nd=80;
+        for(const e of G.enemies.concat(G.sky)){if(e.dead||hit.has(e)||!visible(e))continue;const d=Math.hypot(e.x-cx,e.y-cy);if(d<nd){nd=d;nb=e}}cur=nb}
       u.burst=pts.map(([x,y],i)=>({x,y,t:i*0.045}));const dur=0.08+pts.length*0.045;sfx('ciws',u.x,u.y,dur)}}
   }
   for(const s of G.tshells){s.t+=dt;if(s.kind==='rocket'&&Math.random()<.8)puff(s.x+(s.tx-s.x)*s.t/s.dur,s.y+(s.ty-s.y)*s.t/s.dur,1,2.2,0.8,'190,190,185',4,0.4);
@@ -1086,8 +1095,8 @@ function bestCluster(R,list){let best=null,bc=-1;for(const c of list.slice(0,30)
 function updateAir(dt,ph){
   const vis=G.enemies.filter(e=>!e.dead&&visible(e));
   for(const u of G.air){u.cd-=dt;
-    if(u.k==='mlaunch'&&vis.length){const t=nearestTo(u);u.ang=Math.atan2(t.y-u.y,t.x-u.x);
-      if(u.cd<=0){u.cd=2.8;const n=Math.min(8,1+Math.floor(L('mlaunch')/2)),tg=[...vis].sort((a,b)=>b.hp-a.hp);
+    if(u.k==='mlaunch'&&(vis.length||G.sky.length&&skyTargets().length)){const t=nearestTo(u);u.ang=Math.atan2(t.y-u.y,t.x-u.x);
+      if(u.cd<=0){u.cd=2.8;const n=Math.min(8,1+Math.floor(L('mlaunch')/2)),tg=[...vis,...skyTargets()].sort((a,b)=>b.hp*(b.air?3:1)-a.hp*(a.air?3:1));
         for(let i=0;i<n;i++){const e=tg[i%tg.length],a=u.ang+(Math.random()-.5)*1.5;G.missiles.push({x:u.x,y:u.y,vx:Math.cos(a)*80,vy:Math.sin(a)*80,tgt:e,tx:e.x,ty:e.y,life:4,dmg:mslDmg(L('mlaunch')),delay:i*0.12})}
         sfx('launch',u.x,u.y)}}
     if(u.k==='silo'&&u.cd<=0){const all=G.enemies.filter(e=>!e.dead&&visible(e));if(all.length<4){u.cd=1;continue}
@@ -1103,7 +1112,7 @@ function updateAir(dt,ph){
     if(m.tgt&&!m.tgt.dead){m.tx=m.tgt.x;m.ty=m.tgt.y}
     const dx=m.tx-m.x,dy=m.ty-m.y,d=Math.hypot(dx,dy)||1;m.vx+=dx/d*600*dt;m.vy+=dy/d*600*dt;const sp=Math.hypot(m.vx,m.vy),mx=260;if(sp>mx){m.vx*=mx/sp;m.vy*=mx/sp}
     m.x+=m.vx*dt;m.y+=m.vy*dt;if(Math.random()<.85)puff(m.x,m.y,1,2.4,0.9,'200,200,195',4,0.4);if(Math.random()<.3)light(m.x,m.y,16,'255,170,80',0.05);
-    if(d<8||m.life<=0){m.done=true;explode(m.x,m.y,28,m.dmg)}}
+    if(d<8||m.life<=0){m.done=true;if(m.tgt&&m.tgt.air)skyBurst(m.x,m.y,18,m.dmg*AIR_BONUS.msl*aaMul());else explode(m.x,m.y,28,m.dmg)}}
   G.missiles=G.missiles.filter(m=>!m.done);
   // silo strikes
   for(const n of G.nukes){n.t-=dt;if(n.t<=0){n.done=true;explode(n.x,n.y,95,siloDmg(L('silo')));explode(n.x,n.y,60,0);ring(n.x,n.y,280,1.3,'255,240,210',7);ring(n.x,n.y,160,0.9,'255,190,120',4);fireball(n.x,n.y,130,1.3);puff(n.x,n.y,34,45,5,'64,56,48',70,.65);light(n.x,n.y,520,'255,200,120',1.1);decal(n.x,n.y,'scorch',140);shake(14);G.flashT=0.4;sfx('nuke',n.x,n.y)}}
@@ -2021,9 +2030,322 @@ function showIntel(type,now){const [name,thr,tip]=INTEL[type],el=$('intel');seen
   drawPreview(type);el.style.setProperty('--dur',INTEL_MS+'ms');el.classList.remove('on');void el.offsetWidth;el.classList.add('on');
   tone(880,0.07,'square',0,0.035);setTimeout(()=>tone(1175,0.1,'square',0,0.035),90)}
 // renders the real in-game sprite, facing right, fitted to the card's preview canvas
-function drawPreview(type){const c=$('intelCv'),d=ET[type],k=d.r/6,span=d.boss?25:21,cxo=d.boss?2.5:4.5,fit=c.width*0.94/(span*k),main=ctx;
+function drawPreview(type){if(SKY[type])return skyPreview(type);const c=$('intelCv'),d=ET[type],k=d.r/6,span=d.boss?25:21,cxo=d.boss?2.5:4.5,fit=c.width*0.94/(span*k),main=ctx;
   ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,c.width,c.height);ctx.setTransform(fit,0,0,fit,c.width/2-cxo*k*fit+100*fit,c.height/2);
     drawEnemy({type,r:d.r,col:d.col,boss:d.boss,moving:false,wob:0,flash:0},-100,0)}finally{ctx=main}}
+// ================= ENEMY AIR =================
+// Hostile aircraft live in their own list, G.sky, never in G.enemies. Every ground-only weapon (explode(), mines, wire, flame,
+// artillery, tank/APC shells, heli rockets, airstrikes, silo, AC-130, fighter strafing runs) only walks G.enemies, so it cannot
+// touch an aircraft. Weapons that CAN engage air opt in explicitly: rifle + squad (fire/enemyAt/nearestVisible), MG nests, CIWS,
+// helicopter guns and the missile launcher (AA_UNIT in nearestTo), plus the AA Gun, SAM Site and fighter CAP below.
+const SKY={
+ drone:      {hp:9,   spd:64, dmg:14,rate:0,  rew:6,  r:5, alt:16,col:'#4a4d45'},
+ gunheli:    {hp:150, spd:30, dmg:9, rate:1.9,rew:40, r:12,alt:26,col:'#8a8060'},
+ strikejet:  {hp:110, spd:190,dmg:20,rate:0,  rew:45, r:11,alt:44,col:'#6f746c'},
+ heavybomber:{hp:220, spd:64, dmg:12,rate:0,  rew:90, r:18,alt:60,col:'#5d625c'},
+ airboss:    {hp:1400,spd:34, dmg:36,rate:3.2,rew:700,r:24,alt:66,col:'#3f4442'}};
+// first wave each threat can appear; drones start arriving in swarms at `swarm`; the gunship leads waves 25, 35, 45...
+const SKY_WAVE={drone:7,swarm:12,gunheli:14,strikejet:22,heavybomber:30,airboss:25};
+Object.assign(INTEL,{
+ drone:['Strike Drone',2,'FPV kamikaze quadcopter. Flies over wire and mines and dives into your walls. Rifles, MG nests and AA guns can hit it.'],
+ gunheli:['Attack Helicopter',3,'Hovers at standoff range raking your walls with cannon and rockets. Ground weapons can\'t reach it: lock on, or build AA.'],
+ strikejet:['Strike Jet',4,'Strafing runs across the fort, then loops back for more. Too fast for most guns: flak, SAMs and CIWS track it.'],
+ heavybomber:['Heavy Bomber',4,'Carpets the fort with bombs on every pass. Tough airframe: kill it before it lines up its run.'],
+ airboss:['Heavy Gunship',5,'Armored flying battery circling the fort with a 105mm gun. Mass every AA weapon you have on it.']});
+Object.assign(IC,{aagun:'M4 21h16M7 21l2-5h6l2 5M9 16l6-11M12 16l6-9M14 5l2-1.5M17 7l2-1',
+  sam:'M4 21h16M6 21l3-5h6l3 5M8.5 16l8-11 2.5 2-8 10.5zM16.5 5l3-2-1 3.5',
+  radar:'M12 21v-6M8 21h8M4.5 12.5a7 7 0 0 0 10-10zM9.5 7.5l3 3M15 3a6 6 0 0 1 6 6M15 6a3 3 0 0 1 3 3'});
+Object.assign(US,{aagun:1.5,sam:1.6,radar:1.4});
+const aaDmg=l=>30*Math.pow(1.3,l-1),aaGuns=l=>l>=4?2:1,radarR=l=>l?30+18*l:0,aaMul=()=>1+0.06*L('radar');
+const samDmg=l=>900*Math.pow(1.33,l-1),samCd=l=>Math.max(1.4,5*Math.pow(0.92,l-1)),samN=l=>Math.min(4,1+Math.floor(l/3));
+const AIR_BONUS={ciws:1.75,msl:1.5,squad:0.6};
+const AA_UNIT={turret:1,heli:1,tesla:2,mlaunch:2};   // units whose guns reach aircraft; 2 = engages aircraft first
+const skyVision=()=>vision()+radarR(L('radar'));
+// ---- waves -------------------------------------------------------------------------------------------------------
+function skyWeights(w,p){
+  if(w>=SKY_WAVE.drone)p.push(['drone',Math.min(4,1.6+0.15*(w-SKY_WAVE.drone))]);
+  if(w>=SKY_WAVE.gunheli)p.push(['gunheli',Math.min(3.5,0.7+0.1*(w-SKY_WAVE.gunheli))]);
+  if(w>=SKY_WAVE.strikejet)p.push(['strikejet',Math.min(3,0.6+0.08*(w-SKY_WAVE.strikejet))]);
+  if(w>=SKY_WAVE.heavybomber)p.push(['heavybomber',Math.min(2,0.35+0.05*(w-SKY_WAVE.heavybomber))])}
+function spawnSky(type,a=Math.random()*TAU,lead=true){const d=SKY[type],w=G.wave,hs=waveHp(w),R0=skyVision()+(type==='drone'?50:140)+(lead?0:20+Math.random()*40);
+  const e={type,air:true,x:Math.cos(a)*R0,y:Math.sin(a)*R0,vx:0,vy:0,hp:d.hp*hs,max:d.hp*hs,spd:d.spd*(1+Math.min(0.35,w*0.007))*(0.92+Math.random()*0.16),
+    dmg:d.dmg*waveDmg(w),rate:d.rate,rew:d.rew*waveRew(w),r:d.r,alt:d.alt,col:d.col,ang:a+Math.PI,flash:0,wob:Math.random()*9,t:0,cd:1+Math.random(),
+    st:0,n:0,gt:0,bt:0,burst:0,rk:2+Math.random()*2,bay:0,fl:-9};
+  G.sky.push(e);
+  if(type==='drone'&&lead&&w>=SKY_WAVE.swarm){const k=Math.min(4,1+Math.floor((w-SKY_WAVE.swarm)/8));for(let i=0;i<k;i++)spawnSky('drone',a+(Math.random()-.5)*0.22,false);
+    const take=Math.min(k>>1,G.spawnLeft);G.spawnLeft-=take;G.waveTotal+=k-take}   // half the swarm replaces pending ground spawns
+  return e}
+function skyWaveStart(){const w=G.wave;if(w>=SKY_WAVE.airboss&&w%10===5){spawnSky('airboss');G.waveTotal++;banner('WAVE '+w+' — ENEMY GUNSHIP INBOUND')}}
+// ---- air-defence emplacements: fixed courtyard spots, kept clear of the arty pit, sniper tower, CIWS, launcher and silo ------
+function aadSpots(ph){return{aa:[{x:ph*0.55,y:ph*0.55},{x:-ph*0.28,y:ph*0.64}],sam:{x:ph*0.15,y:ph*0.62},radar:{x:-ph*0.64,y:-ph*0.12}}}
+const AAD_R={aagun:6.5,sam:8,radar:7};   // footprint radius in sprite units, before US x bS() scaling
+function skyReserve(){const p=aadSpots(wallHalfAt(L('walls'))),s=bS(),out=[],al=L('aagun');
+  if(al)p.aa.slice(0,aaGuns(al)).forEach(q=>out.push({x:q.x,y:q.y,r:AAD_R.aagun*US.aagun*s}));
+  if(L('sam'))out.push({x:p.sam.x,y:p.sam.y,r:AAD_R.sam*US.sam*s});
+  if(L('radar'))out.push({x:p.radar.x,y:p.radar.y,r:AAD_R.radar*US.radar*s});
+  return out}
+function skyInit(){Object.assign(G,{sky:[],skyShots:[],flak:[],sams:[],wrecks:[],caps:[],capT:6,jetSnd:-9,aa:[]});
+  const p=aadSpots(wallHalfAt(L('walls'))),al=L('aagun');
+  if(al)p.aa.slice(0,aaGuns(al)).forEach(q=>G.aa.push({k:'aagun',x:q.x,y:q.y,ang:-Math.PI/2,cd:Math.random(),burst:0,bt:0,side:0,fl:-9}));
+  if(L('sam'))G.aa.push({k:'sam',x:p.sam.x,y:p.sam.y,ang:-Math.PI/2,cd:2,fl:-9});
+  if(L('radar'))G.aa.push({k:'radar',x:p.radar.x,y:p.radar.y})}
+// ---- flight helpers ----------------------------------------------------------------------------------------------
+const skyTargets=()=>G.sky.filter(e=>!e.dead&&visible(e));
+function skyNearest(f,list=skyTargets()){let b=null,bd=1e9;for(const e of list){if(e.dead)continue;const d=Math.hypot(e.x-f.x,e.y-f.y);if(d<bd){bd=d;b=e}}return b}
+const angTo=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));
+const boxD=(x,y)=>Math.max(Math.abs(x),Math.abs(y));
+const noseOf=(e,l)=>[e.x+Math.cos(e.ang)*l,e.y+Math.sin(e.ang)*l];
+function advance(e,spd,dt){const px=e.x,py=e.y;e.x+=Math.cos(e.ang)*spd*dt;e.y+=Math.sin(e.ang)*spd*dt;e.vx=(e.x-px)/dt;e.vy=(e.y-py)/dt}
+function fly(e,tx,ty,turn,spd,dt){e.ang+=Math.max(-turn*dt,Math.min(turn*dt,angTo(e.ang,Math.atan2(ty-e.y,tx-e.x))));advance(e,spd,dt)}
+function glide(e,tx,ty,k,dt){const px=e.x,py=e.y;e.x+=(tx-e.x)*k;e.y+=(ty-e.y)*k;e.vx=(e.x-px)/dt;e.vy=(e.y-py)/dt}
+// nearest point on the fort's outer face, scattered +-j/2 along that wall
+function wallPt(x,y,h,j){const tx=Math.max(-h,Math.min(h,x)),ty=Math.max(-h,Math.min(h,y)),s=(Math.random()-.5)*j;
+  return Math.abs(tx)>=Math.abs(ty)?[tx,Math.max(-h,Math.min(h,ty+s))]:[Math.max(-h,Math.min(h,tx+s)),ty]}
+// ---- behaviours --------------------------------------------------------------------------------------------------
+// Drone: lazy weave toward a point on the wall facing it, then a straight terminal dive.
+function aiDrone(e,dt,h){
+  if(e.tx===undefined){const a=Math.atan2(e.y,e.x)+(Math.random()-.5)*1.1,c=Math.max(Math.abs(Math.cos(a)),Math.abs(Math.sin(a)));e.tx=Math.cos(a)/c*h*0.92;e.ty=Math.sin(a)/c*h*0.92}
+  const d=Math.hypot(e.tx-e.x,e.ty-e.y),dive=d<75;
+  fly(e,e.tx,e.ty,dive?7:3.2,e.spd*(dive?1.65:1),dt);if(!dive)e.ang+=Math.sin(e.t*4+e.wob)*0.9*dt;
+  e.alt=dive?SKY.drone.alt*Math.max(0,(d-4)/71):SKY.drone.alt+Math.sin(e.t*3+e.wob)*1.5;
+  if(d<5+e.spd*1.65*dt){e.dead=true;skyBlast(e.tx,e.ty,0.55);damageFort(e.dmg)}}
+// Attack helicopter: flies in to a standoff ring inside your sight line, then sidesteps around it with the nose on the fort.
+function aiHeli(e,dt,h){const d=Math.hypot(e.x,e.y)||1,stand=Math.max(h+60,Math.min(vision()-e.r-20,h+170));
+  if(!e.st){fly(e,0,0,2,e.spd,dt);if(d<=stand){e.st=1;e.orb=Math.atan2(e.y,e.x);e.dir=Math.random()<.5?1:-1}return}
+  e.orb+=e.dir*e.spd*0.25/stand*dt;const R0=stand+Math.sin(e.t*0.6+e.wob)*12;glide(e,Math.cos(e.orb)*R0,Math.sin(e.orb)*R0,Math.min(1,dt*1.5),dt);
+  e.ang+=Math.max(-2*dt,Math.min(2*dt,angTo(e.ang,Math.atan2(-e.y,-e.x))));
+  e.cd-=dt;if(e.cd<=0&&!e.burst){e.burst=6;e.cd=e.rate*(0.85+Math.random()*0.3)}
+  if(e.burst){e.bt-=dt;if(e.bt<=0){e.bt=0.07;e.burst--;const[wx,wy]=wallPt(e.x,e.y,h,18),[nx,ny]=noseOf(e,16);e.fl=G.time;
+    G.fx.push({k:'tracer',x:nx,y:ny,x2:wx,y2:wy,life:0.06,max:0.06,c:'#ff7a5a',w:1.3});spark(wx,wy,2,70,['#ffd08a','#fff'],0.2,1.2);sfx('mg',e.x,e.y);damageFort(e.dmg/6);if(!running)return}}
+  e.rk-=dt;if(e.rk<=0){e.rk=4.2+Math.random()*1.6;for(const s of[-1,1]){const[wx,wy]=wallPt(e.x,e.y,h,30),ox=-Math.sin(e.ang)*8.6*s,oy=Math.cos(e.ang)*8.6*s;
+    G.skyShots.push({k:'rocket',x:e.x+ox,y:e.y+oy,tx:wx,ty:wy,t:s>0?-0.15:0,dur:Math.hypot(wx-e.x,wy-e.y)/300,dmg:e.dmg*0.9,alt:e.alt})}sfx('rocket',e.x,e.y)}}
+// Fixed-wing attack runs: aim through a point near the fort, overfly, extend beyond the air picture, loop back. After
+// `passes` runs the aircraft egresses (no bounty), so a wave with nothing that can reach the sky still ends.
+function aiPasses(e,dt,h,turn,spread,passes,run){
+  if(!e.aim)newPass(e,spread*h);
+  if(e.leg==='in'){fly(e,e.aim[0],e.aim[1],turn,e.spd,dt);
+    if((e.aim[0]-e.x)*Math.cos(e.ang)+(e.aim[1]-e.y)*Math.sin(e.ang)<0&&Math.hypot(e.x,e.y)<skyVision())e.leg='out'}
+  else{advance(e,e.spd,dt);if(Math.hypot(e.x,e.y)>skyVision()+90){if(++e.n>=passes){e.dead=true;e.gone=true;return}newPass(e,spread*h)}}
+  run(e,dt,h)}
+function newPass(e,sp){const a=Math.atan2(-e.y,-e.x)+Math.PI/2,o=(Math.random()-.5)*2*sp;e.aim=[Math.cos(a)*o,Math.sin(a)*o];e.leg='in';e.rkd=0;e.snd=0}
+function flyby(e,name){if(!e.snd&&e.leg==='in'&&Math.hypot(e.x,e.y)<skyVision()+60){e.snd=1;if(G.time-G.jetSnd>1.4){G.jetSnd=G.time;sfx(name)}}}
+// Strike jet: rocket pair on the way in, then walks a cannon burst across the walls while it is over the fort.
+function jetRun(e,dt,h){flyby(e,'jet');const c=boxD(e.x,e.y);if(c>h+90)return;
+  if(e.leg==='in'&&!e.rkd){e.rkd=1;for(const s of[-1,1]){const[wx,wy]=wallPt(e.x,e.y,h,40);
+    G.skyShots.push({k:'rocket',x:e.x-Math.sin(e.ang)*9*s,y:e.y+Math.cos(e.ang)*9*s,tx:wx,ty:wy,t:s>0?-0.1:0,dur:Math.max(0.15,Math.hypot(wx-e.x,wy-e.y)/420),dmg:e.dmg*0.35,alt:e.alt})}sfx('rocket',e.x,e.y)}
+  e.gt-=dt;if(e.gt<=0&&(e.leg==='in'||c<h)){e.gt=0.08;e.fl=G.time;const px=e.x+Math.cos(e.ang)*34+(Math.random()-.5)*8,py=e.y+Math.sin(e.ang)*34+(Math.random()-.5)*8,[nx,ny]=noseOf(e,20);
+    G.fx.push({k:'tracer',x:nx,y:ny,x2:px,y2:py,life:0.05,max:0.05,c:'#ff9a5a',w:1.4});sfx('cannon',px,py);
+    if(boxD(px,py)<=h+3){spark(px,py,3,90,['#ffd08a','#fff'],0.2,1.2);damageFort(e.dmg*0.1)}else puff(px,py,1,3,0.6,'110,96,72',8,0.4)}}
+// Heavy bomber: opens the bay when its bombs would land on the fort and lays ~8 bombs per crossing, whatever the fort size.
+function bomberRun(e,dt,h){flyby(e,'plane');e.bay=Math.max(0,e.bay-dt);const fall=0.9,lx=e.x+Math.cos(e.ang)*e.spd*fall*0.7,ly=e.y+Math.sin(e.ang)*e.spd*fall*0.7;
+  if(boxD(lx,ly)>h+8)return;e.bay=0.4;e.bt-=dt;
+  if(e.bt<=0){e.bt=Math.max(0.08,2*h/(8*e.spd*0.7));G.skyShots.push({k:'bomb',x:e.x,y:e.y,tx:lx+(Math.random()-.5)*6,ty:ly+(Math.random()-.5)*6,t:0,dur:fall,dmg:e.dmg,alt:e.alt})}}
+// Heavy gunship (air boss): settles into a counter-clockwise orbit inside your sight line, left-side guns on the walls.
+function aiBoss(e,dt,h){const Ro=Math.max(h+110,Math.min(vision()-e.r-26,h+230));
+  if(!e.st){fly(e,0,0,1.2,e.spd*1.6,dt);if(Math.hypot(e.x,e.y)<=Ro+4){e.st=1;e.orb=Math.atan2(e.y,e.x)}return}
+  e.orb-=e.spd/Ro*dt;glide(e,Math.cos(e.orb)*Ro,Math.sin(e.orb)*Ro,Math.min(1,dt*2),dt);e.ang+=Math.max(-dt,Math.min(dt,angTo(e.ang,e.orb-Math.PI/2)));
+  const gx=e.x+Math.cos(e.ang-Math.PI/2)*12,gy=e.y+Math.sin(e.ang-Math.PI/2)*12;
+  e.gt-=dt;if(e.gt<=0){e.gt=0.28;e.fl=G.time;const[wx,wy]=wallPt(e.x,e.y,h,h*0.9);G.fx.push({k:'tracer',x:gx,y:gy,x2:wx,y2:wy,life:0.07,max:0.07,c:'#ffb15a',w:1.8});
+    spark(wx,wy,3,90,['#ffd08a','#fff'],0.25,1.3);sfx('cannon',e.x,e.y);damageFort(e.dmg*0.08);if(!running)return}
+  e.cd-=dt;if(e.cd<=0){e.cd=e.rate;const[wx,wy]=wallPt(e.x,e.y,h,h);G.skyShots.push({k:'shell',x:gx,y:gy,tx:wx,ty:wy,t:0,dur:0.55,dmg:e.dmg,alt:e.alt});
+    light(gx,gy,60,'255,190,110',0.12);sfx('howitzer',e.x,e.y,1.4)}}
+const SKY_AI={drone:aiDrone,gunheli:aiHeli,airboss:aiBoss,
+  strikejet:(e,dt,h)=>aiPasses(e,dt,h,1.5,0.6,3,jetRun),heavybomber:(e,dt,h)=>aiPasses(e,dt,h,0.55,0.35,2,bomberRun)};
+// ---- per-tick update, driven from update() after the ground enemies -----------------------------------------------
+function updateSky(dt,h){
+  for(const e of G.sky){if(e.dead)continue;e.t+=dt;e.flash-=dt;
+    if(!seen()[e.type]&&visible(e))spotted(e.type);
+    SKY_AI[e.type](e,dt,h);if(!running)return}
+  const ds=G.sky.filter(e=>e.type==='drone'&&!e.dead);   // keep swarms loose so flak bursts read one by one
+  for(let i=0;i<ds.length;i++)for(let j=i+1;j<ds.length;j++){const a=ds[i],b=ds[j],dx=b.x-a.x,dy=b.y-a.y,dd=dx*dx+dy*dy;
+    if(dd<81&&dd>0.01){const dl=Math.sqrt(dd),p=(9-dl)/2/dl;a.x-=dx*p;a.y-=dy*p;b.x+=dx*p;b.y+=dy*p}}
+  G.sky=G.sky.filter(e=>!e.dead);
+  for(const s of G.skyShots){s.t+=dt;if(s.t<0)continue;
+    if(s.k==='rocket'&&Math.random()<.7){const k=Math.min(1,s.t/s.dur);puff(s.x+(s.tx-s.x)*k,s.y+(s.ty-s.y)*k,1,2,0.7,'185,180,172',4,0.4)}
+    if(s.t>=s.dur){s.done=true;skyImpact(s);if(!running)return}}
+  G.skyShots=G.skyShots.filter(s=>!s.done);
+  updateAAD(dt);
+  for(const w of G.wrecks){w.t+=dt;w.x+=w.vx*dt;w.y+=w.vy*dt;w.ang+=w.spin*dt;const k=Math.min(1,w.t/w.dur);w.alt=w.alt0*(1-k*k);
+    if(Math.random()<.6)puff(w.x,w.y,1,w.r*0.35,1.4,'40,36,32',6,0.55);
+    if(w.t>=w.dur){w.done=true;skyBlast(w.x,w.y,w.big?1.5:w.type==='drone'?0.35:0.85)}}
+  G.wrecks=G.wrecks.filter(w=>!w.done)}
+function updateAAD(dt){const tg=G.sky.length?skyTargets():[];
+  for(const u of G.aa){
+    if(u.k==='aagun'){const t=skyNearest(u,tg);if(!t){u.burst=0;continue}
+      u.ang+=Math.max(-7*dt,Math.min(7*dt,angTo(u.ang,Math.atan2(t.y-u.y,t.x-u.x))));
+      u.cd-=dt;if(u.cd<=0&&!u.burst){u.burst=4;u.bt=0}
+      if(u.burst){u.bt-=dt;if(u.bt<=0){u.bt=0.11;if(!--u.burst)u.cd=0.55;
+        const s=US.aagun*bS(),side=u.side?1:-1,mx=u.x+Math.cos(u.ang)*13*s-Math.sin(u.ang)*2.6*side*s,my=u.y+Math.sin(u.ang)*13*s+Math.cos(u.ang)*2.6*side*s;
+        const d=Math.hypot(t.x-mx,t.y-my),T=d/720,sp=d*0.035;u.fl=G.time;u.side^=1;   // lead the target, a little dispersion with range
+        G.flak.push({x:mx,y:my,tx:t.x+t.vx*T+(Math.random()-.5)*sp,ty:t.y+t.vy*T+(Math.random()-.5)*sp,t:0,dur:Math.max(0.03,T),dmg:aaDmg(L('aagun'))*aaMul()});
+        light(mx,my,20,'255,200,120',0.05);sfx('cannon',u.x,u.y)}}}
+    else if(u.k==='sam'){u.cd-=dt;if(!tg.length)continue;const s=[...tg].sort((a,b)=>b.hp-a.hp);
+      u.ang+=Math.max(-3*dt,Math.min(3*dt,angTo(u.ang,Math.atan2(s[0].y-u.y,s[0].x-u.x))));
+      if(u.cd<=0){const l=L('sam');u.cd=samCd(l);u.fl=G.time;
+        for(let i=0;i<samN(l);i++){const e=s[i%s.length],a=u.ang+(Math.random()-.5)*0.6;G.sams.push({x:u.x,y:u.y,h:a,v:90,vx:0,vy:0,tgt:e,tx:e.x,ty:e.y,life:6,dmg:samDmg(l)*aaMul(),delay:i*0.25,spd:340,acc:700,turn:5})}
+        puff(u.x,u.y,6,6,1.2,'170,165,155',25,0.5);sfx('launch',u.x,u.y)}}}
+  for(const f of G.flak){f.t+=dt;if(f.t>=f.dur){f.done=true;skyBurst(f.tx,f.ty,16,f.dmg)}}G.flak=G.flak.filter(f=>!f.done);
+  // fighter CAP: while fighters are on strength, a pair sweeps past and looses air-to-air missiles at the toughest aircraft
+  const fl=L('fighter');if(fl&&L('airstrip')){G.capT-=dt;if(G.capT<=0){if(tg.length){G.capT=Math.max(4,14*Math.pow(0.9,fl-1))*stripMul();
+      G.caps.push({a:Math.random()*TAU,o:(Math.random()-.5)*160,t:0,n:Math.min(4,1+Math.floor(fl/2)),fired:0});if(G.time-G.jetSnd>1.4){G.jetSnd=G.time;sfx('jet')}}else G.capT=1}}
+  for(const c of G.caps){c.t+=dt;if(!c.fired&&c.t>=0.9){c.fired=1;const p=capPos(c),s=skyTargets().sort((a,b)=>b.hp-a.hp);
+    for(let i=0;i<c.n&&s.length;i++){const e=s[i%s.length];G.sams.push({x:p.x,y:p.y,h:c.a,v:260,vx:0,vy:0,tgt:e,tx:e.x,ty:e.y,life:4,dmg:jetDmg(fl)*1.6,delay:i*0.15,spd:420,acc:900,turn:6,aam:1})}
+    if(s.length)sfx('launch',p.x,p.y)}}
+  G.caps=G.caps.filter(c=>c.t<2.6);
+  for(const m of G.sams){if(m.delay>0){m.delay-=dt;continue}m.life-=dt;
+    if(!m.tgt||m.tgt.dead)m.tgt=skyNearest(m,tg);if(m.tgt){m.tx=m.tgt.x;m.ty=m.tgt.y}
+    const dx=m.tx-m.x,dy=m.ty-m.y,d=Math.hypot(dx,dy)||1;   // turn-rate-limited seeker: tight enough to catch a jetting target
+    m.h+=Math.max(-m.turn*dt,Math.min(m.turn*dt,angTo(m.h,Math.atan2(dy,dx))));m.v=Math.min(m.spd,m.v+m.acc*dt);m.vx=Math.cos(m.h)*m.v;m.vy=Math.sin(m.h)*m.v;
+    m.x+=m.vx*dt;m.y+=m.vy*dt;if(Math.random()<.8)puff(m.x,m.y,1,2.4,0.9,'205,205,200',4,0.4);
+    if(m.tgt&&d<m.tgt.r+6+m.v*dt){m.done=true;hurtEnemy(m.tgt,m.dmg,false);skyBurst(m.x,m.y,20,m.dmg*0.25)}else if(m.life<=0||(!m.tgt&&d<8)){m.done=true;skyBurst(m.x,m.y,14,0)}}
+  G.sams=G.sams.filter(m=>!m.done)}
+const capPos=c=>{const s=-950+800*c.t;return{x:Math.cos(c.a)*s-Math.sin(c.a)*c.o,y:Math.sin(c.a)*s+Math.cos(c.a)*c.o}};
+// ---- damage + effects (air bursts only ever touch G.sky; aircraft ordnance only ever touches the fort) -------------
+function skyBurst(x,y,r,dmg){if(dmg)for(const e of G.sky)if(!e.dead&&Math.hypot(e.x-x,e.y-y)<r+e.r)hurtEnemy(e,dmg,false);
+  puff(x,y,2,5,0.9,'46,44,40',8,0.6);spark(x,y,4,110,['#ffe7a0','#ff9a3a'],0.25,1.3);light(x,y,26,'255,190,110',0.08)}
+function skyBlast(x,y,k){fireball(x,y,22*k,0.4+0.15*k);ring(x,y,34*k,0.35,'255,220,170',1.5+k);spark(x,y,Math.round(8+8*k),150*k,['#fff6d0','#ffc04a','#ff7a1a'],0.45,1.5);
+  puff(x,y,Math.round(2+3*k),9*k,1.4+k*0.5,'58,52,46',14*k,0.55);decal(x,y,'scorch',12*k);light(x,y,70*k,'255,165,70',0.3);sfx('boom',x,y,0.5+0.7*k);if(k>=0.9)shake(2*k)}
+function skyImpact(s){const k=s.k==='shell'?1.3:s.k==='bomb'?1:0.6;skyBlast(s.tx,s.ty,k);if(s.dmg&&boxD(s.tx,s.ty)<=blockHalf()+4)damageFort(s.dmg)}
+function skyHit(e,crit){spark(e.x,e.y,crit?6:2,crit?150:100,crit?['#fff','#ffe07a']:['#ffe7a0','#c9ccd0'],0.25,1.3);if(crit)light(e.x,e.y,22,'255,230,140',0.1)}
+// shot down: the airframe tumbles out of the sky trailing smoke and burns in where it lands (no ground damage)
+function airDown(e){const big=e.type==='airboss'||e.type==='heavybomber';
+  G.wrecks.push({type:e.type,x:e.x,y:e.y,alt:e.alt,alt0:e.alt,ang:e.ang,vx:e.vx*0.6,vy:e.vy*0.6,spin:(Math.random()-.5)*(e.type==='drone'?9:2.4),t:0,
+    dur:e.type==='drone'?0.45:big?1.8:1.1,r:e.r,col:e.col,wob:e.wob,flash:0,fl:-9,bay:0,big});
+  spark(e.x,e.y,e.type==='drone'?8:16,160,['#fff6d0','#ffc04a','#ff7a1a'],0.5,1.6);fireball(e.x,e.y,e.r*1.6,0.35);light(e.x,e.y,e.r*6,'255,170,80',0.3);
+  if(e.type==='airboss'){banner('ENEMY GUNSHIP DOWN  +$'+money(e.rew));shake(10);sfx('boom',e.x,e.y,2.4)}else sfx('boom',e.x,e.y,e.type==='drone'?0.5:1.1)}
+// ---- sprites: top-down, nose along +x, authored in world units at the type's reference radius ------------------------
+const DRONE_ARMS=[[4.2,4.2],[4.2,-4.2],[-4.2,4.2],[-4.2,-4.2]];
+const JET_TOP=[[22,0],[14,-2.4],[6,-3.2],[-2,-15],[-7,-15.5],[-6,-4],[-14,-4.2],[-19,-9.5],[-22,-9.5],[-20,-2.2],[-23,-1.2]];
+const BMR_WING=[[10,-4],[-12,-46],[-20,-46],[-12,-4]],BMR_TAIL=[[-30,-3],[-37,-17],[-42,-17],[-40,-3]];
+const BOSS_WING=[[8,-56],[12,0],[8,56],[-4,56],[-8,0],[-4,-56]];
+const flipY=pts=>pts.map(([x,y])=>[x,-y]),mirrorY=top=>top.concat(flipY(top).reverse());
+// polygons are wound clockwise (screen space) like rect()/ellipse(), so overlapping parts of one silhouette never punch holes
+function polyTo(p,pts){let a=0;for(let i=0;i<pts.length;i++){const[x1,y1]=pts[i],[x2,y2]=pts[(i+1)%pts.length];a+=x1*y2-x2*y1}if(a<0)pts=pts.slice().reverse();
+  p.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)p.lineTo(pts[i][0],pts[i][1]);p.closePath();return p}
+function fpoly(pts,c){ctx.fillStyle=c;ctx.fill(polyTo(new Path2D(),pts))}
+const _skySil={};
+function skySil(type){let p=_skySil[type];if(p)return p;p=_skySil[type]=new Path2D();
+  const el=(x,y,rx,ry)=>{p.moveTo(x+rx,y);p.ellipse(x,y,rx,ry,0,0,TAU)},wing=pts=>{polyTo(p,pts);polyTo(p,flipY(pts))};
+  if(type==='drone'){for(const[a,b]of DRONE_ARMS)el(a,b,3,3);p.rect(-2.6,-1.8,8.2,3.6)}
+  else if(type==='gunheli'){el(-1,0,11.5,4.8);p.rect(-24,-1.1,16,2.2);p.rect(-4,-10,5,20);p.rect(-24.5,-5,2.4,10)}
+  else if(type==='strikejet')polyTo(p,mirrorY(JET_TOP));
+  else if(type==='heavybomber'){el(2,0,44,5.4);wing(BMR_WING);wing(BMR_TAIL)}
+  else{el(0,0,40,7.5);polyTo(p,BOSS_WING);p.rect(-41,-18,7,36)}
+  return p}
+// never let an aircraft shrink below ~4.5px radius when the camera is far out; SKY_EXT = drawn half-span, for brackets and bars
+const SKY_EXT={drone:7.5,gunheli:20,strikejet:22,heavybomber:46,airboss:56};
+const craftK=e=>Math.max(1,4.5/(sc*e.r));
+function drawCraft(e,x,y,k){const t=G.time,hot=t-(e.fl??-9)<0.06;ctx.save();ctx.translate(x,y);ctx.rotate(e.ang);ctx.scale(k,k);
+  switch(e.type){
+  case'drone':
+    for(const[a,b]of DRONE_ARMS)limb(0,0,a,b,1.3,'#26282a');
+    box(-2.6,-1.8,5.2,3.6,e.col);box(-2.6,-1.8,5.2,.7,'#6c7066');box(2.2,-.75,3.2,1.5,'#6b5a3a');ell(5.5,0,.95,.8,'#8f7c4c');ell(-1.2,0,.8,.8,'#111');   // airframe + strapped-on warhead
+    for(const[a,b]of DRONE_ARMS){const r=t*80+a*1.3+e.wob;ell(a,b,3,3,'rgba(200,205,210,.16)');limb(a-Math.cos(r)*2.8,b-Math.sin(r)*2.8,a+Math.cos(r)*2.8,b+Math.sin(r)*2.8,.5,'rgba(20,20,20,.6)');ell(a,b,.75,.75,'#111')}
+    if(Math.floor(t*5+e.wob)%2){ell(-2.3,0,.55,.55,'#ff3b30');ell(-2.3,0,1.4,1.4,'rgba(255,60,50,.3)')}
+    break;
+  case'gunheli':
+    box(-23,-1.1,15,2.2,'#55543f');box(-24.5,-5,2.4,10,'#44432f');ell(-23.3,6.2,3,.8,'rgba(40,40,40,.35)');box(-17,-1.1,2.2,2.2,'#b3261e');   // boom, fin, tail rotor, red band
+    box(-4,-10,5,20,'#4a4935');for(const s of[-1,1]){ell(-1.2,8.6*s,3.6,1.6,'#2c2c24');ell(2,8.6*s,.9,1.2,'#111')}                                 // stub wings + rocket pods
+    ell(-1,0,11.5,4.8,e.col);ell(-2,-1.6,8,1.8,'rgba(255,245,210,.12)');ell(-5,-3.6,3.2,1.2,'#3d3c2c');ell(-5,3.6,3.2,1.2,'#3d3c2c');             // fuselage + engine fairings
+    ell(5.5,0,3.2,2.3,'#1b2a33');ell(9.2,0,2.3,1.8,'#1b2a33');ell(8.8,-.7,.9,.45,'rgba(170,220,255,.5)');                                          // tandem cockpits
+    ell(11.2,0,1.5,1.5,'#2a2a22');box(11.2,-.45,5.6,.9,'#111');if(hot){ell(17.8,0,2.4,1.3,'#ffcf5a');ell(17.4,0,1.1,.6,'#fff')}                       // chin cannon
+    ell(0,0,20,20,'rgba(25,25,25,.07)');ctx.strokeStyle='rgba(20,20,20,.4)';ctx.lineWidth=1.1;ctx.lineCap='round';ctx.beginPath();
+    for(let i=0;i<5;i++){const a=t*26+e.wob+i*TAU/5;ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*19.5,Math.sin(a)*19.5)}ctx.stroke();ell(0,0,1.8,1.8,'#222');
+    break;
+  case'strikejet':{const P=skySil('strikejet'),ab=0.75+0.25*Math.sin(t*40+e.wob);
+    ctx.fillStyle=e.col;ctx.fill(P);ctx.save();ctx.clip(P);ell(-6,-9,4,2,'#585d55',0.5);ell(-4,8,3.6,1.8,'#585d55',-0.4);ell(-16,-4,3,1.4,'#80867c');ell(8,1.8,5,1,'#81877d');ctx.restore();   // two-tone camo
+    box(-18,-3.8,9,2.4,'#43473f');box(-18,1.4,9,2.4,'#43473f');                                                                                   // engine nacelles
+    for(const s of[-1,1]){ell(-3.5,9.5*s,3.2,.9,'#34342c');ell(-0.3,9.5*s,.7,.7,'#b3261e');ell(-6,6*s,2.4,.8,'#34342c')}                              // rocket pods + bombs on pylons
+    box(-22.5,-9.5,3,1.8,'#b3261e');box(-22.5,7.7,3,1.8,'#b3261e');
+    ell(9.5,0,4.2,1.5,'#1c2a33');ell(10.5,-.5,1.6,.5,'rgba(170,220,255,.5)');                                                                     // canopy
+    if(hot){ell(24,0,2.6,1.2,'#ffcf5a');ell(23.4,0,1.2,.6,'#fff')}
+    ctx.globalCompositeOperation='lighter';for(const s of[-2.6,2.6]){ell(-20.5,s,2.8*ab,1.2,'rgba(255,150,60,.75)');ell(-19.8,s,1.2,.7,'#fff3c0')}ctx.globalCompositeOperation='source-over';
+    break}
+  case'heavybomber':
+    for(const s of[1,-1]){fpoly(s>0?BMR_WING:flipY(BMR_WING),'#50554f');fpoly(s>0?BMR_TAIL:flipY(BMR_TAIL),'#50554f')}
+    for(const s of[1,-1])for(const[ex,ey]of[[-3,14],[-10,27]]){box(ex-4,ey*s-1.8,9,3.6,'#3b3f3a');ell(ex+5,ey*s,1,1.6,'#111');ell(ex-4.6,ey*s,1.3,1.2,'rgba(255,150,60,.55)')}   // four engine pods
+    ell(2,0,44,5.4,e.col);ell(0,-1.8,38,1.6,'rgba(255,250,230,.1)');box(-45,-.7,14,1.4,'#474c46');                                                // fuselage, sheen, fin
+    ell(43,0,3.4,3,'#3e433d');ell(37,0,3.6,2.6,'#1c2a33');ell(38,-.8,1.4,.6,'rgba(170,220,255,.45)');                                             // nose + cockpit
+    if(e.bay>0){box(-14,-2.6,20,5.2,'#141414');for(let i=0;i<4;i++)ell(-11+i*5,0,1.8,1,'#4a4a40')}else{ctx.strokeStyle='rgba(20,20,20,.5)';ctx.lineWidth=.4;ctx.strokeRect(-14,-2.6,20,5.2)}
+    box(-36,-2.4,2.6,4.8,'#b3261e');
+    break;
+  default:   // airboss: four-turboprop heavy gunship
+    fpoly(BOSS_WING,'#474d4a');box(-6.5,-56,3,112,'rgba(255,250,230,.07)');box(-41,-18,7,36,'#474d4a');box(-41,-18,7,1,'#5d6460');
+    for(const ey of[-32,-16,16,32]){const r=t*50+ey;box(2,ey-2.6,12,5.2,'#2b2f2d');ell(15,ey,1.1,7.5,'rgba(200,205,200,.14)');limb(15,ey-Math.cos(r)*7,15,ey+Math.cos(r)*7,.9,'rgba(25,25,25,.7)');ell(15,ey,1,1,'#111')}
+    ell(0,0,40,7.5,e.col);ell(-2,-3,34,2.2,'rgba(255,250,230,.08)');ell(37,0,4,5,'#2f3432');ell(35,0,3,3.8,'#1c2a33');box(-40,-.8,12,1.6,'#2b2f2d');
+    for(const gx of[-8,4,14]){box(gx-1.6,-8.6,3.2,2.4,'#151515');box(gx-.5,-12.4,1,3.8,'#0c0c0c')}                                                   // left-side gun battery
+    if(hot){ell(4,-14.5,1.4,2.8,'#ffcf5a');ell(4,-14,.7,1.3,'#fff')}
+    box(-28,-7.2,3,14.4,'#b3261e');ell(20,-40,2.4,2.4,'#b3261e');ell(20,40,2.4,2.4,'#b3261e');
+  }
+  if(e.flash>0){ctx.fillStyle='rgba(255,255,255,.35)';ctx.fill(skySil(e.type))}
+  ctx.restore()}
+function craftShadow(type,x,y,ang,alt,k){ctx.save();ctx.translate(x+alt*0.55,y+alt*0.7);ctx.rotate(ang);ctx.scale(k,k);ctx.fillStyle='rgba(0,0,0,.26)';ctx.fill(skySil(type));
+  if(type==='gunheli')ell(0,0,20,20,'rgba(0,0,0,.05)');ctx.restore()}
+// Twin 35mm flak (Gepard-style) in a sandbag revetment, search radar spinning on the turret rear
+function drawAAGun(u){const s=US.aagun*bS(),hot=G.time-u.fl<0.06;ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);
+  ell(0.8,1,7.4,7.4,'rgba(0,0,0,.3)');sandbags(6.5,14,k=>k===3);ell(0,0,5.2,5.2,'#58564a');ctx.rotate(u.ang);
+  box(-4.4,-3.6,7.4,7.2,'#5b6440');box(-4.4,-3.6,7.4,.7,'#737d52');ctx.strokeStyle='#2e3320';ctx.lineWidth=.4;ctx.strokeRect(-4.4,-3.6,7.4,7.2);
+  for(const sy of[-2.6,2.6]){const rc=hot&&(u.side?sy<0:sy>0)?1.2:0;box(3-rc,sy-.5,9,1,'#1d1f1a');box(11.4-rc,sy-.75,1.8,1.5,'#111')}
+  ctx.save();ctx.translate(-3.2,0);ctx.rotate(G.time*4);box(-.5,-2.6,1,5.2,'#c9ccc4');ctx.restore();ell(-3.2,0,.8,.8,'#333');ell(-.6,0,1.5,1.5,'#3d4428');
+  if(hot){const sy=u.side?-2.6:2.6;ell(14.4,sy,2.4,1.2,'#ffcf5a');ell(14,sy,1.1,.6,'#fff')}
+  ctx.restore()}
+// SAM site: hazard-cornered pad, turntable, four canisters (caps show loaded rounds while reloading)
+function drawSAM(u){const s=US.sam*bS(),ready=G.time-u.fl>1.2;ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);
+  box(-7.2,-7,16,16,'rgba(0,0,0,.3)');box(-8,-8,16,16,'#6d6f66');box(-8,-8,16,.7,'#8a8c82');ctx.strokeStyle='#3e403a';ctx.lineWidth=.4;ctx.strokeRect(-8,-8,16,16);
+  for(const[cx,cy]of[[-8,-8],[5.6,-8],[-8,5.6],[5.6,5.6]]){box(cx,cy,2.4,2.4,'#d8b23a');box(cx+.6,cy+.6,1.2,1.2,'#1c1c1c')}
+  ell(0,0,5.6,5.6,'#3a3d36');ctx.rotate(u.ang);box(-4,-5.6,3,11.2,'#39432b');
+  for(let i=0;i<4;i++){const y=-4.2+i*2.8;box(-2.5,y-1.2,11,2.4,'#4e5a3a');box(-2.5,y-1.2,11,.5,'#65744b');ell(8.5,y,.9,1,ready?'#e8e6de':'#151515');if(ready)ell(8.9,y,.45,.5,'#b33')}
+  ctx.restore()}
+// Air-search radar: lattice base, rotating planar array, faint sweep on the ground
+function drawRadar(u){const s=US.radar*bS(),a=G.time*1.6;ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgba(110,230,150,.07)';ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,20,a-0.5,a);ctx.closePath();ctx.fill();ctx.restore();
+  ell(1,1.2,6.4,6.4,'rgba(0,0,0,.3)');box(-5,-5,10,10,'#4d524a');ctx.strokeStyle='#2c302a';ctx.lineWidth=.4;ctx.beginPath();ctx.moveTo(-5,-5);ctx.lineTo(5,5);ctx.moveTo(5,-5);ctx.lineTo(-5,5);ctx.stroke();ctx.strokeRect(-5,-5,10,10);
+  ell(0,0,2.2,2.2,'#6b6f66');ctx.rotate(a);box(-1,-7.5,2.4,15,'#cfd3cb');box(-1,-7.5,.6,15,'#f0f2ec');for(let y=-6.5;y<7;y+=2)box(-.4,y,1.6,.3,'#9aa096');box(1.4,-.8,2.2,1.6,'#5b5f58');
+  if(Math.floor(G.time*2)%2)ell(0,0,.7,.7,'#ff3b30');ctx.restore()}
+// ground pass (before the fog): emplacements, and shadows of anything flying over ground you can see
+function drawSkyGround(){
+  for(const u of G.aa)(u.k==='aagun'?drawAAGun:u.k==='sam'?drawSAM:drawRadar)(u);
+  const V=vision();
+  for(const e of G.sky)if(!e.dead&&Math.hypot(e.x,e.y)<V+e.r)craftShadow(e.type,e.x,e.y,e.ang,e.alt,craftK(e));
+  for(const w of G.wrecks)craftShadow(w.type,w.x,w.y,w.ang,w.alt,1);
+  for(const s of G.skyShots)if(s.k==='bomb'&&s.t>0){const k=Math.min(1,s.t/s.dur),x=s.x+(s.tx-s.x)*k,y=s.y+(s.ty-s.y)*k,z=s.alt*(1-k);ell(x+z*0.55,y+z*0.7,1.8,1,'rgba(0,0,0,.3)')}}
+// air pass (after the fog, like friendly aircraft): ordnance, wrecks, aircraft, radar contacts, fog-edge warnings
+const ARW=new Path2D('M9 0L-3 -3L-6 -8L-8.5 -8L-6.5 -2L-8.5 0L-6.5 2L-8.5 8L-6 8L-3 3Z');
+function drawSky(){const V=vision(),SV=skyVision(),ta=Math.max(1,1/sc),lw=Math.max(1,1/sc),t=G.time;
+  if(L('radar')&&S.set.ring){ctx.strokeStyle='rgba(110,195,255,.16)';ctx.lineWidth=lw;ctx.setLineDash([3*ta,9*ta]);ctx.beginPath();ctx.arc(0,0,SV,0,TAU);ctx.stroke();ctx.setLineDash([])}
+  for(const s of G.skyShots){if(s.t<0)continue;const k=Math.min(1,s.t/s.dur),x=s.x+(s.tx-s.x)*k,y=s.y+(s.ty-s.y)*k,a=Math.atan2(s.ty-s.y,s.tx-s.x);
+    if(s.k==='shell'){ctx.globalCompositeOperation='lighter';ell(x,y,3.4,3.4,'rgba(255,170,80,.35)');ell(x,y,1.6,1.6,'#fff0c8');ctx.globalCompositeOperation='source-over';continue}
+    ctx.save();ctx.translate(x,y);ctx.rotate(a);
+    if(s.k==='rocket'){box(-4,-.7,5.5,1.4,'#cfcac0');box(1.5,-.7,1,1.4,'#b3261e');ctx.globalCompositeOperation='lighter';ell(-4.8,0,2,1,'#ffb13b')}
+    else{const z=1+0.5*(1-k);ctx.scale(z,z);box(-2.4,-1,4.8,2,'#2f312c');box(-3.2,-1.5,1.2,3,'#1f201c');ell(2.4,0,.9,1,'#3a3c36')}   // bomb, a touch larger while still high
+    ctx.restore()}
+  ctx.lineCap='round';ctx.globalCompositeOperation='lighter';
+  for(const f of G.flak){const k=f.t/f.dur,x=f.x+(f.tx-f.x)*k,y=f.y+(f.ty-f.y)*k,dl=Math.hypot(f.tx-f.x,f.ty-f.y)||1;ctx.strokeStyle='rgba(255,220,140,.9)';ctx.lineWidth=lw;
+    ctx.beginPath();ctx.moveTo(x-(f.tx-f.x)/dl*7,y-(f.ty-f.y)/dl*7);ctx.lineTo(x,y);ctx.stroke()}
+  ctx.globalCompositeOperation='source-over';
+  for(const m of G.sams){if(m.delay>0)continue;ctx.save();ctx.translate(m.x,m.y);ctx.rotate(Math.atan2(m.vy,m.vx));
+    box(-4.5,-.9,8,1.8,'#eceae2');box(3.5,-.9,1.5,1.8,m.aam?'#6b7a86':'#b3261e');box(-4.5,-1.8,1.6,3.6,'#9a9890');ctx.globalCompositeOperation='lighter';ell(-6,0,2.6,1.2,'rgba(255,170,80,.9)');ctx.restore()}
+  for(const c of G.caps){const p=capPos(c);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(c.a);ctx.fillStyle='#8a969e';drawJet(2.2);ell(8.8,0,6.6,2.6,'#1c2a33');ctx.restore()}
+  for(const w of G.wrecks){const k=w.t/w.dur;ctx.globalAlpha=1-k*0.3;drawCraft(w,w.x,w.y,1-0.25*k);ctx.globalAlpha=1;
+    ctx.save();ctx.translate(w.x,w.y);ctx.rotate(w.ang);ctx.scale(1-0.25*k,1-0.25*k);ctx.fillStyle='rgba(18,14,10,.5)';ctx.fill(skySil(w.type));ctx.restore();
+    ctx.globalCompositeOperation='lighter';blit(fireSprite(),w.x,w.y,w.r*(0.9+Math.random()*0.3),0.85);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
+  const live=G.sky.filter(e=>!e.dead&&visible(e)).sort((a,b)=>a.alt-b.alt),bars=[new Path2D(),new Path2D(),new Path2D()],bh=Math.max(2.5,1.5/sc);
+  for(const e of live){const k=craftK(e),far=Math.hypot(e.x,e.y)>V;if(far)ctx.globalAlpha=0.72;drawCraft(e,e.x,e.y,k);ctx.globalAlpha=1;
+    const ext=SKY_EXT[e.type]*k;
+    if(far){const r=ext+4*ta,q=Math.min(r*0.45,10*ta);ctx.strokeStyle='rgba(110,195,255,.85)';ctx.lineWidth=lw;ctx.beginPath();    // radar contact bracket
+      for(const[sx,sy]of[[-1,-1],[1,-1],[1,1],[-1,1]]){ctx.moveTo(e.x+sx*r,e.y+sy*(r-q));ctx.lineTo(e.x+sx*r,e.y+sy*r);ctx.lineTo(e.x+sx*(r-q),e.y+sy*r)}ctx.stroke()}
+    if(e.hp<e.max){const w=Math.max(14,Math.min(ext*1.2,e.r*3*k)),by=e.y-ext*0.8-bh-3*ta;bars[0].rect(e.x-w/2,by,w,bh);bars[e.type==='airboss'?2:1].rect(e.x-w/2,by,w*Math.max(0,e.hp/e.max),bh)}}
+  ctx.fillStyle='#000';ctx.fill(bars[0]);ctx.fillStyle='#6c4';ctx.fill(bars[1]);ctx.fillStyle='#f44';ctx.fill(bars[2]);
+  const tg=G.sold[0].tgt;if(tg&&tg.air&&!tg.dead&&Math.hypot(tg.x,tg.y)>V){ctx.strokeStyle='#ffd23f';ctx.lineWidth=Math.max(1.2,1.5/sc);const r=Math.max(tg.r+5,(tg.r*sc+6)/sc)+Math.sin(t*10);ctx.beginPath();ctx.arc(tg.x,tg.y,r,0,TAU);ctx.stroke()}
+  // incoming aircraft beyond the air picture: a red aircraft glyph on the fog edge (kept on screen), pulsing, fading with range
+  const hw=VW/2/sc,hh=VH/2/sc,edge=L('radar')?SV:V+22*ta;
+  for(const e of G.sky){if(e.dead||visible(e))continue;const a=Math.atan2(e.y,e.x),c=Math.cos(a),s=Math.sin(a),d=Math.hypot(e.x,e.y),
+      lim=Math.min(Math.abs(c)>1e-3?hw/Math.abs(c):1e9,Math.abs(s)>1e-3?hh/Math.abs(s):1e9)-16*ta,r=Math.min(edge,lim),al=Math.max(0.3,1-(d-SV)/420)*(0.72+0.28*Math.sin(t*9+e.wob)),z=ta*(e.type==='airboss'?1.7:e.type==='drone'?0.8:1.15);
+    ctx.save();ctx.translate(c*r,s*r);ctx.rotate(a+Math.PI);ctx.scale(z,z);ctx.fillStyle=`rgba(255,70,50,${al})`;ctx.strokeStyle=`rgba(24,6,4,${al*0.8})`;ctx.lineWidth=1;ctx.fill(ARW);ctx.stroke(ARW);ctx.restore()}}
+const SKY_FRAME={drone:[15,1.3],gunheli:[45,-2.5],strikejet:[48,-0.5],heavybomber:[96,0],airboss:[116,0]};   // intel preview [span, x-centre]
+function skyPreview(type){const c=$('intelCv'),[span,cx]=SKY_FRAME[type],fit=c.width*0.92/span,main=ctx;
+  ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,c.width,c.height);ctx.setTransform(fit,0,0,fit,c.width/2-cx*fit,c.height/2);
+    drawCraft({type,ang:0,col:SKY[type].col,wob:0,flash:0,fl:-9,bay:0},0,0,1)}finally{ctx=main}}
 // ================= HIGH-GFX ENVIRONMENT =================
 // High preset only. Static art (terrain, props, wire, fort) is baked once per run layout into offscreen canvases authored in
 // world units, so a frame costs a few drawImage calls. One sun for everything: light from the top-left, shadows fall +x/+y.
@@ -2491,7 +2813,7 @@ function draw(){
   const tg=G.sold[0].tgt;if(tg){ctx.strokeStyle='#ffd23f';ctx.lineWidth=Math.max(1.2,1.5/sc);const r=Math.max(tg.r+5,(tg.r*sc+6)/sc)+Math.sin(G.time*10);ctx.beginPath();ctx.arc(tg.x,tg.y,r,0,7);ctx.stroke();
     const tk=Math.max(4,5/sc);for(let i=0;i<4;i++){const a=i*Math.PI/2;ctx.beginPath();ctx.moveTo(tg.x+Math.cos(a)*r,tg.y+Math.sin(a)*r);ctx.lineTo(tg.x+Math.cos(a)*(r+tk),tg.y+Math.sin(a)*(r+tk));ctx.stroke()}}
   // soldiers
-  drawAirGround();drawLogiGround();drawUnits();drawArtyGun();
+  drawAirGround();drawLogiGround();drawUnits();drawArtyGun();drawSkyGround();
   for(const s of G.sold)drawSoldier(s);
   // fx
   drawSmoke();drawParts();drawFx();
@@ -2504,6 +2826,7 @@ function draw(){
   // threat indicators
   const ta=Math.max(1,1/sc);for(const e of G.enemies)if(!visible(e)){const a=Math.atan2(e.y,e.x),d=Math.hypot(e.x,e.y),al=Math.max(0.15,1-(d-V)/300);
     ctx.save();ctx.translate(Math.cos(a)*(V+10*ta),Math.sin(a)*(V+10*ta));ctx.rotate(a+Math.PI);ctx.scale(ta,ta);ctx.fillStyle=`rgba(255,70,50,${al*0.8})`;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(7,-4);ctx.lineTo(7,4);ctx.fill();ctx.restore()}
+  drawSky();
   // planes (above fog)
   for(const p of G.planes){const s=-800+500*p.t,x=p.x+p.dx*s,y=p.y+p.dy*s,a=Math.atan2(p.dy,p.dx);
     ctx.save();ctx.translate(x+34,y+34);ctx.rotate(a);ctx.fillStyle='rgba(0,0,0,.35)';drawPlane();ctx.restore();
@@ -2527,16 +2850,16 @@ function draw(){
   if(G.hurtT>0){const vg=ctx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.3,VW/2,VH/2,Math.max(VW,VH)*0.7);vg.addColorStop(0,'rgba(200,0,0,0)');vg.addColorStop(1,`rgba(200,0,0,${G.hurtT*1.5})`);ctx.fillStyle=vg;ctx.fillRect(0,0,VW,VH)}
   if(G.hp/G.maxHp<0.3){ctx.strokeStyle=`rgba(239,90,79,${0.3+0.3*Math.sin(G.time*6)})`;ctx.lineWidth=6;ctx.strokeRect(0,0,VW,VH)}
   // wave card
-  panel(20,20,230,G.spawnLeft+G.enemies.length?84:64);
+  panel(20,20,230,G.spawnLeft+G.enemies.length+G.sky.length?84:64);
   ctx.textAlign='left';ctx.fillStyle='#8f9882';ctx.font='600 11px Inter,sans-serif';ctx.fillText('WAVE',36,42);
   ctx.fillStyle='#e6ead9';ctx.font='800 28px Oxanium,sans-serif';ctx.fillText(G.wave,36,72);
   ctx.fillStyle='#8f9882';ctx.font='600 11px Inter,sans-serif';ctx.fillText('KILLS',120,42);ctx.fillStyle='#e6ead9';ctx.font='600 20px Oxanium,sans-serif';ctx.fillText(G.kills,120,68);
-  const left=G.spawnLeft+G.enemies.length;
+  const left=G.spawnLeft+G.enemies.length+G.sky.length;
   if(left){const tot=G.waveTotal||1;rrect(36,86,198,5,3,'rgba(255,255,255,.08)');rrect(36,86,198*Math.max(0,1-left/tot),5,3,'#e3b53c');
     ctx.fillStyle='#8f9882';ctx.font='500 10px Inter,sans-serif';ctx.textAlign='right';ctx.fillText(left+' hostiles',234,80)}
   else if(G.wave){ctx.fillStyle='#7fd35a';ctx.font='600 11px Inter,sans-serif';ctx.textAlign='right';ctx.fillText('NEXT WAVE '+Math.max(0,G.breakT).toFixed(1)+'s',234,68)}
   // money chip
-  ctx.font='700 18px Oxanium,sans-serif';const mt='$'+f1(S.bank),mw=ctx.measureText(mt).width+70,nar=VW<640,mcx=nar?20+mw/2:VW/2,mcy=nar?(G.spawnLeft+G.enemies.length?114:94):20;panel(mcx-mw/2,mcy,mw,40);
+  ctx.font='700 18px Oxanium,sans-serif';const mt='$'+f1(S.bank),mw=ctx.measureText(mt).width+70,nar=VW<640,mcx=nar?20+mw/2:VW/2,mcy=nar?(G.spawnLeft+G.enemies.length+G.sky.length?114:94):20;panel(mcx-mw/2,mcy,mw,40);
   const tw=ctx.measureText(mt).width;cIcon('coin',mcx-tw/2-14,mcy+11,18,'#ffcf5a');ctx.textAlign='center';ctx.fillStyle='#ffcf5a';ctx.fillText(mt,mcx+10,mcy+26);
   ctx.font='500 11px Inter,sans-serif';ctx.fillStyle='#7fd35a';ctx.fillText('+$'+f1(G.earned)+' this run',mcx,mcy+56);
   // bars
