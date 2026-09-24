@@ -157,6 +157,7 @@ kbd{font:600 12px var(--f-display);background:rgba(255,255,255,.08);border:1px s
 .c-info{color:var(--c-blue-hi);background:var(--t-blue);border:1px solid var(--b-blue)}.c-info b{color:var(--c-text);font-weight:600}
 /* progress */
 .pips{display:flex;gap:3px}.pips span{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.07);transition:background var(--d-2)}.pips span.f{background:linear-gradient(90deg,#e3b53c,#ffd76a)}
+.pips span.new,.lvbar i.new{transform-origin:left;animation:fillIn var(--d-2) var(--e-out)}@keyframes fillIn{from{transform:scaleX(0)}}
 .lvbar{height:4px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden}.lvbar i{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,#e3b53c,#ffd76a)}
 .meter{height:6px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}.meter i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#e3b53c,#ffd76a)}
 .wreq{position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border-radius:var(--rad-sm);border:1px dashed var(--c-line-2);
@@ -530,7 +531,7 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
 .manual summary{font-size:11px;letter-spacing:.2em;color:var(--c-dim)}
 .manual summary .eyebrow{flex:1}
 .manual[open]{padding-bottom:18px}
-.mgrid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 20px;margin:4px 0 14px}
+.mgrid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 20px;margin:4px 0 14px}.manual .mgrid2{grid-template-columns:1fr;gap:6px}
 .krow{display:flex;align-items:center;gap:10px;min-height:28px;font:400 13px/1.35 var(--f-body);color:var(--c-text-2)}.krow kbd{flex:none;min-width:30px;text-align:center}
 .mtips{margin:0;padding:0 0 0 18px;display:flex;flex-direction:column;gap:6px;font:400 13px/1.45 var(--f-body);color:var(--c-text-2)}.mtips b{color:var(--c-text);font-weight:600}
 .mtips li::marker{color:var(--c-gold)}
@@ -649,7 +650,7 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
 .rtc.own:before,.rtc.act:before,.rtc.ok:before{background:var(--c-blue)}
 .rtc.act{border-color:rgba(110,195,255,.55);box-shadow:0 0 0 1px rgba(110,195,255,.12),var(--glow-blue)}
 .rtc.ok{border-color:rgba(127,211,90,.5);box-shadow:0 0 0 1px rgba(127,211,90,.1),var(--glow-green)}
-.rtc.flash,.rtr.flash{animation:cardFlash 1.6s ease-out}
+.rtc.flash,.rtr.flash{animation:rsFlash 1.6s ease-out}@keyframes rsFlash{0%,60%{box-shadow:0 0 0 2px var(--c-blue),0 0 30px rgba(110,195,255,.4)}100%{box-shadow:0 0 0 0 transparent}}
 .rth{position:relative;height:104px;border-radius:10px;display:grid;place-items:center;overflow:hidden;border:1px solid var(--c-line);background:radial-gradient(circle at 50% 42%,var(--eb),#0c0f0a 78%)}
 .rth:after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--ea);opacity:.85}
 .rth canvas{width:96px;height:96px;cursor:inherit}
@@ -918,7 +919,7 @@ const U=[
  {id:'wire',wave:5,need:[["walls", 3]],cat:'FORT',name:'Barbed Wire',max:8,cost:100,g:1.75,desc:'A wire ring that slows and cuts enemies near the fort.',val:l=>l?'-'+pct(Math.min(0.7,0.25+0.06*l))+' speed · '+2*l+' dps':'none'},
  {id:'hp',late:1,cat:'SQUAD',name:'Body Armor',max:Infinity,cost:20,g:1.4,desc:'More soldier health.',val:l=>fmtN(hpAt(l))+' HP'},
  {id:'medic',wave:3,need:[["hp", 3]],cat:'SQUAD',name:'Field Medic',max:Infinity,cost:60,g:1.6,desc:'Regenerate health over time.',val:l=>(0.4*l).toFixed(1)+' HP/s'},
- {id:'squad',wave:4,need:[["walls", 2]],cat:'SQUAD',name:'Squad',max:Infinity,cost:200,g:1.85,desc:'Another soldier who fights on their own (70% dmg). Their weapon improves with Squad research.',val:l=>Math.min(8,l)+' extra '+pl(Math.min(8,l),'soldier')+(l>8?' · +'+pct(0.12*(l-8))+' dmg':'')},
+ {id:'squad',wave:4,need:[["walls", 2]],cat:'SQUAD',name:'Squad',max:Infinity,cost:200,g:1.85,desc:'Another soldier who fights on their own (70% dmg). Their weapon improves with Squad Kit research.',val:l=>Math.min(8,l)+' extra '+pl(Math.min(8,l),'soldier')+(l>8?' · +'+pct(0.12*(l-8))+' dmg':'')},
  {id:'arty',late:1,wave:6,need:[["walls", 2], ["vision", 3]],cat:'SUPPORT',name:'Artillery',max:Infinity,cost:250,g:1.55,desc:'A gun emplaced in your fort shells the biggest enemy cluster. Starts as a mortar pit; research the M777 Howitzer and HIMARS rocket salvos in R&D.',val:l=>l?f1(artyDmg(l))+' dmg / '+artyCd(l).toFixed(1)+'s':'none'},
  {id:'mines',late:1,wave:3,need:[["vision", 2]],cat:'SUPPORT',name:'Minefield',max:Infinity,cost:120,g:1.55,desc:'Mines are laid at the start of each wave.',val:l=>l?Math.min(30,2*l)+' mines · '+f1(mineDmg(l))+' dmg':'none'},
  {id:'air',late:1,wave:10,need:[["vision", 4]],cat:'SUPPORT',name:'Air Support',max:Infinity,cost:400,g:1.6,desc:'Call a bombing run anywhere (Q, then click).',val:l=>l?Math.min(16,5+l)+' bombs · '+f1(airDmg(l))+' dmg · '+Math.round(airCd(l))+'s cd':'none'},
@@ -1316,10 +1317,11 @@ const checkpoints=()=>{const c=[1];for(let w=20;w<=S.best;w+=20)c.push(w);return
 const startWaveOk=()=>{const w=S.set.startWave||1;return checkpoints().includes(w)?w:1};
 function renderStartSel(){const c=checkpoints(),el=$('startSel');
   if(c.length<2){el.className='cp one';el.innerHTML=`<p class="cp-none">${ic('lock',12)}Reach wave 20 to unlock a checkpoint start</p>`;return}
-  const cur=startWaveOk(),ph=narrow(),n=Math.min(8,Math.floor(cur/10));el.className='cp';
+  const cur=startWaveOk(),ph=narrow();el.className='cp';
   el.innerHTML=`<div class="eyebrow" id="cpLbl">START AT</div><div class="seg${c.length>4?' many':''}${c.length>(ph?5:7)?' scroll':''}" role="group" aria-labelledby="cpLbl">`
     +c.map(w=>`<button data-start="${w}" aria-pressed="${w===cur}">${ph||c.length>5?'W':'WAVE '}${w}</button>`).join('')+'</div>'
-    +`<p class="cpx">${cur<=1?'Full run from the first wave.':`Skips ${cur-1} waves · ${n} directive ${pl(n,'pick')} · RP back-pay after you hold 5 waves`}</p>`}
+    +`<p class="cpx">${cpText(cur)}</p>`}
+const cpText=w=>{const n=Math.min(8,Math.floor(w/10));return w<=1?'Full run from the first wave.':`Skips ${w-1} waves · ${n} directive ${pl(n,'pick')} · RP back-pay after you hold 5 waves`};
 function renderBase(){renderStartSel();renderMission();renderAAR();renderPicks();renderRdSum();$('nextUnl').innerHTML=nextUnlockHtml();renderManual();
   // desktop balance: next unlocks sit under the picks while the After-Action card fills the right column, else on the right
   const nu=$('nextUnl'),aar=!!(lastAAR&&lastRunMsg),col=aar?$('picks').parentNode:$('rdSum').parentNode;if(nu.parentNode!==col)col.insertBefore(nu,aar?null:$('manual'))}
@@ -1431,7 +1433,8 @@ $('tabs').addEventListener('click',e=>{const t=e.target.closest('[data-tab]');if
   const st=$('store'),top=st.getBoundingClientRect().top-$('hdr').offsetHeight-60;if(top<0)$('home').scrollTop+=top});
 $('affBtn').onclick=()=>{S.set.affFirst=S.set.affFirst===false;save();_armFreeze=null;renderArmory()};
 $('store').addEventListener('click',e=>{const b=e.target.closest('[data-id]');
-  if(b){const id=b.dataset.id,from=S.bank;if(buyUpgrade(id)){renderHome();tweenBank(from,S.bank);const nb=$('store').querySelector(`[data-id="${id}"]`);if(nb){nb.classList.add('pop');flash(nb.closest('.card'))}}
+  if(b){const id=b.dataset.id,from=S.bank;if(buyUpgrade(id)){renderHome();tweenBank(from,S.bank);const nb=$('store').querySelector(`[data-id="${id}"]`);if(nb){const c=nb.closest('.card');nb.classList.add('pop');flash(c);
+      const f=c.querySelectorAll('.pips .f');if(f.length)f[f.length-1].classList.add('new');const lb=c.querySelector('.lvbar i');if(lb)lb.classList.add('new')}}
     else if(!b.disabled){b.classList.remove('deny');void b.offsetWidth;b.classList.add('deny')}return}
   const sc=e.target.closest('[data-scard]');if(sc){const c=$('store').querySelector(`[data-card="${sc.dataset.scard}"]`);if(c){c.scrollIntoView({behavior:'smooth',block:'center'});flash(c)}return}
   if(e.target.closest('[data-goto],[data-rsgo]'))return;
@@ -1566,7 +1569,8 @@ function renderMedals(){const got=MG(),n=Object.keys(got).length,prog=m=>Math.mi
   if(won.length)h+=`<div class="eyebrow msec">EARNED · ${won.length}</div><div class="mgrid earned">${won.map(m=>medalCard(m,got)).join('')}</div>`;
   $('medals').innerHTML=h;S.set.medalSeen=n}
 // ---------------- wiring ----------------
-$('startSel').addEventListener('click',e=>{const b=e.target.closest('[data-start]');if(b){S.set.startWave=+b.dataset.start;save();renderStartSel();renderHdr()}});
+$('startSel').addEventListener('click',e=>{const b=e.target.closest('[data-start]');if(!b)return;S.set.startWave=+b.dataset.start;save();
+  for(const x of $('startSel').querySelectorAll('[data-start]'))x.setAttribute('aria-pressed',x===b);const t=$('startSel').querySelector('.cpx');if(t)t.textContent=cpText(startWaveOk());renderHdr()});
 $('deployBtn').onclick=()=>{startRun();};
 $('dockDeploy').onclick=$('hdrDeploy').onclick=()=>$('deployBtn').onclick();
 $('moneyChip').onclick=()=>setView('armory',true);
