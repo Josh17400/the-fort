@@ -654,14 +654,14 @@ const ET={
  bomber:{hp:16,spd:34,dmg:45,rate:1,rew:8,r:7,col:'#857a55',bomb:true},
  boss:{hp:900,spd:10,dmg:40,rate:2.2,rew:250,r:20,range:55,col:'#6d6450',boss:true},
  // support infantry: RPG gunners knock out your vehicles and MG nests; mortar teams shell the fort from the fog
- rpg:{hp:18,spd:22,dmg:22,rate:3.6,rew:12,r:7,col:'#7d6a48',range:125,span:23,cx:3.5},
- mortar:{hp:30,spd:17,dmg:24,rate:5,rew:16,r:8,col:'#6f6444',range:1,stand:22,nodep:true,span:22,cx:2.5},
+ rpg:{hp:18,spd:22,dmg:11,rate:3.6,rew:12,r:7,col:'#7d6a48',range:125,span:23,cx:3.5},
+ mortar:{hp:30,spd:17,dmg:7,rate:6,rew:16,r:8,col:'#6f6444',range:1,stand:22,nodep:true,span:22,cx:2.5},
  // armor (veh): arm = share of small-arms damage the plating stops; stand = parks this far past the sight line and fires from the fog
- technical:{hp:70,spd:40,dmg:2.2,rate:0.24,rew:24,r:14,col:'#ab9464',range:120,veh:1,arm:0.35,span:22,cx:0},
- apc:{hp:260,spd:18,dmg:5,rate:0.16,rew:48,r:14,col:'#8f7f58',range:24,veh:1,arm:0.6,load:1,span:26,cx:0.4},
- ifv:{hp:380,spd:16,dmg:8,rate:0.18,rew:64,r:14,col:'#8f7f58',range:110,veh:1,arm:0.7,span:28,cx:2.6},
- mbt:{hp:620,spd:12,dmg:40,rate:2.5,rew:110,r:17,col:'#8a7a52',range:90,veh:1,arm:0.78,span:25,cx:2.5},
- mlrs:{hp:300,spd:16,dmg:15,rate:11,rew:90,r:15,col:'#8f7f58',range:1,stand:36,nodep:true,veh:1,arm:0.45,span:23,cx:0},
+ technical:{hp:60,spd:40,dmg:1.3,rate:0.24,rew:24,r:14,col:'#ab9464',range:120,veh:1,arm:0.25,span:22,cx:0},
+ apc:{hp:180,spd:18,dmg:3.5,rate:0.16,rew:48,r:14,col:'#8f7f58',range:24,veh:1,arm:0.45,load:1,span:26,cx:0.4},
+ ifv:{hp:200,spd:16,dmg:3,rate:0.18,rew:64,r:14,col:'#8f7f58',range:110,veh:1,arm:0.55,span:28,cx:2.6},
+ mbt:{hp:420,spd:12,dmg:30,rate:2.8,rew:110,r:17,col:'#8a7a52',range:90,veh:1,arm:0.65,span:25,cx:2.5},
+ mlrs:{hp:200,spd:16,dmg:4,rate:16,rew:90,r:15,col:'#8f7f58',range:1,stand:36,nodep:true,veh:1,arm:0.35,span:23,cx:0},
 };
 let G=null,running=false,paused=false,mouse={x:0,y:0,wx:0,wy:0,down:false};
 function startRun(){
@@ -698,7 +698,7 @@ const HPC=[Math.log(1.14),Math.log(1.003),26,30,Math.log(1.11)],DMC=[Math.log(1.
 const waveHp=w=>Math.min(1e200,Math.exp(curve(w,...HPC))*EARLY(w)),waveDmg=w=>Math.min(1e200,Math.exp(curve(w,...DMC))*EARLY(w)),waveRew=w=>Math.min(1e200,Math.exp(curve(w,...RWC)));
 const waveCount=w=>Math.round((6+2.6*w)*(1+0.04*L('vision'))), waveWindow=w=>Math.max(6,Math.min(12,6+0.3*w)-Math.max(0,w-24)*0.3);
 function pickType(w){const p=[['grunt',10]];if(w>=3)p.push(['runner',4+w*.3]);if(w>=4)p.push(['shooter',2+w*.2]);if(w>=6)p.push(['brute',1+w*.15]);if(w>=8)p.push(['bomber',2+w*.15]);
-  if(w>=9)p.push(['rpg',Math.min(4,0.8+0.1*(w-9))]);if(w>=11)p.push(['mortar',Math.min(2.2,0.5+0.06*(w-11))]);skyWeights(w,p);evWeights(p);
+  if(w>=9)p.push(['rpg',Math.min(4,0.8+0.1*(w-9))]);if(w>=11)p.push(['mortar',Math.min(1.6,0.4+0.05*(w-11))]);skyWeights(w,p);evWeights(p);
   let t=p.reduce((a,b)=>a+b[1],0)*Math.random();for(const[k,v]of p){if((t-=v)<=0)return k}return'grunt'}
 function spawn(type,at){if(SKY[type])return spawnSky(type);const d=ET[type],w=G.wave,a=Math.random()*Math.PI*2,hs=waveHp(w);
   G.enemies.push({type,x:at?at.x:Math.cos(a)*(vision()+80),y:at?at.y:Math.sin(a)*(vision()+80),hp:d.hp*hs*hazardHp(),max:d.hp*hs*hazardHp(),spd:d.spd*(1+Math.min(.7,w*.014))*(0.9+Math.random()*.2),
@@ -707,9 +707,9 @@ function spawn(type,at){if(SKY[type])return spawnSky(type);const d=ET[type],w=G.
   const e=G.enemies[G.enemies.length-1];if(d.boss)trackBoss(e);return e}
 // ---- enemy armor: from wave 6 each wave draws a vehicle roster that takes a share of the wave's slots (a vehicle is worth a
 // few riflemen) and is shuffled into the spawn stream, so late waves roll in as combined-arms assaults rather than rifle mobs.
-const VEH_WAVE={technical:6,apc:12,ifv:18,mlrs:22,mbt:25},VEH_COST={technical:2,apc:3,ifv:4,mlrs:4,mbt:6};
+const VEH_WAVE={technical:6,apc:12,ifv:18,mlrs:22,mbt:25},VEH_COST={technical:2,apc:5,ifv:4,mlrs:4,mbt:6};
 function vehBase(t,w){const x=w-VEH_WAVE[t];if(x<0)return 0;
-  return t==='technical'?Math.min(6,1+x/4.5):t==='apc'||t==='ifv'?Math.min(5,1+x/5):t==='mlrs'?Math.min(2,0.7+x/10):Math.min(4,0.8+x/7)}
+  return t==='technical'?Math.min(5,1+x/6):t==='apc'?Math.min(5,1+x/5):t==='ifv'?Math.min(5,1+x/6):t==='mlrs'?Math.min(2,0.5+x/12):Math.min(4,0.8+x/7)}
 function vehWave(){const w=G.wave,q=[],f=w%10===0?0.5:1;   // MBT (boss) waves bring half the usual escort so the tank stays the headline
   for(const t in VEH_WAVE){let n=Math.floor(vehBase(t,w)*f+Math.random()*0.6);if(G.ev==='armor'&&(t==='apc'||t==='ifv')&&w>=VEH_WAVE[t])n++;for(let i=0;i<n;i++)q.push(t)}
   for(let i=q.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[q[i],q[j]]=[q[j],q[i]]}
@@ -825,12 +825,12 @@ function standOff(e,spd,dt){const d=Math.hypot(e.x,e.y)||1,want=e.fwd?Math.max(b
 function fireMortar(e){const h=blockHalf()*0.85,tx=(R()*2-1)*h,ty=(R()*2-1)*h;e.rev=1.8;if(e.shots>=4)e.fwd=1;
   G.eshots.push({k:'mortar',x:e.x,y:e.y,tx,ty,t:0,dur:1.35,dmg:e.dmg,src:e.type,h:70,warn:1});
   light(e.x,e.y,46,'255,190,110',0.18);puff(e.x,e.y,4,5,1.2,'170,165,150',16,0.5);sfx('mortar',e.x,e.y);sfx('whistle')}
-function fireMLRS(e){const n=Math.min(12,6+Math.floor(Math.max(0,G.wave-22)/4)),h=blockHalf()*0.95;e.rev=4;if(e.shots>=2)e.fwd=1;
+function fireMLRS(e){const n=Math.min(10,6+Math.floor(Math.max(0,G.wave-22)/5)),h=blockHalf()*0.95;e.rev=4;if(e.shots>=2)e.fwd=1;
   for(let i=0;i<n;i++)G.eshots.push({k:'mlrs',x:e.x,y:e.y,tx:(R()*2-1)*h,ty:(R()*2-1)*h,t:-1.1-i*0.16,dur:1.1,dmg:e.dmg,src:e.type,h:95,warn:1});   // rings first, then the ripple
   sfx('alarm');float(e.x,e.y-e.r-10,'ROCKET SALVO','#ff8a70',12)}
 // APC: once at the wall it drops the ramp and a rifle squad pours out on both flanks, then its turret opens up
 function apcUnload(e){const n=e.load,d=Math.hypot(e.x,e.y)||1,ux=-e.x/d,uy=-e.y/d;e.load=0;e.atk=1.2;
-  for(let i=0;i<n;i++){const s=i%2?1:-1,o=e.r+5+Math.floor(i/2)*6,a=-4+Math.floor(i/2)*5,q=spawn(G.wave>=15&&i%3===2?'brute':'grunt',{x:e.x-uy*s*o-ux*a,y:e.y+ux*s*o-uy*a});q.atk=0.4+i*0.12}
+  for(let i=0;i<n;i++){const s=i%2?1:-1,o=e.r+5+Math.floor(i/2)*6,a=-4+Math.floor(i/2)*5,q=spawn(G.wave>=25&&i%4===3?'brute':'grunt',{x:e.x-uy*s*o-ux*a,y:e.y+ux*s*o-uy*a});q.atk=0.4+i*0.12}
   G.waveTotal+=n;sfx('hatch',e.x,e.y);puff(e.x-ux*e.r,e.y-uy*e.r,4,6,1,'150,135,105',14,0.4);float(e.x,e.y-e.r-10,'SQUAD DISMOUNTING','#ff9d7a',11)}
 function updateEShots(dt){
   for(const s of G.eshots){s.t+=dt;if(s.t<0)continue;
