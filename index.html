@@ -806,7 +806,7 @@ const SIGT={
  snapToLock:()=>'Bombs guide onto your locked target',
  autoDistribute:()=>'Bombs spread across every target in the zone',
  cd:x=>`${pct(1-x)} shorter cooldown`,
- stealth:()=>'Stealth airframe slips past enemy air defence',
+ stealth:()=>'Stealth airframe: gun runs come 35% sooner',
  pen:x=>`Armor-piercing rounds ignore ${pct(x)} of armor`};
 function sigText(sig){if(!sig)return'';const out=[];for(const k in sig){if(k==='every'||k==='pen'||!SIGT[k])continue;out.push(SIGT[k](sig[k]))}
   if(!out.length)return'';let s=out.join(' · ');if(sig.every){const lead=`Every ${ORD(sig.every)} ${sig.mega?'strike':'shot'}: `;s=lead+(sig.mega?s:s[0].toLowerCase()+s.slice(1))}return s}
@@ -1006,7 +1006,7 @@ function lNoise(v,ftype,f0,f1,q,peak,att,dec,delay=0){const[c,t0,out]=v,t=t0+del
 // Single-layer helper for UI chimes: centred, bus-routed, never dropped.
 function tone(f,d,type='square',slide=0,gain=0.08){const v=voice(d,1,null,null,true);if(v)lOsc(v,type,f,f+slide,gain,0.004,d)}
 // Minimum spacing (s) per sound so an 8-gun volley in one frame reads as one sharp report, not a smear.
-const SFX_GAP={mortar:0.08,hatch:0.2,shot2:0.03,mg:0.035,cannon:0.05,boom:0.03,kill:0.02,wall:0.06,hurt:0.08,nade:0.05,rocket:0.06,launch:0.1};
+const SFX_GAP={mortar:0.08,hatch:0.2,shot2:0.03,mg:0.035,cannon:0.05,boom:0.03,kill:0.02,wall:0.06,hurt:0.08,nade:0.05,rocket:0.06,launch:0.1,laser:0.06,zap:0.07,intercept:0.08,emp:0.3};
 // sfx(name, worldX?, worldY?, size?) - size scales explosions/howitzers (1 = frag grenade, 3 = heavy bomb); for 'ciws' it is burst length (s).
 function sfx(n,x,y,k=1){
   const c=AU.ctx,gap=SFX_GAP[n];if(gap&&c){const now=c.currentTime;if(now-(AU.last[n]??-1)<gap)return;AU.last[n]=now}
@@ -1069,6 +1069,11 @@ function sfx(n,x,y,k=1){
     lOsc(v,'sine',120*p,48,0.4,0.002,0.22);lNoise(v,'bandpass',420*p,160,1.2,0.3,0.003,0.16);lNoise(v,'highpass',2400,2400,0.7,0.05,0.001,0.03)}break;
   case'hatch':if(v=voice(0.5,1,x,y)){for(const dl of[0,0.14]){lNoise(v,'bandpass',1700,1200,2.2,0.2,0.001,0.07,dl);lOsc(v,'square',210,170,0.05,0.001,0.06,dl)}   // ramp clank
     lOsc(v,'sine',85,55,0.25,0.004,0.2,0.14)}break;
+  // research signatures: directed-energy zap, electric arc, active-protection kill, EMP / microwave thump
+  case'laser':if(v=voice(0.2,jit(0.1),x,y)){const p=jit(0.06);lOsc(v,'sine',2600*p,700,0.07,0.002,0.12);lNoise(v,'highpass',6000,6000,0.7,0.05,0.001,0.05)}break;
+  case'zap':if(v=voice(0.2,jit(0.12),x,y)){const p=jit(0.1);lNoise(v,'bandpass',3200*p,1400,3,0.18,0.001,0.12);lOsc(v,'square',180*p,110,0.035,0.001,0.1)}break;
+  case'intercept':if(v=voice(0.25,1,x,y)){lNoise(v,'highpass',3600,3600,0.7,0.2,0.001,0.05);lOsc(v,'sine',1900,850,0.05,0.002,0.1);lNoise(v,'lowpass',900,200,0.8,0.18,0.002,0.14,0.02)}break;
+  case'emp':if(v=voice(0.9,1,x,y,true)){lOsc(v,'sine',1100,55,0.18,0.004,0.6);lNoise(v,'bandpass',1500,180,2,0.22,0.01,0.7)}break;
   case'die':if(v=voice(1.3,1,null,null,true)){lOsc(v,'triangle',300,40,0.15,0.01,1.2);lNoise(v,'lowpass',500,60,0.8,0.3,0.01,1.2)}break;
 }}
 // Persistent beds + procedural march, driven once per rendered frame from loop(): pure scheduling, no per-frame node churn.
@@ -1140,7 +1145,7 @@ function startRun(){
   G.rs=Object.assign({},S.rs);G.rf=Object.assign({},S.rf);G.rp=0;G.cleared=0;G.rsNew=rsFieldNew();   // research is frozen for the whole run
   {const w0=startWaveOk();G.startWave=w0;if(w0>1){G.cp={i:0,n:Math.min(8,Math.floor(w0/10))};G.perkAt=0.5;medalMax('cp',1)}}
   G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=Math.min(S.set.lastSpeed||1,SPEEDS[L('speed')]);syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;initLogi();
-  skyInit();syncPrioBtn();syncNadeBtn(true);$('hud').classList.toggle('air',L('air')>0);
+  skyInit();sigInit();syncPrioBtn();syncNadeBtn(true);$('hud').classList.toggle('air',L('air')>0);
   running=true;paused=false;mouse.down=false;$('overlay').classList.remove('on');showScreen('game');
 }
 // vision() is hit thousands of times a frame via visible(); levels can't change mid-run, so memoise it per sim tick.
@@ -1236,7 +1241,7 @@ function shake(n){if(S.set.shake)G.shake=Math.min(12,G.shake+n)}
 let _dk='',_pen=0;
 function armMul(e){if(_dk==='m')return e.veh||e.boss?2.2:1;if(!e.arm)return 1;
   return _dk==='s'?1-e.arm*(1-Math.min(1,_pen+0.15*pk('tungsten'))):_dk==='p'?1-e.arm*(1-Math.max(0.55,_pen)):_dk==='f'?(1-e.arm)*0.5:1}
-function hurtEnemy(e,d,crit){if(e.dead)return;d*=(1+0.2*pk('overwatch'))*armMul(e);e.hp-=d;e.flash=0.08;(e.air?skyHit:fxHit)(e,crit);
+function hurtEnemy(e,d,crit){if(e.dead)return;d*=(1+0.2*pk('overwatch'))*armMul(e)*(e.mkT>G.time?1+e.mkB:1);   // mkT/mkB: research mark (sgMark)e.hp-=d;e.flash=0.08;(e.air?skyHit:fxHit)(e,crit);
   if(S.set.dmgNums&&visible(e)&&(crit||_mainHit||S.set.gfx!=='high'))dmgFloat(e,d,crit);
   if(e.hp<=0)kill(e)}
 // Kill streak: kills from the player's own aimed rifle (a tapped/clicked lock, not auto-fire) chain within STREAK_T seconds;
@@ -1254,18 +1259,23 @@ function kill(e){e.dead=true;if(_mainHit&&_aimed)streakKill();
   if(bonus)float(e.x,e.y-e.r-24,'CARRIER KILLED LOADED','#ffcf5a',12);
   if(e.boss){shake(10);banner('ENEMY TANK DESTROYED  +$'+r)}}
 let _mainHit=false;
-function fire(s,e,mult=1){
+function fire(s,e,mult=1){const m0=mult;
+  // research signatures: every Nth round can be a 40mm airburst (Commander) or a Carl Gustaf HEAT round that seeks armor (squad)
+  const line=s.main?'dmg':'squad',big=sgRound(s,line),heat=big&&!!sg(line,'seek');if(heat)e=sgSeek(G.enemies,s)||e;
   if(e.air&&!s.main)mult*=AIR_BONUS.squad;
-  const line=s.main?'dmg':'squad';let d=dmgAt(L('dmg'))*rMult(line)*mult*(1+0.25*pk('hollow'));const crit=Math.random()<critChance();if(crit)d*=2.5+Math.max(0,L('crit')-15)*0.1;
+  let d=dmgAt(L('dmg'))*rMult(line)*mult*(1+0.25*pk('hollow'));const d0=d,crit=Math.random()<critChance()||s.main&&e===s.tgt&&sg('dmg','lockCrit')!=null;if(crit)d*=2.5+Math.max(0,L('crit')-15)*0.1;
   s.ang=Math.atan2(e.y-s.y,e.x-s.x);s.fl=G.time;
-  G.fx.push({k:'tracer',x:s.x+Math.cos(s.ang)*6,y:s.y+Math.sin(s.ang)*6,x2:e.x,y2:e.y,life:0.07,max:0.07,c:crit?'#ffd23f':'#fff2b0'});
-  const ex=e.x,ey=e.y;_mainHit=!!s.main;_dk='s';_pen=rPen(line);hurtEnemy(e,d,crit);_mainHit=false;
+  sgTracer(line,s.x+Math.cos(s.ang)*6,s.y+Math.sin(s.ang)*6,e.x,e.y,crit?'#ffd23f':'#fff2b0',big?1.8:1.2,0.07);
+  const ex=e.x,ey=e.y;_mainHit=!!s.main;_dk=heat&&!e.air?'':'s';_pen=rPen(line);hurtEnemy(e,d,crit);_mainHit=false;_dk='s';
+  if(big&&!e.air){const p=sg(line,'splash');sigSplash(ex,ey,p[0],d*p[1],e)}
+  sigOnHit(line,s.x,s.y,e,d,'s',d0);
   const fl=L('frag');if(fl&&!e.air){const fr=Math.min(40,10+4*fl);for(const o of G.enemies)if(o!==e&&!o.dead&&Math.hypot(o.x-ex,o.y-ey)<fr+o.r)hurtEnemy(o,d*0.35,false);G.fx.push({k:'boom',x:ex,y:ey,r:fr,life:0.2,max:0.2})}
   _dk='';_pen=0;
-  fxMuzzle(s);sfx(s.main?'shot':'shot2',s.x,s.y);}
+  fxMuzzle(s);sfx(s.main?'shot':'shot2',s.x,s.y);sgSalvo(s,line,e,m0)}
 // src = attacker type; G.threat keeps a decaying tally (x0.6 per wave) so the after-action report names what actually broke you
 function damageFort(d,src){if(src)G.threat[src]=(G.threat[src]||0)+d;G.wHit=1;
-  if(wallsUp()){G.wallHp-=d*(1-Math.min(0.75,0.07*L('armor')));sfx('wall');if(G.wallHp<=0){G.wallHp=0;G.breachW=G.wave;banner('WALLS BREACHED!');sfx('breach');shake(8)}}
+  if(G.shT>0){sgShieldHit();return}   // EM Armor Screen up over a fresh breach
+  if(wallsUp()){G.wallHp-=d*(1-Math.min(0.75,0.07*L('armor')));sfx('wall');if(G.wallHp<=0){G.wallHp=0;G.breachW=G.wave;banner('WALLS BREACHED!');sfx('breach');shake(8);sgBreach()}}
   else{G.hp-=d;G.hurtT=0.3;sfx('hurt');shake(3);if(G.hp<=0)endRun()}}
 // ================= ENEMY ARMOR & SUPPORT WEAPONS =================
 // Vehicle guns fire from the muzzle end of the hull toward the aim point (a wall face, or the depot). dep: hit the depot, not the fort.
@@ -1285,7 +1295,7 @@ const EFIRE={
 // RPG gunners pick a lane vehicle or MG nest in reach two times in three; a hit knocks it out (guns silent, engine dead) for a while
 const RPG_KO={truck:6,apc:5,tank:4,turret:4};
 function rpgTarget(e){let b=null,bd=e.range+70;for(const u of G.units){if(!RPG_KO[u.k]||u.stun>0)continue;const d=Math.hypot(u.x-e.x,u.y-e.y);if(d<bd){bd=d;b=u}}return b}
-function stunUnit(u,t){const was=u.stun>0;u.stun=Math.max(u.stun||0,t);if(was)return;
+function stunUnit(u,t){t*=sgKo(u);const was=u.stun>0;u.stun=Math.max(u.stun||0,t);if(was)return;
   float(u.x,u.y-22,(u.k==='turret'?'MG NEST':u.k==='truck'?'GUN TRUCK':u.k.toUpperCase())+' KNOCKED OUT','#ff8a70',12)}
 // Standoff crews (mortar, rocket artillery) park just past your sight line and fire from the fog; each launch gives their
 // position away for a moment (e.rev). After a few volleys they displace forward into view, so a wave can always be finished.
@@ -1400,7 +1410,7 @@ function update(dt){
     if(!near)near=topTargets(G.enemies.concat(G.sky),{x:0,y:0},12);
     const pick=[];for(const e of near){if(!e.dead&&pick.push(e)===3)break}if(!pick.length)continue;
     fire(s,pick[Math.floor(Math.random()*pick.length)],0.7*(1+0.12*Math.max(0,L('squad')-8)));s.cd=cd*1.5}
-  updateUnits(dt,half);updateAir(dt,half);updateLogi(dt);
+  updateUnits(dt,half);updateAir(dt,half);updateLogi(dt);sigUpdate(dt);
   // enemies
   intelTick();
   const wl=L('wire'),wireR=fortHalf()+wallThick()/2+wireOut(),slow=1-(Math.min(0.7,0.25+0.06*wl));
@@ -1408,8 +1418,9 @@ function update(dt){
     if(e.dead)continue;e.flash-=dt;e.wob+=dt*8;if(e.rev>0)e.rev-=dt;
     if(!seen()[e.type]&&visible(e))spotted(e.type);
     if(e.chute>0){e.chute-=dt;if(e.chute<=0)chuteLand(e);continue}   // paratroopers are helpless until they touch down
+    if(sigStatus(e,dt))continue;   // burning / stunned (research signatures)
     const d=Math.hypot(e.x,e.y)||1,cheb=Math.max(Math.abs(e.x),Math.abs(e.y)),stop=half+e.range+e.r;
-    let spd=e.spd;if(wl&&cheb<wireR){if(e.veh)spd*=(1+slow)/2;else{spd*=slow;e.hp-=2*wl*dt;if(e.hp<=0){kill(e);continue}}}   // tracks and tyres crush the wire
+    let spd=e.slT>G.time?e.spd*(1-e.slF):e.spd;if(wl&&cheb<wireR){if(e.veh)spd*=(1+slow)/2;else{spd*=slow;e.hp-=2*wl*dt;if(e.hp<=0){kill(e);continue}}}   // tracks and tyres crush the wire
     if(depotEnemy(e,spd,dt))continue;
     if(e.stand)standOff(e,spd,dt);
     else if(cheb>half+e.r&&(cheb>stop||(e.range&&d>sight()-e.r*1.5))){e.x-=e.x/d*spd*dt;e.y-=e.y/d*spd*dt;e.moving=true;e.odo+=spd*dt}
@@ -1417,10 +1428,10 @@ function update(dt){
       if(e.bomb){e.dead=true;explode(e.x,e.y,30,0);damageFort(e.dmg,e.type)}
       else if(EFIRE[e.type]){const tx=Math.max(-half,Math.min(half,e.x)),ty=Math.max(-half,Math.min(half,e.y));EFIRE[e.type](e,tx,ty,false)}
       else if(e.range){const tx=Math.max(-half,Math.min(half,e.x)),ty=Math.max(-half,Math.min(half,e.y));G.fx.push({k:'tracer',x:e.x,y:e.y,x2:tx,y2:ty,life:0.08,max:0.08,c:e.boss?'#ffd08a':'#ff6a5a',w:e.boss?2.4:1.2});if(e.boss)explode(tx,ty,16,0);damageFort(e.dmg,e.type)}
-      else{damageFort(e.dmg,e.type);e.lunge=0.15}}}
+      else{damageFort(e.dmg,e.type);e.lunge=0.15;sigThorns(e)}}}
     if(e.lunge>0)e.lunge-=dt;
     // mines
-    for(const mi of G.mines)if(!mi.used&&Math.hypot(mi.x-e.x,mi.y-e.y)<e.r+6){mi.used=true;_dk='m';explode(mi.x,mi.y,36,mineDmg(L('mines')));_dk=''}
+    for(const mi of G.mines)if(!mi.used&&!e.dead&&Math.hypot(mi.x-e.x,mi.y-e.y)<e.r+6+sgMineR())sigMine(mi,e);
     if(!running)return;
   }
   G.mines=G.mines.filter(m=>!m.used);
@@ -1432,14 +1443,14 @@ function update(dt){
   // artillery
   const al=L('arty');if(al){G.artyT-=dt;if(G.artyT<=0){const vis=G.enemies.filter(visible);if(vis.length){let best=vis[0],bc=-1,R=artyR(al);
     for(const c of vis.slice(0,25)){let k=0;for(const o of vis)if(Math.hypot(o.x-c.x,o.y-c.y)<R)k+=o.veh||o.stand?3:1;if(k>bc){bc=k;best=c}}
-    fireArty(best,R,artyDmg(al));G.artyT=artyCdNow()}else G.artyT=0.5}}
-  for(const s of G.shells){s.t-=dt;if(s.t<=0){s.done=true;explode(s.x,s.y,s.r,s.dmg)}}G.shells=G.shells.filter(s=>!s.done);
+    fireArty(sg('arty','seek')&&sgSeek(vis,G.gun||{x:0,y:0})||best,R,artyDmg(al));G.artyT=artyCdNow()}else G.artyT=0.5}}
+  for(const s of G.shells){s.t-=dt;if(s.tg)sgGuide(s);if(s.t<=0){s.done=true;explode(s.x,s.y,s.r,s.dmg);if(s.mega)sgMegaFx(s)}}G.shells=G.shells.filter(s=>!s.done);
   updateNades(dt);
   // air
   if(G.gun&&G.gun.recoil>0)G.gun.recoil=Math.max(0,G.gun.recoil-dt*3);
   if(G.airT>0)G.airT-=dt;
   for(const p of G.planes)p.t+=dt;G.planes=G.planes.filter(p=>p.t<3.5);
-  for(const b of G.bombs){b.t-=dt;if(b.t<=0){b.done=true;explode(b.x,b.y,34,b.dmg)}}G.bombs=G.bombs.filter(b=>!b.done);
+  for(const b of G.bombs){b.t-=dt;if(b.t<=0){b.done=true;sigBomb(b)}}G.bombs=G.bombs.filter(b=>!b.done);
   // crates
   G.crateT-=dt;if(G.crateT<=0){G.crateT=crateEvery(L('scav'))/(1+0.4*pk('supply'))*(0.7+Math.random()*0.6);dropCrate()}
   for(const c of G.crates)c.life-=dt;G.crates=G.crates.filter(c=>c.life>0);
@@ -1463,7 +1474,9 @@ function separate(es){let C=1;for(const e of es)if(e.r*2>C)C=e.r*2;_grid.clear()
 function callAir(x,y,ang){
   const l=L('air'),n=Math.min(16,5+l),a=ang??Math.random()*Math.PI*2,dx=Math.cos(a),dy=Math.sin(a);
   G.planes.push({x,y,dx,dy,t:0});sfx('plane');
-  for(let i=0;i<n;i++){const o=(i-(n-1)/2)*24;G.bombs.push({x:x+dx*o,y:y+dy*o,t:(800+o)/500,dmg:airDmg(l)})}
+  const hyper=sg('air','instant'),grp=new Set();   // research: hypersonic strike lands at once; SDB swarms share one target list
+  for(let i=0;i<n;i++){const o=(i-(n-1)/2)*24;G.bombs.push({x:x+dx*o,y:y+dy*o,t:hyper?0.1+i*0.03:(800+o)/500,dmg:airDmg(l),g:grp})}
+  if(hyper)sgBeam(x-dx*400,y-dy*400-600,x,y,BEAMC.air,2.4,0.3);
   G.airArmed=false;G.airT=airCdNow();
 }
 
@@ -1475,12 +1488,12 @@ function nadeClamp(x,y){const d=Math.hypot(x,y),R=sight()*0.97;return d>R?[x/d*R
 function throwNade(x,y){if(!running||paused||G.choosing)return;if(G.nadeT>0){sfx('deny');return}
   const m=G.sold[0],l=L('nade'),r=nadeR(l),n=nadeNow(),dmg=nadeDmg(l);[x,y]=nadeClamp(x,y);m.ang=Math.atan2(y-m.y,x-m.x);
   for(let i=0;i<n;i++){const a=Math.random()*TAU,o=i?r*(0.55+Math.random()*0.45):0,[tx,ty]=nadeClamp(x+Math.cos(a)*o,y+Math.sin(a)*o),d=Math.hypot(tx-m.x,ty-m.y);
-    G.nades.push({sx:m.x,sy:m.y,x:tx,y:ty,t:-i*0.14,dur:0.4+d/560,h:Math.min(110,18+d*0.3),r,dmg,spin:(Math.random()<.5?-1:1)*(9+Math.random()*5)})}
+    G.nades.push(sgNade({sx:m.x,sy:m.y,x:tx,y:ty,t:-i*0.14,dur:0.4+d/560,h:Math.min(110,18+d*0.3),r,dmg,spin:(Math.random()<.5?-1:1)*(9+Math.random()*5)}))}
   G.nadeT=nadeCdNow();G.nadeArmed=false;if(!seen().nade){seen().nade=1;save()}syncNadeBtn(true);sfx('toss',m.x,m.y)}
 let _nadeK=false;   // set while a grenade bursts, so kill() can credit Demolitions
 function updateNades(dt){if(G.nadeT>0)G.nadeT=Math.max(0,G.nadeT-dt);if(!G.nades.length)return;
-  for(const g of G.nades){g.t+=dt;if(g.t<g.dur)continue;g.done=true;const{x,y,r}=g;
-    _nadeK=true;explode(x,y,r,g.dmg);_nadeK=false;fireball(x,y,r*0.55,0.32);ring(x,y,r*1.1,0.3,'255,226,170',2.2);spark(x,y,14,190,['#fff6d0','#ffc04a','#ff7a1a'],0.45,1.5);
+  for(const g of G.nades){g.t+=dt;if(g.tg&&g.t>0)sgHome(g,dt);if(g.t<g.dur)continue;g.done=true;const{x,y,r}=g;
+    _nadeK=true;explode(x,y,r,g.dmg);sigNade(g);_nadeK=false;fireball(x,y,r*0.55,0.32);ring(x,y,r*1.1,0.3,'255,226,170',2.2);spark(x,y,14,190,['#fff6d0','#ffc04a','#ff7a1a'],0.45,1.5);
     puff(x,y,4,r*0.35,1.3,'64,58,50',20,0.5);decal(x,y,'scorch',r*0.5);light(x,y,r*2.4,'255,170,80',0.22)}
   G.nades=G.nades.filter(g=>!g.done)}
 function drawNades(){const k=Math.max(1,1.6/(sc*2.4));
@@ -1516,8 +1529,9 @@ function artyPos(){const ph=fortHalf();return{x:-ph*0.6,y:ph*0.3}}
 function fireArty(tgt,R,dmg){const g=G.gun,t=artyTier();if(!g)return;const salvo=rSigP('arty','salvo')||1,rm=rMult('arty','radius');
   g.ang=Math.atan2(tgt.y-g.y,tgt.x-g.x);g.recoil=1;const mx=g.x+Math.cos(g.ang)*ARTY_R[t],my=g.y+Math.sin(g.ang)*ARTY_R[t];
   light(mx,my,40+t*20,'255,190,110',0.15);puff(mx,my,3+t*2,4+t*2,1.4,'150,145,135',20,0.5);spark(mx,my,4+t*3,120,['#fff2c0','#ffb04a'],0.25,1.5);sfx('howitzer',g.x,g.y,t);shake(1+t);
-  for(let i=0;i<salvo;i++){const tx=tgt.x+(salvo>1?(Math.random()-.5)*R:0),ty=tgt.y+(salvo>1?(Math.random()-.5)*R:0),d=Math.hypot(tx-g.x,ty-g.y),T=0.6+d/380;
-    G.shells.push({sx:g.x,sy:g.y,x:tx,y:ty,t:T+i*0.18,T:T+i*0.18,r:R*rm,dmg,h:Math.min(140,d*0.55)})}
+  const mg=sg('arty','mega'),mega=mg&&(g.n=(g.n||0)+1)%(sge('arty','mega')||1)===0;   // research: kinetic strike every Nth fire mission
+  for(let i=0;i<salvo;i++){const tx=tgt.x+(salvo>1?(Math.random()-.5)*R:0),ty=tgt.y+(salvo>1?(Math.random()-.5)*R:0),d=Math.hypot(tx-g.x,ty-g.y),T=0.6+d/380,k=mega&&!i;
+    G.shells.push(sgArtyShell({sx:g.x,sy:g.y,x:tx,y:ty,t:T+i*0.18,T:T+i*0.18,r:R*rm*(k?mg[0]:1),dmg:dmg*(k?mg[1]:1),h:Math.min(140,d*0.55),mega:k},tgt,i,g))}
   sfx('whistle')}
 function drawArtyGun(){if(S.set.gfx==='high'){drawArtyGunHQ();return}const g=G.gun;if(!g)return;const t=artyTier(),rc=g.recoil*(t===3?0:2.5);ctx.save();ctx.translate(g.x,g.y);
   // sandbag pit
@@ -1581,42 +1595,45 @@ function buildUnits(){const u=[],ph=wallHalfAt(L('walls'));
   const nh=Math.min(2,Math.ceil(L('heli')/3));for(let i=0;i<nh;i++)u.push({k:'heli',orb:i*Math.PI,x:0,y:0,cd:0,rk:2+i,ang:0,gun:0,rot:0});
   return u}
 const HEAVY={apc:1,tank:1,tesla:1,mlaunch:1};   // TOUGHEST doctrine applies to these; MG-class guns keep sweeping the nearest
-function nearestTo(u){const aa=AA_UNIT[u.k]||0,h=!!HEAVY[u.k],b=bestTarget(aa===1?G.enemies.concat(G.sky):G.enemies,u,h);
+function nearestTo(u){const aa=AA_UNIT[u.k]||(sg(u.k,'aaBonus')?1:0),h=!!HEAVY[u.k],b=bestTarget(aa===1?G.enemies.concat(G.sky):G.enemies,u,h);   // an aaBonus tier also engages aircraft
   return aa===2&&bestTarget(G.sky,u,h,true)||b}
 function updateUnits(dt,ph){
-  const fl=L('flame');if(fl&&L('walls')){G.flameT-=dt;if(G.flameT<=0){G.flameT=0.1;const reach=ph+Math.min(60,26+4*fl);
-    for(const e of G.enemies){if(e.dead||Math.max(Math.abs(e.x),Math.abs(e.y))>reach)continue;_dk='f';hurtEnemy(e,flameDps(fl)*0.1,false);_dk='';
+  const fl=L('flame');if(fl&&L('walls')){G.flameT-=dt;if(G.flameT<=0){G.flameT=0.1;const reach=ph+Math.min(60,26+4*fl),hel=sg('flame','instant');
+    for(const e of G.enemies){if(e.dead||Math.max(Math.abs(e.x),Math.abs(e.y))>reach)continue;_dk='f';hurtEnemy(e,flameDps(fl)*0.1,false);_dk='';sigFlame(e,fl);
+      if(hel)continue;   // HEL tiers: the bunkers are lasers now, no flame stream
       const wx=Math.max(-ph,Math.min(ph,e.x)),wy=Math.max(-ph,Math.min(ph,e.y));
-      for(let i=0;i<2;i++)G.parts.push({x:wx,y:wy,vx:(e.x-wx)*3+(Math.random()-.5)*30,vy:(e.y-wy)*3+(Math.random()-.5)*30,life:0.3,c:Math.random()<.5?'#ff9a2a':'#ffd23f',sz:2.4,max:0.3,glow:1})}}}
+      for(let i=0;i<2;i++)G.parts.push({x:wx,y:wy,vx:(e.x-wx)*3+(Math.random()-.5)*30,vy:(e.y-wy)*3+(Math.random()-.5)*30,life:0.3,c:Math.random()<.5?'#ff9a2a':'#ffd23f',sz:2.4,max:0.3,glow:1})}
+    if(hel)sigLaser(ph,reach,fl)}}
   for(const u of G.units){
     u.cd-=dt;
-    if(u.stun>0){u.stun-=dt;if(R()<.3)puff(u.x+(R()-.5)*8,u.y+(R()-.5)*8,1,5,1.6,'38,34,30',10,0.55);if(R()<.08)light(u.x,u.y,30,'255,130,50',0.15);continue}   // knocked out by an RPG
+    if(u.stun>0){if(u.k==='tank'&&sg('tank','selfRepair'))logiDrive(u,1,12,dt);u.stun-=dt;if(R()<.3)puff(u.x+(R()-.5)*8,u.y+(R()-.5)*8,1,5,1.6,'38,34,30',10,0.55);if(R()<.08)light(u.x,u.y,30,'255,130,50',0.15);continue}   // knocked out by an RPG
     if(u.k==='tank')logiDrive(u,1,12,dt);
     if(u.k==='heli')heliOps(u,dt);
     if(u.k==='truck')logiDrive(u,0,-24,dt);
     if(u.k==='apc')logiDrive(u,2,9,dt);
     if(u.burst&&u.burst.length)ciwsBurst(u,dt);
     if(!armed(u))continue;
-    const t=nearestTo(u);if(!t)continue;
+    const t=nearestTo(u)||sigFogPick(u);if(!t)continue;
     const face=Math.atan2(t.y-u.y,t.x-u.x);
-    if(u.k==='turret'){u.ang=face;if(u.cd<=0){const l=L('turret');u.cd=0.2;u.fl=G.time;G.fx.push({k:'tracer',x:u.x,y:u.y,x2:t.x,y2:t.y,life:0.05,max:0.05,c:'#ffe28a'});_dk='s';_pen=rPen('turret');hurtEnemy(t,turretDmg(l)*(l>4?1+0.25*(l-4):1),false);_dk='';_pen=0;sfx('mg',u.x,u.y)}}
-    else if(u.k==='sniper'){let big=t;for(const e of G.enemies)if(!e.dead&&visible(e)&&e.hp>big.hp)big=e;u.ang=Math.atan2(big.y-u.y,big.x-u.x);
-      if(u.cd<=0){u.cd=sniperCd(L('sniper'));u.fl=G.time;G.fx.push({k:'tracer',x:u.x,y:u.y,x2:big.x,y2:big.y,life:0.25,max:0.25,c:'#aee6ff',w:2});_dk='p';_pen=rPen('sniper');hurtEnemy(big,sniperDmg(L('sniper')),true);_dk='';_pen=0;sfx('shot',u.x,u.y)}}
-    else if(u.k==='truck'){u.gun=face;if(u.cd<=0){u.cd=0.2;u.fl=G.time;G.fx.push({k:'tracer',x:u.x,y:u.y,x2:t.x+(Math.random()-.5)*5,y2:t.y+(Math.random()-.5)*5,life:0.05,max:0.05,c:'#ffe28a'});_dk='s';_pen=rPen('truck');hurtEnemy(t,truckDmg(L('truck')),false);_dk='';_pen=0;sfx('mg',u.x,u.y)}}
+    if(u.k==='turret'){u.ang=face;const su=sg('turret','spinup');if(su){u.sp=G.time-(u.spL??-9)<0.35?(u.sp||0)+dt:0;u.spL=G.time}   // gatling spin-up while it keeps firing
+      if(u.cd<=0){const l=L('turret'),d=turretDmg(l)*(l>4?1+0.25*(l-4):1)*(t.air?1+(sg('turret','aaBonus')||0):1);u.cd=su&&u.sp>=su[0]?0.2/su[1]:0.2;u.fl=G.time;G.fx.push({k:'tracer',x:u.x,y:u.y,x2:t.x,y2:t.y,life:0.05,max:0.05,c:'#ffe28a'});_dk='s';_pen=rPen('turret');hurtEnemy(t,d,false);_dk='';_pen=0;sigOnHit('turret',u.x,u.y,t,d,'s');sfx('mg',u.x,u.y)}}
+    else if(u.k==='sniper'){let big=t;const th=sg('sniper','fogSight')!=null;for(const e of G.enemies)if(!e.dead&&(visible(e)||th&&sgThermal(e))&&e.hp>big.hp)big=e;u.ang=Math.atan2(big.y-u.y,big.x-u.x);
+      if(u.cd<=0){u.cd=sniperCd(L('sniper'));u.fl=G.time;if(!visible(big))big.rev=Math.max(big.rev||0,0.4);sgTracer('sniper',u.x,u.y,big.x,big.y,'#aee6ff',2,0.25);const d=sniperDmg(L('sniper'));_dk='p';_pen=rPen('sniper');hurtEnemy(big,d,true);_dk='';_pen=0;sigOnHit('sniper',u.x,u.y,big,d,'p');sfx('shot',u.x,u.y)}}
+    else if(u.k==='truck'){u.gun=face;if(u.cd<=0){u.cd=0.2;u.fl=G.time;sgTracer('truck',u.x,u.y,t.x+(Math.random()-.5)*5,t.y+(Math.random()-.5)*5,'#ffe28a',1.2,0.05);const d=truckDmg(L('truck'))*(t.air?1+(sg('truck','aaBonus')||0):1);_dk='s';_pen=rPen('truck');hurtEnemy(t,d,false);_dk='';_pen=0;sigOnHit('truck',u.x,u.y,t,d,'s');sfx('mg',u.x,u.y)}}
     else if(u.k==='apc'){u.tur=face;if(u.cd<=0){u.burst++;u.fl=G.time;u.cd=u.burst%3?0.18:1.6;const tx=t.x+(Math.random()-.5)*14,ty=t.y+(Math.random()-.5)*14,d=Math.hypot(tx-u.x,ty-u.y);
-      G.tshells.push({x:u.x,y:u.y,tx,ty,t:0,dur:Math.max(0.05,d/260),dmg:apcDmg(L('apc')),r:18,kind:'nade'});sfx('nade',u.x,u.y)}}
-    else if(u.k==='tank'){u.tur=face;if(u.cd<=0){u.cd=2.2/rMult('tank','rate');u.fl=G.time;const d=Math.hypot(t.x-u.x,t.y-u.y);
-      G.tshells.push({x:u.x+Math.cos(face)*40,y:u.y+Math.sin(face)*40,tx:t.x,ty:t.y,t:0,dur:Math.max(0.05,d/400),dmg:tankDmg(L('tank')),r:26,kind:'shell'});sfx('tank',u.x,u.y)}}
-    else if(u.k==='heli'){u.gun=face;if(u.cd<=0){u.cd=0.12;G.fx.push({k:'tracer',x:u.x,y:u.y,x2:t.x+(Math.random()-.5)*6,y2:t.y+(Math.random()-.5)*6,life:0.05,max:0.05,c:'#ffcf6a'});_dk='s';_pen=rPen('heli');hurtEnemy(t,heliDmg(L('heli')),false);_dk='';_pen=0;sfx('mg',u.x,u.y)}
-      if(u.rk<=0&&!t.air){u.rk=3;const d=Math.hypot(t.x-u.x,t.y-u.y);G.tshells.push({x:u.x,y:u.y,tx:t.x,ty:t.y,t:0,dur:Math.max(0.05,d/300),dmg:rocketDmg(L('heli')),r:30,kind:'rocket'});sfx('rocket',u.x,u.y)}}
+      G.tshells.push(sgShell('apc',{x:u.x,y:u.y,tx,ty,t:0,dur:Math.max(0.05,d/260),dmg:apcDmg(L('apc')),r:18,kind:'nade'}));sfx('nade',u.x,u.y)}}
+    else if(u.k==='tank'){u.tur=face;if(u.cd<=0){u.cd=2.2/rMult('tank','rate');u.fl=G.time;if(!sgCanister(u,t)){const d=Math.hypot(t.x-u.x,t.y-u.y);
+      G.tshells.push(sgShell('tank',{x:u.x+Math.cos(face)*40,y:u.y+Math.sin(face)*40,tx:t.x,ty:t.y,t:0,dur:Math.max(0.05,d/400),dmg:tankDmg(L('tank')),r:26,kind:'shell'}));sfx('tank',u.x,u.y)}}}
+    else if(u.k==='heli'){u.gun=face;if(u.cd<=0){u.cd=0.12;sgTracer('heli',u.x,u.y,t.x+(Math.random()-.5)*6,t.y+(Math.random()-.5)*6,'#ffcf6a',1.2,0.05);_dk='s';_pen=rPen('heli');hurtEnemy(t,heliDmg(L('heli')),false);_dk='';_pen=0;sfx('mg',u.x,u.y)}
+      if(u.rk<=0&&!t.air){u.rk=3;sgRockets(u,t)}}
     else if(u.k==='tesla'){if(!u.burst||!u.burst.length)u.ang=face;
       if(u.cd<=0){u.cd=Math.max(0.4,1.6*Math.pow(0.9,L('tesla')-1));const hit=new Set();let cur=t;const pts=[];
       for(let j=0;j<Math.min(12,3+L('tesla'))&&cur;j++){hit.add(cur);pts.push([cur.x,cur.y]);const cx=cur.x,cy=cur.y;_dk='p';_pen=rPen('tesla');hurtEnemy(cur,teslaDmg(L('tesla'))*(cur.air?AIR_BONUS.ciws*aaMul():1),false);_dk='';_pen=0;let nb=null,nd=80;
         for(const e of G.enemies.concat(G.sky)){if(e.dead||hit.has(e)||!visible(e))continue;const d=Math.hypot(e.x-cx,e.y-cy);if(d<nd){nd=d;nb=e}}cur=nb}
-      u.burst=pts.map(([x,y],i)=>({x,y,t:i*0.045}));const dur=0.08+pts.length*0.045;sfx('ciws',u.x,u.y,dur)}}
+      u.burst=pts.map(([x,y],i)=>({x,y,t:i*0.045}));sigCiws(u,t,hit);const dur=0.08+u.burst.length*0.045;sfx('ciws',u.x,u.y,dur)}}
   }
   for(const s of G.tshells){s.t+=dt;if(s.kind==='rocket'&&Math.random()<.8)puff(s.x+(s.tx-s.x)*s.t/s.dur,s.y+(s.ty-s.y)*s.t/s.dur,1,2.2,0.8,'190,190,185',4,0.4);
-    if(s.t>=s.dur){s.done=true;explode(s.tx,s.ty,s.r,s.dmg,s.kind!=='nade');if(s.kind==='nade')sfx('boom',s.tx,s.ty,0.45)}}
+    if(s.t>=s.dur){s.done=true;explode(s.tx,s.ty,s.r,s.dmg,s.kind!=='nade');sigShellHit(s);if(s.kind==='nade')sfx('boom',s.tx,s.ty,0.45)}}
   G.tshells=G.tshells.filter(s=>!s.done);
 }
 // CIWS: damage lands instantly (same math as before); the visible burst walks target-to-target a few ms apart
@@ -1778,7 +1795,7 @@ function jetFly(j,tx,ty,v,turn,dt){j.ang=turnTo(j.ang,Math.atan2(ty-j.y,tx-j.x),
 function jetFollow(j,v,dt){while(j.path.length){const p=j.path[0];j.spd=v;if(!moveTo(j,p.x,p.y,v,dt,3.5))return false;j.path.shift()}j.spd=0;return true}
 function jetSfx(){if(G.jetSfxT<=0){G.jetSfxT=1.4;sfx('jet')}}
 function updateJets(dt){G.jets=[];G.jetSfxT-=dt;if(!G.fleet.length)return;
-  const g=rwyGeo(),fl=L('fighter'),cdBase=Math.max(5,20*Math.pow(0.9,fl-1))*stripMul(),combat=combatOn(),W1={x:g.x0-340,y:g.cy},T={x:g.x0+24,y:g.cy},
+  const g=rwyGeo(),fl=L('fighter'),cdBase=Math.max(5,20*Math.pow(0.9,fl-1))*stripMul()*(sg('fighter','stealth')?0.65:1),   // stealth: shorter loiter between gun runscombat=combatOn(),W1={x:g.x0-340,y:g.cy},T={x:g.x0+24,y:g.cy},
     vis=G.enemies.filter(e=>!e.dead&&visible(e)),orbit=Math.max(fortHalf()+170,vision()*0.6),holding=G.fleet.some(j=>j.fs==='hold'||j.fs==='final');
   for(const j of G.fleet){
     if(j.alt>0||j.fs==='roll')j.fuel=Math.max(j.fs==='air'||j.fs==='strafe'?0:RESERVE,j.fuel-burnRate('jet')*dt);
@@ -1800,7 +1817,7 @@ function updateJets(dt){G.jets=[];G.jetSfxT-=dt;if(!G.fleet.length)return;
         if(d<170&&Math.abs(wrapA(Math.atan2(t.y-j.y,t.x-j.x)-j.ang))<0.3)j.lock={x:j.x,y:j.y};if(j.st>9){j.fs='air';j.cd=2}break}
       {j.x+=Math.cos(j.ang)*j.spd*dt;j.y+=Math.sin(j.ang)*j.spd*dt;const dx=Math.cos(j.ang),dy=Math.sin(j.ang);   // committed gun run: cannon walks along the flight path
         for(const e of G.enemies)if(!e.dead&&!j.hit.has(e)&&Math.hypot(e.x-j.x-dx*30,e.y-j.y-dy*30)<14+e.r){j.hit.add(e);hurtEnemy(e,jetDmg(fl),false);G.fx.push({k:'boom',x:e.x,y:e.y,r:8,life:.2,max:.2})}
-        if(Math.random()<.6)G.fx.push({k:'tracer',x:j.x+dx*20,y:j.y+dy*20,x2:j.x+dx*60+(Math.random()-.5)*10,y2:j.y+dy*60+(Math.random()-.5)*10,life:.05,max:.05,c:'#ffe28a'});
+        if(Math.random()<.6)sgTracer('fighter',j.x+dx*20,j.y+dy*20,j.x+dx*60+(Math.random()-.5)*10,j.y+dy*60+(Math.random()-.5)*10,'#ffe28a',1.2,.05);
         if(Math.hypot(j.x-j.lock.x,j.y-j.lock.y)>340){j.fs='air';j.cd=cdBase*(0.8+Math.random()*0.4)}}break;
     case'rtb':jetFly(j,W1.x,W1.y,JET_V.rtb,1.8,dt);if(Math.hypot(j.x-W1.x,j.y-W1.y)<70)j.fs=G.rwy&&G.rwy!==j?'hold':'final';break;
     case'hold':{const a=Math.atan2(j.y-W1.y,j.x-W1.x)+0.7;jetFly(j,W1.x+Math.cos(a)*120,W1.y+Math.sin(a)*120,JET_V.rtb,1.8,dt);if(!G.rwy)j.fs='rtb';break}
@@ -1826,7 +1843,8 @@ function depotEnemy(e,spd,dt){const D=G.depot;if(!D||D.dead||e.air||e.nodep){if(
   const dx=D.x-e.x,dy=D.y-e.y,d=Math.hypot(dx,dy)||1,edge=d-50;
   if(e.dep===undefined){if(edge>(e.range||0)+70||!visible(e))return false;e.dep=Math.random()<(e.range?0.5:0.35)}
   if(!e.dep)return false;e.face=Math.atan2(dy,dx);
-  for(const mi of G.mines)if(!mi.used&&Math.hypot(mi.x-e.x,mi.y-e.y)<e.r+6){mi.used=true;_dk='m';explode(mi.x,mi.y,36,mineDmg(L('mines')));_dk=''}
+  for(const mi of G.mines)if(!mi.used&&!e.dead&&Math.hypot(mi.x-e.x,mi.y-e.y)<e.r+6+sgMineR())sigMine(mi,e);
+  if(e.dead)return true;
   if(edge>(e.range||0)+e.r*0.5){e.x+=dx/d*spd*dt;e.y+=dy/d*spd*dt;e.moving=true;e.odo+=spd*dt}
   else{e.moving=false;if(e.load)apcUnload(e);e.atk-=dt;if(e.atk<=0){e.atk=e.rate;
     if(e.bomb){e.dead=true;explode(e.x,e.y,30,0);hitDepot(e.dmg)}
@@ -1957,26 +1975,27 @@ function updateAir(dt,ph){
   const vis=G.enemies.filter(e=>!e.dead&&visible(e));
   for(const u of G.air){u.cd-=dt;
     if(u.k==='mlaunch'&&(vis.length||G.sky.length&&skyTargets().length)){const t=nearestTo(u);u.ang=Math.atan2(t.y-u.y,t.x-u.x);
-      if(u.cd<=0){u.cd=2.8;const n=Math.min(8,1+Math.floor(L('mlaunch')/2)),tg=[...vis,...skyTargets()].sort((a,b)=>b.hp*(b.air?3:1)-a.hp*(a.air?3:1));
-        for(let i=0;i<n;i++){const e=tg[i%tg.length],a=u.ang+(Math.random()-.5)*1.5;G.missiles.push({x:u.x,y:u.y,vx:Math.cos(a)*80,vy:Math.sin(a)*80,tgt:e,tx:e.x,ty:e.y,life:4,dmg:mslDmg(L('mlaunch')),delay:i*0.12})}
+      if(u.cd<=0){u.cd=2.8;const n=Math.min(8,1+Math.floor(L('mlaunch')/2))*(sg('mlaunch','salvo')||1),tg=[...vis,...skyTargets()].sort((a,b)=>b.hp*(b.air?3:1)-a.hp*(a.air?3:1));
+        for(let i=0;i<n;i++){const e=tg[i%tg.length],a=u.ang+(Math.random()-.5)*1.5;G.missiles.push(sgMissile('mlaunch',u,{x:u.x,y:u.y,vx:Math.cos(a)*80,vy:Math.sin(a)*80,tgt:e,tx:e.x,ty:e.y,life:4,dmg:mslDmg(L('mlaunch')),delay:i*0.12}))}
         sfx('launch',u.x,u.y)}}
     if(u.k==='silo'&&u.cd<=0){const all=G.enemies.filter(e=>!e.dead&&visible(e));if(all.length<4){u.cd=1;continue}
-      const c=bestCluster(90,all);u.cd=siloCd(L('silo'));G.nukes.push({x:c.x,y:c.y,t:3,max:3,sx:u.x,sy:u.y});banner('MISSILE AWAY');sfx('silo',u.x,u.y)}
+      const c=bestCluster(90,all),T=sg('silo','instant')?0.45:3;u.cd=siloCd(L('silo'));G.nukes.push({x:c.x,y:c.y,t:T,max:T,sx:u.x,sy:u.y});banner('MISSILE AWAY');sfx('silo',u.x,u.y)}
     if(u.k==='gunship'){u.orb-=0.12*dt;const r=Math.max(ph+140,vision()*0.75);u.x=Math.cos(u.orb)*r;u.y=Math.sin(u.orb)*r;u.ang=u.orb-Math.PI/2;
       if(!vis.length)continue;u.gcd-=dt;
-      if(u.cd<=0){u.cd=2.4;const c=bestCluster(40,vis);const d=Math.hypot(c.x-u.x,c.y-u.y);G.tshells.push({x:u.x,y:u.y,tx:c.x,ty:c.y,t:0,dur:Math.max(.05,d/500),dmg:gsDmg(L('gunship')),r:40,kind:'shell'});sfx('howitzer',u.x,u.y,1.5)}
+      if(u.cd<=0){u.cd=2.4;sgGunship(u,vis)}
       if(u.gcd<=0){u.gcd=0.22;const top=topTargets(vis,u,4),t=top[Math.floor(Math.random()*top.length)];explode(t.x+(Math.random()-.5)*8,t.y+(Math.random()-.5)*8,10,gsGun(L('gunship')),false);
-        G.fx.push({k:'tracer',x:u.x,y:u.y,x2:t.x,y2:t.y,life:0.06,max:0.06,c:'#ffb15a'});sfx('cannon',u.x,u.y)}}
+        sgTracer('gunship',u.x,u.y,t.x,t.y,'#ffb15a',1.2,0.06);sfx('cannon',u.x,u.y)}}
   }
   // homing missiles
   for(const m of G.missiles){if(m.delay>0){m.delay-=dt;continue}m.life-=dt;
+    if(m.rt&&m.tgt&&m.tgt.dead)m.tgt=sgRetarget(m)||m.tgt;   // research: retargeting missiles / ATGMs
     if(m.tgt&&!m.tgt.dead){m.tx=m.tgt.x;m.ty=m.tgt.y}
     const dx=m.tx-m.x,dy=m.ty-m.y,d=Math.hypot(dx,dy)||1;m.vx+=dx/d*600*dt;m.vy+=dy/d*600*dt;const sp=Math.hypot(m.vx,m.vy),mx=260;if(sp>mx){m.vx*=mx/sp;m.vy*=mx/sp}
     m.x+=m.vx*dt;m.y+=m.vy*dt;if(Math.random()<.85)puff(m.x,m.y,1,2.4,0.9,'200,200,195',4,0.4);if(Math.random()<.3)light(m.x,m.y,16,'255,170,80',0.05);
-    if(d<8||m.life<=0){m.done=true;if(m.tgt&&m.tgt.air)skyBurst(m.x,m.y,18,m.dmg*AIR_BONUS.msl*aaMul());else explode(m.x,m.y,28,m.dmg)}}
+    if(d<8||m.life<=0){m.done=true;if(m.atgm)sgAtgmHit(m);else if(m.tgt&&m.tgt.air)skyBurst(m.x,m.y,18,m.dmg*AIR_BONUS.msl*aaMul());else explode(m.x,m.y,28,m.dmg)}}
   G.missiles=G.missiles.filter(m=>!m.done);
   // silo strikes
-  for(const n of G.nukes){n.t-=dt;if(n.t<=0){n.done=true;explode(n.x,n.y,95*rMult('silo','radius'),siloDmg(L('silo')));explode(n.x,n.y,60,0);ring(n.x,n.y,280,1.3,'255,240,210',7);ring(n.x,n.y,160,0.9,'255,190,120',4);fireball(n.x,n.y,130,1.3);puff(n.x,n.y,34,45,5,'64,56,48',70,.65);light(n.x,n.y,520,'255,200,120',1.1);decal(n.x,n.y,'scorch',140);shake(14);G.flashT=0.4;sfx('nuke',n.x,n.y)}}
+  for(const n of G.nukes){n.t-=dt;if(n.t<=0){n.done=true;explode(n.x,n.y,95*rMult('silo','radius'),siloDmg(L('silo')));sigNuke(n);explode(n.x,n.y,60,0);ring(n.x,n.y,280,1.3,'255,240,210',7);ring(n.x,n.y,160,0.9,'255,190,120',4);fireball(n.x,n.y,130,1.3);puff(n.x,n.y,34,45,5,'64,56,48',70,.65);light(n.x,n.y,520,'255,200,120',1.1);decal(n.x,n.y,'scorch',140);shake(14);G.flashT=0.4;sfx('nuke',n.x,n.y)}}
   G.nukes=G.nukes.filter(n=>!n.done);
   // fighter jets: persistent fleet with parked -> taxi -> takeoff -> patrol/strafe -> RTB -> landing -> refuel
   updateJets(dt);
@@ -2027,8 +2046,296 @@ function drawAirTop(){
   if(G.flashT>0){ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle=`rgba(255,240,200,${G.flashT*1.5})`;ctx.fillRect(0,0,VW,VH);ctx.restore()}
 }
 
+// ================= SIGNATURE MECHANICS =================
+// Each research tier adds one signature mechanic (RLINES sig). Every mechanic is one helper here, and the weapon code calls it with
+// the params of its line's active tier (sg). Signatures are cumulative: a later tier that restates a key replaces its params.
+// Enemy status lives on the enemy: e.burn {d dps, t left, k tick}, e.mkT/e.mkB (mark: +damage taken from every gun until mkT),
+// e.stun (+e.stunCD: a stun of s seconds leaves the target immune for another s, so nothing can be stun-locked), e.slT/e.slF (slow).
+// New visuals (beams, arcs, cones, drones, loitering munitions, EM screen, mark reticles) live in G.sgfx / G.drones / G.sgl and are
+// drawn by drawSigFx(); everything else goes through the FX helpers, so FXCAP bounds all of it on Medium and Low.
+function sgLine(id){const o={},r=RLINES[id];
+  if(r)for(let i=0;i<=rTier(id);i++){const s=r.t[i].sig;if(s)for(const k in s)if(k!=='every'&&!RS_MULKEYS.has(k)){const a=rSigAt(id,k);o[k]=a[k];o['@'+k]=a.every||0}}
+  return(G._sg||(G._sg={}))[id]=o}
+// sg(line,key): params of an unlocked signature (null when the line doesn't have it); sge: its "every Nth shot" count (0 = every shot)
+const sgOf=id=>G._sg&&G._sg[id]||sgLine(id);
+const sg=(id,k)=>sgOf(id)[k]??null,sge=(id,k)=>sgOf(id)['@'+k]||0;
+// beam colours for hitscan tiers (rgb triplets)
+const BEAMC={dmg:'150,225,255',squad:'150,225,255',sniper:'190,235,255',truck:'255,120,100',flame:'255,110,80',heli:'150,225,255',arty:'200,230,255',
+  aagun:'255,140,110',tesla:'255,120,90',sam:'200,230,255',mlaunch:'200,230,255',air:'255,215,170',fighter:'150,225,255',gunship:'255,120,90',silo:'255,240,220'};
+const ARC_C='120,200,255',HEL_C='255,110,80';
+// ---- one hit with the damage class and penetration it should carry (the caller's _dk/_pen are restored) ----
+function sgHit(e,d,dk,pen,crit=false){if(e.dead||!(d>0))return;const k=_dk,p=_pen;_dk=dk;_pen=pen;hurtEnemy(e,d,crit);_dk=k;_pen=p}
+function sgBeam(x,y,x2,y2,c,w=1,life=0.1){if(G.sgfx.length<FXCAP.sig)G.sgfx.push({k:'beam',x,y,x2,y2,c,w,life,max:life});if(R()<.5)light(x2,y2,18+w*8,c,Math.min(0.12,life))}
+// a gun's tracer, or its beam once the line is hitscan ('instant')
+function sgTracer(id,x,y,x2,y2,c,w,life){if(sg(id,'instant'))sgBeam(x,y,x2,y2,BEAMC[id],(w||1.2)*0.8,Math.max(0.06,life*0.8));
+  else G.fx.push({k:'tracer',x,y,x2,y2,life,max:life,c,w})}
+// ---- target pickers ----
+const sgLive=(e,hi)=>!e.dead&&(hi||!e.hi)&&visible(e);
+// seek: the nearest armor (vehicle) or boss in range, bosses first; null when there is none
+function sgSeek(list,f,range=1e9){let b=null,bs=1e9;for(const e of list){if(e.air||!(e.veh||e.boss)||!sgLive(e))continue;
+  const d=Math.hypot(e.x-f.x,e.y-f.y);if(d>range)continue;const s=d-(e.boss?500:0);if(s<bs){bs=s;b=e}}return b}
+function sgNear(list,f,range=1e9,skip){let b=null,bd=range;for(const e of list){if(e===skip||!sgLive(e))continue;const d=Math.hypot(e.x-f.x,e.y-f.y);if(d<bd){bd=d;b=e}}return b}
+const sgNearAny=(f,range)=>{const a=sgNear(G.enemies,f,range),b=G.sky.length?sgNear(G.sky,f,range):null;return!b?a:!a?b:Math.hypot(a.x-f.x,a.y-f.y)<=Math.hypot(b.x-f.x,b.y-f.y)?a:b};
+// ---- pierce: the round carries on along its line into the next n enemies behind the target (60m past it, +20m per extra body)
+function sigPierce(x0,y0,t,d,n,frac,dk,pen,skipR=0){const list=t.air?G.sky:G.enemies,dx=t.x-x0,dy=t.y-y0,L0=Math.hypot(dx,dy)||1,ux=dx/L0,uy=dy/L0,reach=L0+60+20*n,hits=[];
+  for(const o of list){if(o===t||!sgLive(o,true))continue;const px=o.x-x0,py=o.y-y0,al=px*ux+py*uy;if(al<=L0||al>reach)continue;
+    if(skipR&&Math.hypot(o.x-t.x,o.y-t.y)<skipR+o.r)continue;if(Math.abs(px*uy-py*ux)<o.r+4)hits.push([al,o])}
+  if(!hits.length)return 0;hits.sort((a,b)=>a[0]-b[0]);const k=Math.min(n,hits.length);
+  for(let i=0;i<k;i++){const o=hits[i][1];sgHit(o,d*frac,dk,pen);spark(o.x,o.y,3,110,['#e8f6ff','#9fd8ff'],0.2,1.1)}
+  const z=hits[k-1][1];sgBeam(t.x,t.y,z.x,z.y,'200,235,255',0.7,0.09);return k}
+// ---- splash: explosive (full vs armor) blast around a point, sparing the target the direct hit already landed on
+function sigSplash(x,y,r,d,skip){let n=0;for(const o of G.enemies)if(o!==skip&&!o.dead&&Math.hypot(o.x-x,o.y-y)<r+o.r){sgHit(o,d,'',0);n++}
+  G.fx.push({k:'boom',x,y,r:r*0.9,life:0.22,max:0.22});if(GFX.fx>0.5)ring(x,y,r*1.15,0.22,'255,225,170',1.2);light(x,y,r*2.2,'255,170,80',0.12);return n}
+// ---- chain: an arc hops to the nearest fresh target within `hop`, n times; returns the enemies it reached
+function sigChain(e0,n,d,dk,pen,col=ARC_C,hop=85,hit,airMul=1){hit=hit||new Set();hit.add(e0);const list=e0.air?G.enemies.concat(G.sky):G.enemies,pts=[[e0.x,e0.y]],out=[];let cur=e0;
+  for(let j=0;j<n;j++){let nb=null,nd=hop;for(const o of list){if(hit.has(o)||!sgLive(o))continue;const q=Math.hypot(o.x-cur.x,o.y-cur.y);if(q<nd){nd=q;nb=o}}
+    if(!nb)break;hit.add(nb);pts.push([nb.x,nb.y]);out.push(nb);sgHit(nb,d*(nb.air?airMul:1),dk,pen);cur=nb}
+  if(out.length&&G.sgfx.length<FXCAP.sig){G.sgfx.push({k:'arc',pts,c:col,life:0.16,max:0.16});sfx('zap',e0.x,e0.y)}return out}
+// ---- status effects ----
+function sgBurn(e,dps,s){if(e.dead||!(dps>0))return;const b=e.burn;if(b){b.d=Math.max(b.d,dps);b.t=Math.max(b.t,s)}else e.burn={d:dps,t:s,k:0.25}}   // refreshes, never stacks
+function sgMark(e,b,s){if(e.dead)return;e.mkB=Math.max(e.mkT>G.time?e.mkB:0,b);e.mkT=Math.max(e.mkT||0,G.time+s)}
+function sgStun(e,s){if(e.dead||G.time<(e.stunCD||0))return false;const t=s*(e.boss||e.type==='airboss'?0.3:1);e.stun=t;e.stunCD=G.time+t*2;
+  spark(e.x,e.y,5,90,['#bff0ff','#5fd4ff','#ffffff'],0.3,1.2);return true}
+function sgSlow(e,f,s){if(e.dead||e.air)return;e.slF=Math.max(e.slT>G.time?e.slF:0,f);e.slT=Math.max(e.slT||0,G.time+s)}
+function sgExecute(e){if(e.dead)return;spark(e.x,e.y,10,160,['#fff','#ff5a3a','#ffd23f'],0.35,1.5);float(e.x,e.y-e.r-14,'EXECUTED','#ff8a70',10);e.hp=0;kill(e)}
+// per-tick status of one enemy (ground or air): burn ticks and the stun clock. true = it can't move or attack this tick
+function sigStatus(e,dt){const b=e.burn;
+  if(b){b.t-=dt;b.k-=dt;if(b.k<=0){b.k+=0.25;sgHit(e,b.d*0.25,'f',0);if(e.dead)return true}if(b.t<=0)e.burn=null;
+    else if(G._bf>0&&R()<.45&&G.parts.length<FXCAP.parts){G._bf--;G.parts.push({x:e.x+(R()-.5)*e.r,y:e.y+(R()-.5)*e.r*.6,vx:(R()-.5)*8,vy:-18-R()*16,life:0.35+R()*0.25,max:0.5,c:R()<.5?'#ff9a2a':'#ffd23f',sz:1.8,glow:1})}}
+  if(e.stun>0){e.stun-=dt;if(G._bf>0&&R()<.2){G._bf--;spark(e.x+(R()-.5)*e.r,e.y+(R()-.5)*e.r,1,70,['#bff0ff','#5fd4ff'],0.15,1.1)}return true}
+  return false}
+// ---- after a line's direct hit on t (d damage, fired from x,y); base = the hit before crits. 'Every Nth' splashes are the caller's.
+function sigOnHit(id,x,y,t,d,dk,base=d){const o=sgOf(id),pen=rPen(id);let p;
+  if((p=o.pierce))sigPierce(x,y,t,d,p[0],p[1],dk,pen);
+  if(!t.air&&(p=o.splash)&&!o['@splash'])sigSplash(t.x,t.y,p[0],d*p[1],t);
+  if((p=o.chain))sigChain(t,p[0],d*p[1],dk,pen);
+  if(t.dead)return;
+  if((p=o.burn))sgBurn(t,base*p[0],p[1]);
+  if((p=o.mark))sgMark(t,p[0],p[1]);
+  if((p=o.slow))sgSlow(t,p[0],p[1]);
+  if((p=o.stun))sgStun(t,p[0]);
+  if((p=o.execute)&&t.hp<t.max*p)sgExecute(t);
+  if(t.air&&(p=o.executeAir)&&t.hp<t.max*p)sgExecute(t)}
+// nominal damage per second of a line's own weapon: drones and ATGMs are sized off it, so they stay a share of that line
+function sgDps(id){switch(id){
+  case'dmg':return dmgAt(L('dmg'))*rMult('dmg')/cdAt(L('rate'));
+  case'squad':return dmgAt(L('dmg'))*rMult('squad')*0.7/(cdAt(L('rate'))*1.5);
+  case'truck':return truckDmg(L('truck'))/0.2;
+  case'apc':return apcDmg(L('apc'))*3/1.96;
+  case'tank':return tankDmg(L('tank'))*rMult('tank','rate')/2.2;
+  case'heli':return heliDmg(L('heli'))/0.12+rocketDmg(L('heli'))/3;
+  case'gunship':return gsDmg(L('gunship'))/2.4+gsGun(L('gunship'))/0.22;
+  case'fighter':return jetDmg(L('fighter'))*0.6}return 0}
+// ---- run setup (end of startRun): escort drones, extra gunships, APC dismount teams, fuel-free vehicles ----
+function sigInit(){G._sg=null;G.sgfx=[];G.drones=[];G.sgl=[];G.aps=0;G.shT=0;G.shW=-1;G.cca=null;G._bf=0;
+  let p;const drones=(o,id,p)=>{for(let i=0;i<p[0];i++)G.drones.push({o,id,frac:p[1],i,n:p[0],ph:R()*TAU,rr:(o.k?22:15)+i*3,x:o.x,y:o.y,cd:0.3+R()*0.4,ang:0,fl:-9})};
+  if(L('apc')&&(p=sg('apc','dismount'))){const r=laneHalf(0)-16;   // rifle teams dig in at the lane corners, clear of the vehicle tracks
+    for(let i=0;i<p;i++){const a=-Math.PI/4+i*Math.PI,cx=Math.cos(a)*r,cy=Math.sin(a)*r;for(const s of[-1,1])G.sold.push({x:cx-Math.sin(a)*5*s,y:cy+Math.cos(a)*5*s,cd:R(),ang:a,tgt:null,dm:1})}}
+  if((p=sg('dmg','drones')))drones(G.sold[0],'dmg',p);
+  if((p=sg('squad','drones')))for(const s of G.sold.slice(1))drones(s,'squad',p);
+  for(const u of G.units){if(u.k==='apc'&&(p=sg('apc','drones')))drones(u,'apc',p);if(u.k==='tank'&&(p=sg('tank','drones')))drones(u,'tank',p)}
+  if(G.fleet.length&&(p=sg('fighter','drones'))){G.cca={x:0,y:-fortHalf()-140,a:-Math.PI/2};drones(G.cca,'fighter',p);for(const d of G.drones)if(d.o===G.cca)d.rr=26+d.i*10}
+  if(L('gunship')&&(p=sg('gunship','mounts')))for(let i=1;i<p;i++)G.air.push({k:'gunship',orb:i*TAU/p,x:0,y:0,cd:2+i*1.2,gcd:0.1*i,ang:0});
+  sgFuel()}
+function sgFuel(){for(const u of G.units)if(u.fuel!=null&&((u.k==='truck'&&sg('truck','noFuel'))||(u.k==='heli'&&sg('heli','noFuel'))))u.fuel=1}
+// RPG knockouts: up-armored trucks shake them off sooner, a self-repairing tank crew patches twice as fast
+const sgKo=u=>u.k==='truck'?1-(sg('truck','armor')||0):u.k==='tank'&&sg('tank','selfRepair')?0.5:1;
+// ---- per tick: wall regrowth, EM screen, active protection, ATGM racks, microwave pulses, escort drones, loitering munitions ----
+function sigUpdate(dt){G._bf=Math.round(14*GFX.fx);
+  for(const f of G.sgfx)f.life-=dt;if(G.sgfx.length)G.sgfx=G.sgfx.filter(f=>f.life>0);
+  sgFuel();
+  if(L('walls')){let p;if(G.wallHp>0&&(p=sg('walls','regen')))G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*p*dt);
+    if(G.shT>0){G.shT-=dt;G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.3*dt/SHIELD_T);if(G.shT<=0)float(0,-fortHalf()-30,'BREACH SEALED','#9fe8ff',13)}
+    if((p=sg('walls','intercept'))&&G.wallHp>0)sgAps(G,0,0,170,p,3,dt,'170,230,255',1)}
+  for(const u of G.units){if(u.stun>0)continue;let p;
+    if(u.k==='tesla'&&(p=sg('tesla','intercept')))sgAps(u,u.x,u.y,Math.min(360,sight()),p,3,dt,'255,210,140');
+    if(u.k==='tank'&&(p=sg('tank','intercept')))sgAps(u,u.x,u.y,70,p,1,dt,'255,230,190',2);
+    if(u.k==='heli'&&u.fs==='air'&&(p=sg('heli','speed')))u.orb+=0.35*(p-1)*dt;   // compound helo: faster orbit
+    if((p=sg(u.k,'atgm'))&&armed(u))sgAtgm(u,u.k,p,dt)}
+  for(const u of G.air){const p=u.k==='gunship'&&sg('gunship','atgm');if(p)sgAtgm(u,'gunship',p,dt)}
+  // HPM: each AA gun sweeps a microwave cone across the sky that fries and stuns everything in it
+  const hp=sg('aagun','cone')&&sg('aagun','stun');if(hp)for(const u of G.aa){if(u.k!=='aagun')continue;u.hpm=(u.hpm??1)-dt;if(u.hpm>0)continue;
+    const t=bestTarget(G.sky,u,false,true);if(!t){u.hpm=0.4;continue}u.hpm=2.4;sgCone(u.x,u.y,Math.atan2(t.y-u.y,t.x-u.x),0.42,300,G.sky,aaDmg(L('aagun'))*aaMul()*2,hp[0],'150,220,255');sfx('emp',u.x,u.y)}
+  // escort drones (CCA wingmen shadow the first airborne jet, or hold a racetrack over the fort)
+  if(G.cca){const j=G.fleet.find(q=>q.alt>=1),c=G.cca,k=Math.min(1,dt*(j?3:2));if(!j)c.a+=dt*0.3;const r=fortHalf()+150,tx=j?j.x:Math.cos(c.a)*r,ty=j?j.y:Math.sin(c.a)*r;c.x+=(tx-c.x)*k;c.y+=(ty-c.y)*k}
+  for(const d of G.drones){const o=d.o,a=G.time*1.7+d.ph+d.i*TAU/d.n,tx=o.x+Math.cos(a)*d.rr,ty=o.y+Math.sin(a)*d.rr*0.8,k=Math.min(1,dt*5);
+    d.x+=(tx-d.x)*k;d.y+=(ty-d.y)*k;d.cd-=dt;if(d.cd>0)continue;const t=sgNearAny(d,200);if(!t){d.cd=0.2;continue}
+    d.cd=0.4;d.ang=Math.atan2(t.y-d.y,t.x-d.x);d.fl=G.time;G.fx.push({k:'tracer',x:d.x,y:d.y,x2:t.x,y2:t.y,life:0.05,max:0.05,c:'#9fe0ff',w:0.8});
+    sgHit(t,sgDps(d.id)*d.frac*0.4,'s',rPen(d.id));if(R()<.3)sfx('shot2',d.x,d.y)}
+  // loitering munitions and bomblets in flight
+  for(const m of G.sgl){m.t+=dt;if(m.tg&&!m.tg.dead){m.tx=m.tg.x;m.ty=m.tg.y}if(m.t<m.dur)continue;m.done=true;
+    const k=_dk;_dk=m.dk;_nadeK=!!m.nade;explode(m.tx,m.ty,m.r,m.dmg,m.big);_nadeK=false;_dk=k}
+  if(G.sgl.length)G.sgl=G.sgl.filter(m=>!m.done)}
+// ---- intercept (wall APS / C-RAM / Trophy): charges build at `rate` a second up to `cap`; each kills the inbound round nearest impact
+// within R0 of the emitter. mode 1 = wall launchers (rounds falling on the fort or a unit; emitter = nearest wall point), 2 = only
+// rounds aimed at this vehicle
+function sgAps(o,x,y,R0,rate,cap,dt,col,mode){o.aps=Math.min(cap,(o.aps||0)+rate*dt);if(o.aps<1)return 0;
+  const h=blockHalf(),cl=v=>Math.max(-h,Math.min(h,v));let best=null,bk=-1,bx=0,by=0,ex=x,ey=y,sky=false;
+  const test=(s,air)=>{if(s.t<0)return;const k=Math.min(1,s.t/s.dur),px=s.x+(s.tx-s.x)*k,py=s.y+(s.ty-s.y)*k;
+    if(mode===1&&!s.u&&boxD(s.tx,s.ty)>h+4)return;if(mode===2&&s.u!==o&&Math.hypot(s.tx-x,s.ty-y)>30)return;
+    const qx=mode===1?cl(px):x,qy=mode===1?cl(py):y;if(Math.hypot(px-qx,py-qy)>R0||k<=bk)return;
+    bk=k;best=s;sky=air;ex=qx;ey=qy;bx=px;by=py-(s.h?Math.sin(k*Math.PI)*s.h:0)};
+  for(const s of G.eshots)test(s,false);for(const s of G.skyShots)test(s,true);
+  if(!best)return 0;o.aps-=1;if(sky)G.skyShots=G.skyShots.filter(q=>q!==best);else G.eshots=G.eshots.filter(q=>q!==best);
+  sgBeam(ex,ey,bx,by,col,1,0.12);spark(bx,by,8,130,['#fff6d0','#bfe9ff','#ffc04a'],0.3,1.4);ring(bx,by,16,0.25,'220,240,255',1.5);light(bx,by,44,'210,235,255',0.15);
+  sfx('intercept',bx,by);if(!G.icF){G.icF=1;float(bx,by-12,'INTERCEPTED','#bfe9ff',11)}return 1}
+// ---- anti-tank missile rack: a top-attack missile every n seconds at the nearest armor (else the toughest target), worth half
+// of n seconds of the line's own fire, full damage against armor
+function sgAtgm(u,id,n,dt){u.atT=(u.atT??n*(0.3+0.7*R()))-dt;if(u.atT>0)return;const t=sgSeek(G.enemies,u,420)||bestTarget(G.enemies,u,true);if(!t){u.atT=0.5;return}
+  u.atT=n;const a=Math.atan2(t.y-u.y,t.x-u.x)+(R()-.5)*0.8;
+  G.missiles.push({x:u.x,y:u.y,vx:Math.cos(a)*90,vy:Math.sin(a)*90,tgt:t,tx:t.x,ty:t.y,life:5,dmg:sgDps(id)*n*0.5,delay:0,atgm:1,rt:1});
+  puff(u.x,u.y,3,4,0.9,'200,196,188',18,0.45);sfx('launch',u.x,u.y)}
+function sgAtgmHit(m){const t=m.tgt;if(t&&!t.dead&&Math.hypot(t.x-m.x,t.y-m.y)<t.r+14)sgHit(t,m.dmg,'',0);
+  G.fx.push({k:'boom',x:m.x,y:m.y,r:14,life:0.25,max:0.25});spark(m.x,m.y,8,140,['#fff6d0','#ffc04a','#ff7a1a'],0.35,1.4);light(m.x,m.y,50,'255,170,80',0.2);sfx('boom',m.x,m.y,0.6)}
+// retarget: a missile whose mark died turns onto the nearest armor, else the nearest target
+function sgRetarget(m){return m.tgt&&m.tgt.air?sgNear(G.sky,m,300):sgSeek(G.enemies,m,300)||sgNear(G.enemies,m,300)}
+// ---- cone weapons (claymore, canister, microwave): everything in the wedge takes d, and a stun when stun > 0
+function sgCone(x,y,a,half,r,list,d,stun,col){let n=0;for(const e of list){if(!sgLive(e,true))continue;const dx=e.x-x,dy=e.y-y,q=Math.hypot(dx,dy);
+  if(q>r+e.r||Math.abs(angTo(a,Math.atan2(dy,dx)))>half)continue;sgHit(e,d,'',0);if(stun)sgStun(e,stun);n++}
+  if(G.sgfx.length<FXCAP.sig)G.sgfx.push({k:'cone',x,y,a,half,r,c:col,life:0.35,max:0.35});return n}
+// ---- rifle and squad: every-Nth rounds (Commander 40mm airburst, squad Carl Gustaf) and IAR salvos
+function sgRound(s,line){const n=s.n=(s.n||0)+1,ev=sge(line,'splash');return ev>0&&n%ev===0}
+function sgSalvo(s,line,e,mult){const sv=sg(line,'salvo');if(!sv||s._sv||s.n%(sge(line,'salvo')||1))return;
+  const list=e.air?G.sky:G.enemies;s._sv=1;for(let i=1;i<sv;i++){const o=sgNear(list,e,110,e)||(!e.dead&&e);if(o)fire(s,o,mult)}s._sv=0}
+// ---- shells (APC 40/50mm, tank main gun, heli rockets, gunship 105mm): tagged with their line so the impact runs its signatures;
+// hitscan tiers land the next tick under a beam
+function sgShell(id,s){s.id=id;if(sg(id,'instant')){s.dur=0.001;sgBeam(s.x,s.y,s.tx,s.ty,BEAMC[id]||'255,200,150',1.6,0.14)}return s}
+function sigShellHit(s){if(!s.id)return;const o=sgOf(s.id);let p;
+  if((p=o.splash)){let n=0;for(const e of G.enemies){if(e.dead)continue;const q=Math.hypot(e.x-s.tx,e.y-s.ty);if(q>=s.r+e.r&&q<s.r+p[0]+e.r){sgHit(e,s.dmg*p[1],'',0);n++}}
+    if(GFX.fx>0.5)ring(s.tx,s.ty,s.r+p[0],0.3,'255,215,160',1.6);if(n)G.fx.push({k:'boom',x:s.tx,y:s.ty,r:s.r+p[0]*0.6,life:0.25,max:0.25})}
+  if((p=o.pierce))sigPierce(s.x,s.y,{x:s.tx,y:s.ty},s.dmg,p[0],p[1],'',rPen(s.id),s.r)}   // rail: the slug keeps going down the column
+// heli rocket volley: `salvo` rockets across the target and its neighbours
+function sgRockets(u,t){const n=sg('heli','salvo')||1,near=n>1?topTargets(G.enemies,t,n):[t];
+  for(let i=0;i<n;i++){const e=near[i%near.length]||t,d=Math.hypot(e.x-u.x,e.y-u.y);
+    G.tshells.push(sgShell('heli',{x:u.x,y:u.y,tx:e.x+(i?(R()-.5)*10:0),ty:e.y+(i?(R()-.5)*10:0),t:0,dur:Math.max(0.05,d/300)*(1+i*0.1),dmg:rocketDmg(L('heli')),r:30,kind:'rocket'}))}
+  sfx('rocket',u.x,u.y)}
+// canister: a tank facing infantry close in fires a shotgun cone instead of a shell. true = it fired
+function sgCanister(u,t){if(!sg('tank','canister')||t.veh||t.boss||t.air||Math.hypot(t.x-u.x,t.y-u.y)>130)return false;
+  const a=Math.atan2(t.y-u.y,t.x-u.x),mx=u.x+Math.cos(a)*30,my=u.y+Math.sin(a)*30;sgCone(mx,my,a,0.4,120,G.enemies,tankDmg(L('tank'))*0.5,0,'255,220,150');
+  for(let i=0;i<6;i++){const b=a+(R()-.5)*0.8,r=70+R()*50;G.fx.push({k:'tracer',x:mx,y:my,x2:mx+Math.cos(b)*r,y2:my+Math.sin(b)*r,life:0.07,max:0.07,c:'#ffe7a0',w:1})}
+  light(mx,my,50,'255,200,120',0.1);sfx('tank',u.x,u.y);return true}
+// flame bunkers: thermobaric burn and the active-denial slow on everything in the fire zone; the HEL tiers add wall lasers (sigLaser)
+function sigFlame(e,fl){let p;if((p=sg('flame','burn')))sgBurn(e,flameDps(fl)*p[0],p[1]);if((p=sg('flame','slow')))sgSlow(e,p[0],p[1]);
+  if(sg('flame','instant')&&!e.dead&&R()<.12){const ph=fortHalf();sgBeam(Math.max(-ph,Math.min(ph,e.x)),Math.max(-ph,Math.min(ph,e.y)),e.x,e.y,HEL_C,0.8,0.08)}}
+// HEL wall lasers: one emitter per wall face engages the nearest enemy out to 90 past the fire zone every LASER_T (chaining on HEL-300)
+const LASER_T=0.2;
+function sigLaser(ph,reach,fl){G.lzT=(G.lzT||0)-0.1;if(G.lzT>0)return;G.lzT=LASER_T;const pen=rPen('flame'),d=flameDps(fl)*LASER_T,ch=sg('flame','chain'),sl=sg('flame','slow'),far=reach+90;let n=0;
+  for(let i=0;i<4;i++){const a=i*Math.PI/2,ex=Math.round(Math.cos(a))*ph,ey=Math.round(Math.sin(a))*ph;let t=null,bd=1e9;
+    for(const e of G.enemies){if(!sgLive(e)||boxD(e.x,e.y)>far)continue;const q=Math.hypot(e.x-ex,e.y-ey);if(q<bd){bd=q;t=e}}
+    if(!t)continue;n++;sgBeam(ex,ey,t.x,t.y,HEL_C,1.3,LASER_T+0.02);sgHit(t,d,'p',pen);if(sl)sgSlow(t,sl[0],sl[1]);if(ch)sigChain(t,ch[0],d*ch[1],'p',pen,HEL_C,90);
+    spark(t.x,t.y,2,70,['#fff0e0','#ff9a6a'],0.18,1.1)}
+  if(n)sfx('laser',0,-ph)}
+// sniper thermal optics: engage through the fog out to 1.45x the sight line
+const sgThermal=e=>!e.air&&!e.dead&&Math.hypot(e.x,e.y)<sight()*1.45;
+function sigFogPick(u){if(u.k!=='sniper'||sg('sniper','fogSight')==null)return null;let b=null;for(const e of G.enemies)if(sgThermal(e)&&(!b||e.hp>b.hp))b=e;return b}
+// walls: rebar thorns bite melee attackers; after a breach the EM screen soaks all damage for SHIELD_T seconds (once a wave) while
+// the crews patch the walls back to 30%
+const SHIELD_T=6;
+function sigThorns(e){if(sg('walls','thorns')==null||!wallsUp()||e.dead)return;sgHit(e,e.max*0.05,'',0);if(R()<.5)spark(e.x,e.y,3,80,['#d8d2c4','#ffcf8a'],0.2,1.1)}
+function sgBreach(){if(!sg('walls','breachShield')||G.shW===G.wave)return;G.shW=G.wave;G.shT=SHIELD_T;banner('WALLS BREACHED!','EM SCREEN UP · crews are patching the breach','110,195,255');sfx('emp',0,0)}
+function sgShieldHit(){if(G._bf>0&&R()<.4){G._bf--;const h=blockHalf(),a=R()*TAU,c=Math.max(Math.abs(Math.cos(a)),Math.abs(Math.sin(a)));spark(Math.cos(a)/c*h,Math.sin(a)/c*h,3,70,['#bff0ff','#5fd4ff'],0.25,1.2)}}
+// ---- grenades: loitering seek, thermobaric burn, EMP stun, cluster bomblets (armor-seeking once the line seeks) ----
+function sgNade(g){if(sg('nade','seek')){const h=sgSeek(G.enemies,g,g.r*2.2)||sgNear(G.enemies,g,g.r*1.6);if(h)g.tg=h}return g}
+function sgHome(g,dt){if(g.tg.dead){g.tg=null;return}const k=Math.min(1,dt*7);g.x+=(g.tg.x-g.x)*k;g.y+=(g.tg.y-g.y)*k}
+function sigNade(g){let p;const inR=e=>!e.dead&&Math.hypot(e.x-g.x,e.y-g.y)<g.r+e.r;
+  if((p=sg('nade','burn')))for(const e of G.enemies)if(inR(e))sgBurn(e,g.dmg*p[0],p[1]);
+  if((p=sg('nade','stun'))){for(const e of G.enemies)if(inR(e))sgStun(e,p[0]);ring(g.x,g.y,g.r*1.3,0.4,'150,225,255',2.5);light(g.x,g.y,g.r*2.4,'140,210,255',0.25);sfx('emp',g.x,g.y)}
+  const n=sg('nade','bomblets');if(!n)return;const sp=sg('nade','splash')||[20,0.4],seek=sg('nade','seek'),used=new Set();
+  for(let i=0;i<n;i++){let tg=null;if(seek){tg=sgSeek(G.enemies,g,g.r*2.4);if(tg&&used.has(tg))tg=null;
+      if(!tg)for(const e of G.enemies)if(!used.has(e)&&sgLive(e)&&Math.hypot(e.x-g.x,e.y-g.y)<g.r*2.4){tg=e;break}}
+    if(tg)used.add(tg);const a=R()*TAU,o=g.r*(0.5+R()*0.8);
+    G.sgl.push({x:g.x,y:g.y,sx:g.x,sy:g.y,tx:tg?tg.x:g.x+Math.cos(a)*o,ty:tg?tg.y:g.y+Math.sin(a)*o,tg,t:0,dur:0.18+i*0.06+R()*0.1,h:14,r:sp[0],dmg:g.dmg*sp[1],dk:'',big:false,nade:1})}}
+// ---- mines: claymore cone, Hornet top-attack from range, networked chain, loitering relaunch ----
+const sgMineR=()=>sg('mines','range')||0;
+function sigMine(mi,e){mi.used=true;const dmg=mineDmg(L('mines')),rg=sg('mines','range'),k=_dk;let tg=e,x=mi.x,y=mi.y;_dk='m';
+  if(rg){tg=sgSeek(G.enemies,mi,rg+30)||e;x=tg.x;y=tg.y;sgBeam(mi.x,mi.y-6,x,y,'255,210,150',1,0.12);puff(mi.x,mi.y,2,4,0.8,'170,160,140',16,0.4)}   // Hornet pops up, fires down on the hull
+  explode(x,y,36,dmg);
+  if(sg('mines','cone')){const a=Math.atan2(mi.y,mi.x);for(const o of G.enemies){if(o.dead)continue;const dx=o.x-mi.x,dy=o.y-mi.y,q=Math.hypot(dx,dy);
+      if(q>=36+o.r&&q<84+o.r&&Math.abs(angTo(a,Math.atan2(dy,dx)))<0.75)hurtEnemy(o,dmg,false)}
+    if(G.sgfx.length<FXCAP.sig)G.sgfx.push({k:'cone',x:mi.x,y:mi.y,a,half:0.75,r:84,c:'255,210,150',life:0.3,max:0.3})}
+  const ch=sg('mines','chain');if(ch)sigChain(tg,ch[0],dmg*ch[1],'m',0,ARC_C,110);
+  _dk=k;
+  if(sg('mines','rearm')&&!mi.re){const o=sgNear(G.enemies,{x,y},220,tg);if(o)G.sgl.push({x,y,sx:x,sy:y,tx:o.x,ty:o.y,tg:o,t:0,dur:0.8,h:40,r:32,dmg,dk:'m',big:true,loiter:1})}}
+// ---- artillery: guided precision shells, railgun hitscan, a kinetic strike every Nth fire mission ----
+function sgArtyShell(s,tgt,i,g){if(sg('arty','seek')&&(tgt.veh||tgt.boss)){s.tg=tgt;s.ox=i?(R()-.5)*18:0;s.oy=i?(R()-.5)*18:0}
+  if(sg('arty','instant')){s.t=s.T=0.06+i*0.07;s.h=6;if(!i)sgBeam(g.x,g.y,s.x,s.y,BEAMC.arty,1.8,0.16)}return s}
+function sgGuide(s){if(s.tg.dead){s.tg=null;return}s.x=s.tg.x+s.ox;s.y=s.tg.y+s.oy}
+function sgMegaFx(s){ring(s.x,s.y,s.r*1.6,0.7,'230,240,255',5);light(s.x,s.y,s.r*4,'220,235,255',0.5);fireball(s.x,s.y,s.r*0.8,0.8);decal(s.x,s.y,'scorch',s.r*0.9);shake(9);sfx('nuke',s.x,s.y);
+  if(!G.megaF){G.megaF=1;float(s.x,s.y-s.r-10,'KINETIC STRIKE','#cfe6ff',13)}}
+// ---- air support: SDB spreading, JDAM lock guidance, thermobaric burn, sensor-fuzed skeets ----
+function sigBomb(b){let p;const lk=G.sold[0].tgt,lock=sg('air','snapToLock')&&lk&&!lk.dead&&!lk.air&&Math.hypot(lk.x-b.x,lk.y-b.y)<140;
+  if(b.g&&sg('air','autoDistribute')){let o=lock&&!b.g.has(lk)?lk:null,bd=110;   // the locked target is served first, then one bomb per target
+    if(!o)for(const e of G.enemies){if(b.g.has(e)||!sgLive(e))continue;const q=Math.hypot(e.x-b.x,e.y-b.y);if(q<bd){bd=q;o=e}}if(o){b.g.add(o);b.x=o.x;b.y=o.y}}
+  else if(lock){b.x=lk.x+(R()-.5)*8;b.y=lk.y+(R()-.5)*8}
+  explode(b.x,b.y,34,b.dmg);
+  if((p=sg('air','burn'))){for(const e of G.enemies)if(!e.dead&&Math.hypot(e.x-b.x,e.y-b.y)<34+e.r)sgBurn(e,b.dmg*p[0],p[1]);fireball(b.x,b.y,30,0.9)}
+  const n=sg('air','bomblets');if(!n)return;const used=new Set();
+  for(let i=0;i<n;i++){let o=sgSeek(G.enemies,b,80);if(!o||used.has(o)){o=null;for(const e of G.enemies)if(!used.has(e)&&sgLive(e)&&Math.hypot(e.x-b.x,e.y-b.y)<70){o=e;break}}
+    if(!o)break;used.add(o);sgHit(o,b.dmg*0.25,'',0);sgBeam(b.x,b.y-24,o.x,o.y,'255,215,170',0.7,0.1);G.fx.push({k:'boom',x:o.x,y:o.y,r:9,life:0.2,max:0.2})}}
+// ---- missiles and interceptors: hitscan tiers arrive at the target the tick they launch ----
+function sgMissile(id,src,m){if(sg(id,'instant')&&m.tgt){m.x=m.tgt.x;m.y=m.tgt.y;m.delay=Math.min(m.delay,0.05);sgBeam(src.x,src.y,m.tgt.x,m.tgt.y,BEAMC[id],1.2,0.14)}
+  if(sg(id,'retarget'))m.rt=1;return m}
+function sgAam(id,src,m){if(sg(id,'instant')&&m.tgt){m.x=m.tgt.x;m.y=m.tgt.y;m.v=m.spd;m.delay*=0.3;sgBeam(src.x,src.y,m.tgt.x,m.tgt.y,BEAMC[id],1.2,0.14)}return m}
+// ---- AA gun: hitscan flak, finishing crippled aircraft ----
+function sgFlak(t,f){if(sg('aagun','instant')){f.tx=t.x;f.ty=t.y;f.dur=0.001;sgBeam(f.x,f.y,t.x,t.y,BEAMC.aagun,1,0.08)}return f}
+function sgFlakHit(f){const p=sg('aagun','executeAir');if(!p)return;const r=16*rMult('aagun','radius');
+  for(const e of G.sky)if(!e.dead&&e.hp<e.max*p&&Math.hypot(e.x-f.tx,e.y-f.ty)<r+e.r)sgExecute(e)}
+// ---- silo: hitscan descent, EMP, MIRV warheads onto the next clusters ----
+function sigNuke(n){let p;const r=95*rMult('silo','radius');
+  if(sg('silo','instant'))sgBeam(n.x+90,n.y-900,n.x,n.y,BEAMC.silo,3,0.25);
+  if((p=sg('silo','stun'))){for(const e of G.enemies)if(!e.dead&&Math.hypot(e.x-n.x,e.y-n.y)<r*1.3+e.r)sgStun(e,p[0]);ring(n.x,n.y,r*1.5,1,'150,225,255',5);light(n.x,n.y,r*3,'140,210,255',0.6)}
+  const k=sg('silo','bomblets');if(!k)return;const vis=G.enemies.filter(e=>sgLive(e)&&Math.hypot(e.x-n.x,e.y-n.y)>r*0.8);
+  for(let i=0;i<k;i++){const c=vis.length>i*7?bestCluster(50,vis.slice(i*7)):null,a=R()*TAU,tx=c?c.x:n.x+Math.cos(a)*r*1.4,ty=c?c.y:n.y+Math.sin(a)*r*1.4;
+    G.sgl.push({x:n.x,y:n.y,sx:n.x,sy:n.y,tx,ty,tg:null,t:0,dur:0.45+i*0.2,h:70,r:50,dmg:siloDmg(L('silo'))*0.4,dk:'',big:true})}}
+// ---- CIWS: extra mounts, Iron Beam arcs; damage lands at once (as before) and the burst walks unless the tier is hitscan ----
+function sigCiws(u,t,hit){const l=L('tesla'),pen=rPen('tesla'),d=teslaDmg(l),m=sg('tesla','mounts')||1,ch=sg('tesla','chain'),beam=!!sg('tesla','instant'),am=AIR_BONUS.ciws*aaMul(),add=e=>u.burst.push({x:e.x,y:e.y,t:u.burst.length*0.045});
+  const tail=[...hit].pop();if(ch&&tail)sigChain(tail,ch[0],d*ch[1],'p',pen,HEL_C,90,hit,am).forEach(add);
+  for(let k=1;k<m;k++){let f=null,bd=1e9;for(const e of G.enemies.concat(G.sky)){if(hit.has(e)||!sgLive(e))continue;const q=Math.hypot(e.x-u.x,e.y-u.y);if(q<bd){bd=q;f=e}}if(!f)break;
+    hit.add(f);sgHit(f,d*(f.air?am:1),'p',pen);add(f);sigChain(f,Math.min(12,3+l)-1,d,'p',pen,beam?HEL_C:'255,210,140',80,hit,am).forEach(add)}
+  if(beam){const s=11*US.tesla*bS();for(const b of u.burst){const a=Math.atan2(b.y-u.y,b.x-u.x);sgBeam(u.x+Math.cos(a)*s,u.y+Math.sin(a)*s,b.x,b.y,HEL_C,1.2,0.12);b.t=0}}}
+// ---- gunship: 105mm salvos across the clusters (follow-up rounds at half weight) ----
+function sgGunship(u,vis){const n=sg('gunship','salvo')||1,c=bestCluster(40,vis),l=L('gunship');
+  for(let i=0;i<n;i++){const e=i?vis[Math.floor(R()*vis.length)]:c,d=Math.hypot(e.x-u.x,e.y-u.y);
+    G.tshells.push(sgShell('gunship',{x:u.x,y:u.y,tx:e.x+(i?(R()-.5)*12:0),ty:e.y+(i?(R()-.5)*12:0),t:0,dur:Math.max(.05,d/500)*(1+i*0.12),dmg:gsDmg(l)*(i?0.5:1),r:40,kind:'shell'}))}
+  sfx('howitzer',u.x,u.y,1.5)}
+// ---- drawing: mark reticles, stun crackle, burn glow, beams, arcs, cones, EM screen, loitering munitions, escort drones ----
+function drawSigFx(){if(!G.sgfx)return;const px=1/sc,lo=GFX.fx<0.5,t=G.time,mk=new Path2D(),st=new Path2D();let nm=0,ns=0;
+  const tag=e=>{if(e.dead)return;if(e.mkT>t){const r=e.r+4+Math.sin(t*9)*0.8,k=Math.min(4,r*0.5);nm++;
+      for(let i=0;i<4;i++){const cx=e.x+(i&1?r:-r),cy=e.y+(i&2?r:-r),sx=i&1?-1:1,sy=i&2?-1:1;mk.moveTo(cx+sx*k,cy);mk.lineTo(cx,cy);mk.lineTo(cx,cy+sy*k)}}
+    if(e.stun>0&&!lo){ns++;const r=e.r+2;for(let i=0;i<2;i++){const a=R()*TAU,b=a+0.6+R();st.moveTo(e.x+Math.cos(a)*r,e.y+Math.sin(a)*r);
+      st.lineTo(e.x+Math.cos((a+b)/2)*(r+3),e.y+Math.sin((a+b)/2)*(r+3));st.lineTo(e.x+Math.cos(b)*r,e.y+Math.sin(b)*r)}}};
+  for(const e of G.enemies)tag(e);for(const e of G.sky)tag(e);
+  if(nm){ctx.strokeStyle='#ff5a3a';ctx.lineWidth=Math.max(1,1.3*px);ctx.globalAlpha=0.75+0.25*Math.sin(t*12);ctx.stroke(mk);ctx.globalAlpha=1}
+  ctx.globalCompositeOperation='lighter';ctx.lineCap='round';ctx.lineJoin='round';
+  if(ns){ctx.strokeStyle='rgba(150,225,255,.85)';ctx.lineWidth=Math.max(0.8,px);ctx.stroke(st)}
+  if(!lo){let n=0;for(const e of G.enemies){if(!e.burn||e.dead)continue;if(++n>60)break;blit(fireSprite(),e.x,e.y-1,e.r*(0.8+0.15*Math.sin(t*14+e.wob)),0.35)}ctx.globalAlpha=1}
+  for(const f of G.sgfx){const k=Math.max(0,f.life/f.max);
+    if(f.k==='beam'){ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.x2,f.y2);
+      if(!lo){ctx.strokeStyle=`rgba(${f.c},${(0.3*k).toFixed(3)})`;ctx.lineWidth=f.w*4;ctx.stroke()}
+      ctx.strokeStyle=`rgba(${f.c},${(0.85*k).toFixed(3)})`;ctx.lineWidth=f.w*1.3;ctx.stroke();ctx.strokeStyle=`rgba(255,255,255,${(0.9*k).toFixed(3)})`;ctx.lineWidth=f.w*0.5;ctx.stroke()}
+    else if(f.k==='arc'){const p=new Path2D(),seg=lo?2:4;for(let i=0;i<f.pts.length;i++){const[x,y]=f.pts[i];if(!i){p.moveTo(x,y);continue}const[qx,qy]=f.pts[i-1];
+        for(let j=1;j<seg;j++){const q=j/seg;p.lineTo(qx+(x-qx)*q+(R()-.5)*9,qy+(y-qy)*q+(R()-.5)*9)}p.lineTo(x,y)}
+      if(!lo){ctx.strokeStyle=`rgba(${f.c},${(0.4*k).toFixed(3)})`;ctx.lineWidth=5;ctx.stroke(p)}
+      ctx.strokeStyle=`rgba(${f.c},${k.toFixed(3)})`;ctx.lineWidth=1.8;ctx.stroke(p);ctx.strokeStyle=`rgba(255,255,255,${k.toFixed(3)})`;ctx.lineWidth=0.7;ctx.stroke(p)}
+    else if(f.k==='cone'){const r=f.r*(0.35+0.65*Math.sqrt(1-k));ctx.fillStyle=`rgba(${f.c},${(0.22*k).toFixed(3)})`;ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.arc(f.x,f.y,r,f.a-f.half,f.a+f.half);ctx.closePath();ctx.fill();
+      ctx.strokeStyle=`rgba(${f.c},${(0.6*k).toFixed(3)})`;ctx.lineWidth=Math.max(1,1.4*px);ctx.beginPath();ctx.arc(f.x,f.y,r,f.a-f.half,f.a+f.half);ctx.stroke()}}
+  if(G.shT>0){const h=blockHalf()+4,a=Math.min(1,G.shT/0.6)*(0.45+0.2*Math.sin(t*20));ctx.strokeStyle=`rgba(120,210,255,${(a*0.5).toFixed(3)})`;ctx.lineWidth=7;ctx.strokeRect(-h,-h,h*2,h*2);
+    ctx.strokeStyle=`rgba(210,245,255,${a.toFixed(3)})`;ctx.lineWidth=1.6;ctx.strokeRect(-h,-h,h*2,h*2);ctx.fillStyle=`rgba(90,180,255,${(a*0.07).toFixed(3)})`;ctx.fillRect(-h,-h,h*2,h*2)}
+  ctx.globalCompositeOperation='source-over';
+  for(const m of G.sgl){const q=Math.min(1,m.t/m.dur),gx=m.sx+(m.tx-m.sx)*q,gy=m.sy+(m.ty-m.sy)*q,y=gy-Math.sin(q*Math.PI)*m.h;
+    ell(gx,gy,1.6,0.9,'rgba(0,0,0,.3)');ell(gx,y,1.5,1.5,m.loiter?'#3b3f44':'#4b5a2a');
+    ctx.globalCompositeOperation='lighter';blit(glowSprite(m.loiter?'120,210,255':'255,170,80'),gx,y,5,0.8);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
+  drawSigDrones()}
+// escort quadcopter: graphite body, rotor discs, a blinking cyan status light; the shadow sits offset below it
+function drawSigDrones(){if(!G.drones.length)return;const t=G.time,lo=GFX.fx<0.5;
+  for(const d of G.drones){const s=d.id==='fighter'?1.5:1;ctx.fillStyle='rgba(0,0,0,.28)';ctx.fillRect(d.x+4-3*s,d.y+6-3*s,6*s,6*s);
+    ctx.save();ctx.translate(d.x,d.y);ctx.rotate(d.ang);ctx.scale(s,s);ctx.strokeStyle='#23272b';ctx.lineWidth=1.1;ctx.beginPath();
+    for(const[ax,ay]of DRONE_ARMS){ctx.moveTo(0,0);ctx.lineTo(ax*0.8,ay*0.8)}ctx.stroke();
+    if(!lo)for(const[ax,ay]of DRONE_ARMS)ell(ax*0.8,ay*0.8,2.4,2.4,'rgba(190,210,220,.28)');
+    box(-2.2,-1.6,4.4,3.2,'#3b3f44');box(-2.2,-1.6,4.4,0.8,'#5a6068');box(1.6,-0.7,1.4,1.4,'#1a1d20');
+    if(Math.sin(t*6+d.ph)>0)ell(-1.2,0,0.7,0.7,'#5fd4ff');if(t-d.fl<0.05)ell(3.4,0,1.2,0.8,'#bff0ff');ctx.restore()}}
 // ================= VFX =================
-const FXCAP={parts:700,smoke:260,decals:160,lights:70};
+const FXCAP={parts:700,smoke:260,decals:160,lights:70,sig:180};
 const FXBASE=Object.assign({},FXCAP);
 let HQ=false;   // High preset: cinematic VFX + post-processing. Medium/Low never enter a code path gated on it.
 function applyGfx(){GFX=GFX_PRESET[S.set.gfx]||GFX_PRESET.high;HQ=GFX===GFX_PRESET.high;
@@ -3366,6 +3673,7 @@ const SKY_AI={drone:aiDrone,gunheli:aiHeli,airboss:aiBoss,uav:aiUav,
 function updateSky(dt,h){
   for(const e of G.sky){if(e.dead)continue;e.t+=dt;e.flash-=dt;if(e.sup)e.sup=Math.max(0,e.sup-dt*0.22);
     if(!seen()[e.type]&&visible(e))spotted(e.type);
+    if(sigStatus(e,dt)){if(!e.dead)advance(e,e.spd*0.35,dt);continue}   // burning / stunned: fried avionics, it drifts and holds fire
     SKY_AI[e.type](e,dt,h);if(!running)return}
   const ds=G.sky.filter(e=>e.type==='drone'&&!e.dead);   // keep swarms loose so flak bursts read one by one
   for(let i=0;i<ds.length;i++)for(let j=i+1;j<ds.length;j++){const a=ds[i],b=ds[j],dx=b.x-a.x,dy=b.y-a.y,dd=dx*dx+dy*dy;
@@ -3384,24 +3692,24 @@ function updateAAD(dt){const tg=G.sky.length?skyTargets():[];
   for(const u of G.aa){
     if(u.k==='aagun'){const t=bestTarget(tg,u,false,true);if(!t){u.burst=0;continue}
       u.ang+=Math.max(-7*dt,Math.min(7*dt,angTo(u.ang,Math.atan2(t.y-u.y,t.x-u.x))));
-      u.cd-=dt;if(u.cd<=0&&!u.burst){u.burst=4;u.bt=0}
+      u.cd-=dt;if(u.cd<=0&&!u.burst){u.burst=4*(sg('aagun','salvo')||1);u.bt=0}
       if(u.burst){u.bt-=dt;if(u.bt<=0){u.bt=0.11;if(!--u.burst)u.cd=0.55;
         const s=US.aagun*bS(),side=u.side?1:-1,mx=u.x+Math.cos(u.ang)*13*s-Math.sin(u.ang)*2.6*side*s,my=u.y+Math.sin(u.ang)*13*s+Math.cos(u.ang)*2.6*side*s;
         const d=Math.hypot(t.x-mx,t.y-my),T=d/720,sp=d*0.035;u.fl=G.time;u.side^=1;   // lead the target, a little dispersion with range
-        G.flak.push({x:mx,y:my,tx:t.x+t.vx*T+(Math.random()-.5)*sp,ty:t.y+t.vy*T+(Math.random()-.5)*sp,t:0,dur:Math.max(0.03,T),dmg:aaDmg(L('aagun'))*aaMul(),pct:flakPct(L('aagun'))*aaMul()});
+        G.flak.push(sgFlak(t,{x:mx,y:my,tx:t.x+t.vx*T+(Math.random()-.5)*sp,ty:t.y+t.vy*T+(Math.random()-.5)*sp,t:0,dur:Math.max(0.03,T),dmg:aaDmg(L('aagun'))*aaMul(),pct:flakPct(L('aagun'))*aaMul()}));
         light(mx,my,20,'255,200,120',0.05);sfx('cannon',u.x,u.y)}}}
     else if(u.k==='sam'){u.cd-=dt;if(!tg.length)continue;const s=[...tg].sort((a,b)=>b.hp-a.hp);
       u.ang+=Math.max(-3*dt,Math.min(3*dt,angTo(u.ang,Math.atan2(s[0].y-u.y,s[0].x-u.x))));
       if(u.cd<=0){const l=L('sam');u.cd=samCd(l);u.fl=G.time;
         const focus=s[0].type==='airboss'||s[0].type==='heavybomber';   // a heavy airframe draws the whole salvo
-        for(let i=0;i<samN(l);i++){const e=focus?s[0]:s[i%s.length],a=u.ang+(Math.random()-.5)*0.6;G.sams.push({x:u.x,y:u.y,h:a,v:90,vx:0,vy:0,tgt:e,tx:e.x,ty:e.y,life:6,dmg:samDmg(l)*aaMul(),pct:samPct(l)*aaMul(),delay:i*0.25,spd:340,acc:700,turn:5})}
+        for(let i=0;i<samN(l)*(sg('sam','salvo')||1);i++){const e=focus?s[0]:s[i%s.length],a=u.ang+(Math.random()-.5)*0.6;G.sams.push(sgAam('sam',u,{x:u.x,y:u.y,h:a,v:90,vx:0,vy:0,tgt:e,tx:e.x,ty:e.y,life:6,dmg:samDmg(l)*aaMul(),pct:(samPct(l)+(sg('sam','pctHp')||0))*aaMul(),delay:i*0.25,spd:340,acc:700,turn:5}))}
         puff(u.x,u.y,6,6,1.2,'170,165,155',25,0.5);sfx('launch',u.x,u.y)}}}
-  for(const f of G.flak){f.t+=dt;if(f.t>=f.dur){f.done=true;skyBurst(f.tx,f.ty,16*rMult('aagun','radius'),f.dmg,f.pct,0.04)}}G.flak=G.flak.filter(f=>!f.done);
+  for(const f of G.flak){f.t+=dt;if(f.t>=f.dur){f.done=true;skyBurst(f.tx,f.ty,16*rMult('aagun','radius'),f.dmg,f.pct,0.04);sgFlakHit(f)}}G.flak=G.flak.filter(f=>!f.done);
   // fighter CAP: while fighters are on strength, a pair sweeps past and looses air-to-air missiles at the toughest aircraft
   const fl=L('fighter');if(fl&&L('airstrip')){G.capT-=dt;if(G.capT<=0){if(tg.length){G.capT=Math.max(4,14*Math.pow(0.9,fl-1))*stripMul();
       G.caps.push({a:Math.random()*TAU,o:(Math.random()-.5)*160,t:0,n:Math.min(4,1+Math.floor(fl/2)),fired:0});if(G.time-G.jetSnd>1.4){G.jetSnd=G.time;sfx('jet')}}else G.capT=1}}
   for(const c of G.caps){c.t+=dt;if(!c.fired&&c.t>=0.9){c.fired=1;const p=capPos(c),s=skyTargets().sort((a,b)=>b.hp-a.hp);
-    for(let i=0;i<c.n&&s.length;i++){const e=s[i%s.length];G.sams.push({x:p.x,y:p.y,h:c.a,v:260,vx:0,vy:0,tgt:e,tx:e.x,ty:e.y,life:4,dmg:jetDmg(fl)*1.6,pct:AAM_PCT,delay:i*0.15,spd:420,acc:900,turn:6,aam:1})}
+    for(let i=0;i<c.n&&s.length;i++){const e=s[i%s.length];G.sams.push(sgAam('fighter',p,{x:p.x,y:p.y,h:c.a,v:260,vx:0,vy:0,tgt:e,tx:e.x,ty:e.y,life:4,dmg:jetDmg(fl)*1.6*(1+(sg('fighter','aaBonus')||0)),pct:AAM_PCT,delay:i*0.15,spd:420,acc:900,turn:6,aam:1}))}
     if(s.length)sfx('launch',p.x,p.y)}}
   G.caps=G.caps.filter(c=>c.t<2.6);
   for(const m of G.sams){if(m.delay>0){m.delay-=dt;continue}m.life-=dt;
@@ -4043,7 +4351,7 @@ function draw(){
   drawAirGround();drawLogiGround();drawUnits();drawArtyGun();drawSkyGround();
   for(const s of G.sold)drawSoldier(s);
   // fx
-  drawSmoke();drawParts();drawFx();
+  drawSmoke();drawParts();drawFx();drawSigFx();
   for(const s of G.shells){ctx.strokeStyle='rgba(255,80,60,.9)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(s.x,s.y,s.r*(0.3+s.t*0.8),0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(s.x-5,s.y);ctx.lineTo(s.x+5,s.y);ctx.moveTo(s.x,s.y-5);ctx.lineTo(s.x,s.y+5);ctx.stroke()}
   drawArtyShells();drawNades();
   for(const b of G.bombs){ctx.fillStyle='rgba(255,60,40,.35)';ctx.beginPath();ctx.arc(b.x,b.y,6,0,7);ctx.fill()}
