@@ -698,11 +698,6 @@ function kill(e){e.dead=true;if(_mainHit&&_aimed)streakKill();const r=Math.round
   if(S.set.gfx==='high'&&!e.air)corpse(e);
   float(e.x,e.y-e.r-8,'+$'+r,'#7ddc5a',11);sfx('kill',e.x,e.y);
   if(e.boss){shake(10);banner('ENEMY TANK DESTROYED  +$'+r)}}
-function explode(x,y,r,dmg,big=true){
-  for(const e of G.enemies)if(!e.dead&&Math.hypot(e.x-x,e.y-y)<r+e.r)hurtEnemy(e,dmg,false);
-  G.fx.push({k:'boom',x,y,r,life:0.45,max:0.45});
-  for(let i=0;i<(big?14:5);i++){const a=Math.random()*7,s=30+Math.random()*120;G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:0.4+Math.random()*.4,c:Math.random()<.5?'#ffb13b':'#555',sz:3})}
-  if(big){sfx('boom',x,y,r/30);shake(4)}}
 let _mainHit=false;
 function fire(s,e,mult=1){
   if(e.air&&!s.main)mult*=AIR_BONUS.squad;
