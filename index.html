@@ -204,6 +204,11 @@ body.mobile #speedBtn{height:38px!important;min-width:44px;font-size:12px;right:
 // ================= ICONS =================
 const IC={"dmg": "M12 12m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M12 2v5M12 17v5M2 12h5M17 12h5M12 12h.01", "rate": "M13 2L4 14h7l-1 8 9-12h-7z", "crit": "M12 2l2.4 6.3L21 9l-5 4.4 1.6 6.6L12 16.6 6.4 20 8 13.4 3 9l6.6-.7z", "frag": "M11 14m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M9 8V5h4v3M13 6h3l3 3M8.5 13.5l5 1", "auto": "M4 8h16v11H4zM12 4v4M9 13h.01M15 13h.01M9 16.5h6M2 12v3M22 12v3", "vision": "M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0", "walls": "M3 5h18v14H3zM3 9.7h18M3 14.3h18M9 5v4.7M15 9.7v4.6M9 14.3V19M15 5v4.7", "armor": "M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5zM12 7v10M8 11h8", "repair": "M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3l7.5-7.5a4 4 0 0 0-2-2zM5 19l2-2", "wire": "M2 9h20M2 15h20M5 7l2 4M11 7l2 4M17 7l2 4M5 13l2 4M11 13l2 4M17 13l2 4", "hp": "M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-3 4.5 4.5 0 0 1 8 3c0 6-8 11-8 11z", "medic": "M9 3h6v6h6v6h-6v6H9v-6H3V9h6z", "squad": "M9 8m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0M3 20c0-4 2.7-6 6-6s6 2 6 6M16 5.3a3 3 0 0 1 0 5.4M17 14c2.5.4 4 2.4 4 6", "arty": "M6 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0M8 16L19 6l2.5 2.5L11 19M11 19h10", "mines": "M4 16a8 4 0 0 0 16 0zM12 12V8M9 8h6M12 5v.01M6 11l1.5 1.5M18 11l-1.5 1.5", "air": "M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z", "bounty": "M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6", "scav": "M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10M7.5 5l9 4", "truck": "M2 6h11v10H2zM13 9h5l3.5 3.5V16H13M6 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M16 5l-3 4", "apc": "M2 15V10l3-3h11l5 4v4zM13 7V4h4M5 18m-1.6 0a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0M10 18m-1.6 0a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0M15 18m-1.6 0a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0M20 18m-1.2 0a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0 -2.4 0", "turret": "M3 19a9 6 0 0 1 18 0zM12 13l8-7M7 16h.01M12 16h.01M17 16h.01", "sniper": "M8 22l2-12h4l2 12M6 10h12l-2-4H8zM12 6V2M9.5 16h5", "tank": "M3 14h18v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM7 14v-3h8v3M15 12h7M6 19v.01M10 19v.01M14 19v.01M18 19v.01", "flame": "M12 22c4 0 7-3 7-7 0-5-4-7-4-13-3 2-6 6-5 10-1.5-.5-2.5-2-2.5-4C5 10 5 12.5 5 15c0 4 3 7 7 7zM12 22c-2 0-3-1.5-3-3.5 0-2 3-4 3-4s3 2 3 4c0 2-1 3.5-3 3.5z", "heli": "M3 4h18M12 4v4M5 13a7 5 0 0 0 7 4h3a4 4 0 0 0 0-8H9a4 4 0 0 0-4 4zM19 13h3M22 11v4M9 21h8M11 17v4M15 17v4", "tesla": "M4 21h16M8 21v-4h8v4M7 17v-6a5 5 0 0 1 10 0v6M17 12h5M17 15h4M10 8h.01", "mlaunch": "M12 2c3 3 4 7 4 11l-4 3-4-3c0-4 1-8 4-11zM8 13l-3 4 3 1M16 13l3 4-3 1M10 20l2 2 2-2M12 9m-1.5 0a1.5 1.5 0 1 0 3.0 0a1.5 1.5 0 1 0 -3.0 0", "airstrip": "M8 2L4 22M16 2l4 20M12 3v3M12 10v3M12 17v3", "fighter": "M12 2l2 7 8 5v2l-8-2v5l3 2v1l-5-1-5 1v-1l3-2v-5l-8 2v-2l8-5z", "silo": "M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M10.5 10.2L7 4.5a8.5 8.5 0 0 1 10 0l-3.5 5.7M14 13.1h7a8.5 8.5 0 0 1-5 7.6l-3-5.8M10 13.1H3a8.5 8.5 0 0 0 5 7.6l3-5.8", "gunship": "M2 12h20M12 3v18M7 6h10M7 18h10M20 10v4M9 9v.01M15 9v.01M9 15v.01M15 15v.01", "coin": "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0M14.5 9h-3.3a1.8 1.8 0 0 0 0 3.5h1.6a1.8 1.8 0 0 1 0 3.5H9.5M12 7.5v9", "trophy": "M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4", "skull": "M12 3a8 8 0 0 0-5 14.2V21h10v-3.8A8 8 0 0 0 12 3zM9 12m-1.5 0a1.5 1.5 0 1 0 3.0 0a1.5 1.5 0 1 0 -3.0 0M15 12m-1.5 0a1.5 1.5 0 1 0 3.0 0a1.5 1.5 0 1 0 -3.0 0M10 21v-2M14 21v-2", "fort": "M3 21V9h3V5h3v4h2V5h2v4h2V5h3v4h3v12zM10 21v-5a2 2 0 0 1 4 0v5M7 13h.01M17 13h.01", "gear": "M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1M12 12m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0", "lock": "M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4M12 15v2", "star": "M12 2l3 6.5 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21l1.4-7L2 9.3l7-.8z", "pause": "M8 5v14M16 5v14", "play": "M7 4l13 8-13 8z", "close": "M6 6l12 12M18 6L6 18"};
 IC.speed='M4 5l8 7-8 7zM12 5l8 7-8 7z';
+IC.depot='M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M6 8h6M14 10h2a2 2 0 0 1 2 2v4a1.5 1.5 0 0 0 3 0V8l-3-3';
+IC.dcap='M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11zM12 11v6M9 14h6';
+IC.darmor='M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5zM12 8s3 3.2 3 5.2a3 3 0 0 1-6 0C9 11.2 12 8 12 8z';
+IC.ddef='M3 20h18M5 20v-3h14v3M8 17v-3h8v3M12 14V9l7-4M9 9h.01';
+IC.feff='M4 18a8 8 0 1 1 16 0M12 18l4-6M7 14h.01M17 14h.01M12 10h.01';
 function ic(n,s=20){return`<svg class="ic" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[n]}"/></svg>`}
 const _p2={};function cIcon(n,x,y,s,c,lw=2){const p=_p2[n]||(_p2[n]=new Path2D(IC[n]));ctx.save();ctx.translate(x,y);ctx.scale(s/24,s/24);ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke(p);ctx.restore()}
 // ================= SAVE =================
@@ -252,6 +257,11 @@ const U=[
  {id:'turret',wave:8,need:[["walls", 3], ["squad", 2]],cat:'HEAVY ARMOR',name:'MG Nests',max:Infinity,cost:500,g:1.75,desc:'Machine-gun nests on the fort corners (up to 4), then heavier guns.',val:l=>l?Math.min(4,l)+' nests · '+f1(turretDmg(l)*(l>4?1+0.25*(l-4):1))+' dmg · 5/s':'none'},
  {id:'sniper',wave:10,need:[["walls", 4], ["vision", 5], ["crit", 2]],cat:'HEAVY ARMOR',name:'Sniper Tower',max:Infinity,cost:900,g:1.6,desc:'A marksman who always picks off the toughest enemy.',val:l=>l?f1(sniperDmg(l))+' dmg / '+sniperCd(l).toFixed(1)+'s':'none'},
  {id:'tank',wave:15,need:[["walls", 5], ["apc", 1]],cat:'HEAVY ARMOR',name:'Tank Platoon',max:Infinity,cost:1800,g:1.9,desc:'Tanks patrol outside the walls firing explosive shells.',val:l=>l?Math.min(3,Math.ceil(l/2))+' tanks · '+f1(tankDmg(l))+' dmg':'none'},
+ {id:'depot',wave:6,need:[["truck", 1], ["vision", 4]],cat:'LOGISTICS',name:'Fuel Depot',max:1,cost:900,g:1,desc:'A fuel farm beyond the vehicle lanes. Vehicles and aircraft refuel here far faster than from field cans, several at once. Enemies will try to torch it: if it burns, nothing refuels for the rest of the run.',val:l=>l?depotSlots(L('dcap'))+' bays · '+depotRefuelT(L('dcap')).toFixed(0)+'s full tank':'field cans · '+FIELD_T+'s full tank'},
+ {id:'dcap',wave:8,need:[["depot", 1]],cat:'LOGISTICS',name:'Pump Capacity',max:Infinity,cost:450,g:1.6,desc:'High-flow pumps and extra fueling bays at the depot.',val:l=>depotSlots(l)+' bays · '+depotRefuelT(l).toFixed(1)+'s full tank'},
+ {id:'darmor',wave:8,need:[["depot", 1]],cat:'LOGISTICS',name:'Depot Hardening',max:Infinity,cost:500,g:1.6,desc:'Blast berms and armored tanks. The depot soaks up far more punishment.',val:l=>f1(depotHpAt(l))+' depot HP'},
+ {id:'ddef',wave:10,need:[["depot", 1], ["turret", 1]],cat:'LOGISTICS',name:'Depot Defenses',max:Infinity,cost:900,g:1.7,desc:'Sandbag walls cut damage to the depot and MG nests guard its corners. From Lv 3 a 40mm AA gun joins them.',val:l=>l?Math.min(4,l)+' MG · '+f1(dMgDmg(l))+' dmg'+(l>=3?' · AA '+f1(dAaDmg(l)):''):'undefended'},
+ {id:'feff',wave:8,need:[["truck", 2]],cat:'LOGISTICS',name:'Fuel Efficiency',max:10,cost:400,g:1.65,desc:'Tuned engines and disciplined crews. Vehicles and aircraft burn less fuel and stay in the fight longer.',val:l=>'-'+pct(1-burnMul(l))+' fuel burn'},
  {id:'flame',wave:18,need:[["walls", 6], ["wire", 2]],cat:'HEAVY ARMOR',name:'Flame Bunkers',max:Infinity,cost:2500,g:1.8,desc:'Flamethrowers roast anything hugging the walls.',val:l=>l?f1(flameDps(l))+' dps · '+Math.min(60,26+4*l)+'m reach':'none'},
  {id:'heli',wave:22,need:[["walls", 7], ["tank", 1]],cat:'HEAVY ARMOR',name:'Attack Helicopter',max:Infinity,cost:4000,g:1.95,desc:'Gunships circle the fort with chainguns and rockets.',val:l=>l?Math.min(2,Math.ceil(l/3))+' helis · '+f1(heliDmg(l))+' gun / '+f1(rocketDmg(l))+' rocket':'none'},
  {id:'tesla',wave:30,need:[["walls", 9], ["flame", 1]],cat:'HEAVY ARMOR',name:'CIWS Point Defense',max:Infinity,cost:8000,g:1.9,desc:'Radar-guided rotary autocannon. Rips bursts through packed enemies, hopping target to target.',val:l=>l?f1(teslaDmg(l))+' dmg · '+Math.min(12,3+l)+' targets':'none'},
@@ -422,7 +432,7 @@ function audioFrame(){const c=AU.ctx;if(!c||c.state!=='running')return;const t=c
     AU.rotor=bedNoise(c,'lowpass',190,1.2,AU.amb);const am=c.createGain(),r=c.createOscillator(),rg=c.createGain();   // rotor: low noise gated into blade thumps
     AU.rotor.g.disconnect();AU.rotor.g.connect(am).connect(AU.amb);am.gain.value=0.5;r.type='square';r.frequency.value=10.5;rg.gain.value=0.5;r.connect(rg).connect(am.gain);r.start();AU.rotor.lfo=r}
   AU.amb.gain.setTargetAtTime(live?0.1:0.04,t,0.8);
-  const helis=live&&G.units?G.units.reduce((n,u)=>n+(u.k==='heli'),0):0;
+  const helis=live&&G.units?G.units.reduce((n,u)=>n+(u.k==='heli'&&(u.spin??1)>0.2),0):0;
   AU.rotor.g.gain.setTargetAtTime(helis?0.5+0.25*helis:0,t,0.4);AU.rotor.lfo.frequency.setTargetAtTime(10.5+helis*0.6,t,0.5);
   const want=S.set.music&&live&&(G.spawnLeft>0||G.enemies.length>0)?0.16:0;AU.mus.gain.setTargetAtTime(want,t,want?1.2:2.2);
   if(want)AU.musOn=t+7;if(t>AU.musOn)return;                                                         // keep scheduling only while audible
@@ -467,7 +477,7 @@ function startRun(){
   G={wave:0,spawnLeft:0,spawnT:0,spawnInt:1,breakT:2,enemies:[],fx:[],parts:[],floats:[],shells:[],bombs:[],planes:[],mines:[],crates:[],
     hp:hpAt(L('hp')),maxHp:hpAt(L('hp')),wallMax:wallMaxAt(L('walls')),wallHp:wallMaxAt(L('walls')),sold,kills:0,earned:0,time:0,shake:0,
     zoomV:vision()*0.3,artyT:3,airT:0,airArmed:false,crateT:10,banner:'',bannerT:0,hurtT:0,breached:false};
-  G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=Math.min(S.set.lastSpeed||1,SPEEDS[L('speed')]);syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;
+  G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=Math.min(S.set.lastSpeed||1,SPEEDS[L('speed')]);syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;initLogi();
   running=true;paused=false;mouse.down=false;$('overlay').classList.remove('on');showScreen('game');
 }
 // vision() is hit thousands of times a frame via visible(); levels can't change mid-run, so memoise it per sim tick.
@@ -561,7 +571,7 @@ function update(dt){
     if(!near){near=G.enemies.filter(e=>!e.dead&&visible(e));for(const e of near)e._d=Math.hypot(e.x,e.y);near.sort((a,b)=>a._d-b._d)}
     const pick=[];for(const e of near){if(!e.dead&&pick.push(e)===3)break}if(!pick.length)continue;
     fire(s,pick[Math.floor(Math.random()*pick.length)],0.7*(1+0.12*Math.max(0,L('squad')-8)));s.cd=cd*1.5}
-  updateUnits(dt,half);updateAir(dt,half);
+  updateUnits(dt,half);updateAir(dt,half);updateLogi(dt);
   // enemies
   intelTick();
   const wl=L('wire'),wireR=fortHalf()+wallThick()/2+wireOut(),slow=1-(Math.min(0.7,0.25+0.06*wl));
@@ -570,6 +580,7 @@ function update(dt){
     if(!seen()[e.type]&&visible(e))spotted(e.type);
     const d=Math.hypot(e.x,e.y)||1,cheb=Math.max(Math.abs(e.x),Math.abs(e.y)),stop=half+e.range+e.r;
     let spd=e.spd;if(wl&&cheb<wireR){spd*=slow;e.hp-=2*wl*dt;if(e.hp<=0){kill(e);continue}}
+    if(depotEnemy(e,spd,dt))continue;
     if(cheb>half+e.r&&(cheb>stop||(e.range&&d>vision()-e.r*1.5))){e.x-=e.x/d*spd*dt;e.y-=e.y/d*spd*dt;e.moving=true}
     else{e.moving=false;e.atk-=dt;if(e.atk<=0){e.atk=e.rate;
       if(e.bomb){e.dead=true;explode(e.x,e.y,30,0);damageFort(e.dmg)}
@@ -658,7 +669,8 @@ const wireOut=()=>L('wire')?Math.min(56,20+6*L('wire')):0;
 // vehicle lanes: rounded-square tracks outside the walls and the wire
 function laneHalf(k){return fortHalf()+wallThick()/2+(L('wire')?wireOut()+10:14)+18+k*30}
 // the runway sits just outside the south wall; lanes bulge south around it so vehicles never drive over parked jets
-const RWY_H=56,runwayY=()=>fortHalf()+wallThick()/2+wireOut()+10,laneSouth=()=>L('airstrip')&&L('walls')?RWY_H+12:0;
+// jets park on an apron just south of the runway, so the lanes bulge a little further when Fighter Jets are owned
+const RWY_H=56,APRON_H=58,runwayY=()=>fortHalf()+wallThick()/2+wireOut()+10,laneSouth=()=>L('airstrip')&&L('walls')?RWY_H+12+(L('fighter')?APRON_H+6:0):0;
 // rounded-rect track: x in [-H,H], y in [-H,B]
 function trackPos(H,B,rad,f){f=((f%1)+1)%1;const w=2*(H-rad),h=H+B-2*rad,arc=Math.PI*rad/2,seg=[w,h,w,h];let d=f*2*(w+h+2*arc);
   const corners=[[H-rad,-(H-rad)],[H-rad,B-rad],[-(H-rad),B-rad],[-(H-rad),-(H-rad)]];
@@ -704,11 +716,12 @@ function updateUnits(dt,ph){
       for(let i=0;i<2;i++)G.parts.push({x:wx,y:wy,vx:(e.x-wx)*3+(Math.random()-.5)*30,vy:(e.y-wy)*3+(Math.random()-.5)*30,life:0.3,c:Math.random()<.5?'#ff9a2a':'#ffd23f',sz:2.4,max:0.3,glow:1})}}}
   for(const u of G.units){
     u.cd-=dt;
-    if(u.k==='tank')driveLane(u,1,12,dt);
-    if(u.k==='heli'){u.orb+=0.35*dt;const r=laneHalf(1)+10;u.x=Math.cos(u.orb)*r;u.y=Math.sin(u.orb)*r;u.ang=u.orb+Math.PI/2;u.rot+=dt*30;u.rk-=dt}
-    if(u.k==='truck')driveLane(u,0,-24,dt);
-    if(u.k==='apc')driveLane(u,2,9,dt);
+    if(u.k==='tank')logiDrive(u,1,12,dt);
+    if(u.k==='heli')heliOps(u,dt);
+    if(u.k==='truck')logiDrive(u,0,-24,dt);
+    if(u.k==='apc')logiDrive(u,2,9,dt);
     if(u.burst&&u.burst.length)ciwsBurst(u,dt);
+    if(!armed(u))continue;
     const t=nearestTo(u);if(!t)continue;
     const face=Math.atan2(t.y-u.y,t.x-u.x);
     if(u.k==='turret'){u.ang=face;if(u.cd<=0){const l=L('turret');u.cd=0.2;u.fl=G.time;G.fx.push({k:'tracer',x:u.x,y:u.y,x2:t.x,y2:t.y,life:0.05,max:0.05,c:'#ffe28a'});hurtEnemy(t,turretDmg(l)*(l>4?1+0.25*(l-4):1),false);sfx('mg',u.x,u.y)}}
@@ -805,6 +818,251 @@ function drawHelis(){
     ell(0,0,1.8,1.8,'#222');ctx.restore()}
 }
 
+// ================= LOGISTICS & AIR OPS =================
+// Every truck, APC, tank, jet and helicopter carries a 0..1 fuel tank. Ground vehicles leave their lane to refuel at the
+// Fuel Depot (or at slower field cans east of the fort without one) and rejoin where they left. Aircraft cycle
+// parked -> taxi/spin-up -> takeoff -> patrol & attack -> RTB -> landing -> refuel. A burned depot ends all refuelling.
+const FIELD_T=40,FUEL_LOW=0.25,AIR_LOW=0.2,RESERVE=0.02;
+const depotRefuelT=l=>Math.max(4,16*Math.pow(0.88,l)),depotSlots=l=>Math.min(4,3+Math.floor(l/4));
+const burnMul=l=>Math.max(0.4,Math.pow(0.92,l));
+const dMgDmg=l=>4.5*Math.pow(1.24,l-1),dAaDmg=l=>18*Math.pow(1.26,l-1);
+const depotHpAt=l=>Math.round(Math.max(800,wallMaxAt(L('walls'))*0.9)*Math.pow(1.35,l));
+// seconds of running per full tank (before Fuel Efficiency); each shot costs a little extra
+const TANK_S={truck:75,apc:95,tank:105,jet:65,heli:85},SHOT_FUEL={truck:0.0006,apc:0.002,tank:0.006},LOGI_SPD={truck:50,apc:42,tank:40};
+// compact depot footprint (local units): storage tanks and the tanker east of the pump island, bays to the west
+const DEPOT_TANKS=[[28,-36,11],[28,-11,11]],DEPOT_FIRE=[[28,-36],[28,-11],[29,24]];
+const JET_V={patrol:230,strafe:330,rtb:240,final:185};
+const depotUp=()=>!!G.depot&&!G.depot.dead,fuelGone=()=>!!G.depot&&G.depot.dead;
+const refuelRate=()=>fuelGone()?0:1/(depotUp()?depotRefuelT(L('dcap')):FIELD_T);
+const burnRate=k=>burnMul(L('feff'))/TANK_S[k];
+const groundPoint=()=>fuelGone()?null:depotUp()?G.depot:G.field;
+const combatOn=()=>G.spawnLeft>0||G.enemies.length>0;
+const laneOuter=()=>laneHalf(L('apc')?2:L('tank')?1:0);
+const wrapA=a=>Math.atan2(Math.sin(a),Math.cos(a));
+const turnTo=(a,b,m)=>{const d=wrapA(b-a);return a+Math.max(-m,Math.min(m,d))};
+// runway geometry (must match drawAirGround) plus the jet apron south of it
+function rwyGeo(){const ph=wallHalfAt(L('walls')),w=Math.max(ph*2.8,200),y=runwayY(),ay=y+RWY_H+4;return{w,x0:-w/2,x1:w/2,y,cy:y+RWY_H/2,ay,am:ay+APRON_H/2}}
+function lanePer(lane){const H=laneHalf(lane),B=H+laneSouth(),rad=18;return 2*(2*(H-rad))+2*(H+B-2*rad)+2*Math.PI*rad}
+// lane parameter closest to a fuel point's bays (cached per run)
+function laneExitF(lane,fp){const c=fp.exitF;if(c[lane]!=null)return c[lane];const H=laneHalf(lane),B=H+laneSouth();let best=0,bd=1e9;
+  for(let i=0;i<360;i++){const p=trackPos(H,B,18,i/360),d=Math.hypot(p.x-fp.ax,p.y-fp.ay);if(d<bd){bd=d;best=i/360}}return c[lane]=best}
+function moveTo(u,x,y,v,dt,turn=5){const dx=x-u.x,dy=y-u.y,d=Math.hypot(dx,dy);if(u.tr!=null)u.tr+=Math.min(d,v*dt)*0.5;
+  if(d<=v*dt||d<0.5){u.x=x;u.y=y;return true}u.ang=turnTo(u.ang,Math.atan2(dy,dx),turn*dt);u.x+=dx/d*v*dt;u.y+=dy/d*v*dt;return false}
+const armed=u=>u.fuel==null||(u.k==='heli'?u.alt>0.6:u.fuel>0);
+function initLogi(){
+  G.fighterT=0;G.fleet=[];G.pads=[];G.depot=null;G.depotWarnT=0;G.rwy=null;G.jetSfxT=0;
+  const H=laneOuter(),ph=wallHalfAt(L('walls'));
+  for(const u of G.units)if(u.k==='truck'||u.k==='apc'||u.k==='tank'){u.fuel=0.7+Math.random()*0.3;u.fs='patrol'}
+  const fy=H*0.25;G.field={x:H+62,y:fy,ax:H+30,ay:fy,exitF:{},slots:[-16,16].map(o=>({x:H+30,y:fy+o,u:null}))};
+  if(L('depot')){const x=H+64,y=-H*0.2,n=depotSlots(L('dcap')),dl=L('ddef'),mx=depotHpAt(L('darmor'));
+    G.depot={x,y,hp:mx,max:mx,dead:false,hitT:0,sfxT:0,smT:0,wave:G.wave,ax:x-16,ay:y,exitF:{},
+      slots:Array.from({length:n},(_,i)=>({x:x-16,y:y+(i-(n-1)/2)*26,u:null})),
+      guns:[[-46,-62],[46,62],[46,-62],[-46,62]].slice(0,Math.min(4,dl)).map(([ox,oy])=>({k:'mg',x:x+ox,y:y+oy,ang:Math.atan2(oy,ox),cd:Math.random()}))
+        .concat(dl>=3?[{k:'aa',x:x+56,y:y-4,ang:-Math.PI/4,cd:1}]:[])}}
+  G.units.filter(u=>u.k==='heli').forEach((u,i)=>{const pad=ph>=60?{x:ph*(i?-0.14:0.46),y:ph*0.56}:{x:-(H+40),y:-30+i*56};G.pads.push(pad);
+    Object.assign(u,{pad,x:pad.x,y:pad.y,ang:-Math.PI/2,gun:-Math.PI/2,fuel:1,fs:'parked',alt:0,spin:0})});
+  const fl=L('fighter');if(fl&&L('airstrip')&&L('walls')){const n=Math.min(4,1+Math.floor(fl/2)),g=rwyGeo(),sp=Math.min(50,(g.w-30)/n);
+    for(let i=0;i<n;i++){const spot={x:(i-(n-1)/2)*sp,y:g.am};G.fleet.push({i,spot,x:spot.x,y:spot.y,ang:-Math.PI/2,spd:0,alt:0,fuel:1,fs:'parked',cd:2+i*1.5,path:null,thr:0})}}}
+// ---- ground vehicles: patrol -> exit (along lane to nearest point) -> queue -> in (to bay) -> fuel -> rejoin -> patrol; 'dry' when empty
+function logiDrive(u,lane,spd,dt){
+  if(u.fuel==null){driveLane(u,lane,spd,dt);return}
+  const burn=burnRate(u.k)*dt,v=LOGI_SPD[u.k],fp=groundPoint();
+  switch(u.fs){
+  case'patrol':if(u.fuel<=0){u.fuel=0;u.fs='dry';break}
+    driveLane(u,lane,spd,dt);u.fuel=Math.max(0,u.fuel-burn);
+    if(u.fuel<FUEL_LOW&&fp){u.fs='exit';u.fp=fp;u.fe=laneExitF(lane,fp)}break;
+  case'exit':{if(u.fp!==fp){u.fs='patrol';break}
+    const H=laneHalf(lane),d=((u.fe-u.f)%1+1.5)%1-0.5,step=v*dt/lanePer(lane),arrive=Math.abs(d)<=step;
+    u.f+=arrive?d:Math.sign(d)*step;const p=trackPos(H,H+laneSouth(),18,u.f);u.x=p.x;u.y=p.y;u.ang=d<0?p.a+Math.PI:p.a;u.tr+=v*dt*0.5;
+    u.fuel=Math.max(RESERVE,u.fuel-burn*0.6);if(arrive)u.fs='queue';break}
+  case'queue':{if(u.fp!==fp){u.fs='patrol';break}const s=fp.slots.find(s=>!s.u);if(s){s.u=u;u.slot=s;u.fs='in'}break}
+  case'in':if(u.fp!==fp){u.slot.u=null;u.fs='rejoin';break}
+    u.fuel=Math.max(RESERVE,u.fuel-burn*0.5);if(moveTo(u,u.slot.x,u.slot.y,v*0.7,dt))u.fs='fuel';break;
+  case'fuel':u.ang=turnTo(u.ang,0,3*dt);u.fuel=Math.min(1,u.fuel+refuelRate()*dt);
+    if(u.fuel>=1||u.fp!==fp){u.slot.u=null;u.slot=null;u.fs='rejoin'}break;
+  case'rejoin':{const H=laneHalf(lane),p=trackPos(H,H+laneSouth(),18,u.fe);u.fuel=Math.max(u.fuel>0?RESERVE:0,u.fuel-burn*0.5);
+    if(moveTo(u,p.x,p.y,v*0.8,dt)){u.f=u.fe;u.fs='patrol'}break}
+  case'dry':if(u.fuel>0)u.fs='patrol';break}}   // stranded: engine dead, guns silent
+// ---- helicopters: parked (refuel) -> spinup -> climb -> transit -> air (orbit, existing guns/rockets) -> rtb -> descend
+function heliOps(u,dt){const rad=laneHalf(1)+10;u.rk-=dt;u.rot+=dt*30*u.spin;
+  if(u.fs!=='parked'&&u.fs!=='spinup')u.fuel=Math.max(RESERVE,u.fuel-burnRate('heli')*dt);
+  switch(u.fs){
+  case'parked':u.spin=Math.max(0,u.spin-dt/3);u.fuel=Math.min(1,u.fuel+refuelRate()*dt);
+    if(combatOn()&&(u.fuel>=1||(fuelGone()&&u.fuel>0.3)))u.fs='spinup';break;
+  case'spinup':u.spin=Math.min(1,u.spin+dt/2);if(u.spin>=1)u.fs='climb';break;
+  case'climb':u.alt=Math.min(1,u.alt+dt/2.4);if(u.alt>=1)u.fs='transit';break;
+  case'transit':u.orb+=0.35*dt;if(moveTo(u,Math.cos(u.orb)*rad,Math.sin(u.orb)*rad,95,dt,3))u.fs='air';break;
+  case'air':u.orb+=0.35*dt;u.x=Math.cos(u.orb)*rad;u.y=Math.sin(u.orb)*rad;u.ang=u.orb+Math.PI/2;
+    if(u.fuel<AIR_LOW||(!combatOn()&&u.fuel<0.6))u.fs='rtb';break;
+  case'rtb':if(moveTo(u,u.pad.x,u.pad.y,85,dt,3))u.fs='descend';break;
+  case'descend':u.alt=Math.max(0,u.alt-dt/2.6);if(!u.alt)u.fs='parked';break}}
+// ---- fighter jets
+function jetFly(j,tx,ty,v,turn,dt){j.ang=turnTo(j.ang,Math.atan2(ty-j.y,tx-j.x),turn*dt);j.spd+=Math.max(-150*dt,Math.min(120*dt,v-j.spd));j.x+=Math.cos(j.ang)*j.spd*dt;j.y+=Math.sin(j.ang)*j.spd*dt}
+function jetFollow(j,v,dt){while(j.path.length){const p=j.path[0];j.spd=v;if(!moveTo(j,p.x,p.y,v,dt,3.5))return false;j.path.shift()}j.spd=0;return true}
+function jetSfx(){if(G.jetSfxT<=0){G.jetSfxT=1.4;sfx('jet')}}
+function updateJets(dt){G.jets=[];G.jetSfxT-=dt;if(!G.fleet.length)return;
+  const g=rwyGeo(),fl=L('fighter'),cdBase=Math.max(5,20*Math.pow(0.9,fl-1))*stripMul(),combat=combatOn(),W1={x:g.x0-340,y:g.cy},T={x:g.x0+24,y:g.cy},
+    vis=G.enemies.filter(e=>!e.dead&&visible(e)),orbit=Math.max(fortHalf()+170,vision()*0.6),holding=G.fleet.some(j=>j.fs==='hold'||j.fs==='final');
+  for(const j of G.fleet){
+    if(j.alt>0||j.fs==='roll')j.fuel=Math.max(j.fs==='air'||j.fs==='strafe'?0:RESERVE,j.fuel-burnRate('jet')*dt);
+    j.thr=j.fs==='roll'||j.fs==='climb'?1:j.alt>0?0.4:0;
+    switch(j.fs){
+    case'parked':j.fuel=Math.min(1,j.fuel+refuelRate()*dt);j.ang=turnTo(j.ang,-Math.PI/2,2*dt);
+      if(combat&&!G.rwy&&!holding&&(j.fuel>=1||(fuelGone()&&j.fuel>0.3))){G.rwy=j;j.fs='taxi';j.path=[{x:j.spot.x,y:g.cy},{x:T.x+2,y:g.cy}]}break;
+    case'taxi':if(jetFollow(j,34,dt))j.fs='lineup';break;
+    case'lineup':j.ang=turnTo(j.ang,0,2.4*dt);if(Math.abs(wrapA(j.ang))<0.01){j.ang=0;j.fs='roll';j.spd=0}break;
+    case'roll':j.spd+=95*dt;j.x+=j.spd*dt;if(j.spd>=165){j.fs='climb';jetSfx()}break;
+    case'climb':j.spd=Math.min(JET_V.patrol,j.spd+60*dt);j.x+=j.spd*dt;j.alt=Math.min(1,j.alt+dt/2.2);
+      if(G.rwy===j&&j.x>g.x1+20)G.rwy=null;if(j.alt>=1){j.fs='air';if(G.rwy===j)G.rwy=null}break;
+    case'air':if(j.fuel<AIR_LOW||(!combat&&j.fuel<0.6)){j.fs='rtb';break}
+      j.cd-=dt;if(j.cd<=0&&vis.length){j.tgt=vis[Math.floor(Math.random()*vis.length)];j.fs='strafe';j.lock=null;j.hit=new Set();j.st=0;jetSfx();break}
+      {const a=Math.atan2(j.y,j.x)+0.6;jetFly(j,Math.cos(a)*orbit,Math.sin(a)*orbit,JET_V.patrol,1.6,dt)}break;
+    case'strafe':j.st+=dt;
+      if(!j.lock){if(!j.tgt||j.tgt.dead){j.tgt=vis.length?vis.reduce((b,e)=>Math.hypot(e.x-j.x,e.y-j.y)<Math.hypot(b.x-j.x,b.y-j.y)?e:b):null;if(!j.tgt){j.fs='air';j.cd=1;break}}
+        const t=j.tgt,d=Math.hypot(t.x-j.x,t.y-j.y);jetFly(j,t.x,t.y,JET_V.strafe,2.4,dt);
+        if(d<170&&Math.abs(wrapA(Math.atan2(t.y-j.y,t.x-j.x)-j.ang))<0.3)j.lock={x:j.x,y:j.y};if(j.st>9){j.fs='air';j.cd=2}break}
+      {j.x+=Math.cos(j.ang)*j.spd*dt;j.y+=Math.sin(j.ang)*j.spd*dt;const dx=Math.cos(j.ang),dy=Math.sin(j.ang);   // committed gun run: cannon walks along the flight path
+        for(const e of G.enemies)if(!e.dead&&!j.hit.has(e)&&Math.hypot(e.x-j.x-dx*30,e.y-j.y-dy*30)<14+e.r){j.hit.add(e);hurtEnemy(e,jetDmg(fl),false);G.fx.push({k:'boom',x:e.x,y:e.y,r:8,life:.2,max:.2})}
+        if(Math.random()<.6)G.fx.push({k:'tracer',x:j.x+dx*20,y:j.y+dy*20,x2:j.x+dx*60+(Math.random()-.5)*10,y2:j.y+dy*60+(Math.random()-.5)*10,life:.05,max:.05,c:'#ffe28a'});
+        if(Math.hypot(j.x-j.lock.x,j.y-j.lock.y)>340){j.fs='air';j.cd=cdBase*(0.8+Math.random()*0.4)}}break;
+    case'rtb':jetFly(j,W1.x,W1.y,JET_V.rtb,1.8,dt);if(Math.hypot(j.x-W1.x,j.y-W1.y)<70)j.fs=G.rwy&&G.rwy!==j?'hold':'final';break;
+    case'hold':{const a=Math.atan2(j.y-W1.y,j.x-W1.x)+0.7;jetFly(j,W1.x+Math.cos(a)*120,W1.y+Math.sin(a)*120,JET_V.rtb,1.8,dt);if(!G.rwy)j.fs='rtb';break}
+    case'final':{G.rwy=j;const al=Math.abs(wrapA(j.ang))<0.35&&j.x<T.x;
+      if(al){j.ang=turnTo(j.ang,0,1.5*dt);j.y+=(g.cy-j.y)*Math.min(1,2.5*dt);j.spd+=Math.max(-150*dt,Math.min(120*dt,JET_V.final-j.spd));j.x+=Math.cos(j.ang)*j.spd*dt;j.y+=Math.sin(j.ang)*j.spd*dt}
+      else jetFly(j,T.x,T.y,JET_V.final,2.2,dt);
+      if(!j.glide&&al&&Math.abs(wrapA(j.ang))<0.2&&T.x-j.x>120)j.glide=T.x-j.x;
+      if(j.glide)j.alt=Math.min(j.alt,Math.max(0,(T.x-j.x)/j.glide));
+      if(j.x>=T.x&&Math.abs(j.y-g.cy)<30){if(j.glide){j.alt=0;j.glide=0;j.y=g.cy;j.ang=0;j.fs='rollout'}else{j.fs='rtb';G.rwy=null}}   // no glide slope: go around
+      break}
+    case'rollout':j.spd=Math.max(30,j.spd-120*dt);j.x+=j.spd*dt;
+      if(j.spd<=30){j.fs='taxiIn';j.path=[{x:j.spot.x,y:g.cy},{x:j.spot.x,y:j.spot.y}]}break;
+    case'taxiIn':if(j.path.length<2&&G.rwy===j)G.rwy=null;if(jetFollow(j,34,dt)){if(G.rwy===j)G.rwy=null;j.fs='parked'}break}
+    if(j.alt>=1)G.jets.push({x:j.x,y:j.y,dx:Math.cos(j.ang),dy:Math.sin(j.ang),t:900/700})}}   // drawAirTop renders fully airborne jets
+// ---- fuel depot
+function hitDepot(d){const D=G.depot,dl=L('ddef');if(!D||D.dead)return;D.hp-=d*(1-(dl?Math.min(0.3,0.1+0.04*dl):0));D.hitT=0.5;
+  if(D.sfxT<=0){D.sfxT=0.5;sfx('wall')}if(D.hp<=0)destroyDepot()}
+function destroyDepot(){const D=G.depot;D.dead=true;D.hp=0;G.depotWarnT=7;for(const s of D.slots)s.u=null;
+  explode(D.x+28,D.y-20,80,D.max*0.25);fireball(D.x+28,D.y-36,70,1.4);fireball(D.x+28,D.y-11,70,1.2);ring(D.x,D.y,240,1,'255,200,140',6);
+  light(D.x,D.y,420,'255,150,60',1.2);puff(D.x,D.y,30,40,5,'28,24,20',60,0.75);decal(D.x,D.y,'scorch',120);shake(12);sfx('nuke',D.x,D.y)}
+// enemies near the depot may divert to attack it; returns true when it handled this enemy's move/attack this tick
+function depotEnemy(e,spd,dt){const D=G.depot;if(!D||D.dead||e.air||e.fly||e.flying||e.drone){if(e.dep)e.dep=false;return false}
+  const dx=D.x-e.x,dy=D.y-e.y,d=Math.hypot(dx,dy)||1,edge=d-50;
+  if(e.dep===undefined){if(edge>(e.range||0)+70||!visible(e))return false;e.dep=Math.random()<(e.range?0.5:0.35)}
+  if(!e.dep)return false;e.face=Math.atan2(dy,dx);
+  for(const mi of G.mines)if(!mi.used&&Math.hypot(mi.x-e.x,mi.y-e.y)<e.r+6){mi.used=true;explode(mi.x,mi.y,36,mineDmg(L('mines')))}
+  if(edge>(e.range||0)+e.r*0.5){e.x+=dx/d*spd*dt;e.y+=dy/d*spd*dt;e.moving=true}
+  else{e.moving=false;e.atk-=dt;if(e.atk<=0){e.atk=e.rate;
+    if(e.bomb){e.dead=true;explode(e.x,e.y,30,0);hitDepot(e.dmg)}
+    else if(e.range){const tx=e.x+dx/d*(d-40),ty=e.y+dy/d*(d-40);G.fx.push({k:'tracer',x:e.x,y:e.y,x2:tx,y2:ty,life:0.08,max:0.08,c:e.boss?'#ffd08a':'#ff6a5a',w:e.boss?2.4:1.2});hitDepot(e.dmg)}
+    else{hitDepot(e.dmg);e.lunge=0.15}}}
+  if(e.lunge>0)e.lunge-=dt;return true}
+function updateLogi(dt){
+  for(const u of G.units)if(u.fuel!=null&&SHOT_FUEL[u.k]&&u.fl===G.time&&u._shot!==G.time){u._shot=G.time;u.fuel=Math.max(u.fs==='patrol'?0:RESERVE,u.fuel-SHOT_FUEL[u.k]*burnMul(L('feff')))}
+  if(G.depotWarnT>0)G.depotWarnT-=dt;
+  const D=G.depot;if(!D)return;
+  if(D.dead){D.smT-=dt;if(D.smT<=0){D.smT=0.12;const t=DEPOT_FIRE[Math.floor(Math.random()*3)];
+      puff(D.x+t[0],D.y+t[1],1,12,4,'22,20,18',10,0.65);if(Math.random()<.5)spark(D.x+t[0],D.y+t[1],2,40,['#ffb04a','#ff7a1a'],0.8,1.2);light(D.x+t[0],D.y+t[1],70,'255,120,40',0.2)}return}
+  D.hitT-=dt;D.sfxT-=dt;
+  if(D.wave!==G.wave){D.wave=G.wave;D.hp=Math.min(D.max,D.hp+D.max*0.25)}
+  D.hp=Math.min(D.max,D.hp+D.max*repairAt(L('repair'))*dt);
+  const dl=L('ddef');
+  for(const gn of D.guns){gn.cd-=dt;const aa=gn.k==='aa';let t=null,bd=aa?210:150;
+    for(const e of G.enemies){if(e.dead||!visible(e))continue;const d=Math.hypot(e.x-gn.x,e.y-gn.y);if(d<bd){bd=d;t=e}}
+    if(!t)continue;gn.ang=Math.atan2(t.y-gn.y,t.x-gn.x);if(gn.cd>0)continue;gn.fl=G.time;
+    const mx=gn.x+Math.cos(gn.ang)*(aa?16:10),my=gn.y+Math.sin(gn.ang)*(aa?16:10);
+    if(aa){gn.cd=0.45;G.fx.push({k:'tracer',x:mx,y:my,x2:t.x,y2:t.y,life:0.07,max:0.07,c:'#ffc26a',w:1.8});explode(t.x+(Math.random()-.5)*6,t.y+(Math.random()-.5)*6,14,dAaDmg(dl),false);sfx('cannon',gn.x,gn.y)}
+    else{gn.cd=0.2;G.fx.push({k:'tracer',x:mx,y:my,x2:t.x+(Math.random()-.5)*5,y2:t.y+(Math.random()-.5)*5,life:0.05,max:0.05,c:'#ffe28a'});hurtEnemy(t,dMgDmg(dl),false);sfx('mg',gn.x,gn.y)}}}
+// ---- drawing (new functions only; sprite bodies stay in their owners' functions)
+// Runs fn with ctx.translate() calls made at the caller's transform pulled toward (x,y) by factor a. Sprite functions draw
+// their drop shadow with a world-level translate(x+ox,y+oy), so this lands the shadow under the aircraft as altitude -> 0.
+function altShadow(x,y,a,fn){const b=ctx.getTransform(),tr=ctx.translate;
+  ctx.translate=function(tx,ty){const m=this.getTransform();if(m.a===b.a&&m.b===b.b&&m.c===b.c&&m.d===b.d&&m.e===b.e&&m.f===b.f){tx=x+(tx-x)*a;ty=y+(ty-y)*a}return tr.call(this,tx,ty)};
+  try{fn()}finally{delete ctx.translate}}
+function drawHelisOps(){const all=G.units;
+  try{for(const u of all){if(u.k!=='heli')continue;const a=u.alt??1,k=0.84+0.16*a;G.units=[u];
+    ctx.save();ctx.translate(u.x,u.y);ctx.scale(k,k);ctx.translate(-u.x,-u.y);altShadow(u.x,u.y,0.05+0.95*a,drawHelis);ctx.restore()}}
+  finally{G.units=all}}
+// jets below full altitude (parked, taxiing, rolling, climbing out, on final): same sprite + shadow recipe as drawAirTop, blended by altitude
+function drawJetsLow(top){if(!G.fleet)return;for(const j of G.fleet){if(j.alt>=1||(j.alt>0.02)!==top)continue;const a=j.alt,k=2.1+0.4*a;
+  ctx.save();ctx.translate(j.x+3+37*a,j.y+4+41*a);ctx.rotate(j.ang);ctx.fillStyle=`rgba(0,0,0,${0.35-0.05*a})`;drawJet(k);ctx.restore();
+  ctx.save();ctx.translate(j.x,j.y);ctx.rotate(j.ang);ctx.scale(k,k);ctx.fillStyle=a>0.5?'#8a969e':'#7d8a93';drawJet();ell(4,0,3,1.2,'#1c2a33');
+  if(j.thr){ctx.globalCompositeOperation='lighter';ell(-15,0,2+1.6*j.thr+Math.random()*0.6,1.1+0.5*j.thr,'#ffb13b');ctx.globalCompositeOperation='source-over'}ctx.restore()}}
+function drawApron(){const g=rwyGeo(),x0=g.x0+4,w=g.w-8,y=g.ay,h=APRON_H;
+  for(const j of G.fleet)box(j.spot.x-9,g.y+RWY_H,18,4,'#474a44');                                               // taxi connectors
+  box(x0-3,y-1,w+6,h+4,'#33362f');box(x0,y,w,h,'#474a44');box(x0,y,w,1,'rgba(255,255,255,.06)');
+  ctx.strokeStyle='rgba(0,0,0,.25)';ctx.lineWidth=.5;ctx.beginPath();for(let x=x0+18;x<x0+w;x+=18){ctx.moveTo(x,y);ctx.lineTo(x,y+h)}ctx.moveTo(x0,y+h/2);ctx.lineTo(x0+w,y+h/2);ctx.stroke();
+  for(let i=0;i<w/16;i++)ell(x0+8+i*16+hash(i,11)*8,y+6+hash(i,13)*(h-12),2+hash(i,17)*3,1.2+hash(i,19)*1.5,'rgba(10,10,8,.18)');   // oil stains
+  ctx.strokeStyle='rgba(227,181,60,.8)';ctx.lineWidth=0.9;
+  for(const j of G.fleet){const s=j.spot;ctx.beginPath();ctx.moveTo(s.x,g.y+RWY_H);ctx.lineTo(s.x,y+h-5);ctx.moveTo(s.x-10,y+h-5);ctx.lineTo(s.x+10,y+h-5);ctx.stroke();
+    box(s.x-1.5,y+h-3.5,3,2,'#d8d4b0')}}
+function drawHelipads(){for(const p of G.pads){ctx.save();ctx.translate(p.x,p.y);
+  ell(1.2,1.6,17,17,'rgba(0,0,0,.3)');ell(0,0,17,17,'#3c413e');ell(0,0,15.4,15.4,'#555b57');
+  ctx.strokeStyle='#d9b43a';ctx.lineWidth=1.3;ctx.beginPath();ctx.arc(0,0,12.6,0,TAU);ctx.stroke();
+  box(-5.2,-6.5,2.3,13,'#e8e6de');box(2.9,-6.5,2.3,13,'#e8e6de');box(-5.2,-1.15,10.4,2.3,'#e8e6de');
+  for(let k=0;k<8;k++){const a=k/8*TAU,on=(Math.floor(G.time*3)+k)%8===0;ell(Math.cos(a)*15.4,Math.sin(a)*15.4,on?1.1:0.75,on?1.1:0.75,on?'#e8ffb0':'#8fae52')}
+  ctx.restore()}}
+function drawFieldDump(){const F=G.field;ctx.save();ctx.translate(F.x,F.y);
+  ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.moveTo(-12,-15);ctx.lineTo(16,-13);ctx.lineTo(17,16);ctx.lineTo(-11,17);ctx.fill();
+  for(let r=0;r<3;r++)for(let c=0;c<3;c++){const x=-7+c*6,y=-8+r*6;ell(x,y,2.8,2.8,'#3f4a2a');ell(x,y,1.9,1.9,'#56633a');ell(x+0.7,y-0.6,0.6,0.6,'#1b1f14')}
+  for(let i=0;i<4;i++){box(-9+i*4,11,3,4.2,'#4b5a2c');box(-9+i*4,11,3,0.8,'#6a7b40')}
+  ctx.fillStyle='rgba(74,92,48,.55)';ctx.beginPath();ctx.moveTo(-13,-14);ctx.lineTo(13,-12);ctx.lineTo(12,9);ctx.lineTo(-12,8);ctx.fill();   // camo net
+  ctx.strokeStyle='rgba(30,38,20,.6)';ctx.lineWidth=.4;ctx.beginPath();for(let k=-12;k<13;k+=4){ctx.moveTo(k,-13);ctx.lineTo(k+1,8)}ctx.stroke();
+  box(-16,-2,4,4,'#8a2a1c');box(-16,-2,4,1,'#b5452f');ctx.restore()}                                              // hand pump
+function drawDepot(){const D=G.depot,dl=L('ddef'),dead=D.dead,t=G.time;ctx.save();ctx.translate(D.x,D.y);
+  box(-40,-54,86,114,'rgba(0,0,0,.28)');box(-44,-60,88,120,dead?'#2b2823':'#4f4b3a');box(-40,-56,80,112,dead?'#26241f':'#67645a');   // berm + gravel pad
+  box(-40,-54,52,108,dead?'#23221f':'#78766d');ctx.strokeStyle='rgba(0,0,0,.2)';ctx.lineWidth=.5;ctx.beginPath();for(let y=-54;y<54;y+=18){ctx.moveTo(-40,y);ctx.lineTo(12,y)}ctx.stroke();   // fueling apron
+  if(!dead)for(const s of D.slots){ctx.strokeStyle='rgba(227,181,60,.55)';ctx.lineWidth=.8;ctx.strokeRect(s.x-D.x-26,s.y-D.y-11,50,22)}
+  ctx.strokeStyle=dead?'#1a1916':'#7d8279';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(19,-48);ctx.lineTo(19,40);for(const[x,y]of DEPOT_TANKS){ctx.moveTo(19,y);ctx.lineTo(x-8,y)}ctx.stroke();   // manifold
+  box(12,-50,6,100,dead?'#2e2c28':'#8c8a80');box(12,-50,6,1,'#a5a399');                                              // pump island
+  for(const s of D.slots){const y=s.y-D.y,busy=s.u&&s.u.fs==='fuel';box(12.5,y-5,5,10,dead?'#221f1b':'#b8352a');box(12.5,y-5,5,1.6,dead?'#2e2a25':'#e8e6de');
+    if(busy){ctx.strokeStyle='#161616';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(12.5,y+1);ctx.quadraticCurveTo(8,y+9,s.u.x-D.x+4,s.u.y-D.y+5);ctx.stroke();
+      ell(15,y+2.5,1.1,1.1,Math.floor(t*4)%2?'#7fd35a':'#3a6a2a')}}
+  for(const[x,y,r]of DEPOT_TANKS){ell(x+3,y+3,r,r,'rgba(0,0,0,.35)');
+    if(dead){ell(x,y,r,r,'#1b1917');ell(x,y,r*0.8,r*0.8,'#0c0b0a');ctx.strokeStyle='#3a332b';ctx.lineWidth=1.2;ctx.beginPath();for(let k=0;k<6;k++){const a=k*1.1+y;ctx.moveTo(x+Math.cos(a)*r*0.9,y+Math.sin(a)*r*0.9);ctx.lineTo(x+Math.cos(a+0.4)*r*0.4,y+Math.sin(a+0.4)*r*0.4)}ctx.stroke();continue}
+    ell(x,y,r,r,'#9ea08f');ell(x-r*0.12,y-r*0.12,r*0.86,r*0.86,'#c3c5b6');ell(x-r*0.3,y-r*0.3,r*0.35,r*0.35,'rgba(255,255,255,.25)');
+    ctx.strokeStyle='rgba(60,62,52,.45)';ctx.lineWidth=.5;for(const f of[0.55,0.8]){ctx.beginPath();ctx.arc(x,y,r*f,0,TAU);ctx.stroke()}
+    ell(x,y,r*0.16,r*0.16,'#6f7166');box(x-1,y+r*0.5,2,r*0.5,'#5a5c52');box(x+r*0.3,y-r*0.7,r*0.5,1.6,'#b8352a')}         // hatch, ladder, hazard band
+  if(dead)box(23,8,12,40,'#1d1a16');else{ell(31,30,8,22,'rgba(0,0,0,.3)');                                            // tanker truck, parked nose-south
+    box(23,6,12,30,'#aeb0a2');box(23,6,2,30,'#cfd1c3');box(33.5,6,1.5,30,'#7f8175');box(24,36,10,10,'#5f6b3c');box(25,43,8,2.4,'#27404f');
+    box(21,9,1.8,6,'#141414');box(35.2,9,1.8,6,'#141414');box(21,28,1.8,6,'#141414');box(35.2,28,1.8,6,'#141414');box(21,39,1.8,5,'#141414');box(35.2,39,1.8,5,'#141414');box(27,16,4,10,'#b8352a')}
+  if(dl){for(let x=-44;x<44;x+=6){box(x,-60,5.4,3.2,(x/6|0)%2?'#8a7650':'#7d6a46');box(x,57,5.4,3.2,(x/6|0)%2?'#7d6a46':'#8a7650')}   // sandbag walls, open to the lanes on the west
+    for(let y=-56;y<57;y+=6)box(41,y,3.2,5.4,(y/6|0)%2?'#8a7650':'#7d6a46');for(const y0 of[-56,38])for(let y=y0;y<y0+18;y+=6)box(-44,y,3.2,5.4,'#7d6a46')}
+  else{ctx.strokeStyle='rgba(170,175,160,.55)';ctx.lineWidth=.5;ctx.setLineDash([2,1.5]);ctx.strokeRect(-42,-58,84,116);ctx.setLineDash([])}
+  if(dead){ctx.globalCompositeOperation='lighter';for(const[x,y]of DEPOT_FIRE)blit(fireSprite(),x+Math.sin(t*9+y)*1.5,y+Math.cos(t*7+y),15*(0.85+0.2*Math.sin(t*13+y)),0.8);
+    ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
+  ctx.restore();
+  if(!dead)for(const gn of D.guns){const aa=gn.k==='aa';ctx.save();ctx.translate(gn.x,gn.y);sandbags(aa?9:6.5,aa?12:9);ell(0,0,aa?7:4.6,aa?7:4.6,'#4a4331');ctx.rotate(gn.ang);
+    if(aa){box(-4,-4,8,8,'#4e5a3a');box(3,-2.6,14,1.4,'#1d2118');box(3,1.2,14,1.4,'#1d2118');ell(-1,0,2.4,2.4,'#56692e')}
+    else{box(0,-1.2,4,2.4,'#2a2a2a');box(4,-0.5,8,1,'#111');ell(-1.5,0,2.3,2.3,'#56692e')}
+    if(G.time-(gn.fl||-9)<0.05)ell(aa?19:13,0,2.6,1.5,'#ffcf5a');ctx.restore()}
+  if(!dead&&D.hp<D.max){const px=1/sc,w=Math.max(70,60*px),h=Math.max(3,3*px),y=D.y-68-h;box(D.x-w/2,y,w,h,'rgba(0,0,0,.7)');
+    box(D.x-w/2,y,w*D.hp/D.max,h,D.hp/D.max>0.5?'#7fd35a':D.hp/D.max>0.25?'#e3b53c':'#ef5a4f')}}
+function drawLogiGround(){if(!G.fleet)return;
+  if(G.fleet.length)drawApron();drawHelipads();
+  if(G.depot)drawDepot();else if(G.units.some(u=>u.fuel!=null&&u.k!=='heli'))drawFieldDump();
+  drawJetsLow(false)}
+// small fuel gauges over every fuelled vehicle and aircraft
+function drawFuelBars(){if(!G.fleet)return;const px=1/sc,w=Math.max(16,20*px),h=Math.max(2,2.6*px),blink=Math.floor(G.time*4)%2;
+  const one=(x,y,f,st)=>{const fuel=st==='fuel'||st==='parked'&&f<1,bx=x-w/2;box(bx-px*0.6,y-px*0.6,w+px*1.2,h+px*1.2,'rgba(0,0,0,.65)');
+    box(bx,y,w*Math.max(0,Math.min(1,f)),h,fuel?(blink?'#6ec3ff':'#a8dcff'):f>0.5?'#7fd35a':f>0.25?'#e3b53c':blink||f>0.1?'#ef5a4f':'#7a2a24');
+    if(st==='dry'&&blink){ctx.font=`700 ${Math.round(Math.max(6,8*px))}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle='#ef5a4f';ctx.fillText('NO FUEL',x,y-2*px)}};
+  for(const u of G.units)if(u.fuel!=null)one(u.x,u.y-(u.k==='heli'?(0.84+0.16*u.alt)*20:(US[u.k]||2)*9)-4,u.fuel,u.fs);
+  for(const j of G.fleet)one(j.x,j.y-(2.1+0.4*j.alt)*12-4,j.fuel,j.fs)}
+function drawLogiHud(){const D=G.depot,nar=VW<640;
+  if(G.depotWarnT>0){const a=Math.min(1,G.depotWarnT),w=Math.min(540,VW-32),x=VW/2-w/2,y=nar?VH*0.3:VH*0.3,p=0.5+0.5*Math.sin(G.time*10);ctx.globalAlpha=a;
+    rrect(x,y,w,70,12,'rgba(60,10,6,.88)');ctx.strokeStyle=`rgba(255,90,70,${0.5+0.5*p})`;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(x+1,y+1,w-2,68,12);ctx.stroke();
+    cIcon('depot',x+18,y+22,26,'#ff8a70',2.2);ctx.textAlign='left';ctx.fillStyle='#ffd0c4';ctx.font=`800 ${nar?19:24}px Oxanium,sans-serif`;ctx.fillText('FUEL DEPOT DESTROYED',x+56,y+36);
+    ctx.fillStyle='#ff9d8a';ctx.font='500 12px Inter,sans-serif';ctx.fillText('No refuelling for the rest of the run. Fuel is now finite.',x+56,y+55);ctx.globalAlpha=1}
+  if(!D)return;
+  const left=G.spawnLeft+G.enemies.length,x=20,w=230,h=58,y=nar?(left?114:94)+66:20+(left?84:64)+10,hit=D.hitT>0&&!D.dead;
+  panel(x,y,w,h);if(hit){ctx.strokeStyle=`rgba(239,90,79,${0.4+0.4*Math.sin(G.time*14)})`;ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(x+.5,y+.5,w-1,h-1,12);ctx.stroke()}
+  cIcon('depot',x+12,y+9,16,D.dead?'#ef5a4f':'#e3b53c');ctx.textAlign='left';ctx.font='700 12px Oxanium,sans-serif';ctx.fillStyle='#e6ead9';ctx.fillText(hit?'DEPOT UNDER ATTACK':'FUEL DEPOT',x+34,y+22);
+  ctx.textAlign='right';ctx.font='600 11px Oxanium,sans-serif';ctx.fillStyle=D.dead?'#ef5a4f':'#e6ead9';ctx.fillText(D.dead?'DESTROYED':f1(Math.max(0,D.hp))+' HP',x+w-12,y+22);
+  const r=Math.max(0,D.hp/D.max);rrect(x+12,y+29,w-24,6,3,'rgba(255,255,255,.08)');rrect(x+12,y+29,(w-24)*r,6,3,r>0.5?'#7fd35a':r>0.25?'#e3b53c':'#ef5a4f');
+  const fu=G.units.filter(u=>u.fuel!=null).map(u=>u.fuel).concat(G.fleet.map(j=>j.fuel)),avg=fu.length?fu.reduce((a,b)=>a+b,0)/fu.length:1,busy=D.slots.filter(s=>s.u&&s.u.fs==='fuel').length;
+  ctx.font='500 10px Inter,sans-serif';ctx.textAlign='left';ctx.fillStyle='#8f9882';ctx.fillText('FLEET FUEL '+pct(avg),x+12,y+49);
+  ctx.textAlign='right';ctx.fillText(D.dead?'NO REFUEL':busy+'/'+D.slots.length+' BAYS PUMPING',x+w-12,y+49)}
+
 // ================= AIR & MISSILES =================
 const mslDmg=l=>60*Math.pow(1.28,l-1),siloDmg=l=>320*Math.pow(1.3,l-1),siloCd=l=>Math.max(8,28*Math.pow(0.9,l-1));
 const jetDmg=l=>40*Math.pow(1.27,l-1),gsDmg=l=>120*Math.pow(1.3,l-1),gsGun=l=>12*Math.pow(1.25,l-1);
@@ -840,15 +1098,8 @@ function updateAir(dt,ph){
   // silo strikes
   for(const n of G.nukes){n.t-=dt;if(n.t<=0){n.done=true;explode(n.x,n.y,95,siloDmg(L('silo')));explode(n.x,n.y,60,0);ring(n.x,n.y,280,1.3,'255,240,210',7);ring(n.x,n.y,160,0.9,'255,190,120',4);fireball(n.x,n.y,130,1.3);puff(n.x,n.y,34,45,5,'64,56,48',70,.65);light(n.x,n.y,520,'255,200,120',1.1);decal(n.x,n.y,'scorch',140);shake(14);G.flashT=0.4;sfx('nuke',n.x,n.y)}}
   G.nukes=G.nukes.filter(n=>!n.done);
-  // fighter sorties
-  const fl=L('fighter');if(fl&&L('airstrip')){G.fighterT-=dt;if(G.fighterT<=0){const all=G.enemies.filter(e=>!e.dead&&visible(e));
-    if(all.length){G.fighterT=Math.max(5,20*Math.pow(0.9,fl-1))*stripMul();const n=Math.min(4,1+Math.floor(fl/2));
-      for(let i=0;i<n;i++){const t=all[Math.floor(Math.random()*all.length)],a=Math.random()*Math.PI*2;G.jets.push({x:t.x,y:t.y,dx:Math.cos(a),dy:Math.sin(a),t:-i*0.35,hit:new Set(),dmg:jetDmg(fl)})}
-      sfx('jet')}else G.fighterT=1}}
-  for(const j of G.jets){j.t+=dt;const s=-900+700*j.t;if(Math.abs(s)<140){const px=j.x+j.dx*s,py=j.y+j.dy*s;
-      for(const e of G.enemies)if(!e.dead&&!j.hit.has(e)&&Math.hypot(e.x-px,e.y-py)<14+e.r){j.hit.add(e);hurtEnemy(e,j.dmg,false);G.fx.push({k:'boom',x:e.x,y:e.y,r:8,life:.2,max:.2})}
-      if(Math.random()<.6)G.fx.push({k:'tracer',x:px,y:py,x2:px+j.dx*40+(Math.random()-.5)*10,y2:py+j.dy*40+(Math.random()-.5)*10,life:.05,max:.05,c:'#ffe28a'})}}
-  G.jets=G.jets.filter(j=>j.t<3);
+  // fighter jets: persistent fleet with parked -> taxi -> takeoff -> patrol/strafe -> RTB -> landing -> refuel
+  updateJets(dt);
   if(G.flashT>0)G.flashT-=dt;
 }
 function drawAirGround(){
@@ -1544,7 +1795,7 @@ function draw(){
   const tg=G.sold[0].tgt;if(tg){ctx.strokeStyle='#ffd23f';ctx.lineWidth=Math.max(1.2,1.5/sc);const r=Math.max(tg.r+5,(tg.r*sc+6)/sc)+Math.sin(G.time*10);ctx.beginPath();ctx.arc(tg.x,tg.y,r,0,7);ctx.stroke();
     const tk=Math.max(4,5/sc);for(let i=0;i<4;i++){const a=i*Math.PI/2;ctx.beginPath();ctx.moveTo(tg.x+Math.cos(a)*r,tg.y+Math.sin(a)*r);ctx.lineTo(tg.x+Math.cos(a)*(r+tk),tg.y+Math.sin(a)*(r+tk));ctx.stroke()}}
   // soldiers
-  drawAirGround();drawUnits();drawArtyGun();
+  drawAirGround();drawLogiGround();drawUnits();drawArtyGun();
   for(const s of G.sold)drawSoldier(s);
   // fx
   drawSmoke();drawParts();drawFx();
@@ -1561,7 +1812,7 @@ function draw(){
   for(const p of G.planes){const s=-800+500*p.t,x=p.x+p.dx*s,y=p.y+p.dy*s,a=Math.atan2(p.dy,p.dx);
     ctx.save();ctx.translate(x+34,y+34);ctx.rotate(a);ctx.fillStyle='rgba(0,0,0,.35)';drawPlane();ctx.restore();
     ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.fillStyle='#8a9a7a';drawPlane();ctx.restore()}
-  drawHelis();drawAirTop();
+  drawHelisOps();drawJetsLow(true);drawAirTop();drawFuelBars();
   drawFloats();
   if(G.airArmed){ctx.strokeStyle='#ff6a3a';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.beginPath();ctx.arc(mouse.wx,mouse.wy,40,0,7);ctx.stroke();ctx.setLineDash([])}
   // HUD (scaled down on phones so panels/bars don't dominate a small screen)
@@ -1592,6 +1843,7 @@ function draw(){
   const cds=[];if(L('arty'))cds.push(['ARTILLERY',G.artyT,artyCd(L('arty'))]);
   for(const [n,t,m] of cds){panel(20,cy-10,170,32);ctx.fillStyle='#e6ead9';ctx.font='600 12px Oxanium,sans-serif';cIcon('arty',30,cy-1,14,'#e6ead9');ctx.fillText(n,50,cy+10);
     rrect(120,cy+3,58,5,3,'rgba(255,255,255,.08)');rrect(120,cy+3,58*Math.max(0,1-t/m),5,3,t<=0?'#7fd35a':'#e3b53c');cy-=40}
+  drawLogiHud();
   if(G.bannerT>0){const a=Math.min(1,G.bannerT),y=VW<640?VH*0.44:VH*0.22;ctx.globalAlpha=a;ctx.font=`800 ${VW<640?22:Math.round(Math.min(32,VW/34))}px Oxanium,sans-serif`;ctx.textAlign='center';
     ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillText(G.banner,VW/2+2,y+3);ctx.fillStyle='#ffd76a';ctx.fillText(G.banner,VW/2,y);
     const w=ctx.measureText(G.banner).width;rrect(VW/2-w/2,y+12,w*a,3,2,'#e3b53c');ctx.globalAlpha=1}
