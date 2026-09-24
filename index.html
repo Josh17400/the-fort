@@ -352,7 +352,8 @@ const visible=e=>Math.hypot(e.x,e.y)<=vision()-e.r*0.3;
 const money=v=>Math.round(v*(1+0.15*L('bounty')));
 
 // Wave scaling. Toughness accelerates past wave 12 so every run ends in a last stand instead of a stalemate.
-const waveHp=w=>Math.pow(1.14,w-1)*Math.pow(1.003,(w-1)*(w-1)), waveDmg=w=>Math.pow(1.1,w-1), waveRew=w=>Math.pow(1.045,w-1);
+const EARLY=w=>w<=3?0.6+0.13*(w-1):1;  // gentler first waves so a brand-new player gets a foothold
+const waveHp=w=>Math.pow(1.14,w-1)*Math.pow(1.003,(w-1)*(w-1))*EARLY(w), waveDmg=w=>Math.pow(1.1,w-1)*EARLY(w), waveRew=w=>Math.pow(1.045,w-1);
 const waveCount=w=>Math.round((6+2.6*w)*(1+0.04*L('vision'))), waveWindow=w=>Math.max(6,Math.min(12,6+0.3*w)-Math.max(0,w-24)*0.3);
 function pickType(w){const p=[['grunt',10]];if(w>=3)p.push(['runner',4+w*.3]);if(w>=4)p.push(['shooter',2+w*.2]);if(w>=6)p.push(['brute',1+w*.15]);if(w>=8)p.push(['bomber',2+w*.15]);
   let t=p.reduce((a,b)=>a+b[1],0)*Math.random();for(const[k,v]of p){if((t-=v)<=0)return k}return'grunt'}
