@@ -2881,7 +2881,7 @@ function drawFloats(){if(!G.floats.length)return;const k=Math.max(1,0.85/sc);let
 function draw(){
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#161a12';ctx.fillRect(0,0,VW,VH);
   if(!G)return;
-  G.zoomV+=(vision()-G.zoomV)*0.035;sc=Math.min(VW,VH)/(2*(40+G.zoomV*1.12));
+  G.zoomV+=(vision()-G.zoomV)*0.035;sc=Math.min(VW,VH)/(2*(40+G.zoomV*1.12))*(G.uZoom||1);
   const sx=(Math.random()-.5)*G.shake,sy=(Math.random()-.5)*G.shake;
   ctx.setTransform(dpr*sc,0,0,dpr*sc,dpr*(VW/2+sx),dpr*(VH/2+sy));
   // ground
@@ -2988,10 +2988,15 @@ function airRelease(){if(!G||!G.airAim)return;const a=G.airAim,dx=mouse.wx-a.x,d
   callAir(a.x,a.y,Math.hypot(dx,dy)*sc>14?Math.atan2(dy,dx):undefined)}
 addEventListener('mouseup',()=>{mouse.down=false;airRelease()});
 const tm=(type,t)=>new MouseEvent(type,{clientX:t.clientX,clientY:t.clientY,button:0});
-cv.addEventListener('touchstart',e=>{e.preventDefault();cv.dispatchEvent(tm('mousedown',e.changedTouches[0]))},{passive:false});
-cv.addEventListener('touchmove',e=>{e.preventDefault();cv.dispatchEvent(tm('mousemove',e.changedTouches[0]))},{passive:false});
-cv.addEventListener('touchend',e=>{e.preventDefault();mouse.down=e.touches.length>0;if(!e.touches.length)airRelease()},{passive:false});
-cv.addEventListener('touchcancel',()=>{mouse.down=false;if(G)G.airAim=null});
+// two-finger pinch = camera zoom (centered on the fort); one finger keeps aiming/firing
+let pinch=null;const tdist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+const setZoom=z=>{if(G)G.uZoom=Math.max(1,Math.min(4,z))};
+cv.addEventListener('touchstart',e=>{e.preventDefault();if(e.touches.length>=2){pinch={d:tdist(e.touches),z:G?G.uZoom||1:1};mouse.down=false;if(G){G.airAim=null;G.sold[0].tgt=G.sold[0].tgt}return}
+  if(pinch)return;cv.dispatchEvent(tm('mousedown',e.changedTouches[0]))},{passive:false});
+cv.addEventListener('touchmove',e=>{e.preventDefault();if(pinch&&e.touches.length>=2){setZoom(pinch.z*tdist(e.touches)/pinch.d);return}if(pinch)return;cv.dispatchEvent(tm('mousemove',e.changedTouches[0]))},{passive:false});
+cv.addEventListener('touchend',e=>{e.preventDefault();if(pinch){if(!e.touches.length)pinch=null;mouse.down=false;return}mouse.down=e.touches.length>0;if(!e.touches.length)airRelease()},{passive:false});
+cv.addEventListener('touchcancel',()=>{mouse.down=false;pinch=null;if(G)G.airAim=null});
+cv.addEventListener('wheel',e=>{if(!G||!running)return;e.preventDefault();setZoom((G.uZoom||1)*Math.exp(-e.deltaY*0.0015))},{passive:false});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 $('airBtn').onclick=()=>toggleAir();
