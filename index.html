@@ -1121,6 +1121,11 @@ addEventListener('keydown',e=>{if(!running)return;
   if(e.code==='Escape'){if(G.airArmed)G.airArmed=false;else setPause(!paused)}
   if(e.code==='KeyQ')toggleAir();if(e.code==='KeyF')cycleSpeed();if(e.code==='KeyP')setPause(!paused)});
 addEventListener('blur',()=>{if(S.set.blurPause)setPause(true)});
+// persist mid-run earnings (phones kill backgrounded apps without warning)
+function persist(){if(G&&running&&G.wave>S.best)S.best=G.wave;save()}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){persist();if(running&&S.set.blurPause)setPause(true)}});
+addEventListener('pagehide',persist);
+setInterval(()=>{if(running&&!paused)persist()},10000);
 
 // ================= LOOP =================
 let last=performance.now(),acc=0;const STEP=1/60;
