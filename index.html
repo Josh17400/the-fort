@@ -175,6 +175,7 @@ body.mobile #speedBtn{height:38px!important;min-width:44px;font-size:12px;right:
     <div class="panel deploy">
       <div><h2>READY TO DEPLOY</h2><p>Enemies close in from the dark. Earn cash per kill, fall, then fortify.</p></div>
       <div class="loadout" id="loadout"></div>
+      <div id="startSel" class="loadout" style="margin:-4px 0 4px"></div>
       <div><button class="btn big" id="deployBtn"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4l13 8-13 8z"/></svg>DEPLOY</button></div>
     </div>
     <div class="panel side">
@@ -244,7 +245,7 @@ const U=[
  {id:'mines',wave:3,need:[["vision", 2]],cat:'SUPPORT',name:'Minefield',max:Infinity,cost:120,g:1.55,desc:'Mines are laid at the start of each wave.',val:l=>l?Math.min(30,2*l)+' mines · '+f1(mineDmg(l))+' dmg':'none'},
  {id:'air',wave:10,need:[["vision", 4]],cat:'SUPPORT',name:'Air Support',max:Infinity,cost:400,g:1.6,desc:'Call a bombing run anywhere (Q, then click).',val:l=>l?Math.min(16,5+l)+' bombs · '+f1(airDmg(l))+' dmg · '+Math.round(airCd(l))+'s cd':'none'},
  {id:'bounty',wave:5,cat:'ECONOMY',name:'War Bonds',max:Infinity,cost:60,g:1.62,desc:'More money per kill and per wave.',val:l=>'+'+pct(l*0.15)+' money'},
- {id:'speed',wave:3,cat:'ECONOMY',name:'Command Tempo',max:4,cost:150,g:2.3,desc:'Unlocks faster battle speeds. Tap the speed button (or F) mid-run to switch.',val:l=>'up to '+[1,1.5,2,2.5,3][l]+'×'},
+ {id:'speed',wave:3,cat:'ECONOMY',name:'Command Tempo',max:6,cost:150,g:2.3,desc:'Unlocks faster battle speeds. Tap the speed button (or F) mid-run to switch.',val:l=>'up to '+[1,1.5,2,2.5,3,3.5,4][l]+'×'},
  {id:'scav',wave:2,cat:'ECONOMY',name:'Scavengers',max:Infinity,cost:40,g:1.5,desc:'Supply crates drop more often and hold more cash.',val:l=>'every '+Math.round(crateEvery(l))+'s · x'+crateMul(l).toFixed(1)},
 
  {id:'truck',wave:6,need:[["walls", 3], ["squad", 1]],cat:'HEAVY ARMOR',name:'Gun Trucks',max:Infinity,cost:350,g:1.9,desc:'Pickup trucks with mounted machine guns patrol around the fort. Your first vehicles.',val:l=>l?Math.min(3,Math.ceil(l/2))+' trucks · '+f1(truckDmg(l))+' dmg · 5/s':'none'},
@@ -273,7 +274,11 @@ const $=id=>document.getElementById(id);
 let lastRunMsg='';
 function showScreen(id){$('home').classList.toggle('on',id==='home'||id==='settings');$('settings').classList.toggle('on',id==='settings');$('hud').classList.toggle('on',id==='game');if(id==='home')renderHome()}
 let storeTab='ALL';
-function renderHome(){
+const checkpoints=()=>{const c=[1];for(let w=20;w<=S.best;w+=20)c.push(w);return c};
+const startWaveOk=()=>{const w=S.set.startWave||1;return checkpoints().includes(w)?w:1};
+function renderStartSel(){const c=checkpoints(),el=$('startSel');if(c.length<2){el.innerHTML='';return}const cur=startWaveOk();
+  el.innerHTML='<span class="tag" style="border:0;background:none;padding-left:0">Start at</span>'+c.map(w=>`<button class="tab ${w===cur?'on':''}" data-start="${w}" style="padding:5px 12px">WAVE ${w}</button>`).join('')}
+function renderHome(){renderStartSel();
   $('bank').textContent='$'+f1(S.bank);$('best').textContent=S.best;$('tkills').textContent=S.tkills;
   $('lastRun').innerHTML=lastRunMsg?`<h3>LAST RUN</h3><div class="lastrun">${lastRunMsg}</div>`:'';
   $('loadout').innerHTML=[['HP',hpAt(L('hp'))],['DMG',f1(dmgAt(L('dmg')))],['Vision',Math.round(vision())+'m'],['Soldiers',1+L('squad')],['Walls',L('walls')?'Lv '+L('walls'):'crate']]
@@ -293,6 +298,7 @@ function renderHome(){
       <button data-id="${u.id}" class="buy ${mx?'max':!ok?'no':''}">${mx?ic('star',16)+' MAXED':lock?lock:'$'+f1(c)+(S.bank<c?' · need $'+f1(c-S.bank):' · UPGRADE')}</button></div>`}
   $('store').innerHTML=h;
 }
+$('startSel').addEventListener('click',e=>{const b=e.target.closest('[data-start]');if(b){S.set.startWave=+b.dataset.start;save();renderStartSel()}});
 $('tabs').addEventListener('click',e=>{const t=e.target.closest('[data-tab]');if(t){storeTab=t.dataset.tab;renderHome()}});
 $('store').addEventListener('click',e=>{const id=e.target.closest('[data-id]')?.dataset.id;if(!id)return;const u=U.find(u=>u.id===id),l=L(id),c=costOf(u,l);
   if(l<u.max&&S.bank>=c&&!lockWhy(u)){S.bank-=c;S.lv[id]=l+1;save();sfx('buy');renderHome();const b=document.querySelector(`[data-id="${id}"]`);if(b)b.classList.add('pop')}else sfx('deny')});
@@ -464,7 +470,7 @@ function startRun(){
   audioUnlock();
   const sold=[{x:0,y:0,cd:0,ang:-Math.PI/2,tgt:null,main:true}];
   for(let i=0;i<Math.min(8,L('squad'));i++)sold.push({x:0,y:0,cd:Math.random(),ang:0,tgt:null});
-  G={wave:0,spawnLeft:0,spawnT:0,spawnInt:1,breakT:2,enemies:[],fx:[],parts:[],floats:[],shells:[],bombs:[],planes:[],mines:[],crates:[],
+  G={wave:startWaveOk()-1,spawnLeft:0,spawnT:0,spawnInt:1,breakT:2,enemies:[],fx:[],parts:[],floats:[],shells:[],bombs:[],planes:[],mines:[],crates:[],
     hp:hpAt(L('hp')),maxHp:hpAt(L('hp')),wallMax:wallMaxAt(L('walls')),wallHp:wallMaxAt(L('walls')),sold,kills:0,earned:0,time:0,shake:0,
     zoomV:vision()*0.3,artyT:3,airT:0,airArmed:false,crateT:10,banner:'',bannerT:0,hurtT:0,breached:false};
   G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=Math.min(S.set.lastSpeed||1,SPEEDS[L('speed')]);syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;
@@ -508,7 +514,7 @@ function dmgFloat(e,d,crit){const f=e._df;
 function shake(n){if(S.set.shake)G.shake=Math.min(12,G.shake+n)}
 
 function hurtEnemy(e,d,crit){if(e.dead)return;e.hp-=d;e.flash=0.08;fxHit(e,crit);
-  if(S.set.dmgNums&&visible(e))dmgFloat(e,d,crit);
+  if(S.set.dmgNums&&visible(e)&&(crit||_mainHit||S.set.gfx!=='high'))dmgFloat(e,d,crit);
   if(e.hp<=0)kill(e)}
 function kill(e){e.dead=true;const r=money(e.rew);S.bank+=r;G.earned+=r;G.kills++;S.tkills++;fxKill(e);
   if(S.set.gfx==='high')corpse(e);
@@ -519,11 +525,12 @@ function explode(x,y,r,dmg,big=true){
   G.fx.push({k:'boom',x,y,r,life:0.45,max:0.45});
   for(let i=0;i<(big?14:5);i++){const a=Math.random()*7,s=30+Math.random()*120;G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:0.4+Math.random()*.4,c:Math.random()<.5?'#ffb13b':'#555',sz:3})}
   if(big){sfx('boom',x,y,r/30);shake(4)}}
+let _mainHit=false;
 function fire(s,e,mult=1){
   let d=dmgAt(L('dmg'))*mult;const crit=Math.random()<Math.min(0.6,L('crit')*0.04);if(crit)d*=2.5+Math.max(0,L('crit')-15)*0.1;
   s.ang=Math.atan2(e.y-s.y,e.x-s.x);s.fl=G.time;
   G.fx.push({k:'tracer',x:s.x+Math.cos(s.ang)*6,y:s.y+Math.sin(s.ang)*6,x2:e.x,y2:e.y,life:0.07,max:0.07,c:crit?'#ffd23f':'#fff2b0'});
-  const ex=e.x,ey=e.y;hurtEnemy(e,d,crit);
+  const ex=e.x,ey=e.y;_mainHit=!!s.main;hurtEnemy(e,d,crit);_mainHit=false;
   const fl=L('frag');if(fl){const fr=Math.min(40,10+4*fl);for(const o of G.enemies)if(o!==e&&!o.dead&&Math.hypot(o.x-ex,o.y-ey)<fr+o.r)hurtEnemy(o,d*0.35,false);G.fx.push({k:'boom',x:ex,y:ey,r:fr,life:0.2,max:0.2})}
   fxMuzzle(s);sfx(s.main?'shot':'shot2',s.x,s.y);}
 function damageFort(d){
@@ -1076,7 +1083,7 @@ function hqHit(e,crit){
   if(R()<.35&&G.smoke.length<FXCAP.smoke*.6){const r=Math.min(e.r,9);hpuff(e.x+(R()-.5)*e.r,e.y+(R()-.5)*e.r,{vx:(R()-.5)*24,vy:(R()-.5)*24,r:r*.25,grow:r*.6,life:.4,col:'104,94,78',a:.3});
     if(!e.boss&&R()<.5)hpuff(e.x,e.y,{r:r*.2,grow:r*.45,life:.3,col:'84,24,20',a:.24})}
   spark(e.x,e.y,crit?6:1,crit?140:80,crit?['#fff','#ffe07a']:['#ffe9b8'],crit?.3:.12,crit?1.4:1);
-  if(crit){light(e.x,e.y,24,'255,230,140',0.1);G.fx.push({k:'flash',x:e.x,y:e.y,r:e.r*1.8,life:.08,max:.08})}}
+  if(crit){light(e.x,e.y,24,'255,230,140',0.1);G.fx.push({k:'flash',x:e.x,y:e.y,r:Math.min(e.r,8)*1.6,life:.07,max:.07})}}
 function hqKill(e){const b=e.boss;decal(e.x,e.y,b?'scorch':'stain',e.r*(b?2.2:1.5));gib(e.x,e.y,b?10:3,70,e.col,.9,b?2.6:2);
   hpuff(e.x,e.y,{vx:0,vy:0,r:e.r*.6,grow:e.r*1.6,life:.8,col:'132,120,100',a:.34});
   if(b){hqBurst(e.x,e.y,55,true);const h=hx();if(h.emit.length<6)h.emit.push({x:e.x,y:e.y,life:10,t:0});light(e.x,e.y,220,'255,140,60',.8);shake(10)}}
@@ -1461,7 +1468,7 @@ function drawTruckHQ(u,px,flash){const k=US.truck,W=hqTrack('whT',px*k,3.8,1.7,.
   ctx.translate(-3.5,0);ctx.rotate(u.gun-u.ang);if(flash)ctx.translate(-.3,0);hqDraw(gun);l=hqLoc(-1,-1,u.gun,1);hqGlint(-2.2+l[0],l[1],1.4,.3);if(flash)hqMuzzle(9.3,0,.8);ctx.restore()}
 // enemy main battle tank (boss): desert camo with red ID stripe/panels; hull and turret face the fort, gun recoils on each shot
 function drawMBTHQ(e,x,y,a,k,px){const since=!e.moving&&e.atk>e.rate-.6?e.rate-e.atk:9;
-  drawTankHQ(x,y,a,a,e.wob*1.8,since,k/1.15,px,{key:'mbt',col:'#8f7f58',camo:'sand',enemy:true,len:17,moving:e.moving,flash:e.flash>0?.35:0})}
+  drawTankHQ(x,y,a,a,e.wob*1.8,since,k/1.15,px,{key:'mbt',col:'#8f7f58',camo:'sand',enemy:true,len:17,moving:e.moving,flash:e.flash>0?.14:0})}
 
 // ---- emplacements ----
 function drawMGNestHQ(u,px,flash){const s=US.turret,base=hqBake('mgB',px*s,15,15,7.5,7.5,()=>{ell(0,0,6.2,6.2,'#3a3222');ell(0,0,4.4,4.4,'#2b261b');hqSpeckle(-4,-4,8,8,20,'rgba(90,75,50,.6)',.4);
@@ -2326,7 +2333,7 @@ cv.addEventListener('touchcancel',()=>{mouse.down=false;if(G)G.airAim=null});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 $('airBtn').onclick=()=>toggleAir();
-const SPEEDS=[1,1.5,2,2.5,3];
+const SPEEDS=[1,1.5,2,2.5,3,3.5,4];
 function syncSpeedBtn(){const b=$('speedBtn'),v=G?G.simSpeed||1:1;b.textContent=v+'×';b.classList.toggle('fast',v>1);b.style.display=L('speed')?'block':'none'}
 function cycleSpeed(){if(!running||!L('speed'))return;const opts=SPEEDS.slice(0,L('speed')+1),i=opts.indexOf(G.simSpeed||1);G.simSpeed=opts[(i+1)%opts.length];S.set.lastSpeed=G.simSpeed;save();syncSpeedBtn();sfx('buy')}
 $('speedBtn').onclick=()=>cycleSpeed();
