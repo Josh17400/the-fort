@@ -437,7 +437,7 @@ function loadSave(){try{S=JSON.parse(localStorage.getItem('theFortSave'))}catch(
 // artillery piece their Walls level already showed, and get a one-off Research Points back-pay so they can research at once.
 function migrateRS(){const lv=S.lv,W=lv.walls||0,existing=S.best>1||Object.keys(lv).length>0;
   S.rs=Object.assign({dmg:existing?1:0,squad:existing?1:0},S.rs);
-  if(existing){S.rs.arty=Math.max(S.rs.arty||0,W>=8&&S.best>=25?2:W>=5&&S.best>=15?1:0);S.rp+=Math.min(400,2*S.best+10*Object.keys(S.mg||{}).length)}
+  if(existing){S.rs.arty=Math.max(S.rs.arty||0,W>=8&&S.best>=25?2:W>=5&&S.best>=15?1:0);S.rp+=Math.min(150,S.best+3*Object.keys(S.mg||{}).length)}
   S.rsv=1;save()}
 function save(){try{localStorage.setItem('theFortSave',JSON.stringify(S))}catch(e){}}
 loadSave();
@@ -558,7 +558,7 @@ function rsCounter(){if(!lastCause.top.some(t=>ARMOR_KILL[t]||t==='technical')||
 // vs the line's first tier), armor penetration (pen) and one signature mechanic (sig) each. Tiers are researched on the home
 // screen, need S.best >= gate, and only take effect at the next deployment: startRun() snapshots S.rs/S.rf into G.
 // S.rs[line] = the tier index owned (0-based; dmg/squad tier 0 is the pistol start). S.rf[line] = Refits bought after the last tier.
-const RP_COST=[0,3,8,16,30,50,80,130,200,300],REFIT_MUL=1.08,refitCost=n=>Math.round(300*Math.pow(1.15,n));
+const RP_COST=[0,10,25,50,90,150,240,380,580,850],REFIT_MUL=1.08,refitCost=n=>Math.round(300*Math.pow(1.15,n));
 const RLINES={currency:'RP',rpCost:RP_COST,refit:{mul:REFIT_MUL,cost:'300*1.15^n'},lines:[
  {id:'dmg',label:'Commander',u:'dmg',t:[
   {n:'Recruit',w:'M17 sidearm',g:0,mul:0.6,hp:1,art:'era0 softcap noplate pistol'},
@@ -756,10 +756,11 @@ function buyResearch(id){const r=RLINES[id];if(!r)return false;
   save();sfx('buy');setTimeout(()=>tone(1175,0.12,'square',0,0.045),110);return true}
 // ---- Research Points ----
 // Per wave held: 1 + floor(w/25); every 10th (armor) wave +3 + floor(w/25) more; +2 per wave beyond your previous best;
-// +10 per medal. A checkpoint start pays 50% of the waves it skipped, once the run holds at least 5 waves.
-const rpWave=w=>1+Math.floor(w/25)+(w%10===0?3+Math.floor(w/25):0);
+// +3 per medal. A checkpoint start pays 50% of the waves it skipped, once the run holds at least 5 waves.
+// no RP before wave 10; +1 per wave from 10, +2 from 20, ... ; armor (every 10th) waves pay +2 more rising with depth
+const rpWave=w=>w<10?0:Math.floor(w/10)+(w%10===0?2+Math.floor(w/20):0);
 function rpGain(n){S.rp+=n;if(G&&!G.over)G.rp=(G.rp||0)+n}   // G.over: the run's tally is closed (set in endRun)
-function rpClear(w){G.cleared=(G.cleared||0)+1;const n=rpWave(w)+(w>G.startBest?2:0);rpGain(n);return n}
+function rpClear(w){G.cleared=(G.cleared||0)+1;const n=rpWave(w)+(w>G.startBest&&w>=10?1:0);rpGain(n);return n}
 function rpCheckpoint(){const w0=G.startWave||1;if(w0<=1||(G.cleared||0)<5)return 0;let n=0;for(let w=1;w<w0;w++)n+=rpWave(w);n=Math.floor(n*0.5);rpGain(n);return n}
 // Plain-language signature lines for the research cards
 const ORD=n=>n+(n%100>10&&n%100<14?'th':['th','st','nd','rd'][n%10]||'th');
@@ -4702,13 +4703,13 @@ const medalVal=m=>m.st==='kills'?S.tkills:MS()[m.st]||0,medalCash=m=>Math.round(
 function medalCheck(st){for(const m of MEDALS)if(m.st===st&&MG()[m.id]==null&&medalVal(m)>=m.goal)award(m)}
 function medalBump(st,n=1){MS()[st]=(MS()[st]||0)+n;medalCheck(st)}
 function medalMax(st,v){if(v>(MS()[st]||0)){MS()[st]=v;medalCheck(st)}}
-function award(m){const c=medalCash(m);MG()[m.id]=c;_mN=Object.keys(MG()).length;S.bank+=c;rpGain(10);if(running&&G)(G.medals||(G.medals=[])).push(m.id);save();medalToast(m,c)}
+function award(m){const c=medalCash(m);MG()[m.id]=c;_mN=Object.keys(MG()).length;S.bank+=c;rpGain(3);if(running&&G)(G.medals||(G.medals=[])).push(m.id);save();medalToast(m,c)}
 function medalSync(){const s=MS();s.wave=Math.max(s.wave||0,S.best-1);_mN=Object.keys(MG()).length;for(const st of new Set(MEDALS.map(m=>m.st)))medalCheck(st)}
 // toast: one at a time, non-blocking (pointer-events none), above the bars on desktop and clear of the thumb buttons on phones
 const _mtQ=[];let _mtOn=false;
 function medalToast(m,c){_mtQ.push([m,c]);if(!_mtOn)medalToastNext()}
 function medalToastNext(){const el=$('medalToast'),n=_mtQ.shift();if(!n){_mtOn=false;return}_mtOn=true;const[m,c]=n;
-  el.innerHTML=`<span class="mti">${ic(m.ic,22)}</span><span class="mtb"><span class="mtt">${ic('medal',12)}MEDAL EARNED</span><b>${m.name}</b><small><em>+$${f1(c)}</em> · <em class="rpc">+10 RP</em> · +1% cash for good</small></span>`;
+  el.innerHTML=`<span class="mti">${ic(m.ic,22)}</span><span class="mtb"><span class="mtt">${ic('medal',12)}MEDAL EARNED</span><b>${m.name}</b><small><em>+$${f1(c)}</em> · <em class="rpc">+3 RP</em> · +1% cash for good</small></span>`;
   el.classList.remove('on');void el.offsetWidth;el.classList.add('on');
   [784,988,1319].forEach((f,i)=>setTimeout(()=>tone(f,i<2?0.08:0.24,'square',0,0.045),i*110));
   setTimeout(()=>{el.classList.remove('on');setTimeout(medalToastNext,400)},3600);
