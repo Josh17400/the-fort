@@ -1399,7 +1399,7 @@ function update(dt){
   // waves
   if(G.spawnLeft>0){G.spawnT-=dt;if(G.spawnT<=0){spawn(nextType());G.spawnLeft--;G.spawnT=G.spawnInt*(0.6+Math.random()*0.8)}}
   else if(G.enemies.length===0&&!G.sky.length&&!G.drops.length&&!(G.uavT>0)){
-    if(G.breakT<=0){if(G.wave>0){medalMax('wave',G.wave);if(G.wave>=15&&!G.wHit)medalMax('flawless',1);let b=money(8*G.wave*waveRew(G.wave));if(G.ev)b+=evClear(b);S.bank+=b;G.earned+=b;float(0,-40,'WAVE CLEAR +$'+b,'#7ddc5a',14);float(0,-22,'+'+rpClear(G.wave)+' RP','#6ec3ff',13);save();if(perkWave(G.wave))G.perkAt=G.time+0.9}G.breakT=G.breakMax=G.wave<10?3:2}
+    if(G.breakT<=0){if(G.wave>0){medalMax('wave',G.wave);if(G.wave>=15&&!G.wHit)medalMax('flawless',1);let b=money(8*G.wave*waveRew(G.wave));if(G.ev)b+=evClear(b);S.bank+=b;G.earned+=b;float(0,-40,'WAVE CLEAR +$'+f1(b),'#7ddc5a',14);float(0,-22,'+'+rpClear(G.wave)+' RP','#6ec3ff',13);save();if(perkWave(G.wave))G.perkAt=G.time+0.9}G.breakT=G.breakMax=G.wave<10?3:2}
     G.breakT-=dt;if(G.breakT<=0)startWave();}
   if(G.perkAt&&G.time>=G.perkAt){G.perkAt=0;offerPerks()}
   // regen
