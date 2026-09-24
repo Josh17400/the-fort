@@ -188,7 +188,7 @@ const L=id=>S.lv[id]||0;
 
 // ================= UPGRADES =================
 const dmgAt=l=>10*Math.pow(1.22,l), cdAt=l=>Math.max(0.08,0.65*Math.pow(0.9,l)), visionAt=l=>110+30*l;
-const wallHalfAt=l=>l?14+Math.min(l,10)*9:10, wallMaxAt=l=>l?Math.round(60*l*Math.pow(1.3,l-1)):0;
+const wallHalfAt=l=>l?14+Math.min(l,20)*9:10, wallMaxAt=l=>l?Math.round(60*l*Math.pow(1.3,l-1)):0;
 const hpAt=l=>50+25*l, autoAt=l=>l?Math.min(1,0.35+0.13*l):0;
 const artyCd=l=>Math.max(1.2,9*Math.pow(0.88,l-1)), artyDmg=l=>35*Math.pow(1.28,l-1), artyR=l=>Math.min(70,32+3*l);
 const mineDmg=l=>45*Math.pow(1.3,l-1), airDmg=l=>60*Math.pow(1.25,l-1), airCd=l=>Math.max(12,50*Math.pow(0.9,l-1));
@@ -201,7 +201,7 @@ const U=[
  {id:'crit',wave:2,need:[["dmg", 3]],cat:'WEAPONS',name:'Marksmanship',max:Infinity,cost:40,g:1.45,desc:'Chance for a critical hit (x2.5 damage).',val:l=>pct(l*0.04)+' crit'},
  {id:'frag',wave:6,need:[["dmg", 5]],cat:'WEAPONS',name:'Frag Rounds',max:Infinity,cost:120,g:1.7,desc:'Bullets burst, splashing 35% damage nearby.',val:l=>l?(10+4*l)+'px splash':'none'},
  {id:'auto',wave:3,need:[["rate", 3]],cat:'WEAPONS',name:'Auto-Fire',max:Infinity,cost:80,g:1.8,desc:'Your soldier fires on its own when you are not aiming.',val:l=>l?pct(autoAt(l))+' fire rate':'off'},
- {id:'vision',cat:'FORT',name:'Watchtower',max:12,cost:30,g:1.5,desc:'See (and shoot) further out.',val:l=>visionAt(l)+'m vision'},
+ {id:'vision',cat:'FORT',name:'Watchtower',max:30,cost:30,g:1.5,desc:'Raise the watch. The camera pulls back to reveal more battlefield, so bigger bases and bigger battles fit.',val:l=>visionAt(l)+'m vision'},
  {id:'walls',cat:'FORT',name:'Fort Walls',max:Infinity,cost:45,g:1.72,desc:'Starts as a tiny perch. Each level makes the fort bigger, the walls thicker and tougher. From Lv 6 they are thick enough for your riflemen to man the ramparts.',val:l=>l?'size '+(wallHalfAt(l)*2)+' · '+wallMaxAt(l)+' HP':'just a crate'},
  {id:'armor',wave:3,need:[["walls", 2]],cat:'FORT',name:'Reinforced Walls',max:Infinity,cost:60,g:1.6,desc:'Walls take less damage.',val:l=>'-'+pct(l*0.07)+' wall dmg'},
  {id:'repair',wave:4,need:[["walls", 2]],cat:'FORT',name:'Engineers',max:Infinity,cost:50,g:1.6,desc:'Walls repair themselves over time.',val:l=>pct(l*0.008)+' HP/s'},
@@ -305,7 +305,7 @@ const cv=$('cv'),ctx=cv.getContext('2d');let VW,VH,dpr,sc;
 const WORLD_R=540,SPAWN_R=590,PLAT=10;
 function resize(){dpr=devicePixelRatio||1;VW=innerWidth;VH=innerHeight;cv.width=VW*dpr;cv.height=VH*dpr;cv.style.width=VW+'px';cv.style.height=VH+'px';sc=Math.min(VW,VH)/(2*WORLD_R)}
 addEventListener('resize',resize);resize();
-const decals=Array.from({length:420},()=>{const a=Math.random()*7,r=Math.sqrt(Math.random())*700;return{x:Math.cos(a)*r,y:Math.sin(a)*r,s:2+Math.random()*9,c:Math.random()<.5?'#2a3120':'#1f2518'}});
+const decals=Array.from({length:1400},()=>{const a=Math.random()*7,r=Math.sqrt(Math.random())*1500;return{x:Math.cos(a)*r,y:Math.sin(a)*r,s:2+Math.random()*9,c:Math.random()<.5?'#2a3120':'#1f2518'}});
 
 // ================= GAME =================
 const ET={
@@ -323,11 +323,11 @@ function startRun(){
   for(let i=0;i<Math.min(8,L('squad'));i++)sold.push({x:0,y:0,cd:Math.random(),ang:0,tgt:null});
   G={wave:0,spawnLeft:0,spawnT:0,spawnInt:1,breakT:2,enemies:[],fx:[],parts:[],floats:[],shells:[],bombs:[],planes:[],mines:[],crates:[],
     hp:hpAt(L('hp')),maxHp:hpAt(L('hp')),wallMax:wallMaxAt(L('walls')),wallHp:wallMaxAt(L('walls')),sold,kills:0,earned:0,time:0,shake:0,
-    zoomV:vision(),artyT:3,airT:0,airArmed:false,crateT:10,banner:'',bannerT:0,hurtT:0,breached:false};
+    zoomV:vision()*0.3,artyT:3,airT:0,airArmed:false,crateT:10,banner:'',bannerT:0,hurtT:0,breached:false};
   G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=Math.min(S.set.lastSpeed||1,SPEEDS[L('speed')]);syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;
   running=true;paused=false;$('overlay').classList.remove('on');showScreen('game');
 }
-const vision=()=>visionAt(L('vision'));
+const vision=()=>Math.max(visionAt(L('vision')),fortHalf()+wallThick()+120);
 const wallsUp=()=>L('walls')>0&&G.wallHp>0;
 const blockHalf=()=>wallsUp()?wallHalfAt(L('walls'))+wallThickAt(L('walls'))/2:PLAT;
 const visible=e=>Math.hypot(e.x,e.y)<=vision()-e.r*0.3;
@@ -339,7 +339,7 @@ function spawn(type){const d=ET[type],w=G.wave,a=Math.random()*Math.PI*2,hs=Math
   G.enemies.push({type,x:Math.cos(a)*(vision()+110),y:Math.sin(a)*(vision()+110),hp:d.hp*hs,max:d.hp*hs,spd:d.spd*(1+Math.min(.5,w*.012))*(0.9+Math.random()*.2),
     dmg:d.dmg*Math.pow(1.07,w-1),rate:d.rate,atk:0.5,rew:d.rew*Math.pow(1.06,w-1),r:d.r,col:d.col,range:d.range||0,bomb:d.bomb,boss:d.boss,flash:0,wob:Math.random()*9})}
 function startWave(){
-  G.breakT=0;G.wave++;G.spawnLeft=5+G.wave*3;G.spawnInt=Math.max(0.22,1.4-G.wave*0.045);G.spawnT=0.5;
+  G.breakT=0;G.wave++;G.spawnLeft=Math.round((5+G.wave*3)*(1+0.05*L('vision')));G.waveTotal=G.spawnLeft+(G.wave%10===0?1:0);G.spawnInt=Math.max(0.08,(1.4-Math.min(1.18,G.wave*0.045))/(1+0.06*L('vision')));G.spawnT=0.5;
   if(G.wave%10===0)spawn('boss');
   const ml=L('mines');if(ml){const half=fortHalf()+wallThick()/2+wireOut(),n=Math.min(30,2*ml);for(let i=0;i<n&&G.mines.length<n*3;i++){const a=Math.random()*7,r=half+18+Math.random()*(Math.max(50,vision()*0.95-half-18));G.mines.push({x:Math.cos(a)*r,y:Math.sin(a)*r,blink:Math.random()*3})}}
   if(G.wallMax){G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.25)}
@@ -395,7 +395,7 @@ function update(dt){
   for(const s of G.sold)s.cd-=dt;
   const m=G.sold[0],cd=cdAt(L('rate'));
   if(m.tgt&&(m.tgt.dead||!visible(m.tgt)))m.tgt=null;
-  if(!m.tgt&&mouse.down&&!G.airArmed)m.tgt=enemyAt(mouse.wx,mouse.wy,MOBILE?Math.max(24,36/sc):24);
+  if(!m.tgt&&mouse.down&&!G.airArmed)m.tgt=enemyAt(mouse.wx,mouse.wy,Math.max(24,(MOBILE?36:18)/sc));
   let t=m.tgt,rm=1;if(!t&&L('auto')){t=nearestVisible(m);rm=autoAt(L('auto'))}
   if(t&&m.cd<=0){fire(m,t);m.cd=cd/rm}else if(t)m.ang=Math.atan2(t.y-m.y,t.x-m.x);
   for(let i=1;i<n;i++){const s=G.sold[i];if(s.cd>0)continue;
@@ -901,11 +901,11 @@ function drawWalls(ph,wlv){
 function draw(){
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#161a12';ctx.fillRect(0,0,VW,VH);
   if(!G)return;
-  G.zoomV+=(vision()-G.zoomV)*0.05;sc=Math.min(VW,VH)/(2*(95+G.zoomV*0.95));
+  G.zoomV+=(vision()-G.zoomV)*0.035;sc=Math.min(VW,VH)/(2*(40+G.zoomV*1.12));
   const sx=(Math.random()-.5)*G.shake,sy=(Math.random()-.5)*G.shake;
   ctx.setTransform(dpr*sc,0,0,dpr*sc,dpr*(VW/2+sx),dpr*(VH/2+sy));
   // ground
-  ctx.fillStyle='#252b1d';ctx.fillRect(-WORLD_R*3,-WORLD_R*3,WORLD_R*6,WORLD_R*6);
+  ctx.fillStyle='#252b1d';ctx.fillRect(-3000,-3000,6000,6000);
   for(const d of decals){ctx.fillStyle=d.c;ctx.fillRect(d.x,d.y,d.s,d.s*0.6)}
   drawDecals();
   const half=blockHalf(),wl=L('wire'),V=vision();
@@ -962,7 +962,7 @@ function draw(){
   ctx.fillStyle='#e6ead9';ctx.font='800 28px Oxanium,sans-serif';ctx.fillText(G.wave,36,72);
   ctx.fillStyle='#8f9882';ctx.font='600 11px Inter,sans-serif';ctx.fillText('KILLS',120,42);ctx.fillStyle='#e6ead9';ctx.font='600 20px Oxanium,sans-serif';ctx.fillText(G.kills,120,68);
   const left=G.spawnLeft+G.enemies.length;
-  if(left){const tot=5+G.wave*3+(G.wave%10===0?1:0);rrect(36,86,198,5,3,'rgba(255,255,255,.08)');rrect(36,86,198*Math.max(0,1-left/tot),5,3,'#e3b53c');
+  if(left){const tot=G.waveTotal||1;rrect(36,86,198,5,3,'rgba(255,255,255,.08)');rrect(36,86,198*Math.max(0,1-left/tot),5,3,'#e3b53c');
     ctx.fillStyle='#8f9882';ctx.font='500 10px Inter,sans-serif';ctx.textAlign='right';ctx.fillText(left+' hostiles',234,80)}
   else if(G.wave){ctx.fillStyle='#7fd35a';ctx.font='600 11px Inter,sans-serif';ctx.textAlign='right';ctx.fillText('NEXT WAVE '+Math.max(0,G.breakT).toFixed(1)+'s',234,68)}
   // money chip
@@ -1000,8 +1000,8 @@ function toWorld(e){mouse.x=e.clientX;mouse.y=e.clientY;mouse.wx=(e.clientX-VW/2
 cv.addEventListener('mousemove',toWorld);
 cv.addEventListener('mousedown',e=>{if(!running||paused||e.button!==0)return;toWorld(e);mouse.down=true;
   if(G.airArmed){callAir(mouse.wx,mouse.wy);return}
-  for(const c of G.crates)if(Math.hypot(c.x-mouse.wx,c.y-mouse.wy)<(MOBILE?Math.max(14,30/sc):14)){c.life=0;fxCrate(c);S.bank+=c.val;G.earned+=c.val;float(c.x,c.y-10,'+$'+c.val,'#ffe066',13);sfx('cash');return}
-  const t=enemyAt(mouse.wx,mouse.wy,MOBILE?Math.max(24,36/sc):24);if(t)G.sold[0].tgt=t});
+  for(const c of G.crates)if(Math.hypot(c.x-mouse.wx,c.y-mouse.wy)<Math.max(14,(MOBILE?30:16)/sc)){c.life=0;fxCrate(c);S.bank+=c.val;G.earned+=c.val;float(c.x,c.y-10,'+$'+c.val,'#ffe066',13);sfx('cash');return}
+  const t=enemyAt(mouse.wx,mouse.wy,Math.max(24,(MOBILE?36:18)/sc));if(t)G.sold[0].tgt=t});
 addEventListener('mouseup',()=>mouse.down=false);
 const tm=(type,t)=>new MouseEvent(type,{clientX:t.clientX,clientY:t.clientY,button:0});
 cv.addEventListener('touchstart',e=>{e.preventDefault();cv.dispatchEvent(tm('mousedown',e.changedTouches[0]))},{passive:false});
