@@ -263,8 +263,9 @@ let storeTab='ALL';
 function renderHome(){
   $('bank').textContent='$'+f1(S.bank);$('best').textContent=S.best;$('tkills').textContent=S.tkills;
   $('lastRun').innerHTML=lastRunMsg?`<h3>LAST RUN</h3><div class="lastrun">${lastRunMsg}</div>`:'';
-  $('loadout').innerHTML=[['HP',hpAt(L('hp'))],['DMG',f1(dmgAt(L('dmg')))],['Vision',visionAt(L('vision'))+'m'],['Soldiers',1+L('squad')],['Walls',L('walls')?'Lv '+L('walls'):'crate']]
+  $('loadout').innerHTML=[['HP',hpAt(L('hp'))],['DMG',f1(dmgAt(L('dmg')))],['Vision',Math.round(vision())+'m'],['Soldiers',1+L('squad')],['Walls',L('walls')?'Lv '+L('walls'):'crate']]
     .map(([k,v])=>`<span class="tag">${k} <b>${v}</b></span>`).join('');
+  {const n=U.filter(u=>L(u.id)<u.max&&!lockWhy(u)&&S.bank>=costOf(u,L(u.id))).length;if(n)$('loadout').innerHTML+=`<span class="tag" style="border-color:rgba(127,211,90,.5);color:var(--good);cursor:pointer" onclick="document.querySelector('.store').scrollIntoView({behavior:'smooth'})">▲ <b style="color:var(--good)">${n}</b> upgrade${n>1?'s':''} ready</span>`}
   const cats=['ALL',...new Set(U.map(u=>u.cat))];
   const can=u=>{const l=L(u.id);return l<u.max&&!lockWhy(u)&&S.bank>=costOf(u,l)};
   $('tabs').innerHTML=cats.map(c=>{const n=U.filter(u=>(c==='ALL'||u.cat===c)&&can(u)).length;return`<button class="tab ${c===storeTab?'on':''}" data-tab="${c}">${c}${n?`<span class="n">${n}</span>`:''}</button>`}).join('');
