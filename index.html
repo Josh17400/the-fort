@@ -121,6 +121,11 @@ body.mobile .card:hover,body.mobile .btn:hover{transform:none}
 @keyframes pulse{50%{box-shadow:0 0 30px rgba(255,90,50,.6)}}
 #airBtn:disabled{cursor:default}
 #resetBtn:disabled{opacity:.45;cursor:not-allowed}
+#prioBtn{position:fixed;pointer-events:auto;touch-action:manipulation;display:none;right:calc(16px + env(safe-area-inset-right));top:calc(68px + env(safe-area-inset-top));height:36px;padding:0 12px 0 10px;border-radius:10px;
+  background:rgba(22,27,18,.7);backdrop-filter:blur(6px);align-items:center;gap:7px;font-family:Oxanium,sans-serif;font-size:12px;font-weight:800;letter-spacing:1.2px;white-space:nowrap}
+#prioBtn.on{display:flex}#prioBtn small{font-size:9px;font-weight:600;letter-spacing:1.5px;color:var(--dim)}
+#prioBtn.threat{border-color:rgba(239,90,79,.7);color:#ffb3a6}#prioBtn.threat .ic{color:#ff8a70}
+#prioBtn.tough{border-color:var(--acc);color:var(--acc2)}#prioBtn.tough .ic{color:var(--acc2)}
 #pauseBtn{right:calc(16px + env(safe-area-inset-right));top:calc(16px + env(safe-area-inset-top));width:44px;height:44px;padding:0;border-radius:12px;background:rgba(22,27,18,.7);backdrop-filter:blur(6px)}
 /* first-encounter intel card */
 #intel{position:fixed;left:calc(20px + env(safe-area-inset-left));top:calc(120px + env(safe-area-inset-top));width:320px;pointer-events:none;display:flex;gap:12px;align-items:center;
@@ -137,7 +142,7 @@ body.mobile .card:hover,body.mobile .btn:hover{transform:none}
 #intel .tip{font-size:12.5px;line-height:1.4;color:var(--dim)}
 #intel .tm{position:absolute;left:0;bottom:0;height:2px;width:100%;background:var(--acc);transform-origin:left;transform:scaleX(0)}
 #intel.on .tm{animation:drain var(--dur,4s) linear forwards}@keyframes drain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
-@media(max-width:640px){#intel{left:calc(16px + env(safe-area-inset-left));right:calc(16px + env(safe-area-inset-right));width:auto;max-width:380px;top:calc(186px + env(safe-area-inset-top))}}
+@media(max-width:640px){#intel{left:calc(16px + env(safe-area-inset-left));right:calc(16px + env(safe-area-inset-right));width:auto;max-width:380px;top:calc(max(186px,var(--boss-y,0px)) + env(safe-area-inset-top))}}
 #overlay .panel{text-align:center;display:flex;flex-direction:column;gap:12px;max-width:360px}
 .pperks{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.pperks:empty{display:none}
 .pperks span{font-size:12px;padding:4px 9px;border-radius:8px;background:rgba(227,181,60,.08);border:1px solid rgba(227,181,60,.28);color:var(--text);display:flex;gap:5px;align-items:center}
@@ -170,6 +175,9 @@ body.mobile .pcard .pk{display:none}
 /* compact phone battle HUD */
 body.mobile #aimBtn{width:58px!important;height:58px!important;font-size:9px!important;letter-spacing:1px;bottom:calc(92px + env(safe-area-inset-bottom))!important}
 body.mobile #aimBtn .ic{width:20px;height:20px}
+body.mobile #prioBtn{top:auto;right:calc(84px + env(safe-area-inset-right));bottom:calc(92px + env(safe-area-inset-bottom));width:58px;height:58px;padding:0;border-radius:14px;
+  flex-direction:column;justify-content:center;gap:2px;font-size:9px;letter-spacing:.8px;background:rgba(22,27,18,.8)}
+body.mobile #prioBtn small{display:none}body.mobile #prioBtn .ic{width:20px;height:20px}
 body.mobile #airBtn{bottom:calc(158px + env(safe-area-inset-bottom))!important;padding:7px 10px!important;font-size:11px!important;letter-spacing:1px}
 body.mobile #airBtn .ic{width:14px;height:14px;margin-right:4px}
 body.mobile #pauseBtn{width:38px!important;height:38px!important}
@@ -183,7 +191,8 @@ body.mobile #speedBtn{height:38px!important;min-width:44px;font-size:12px;right:
 <div id="hud">
   <button class="btn" id="pauseBtn" title="Pause (Esc)"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14M16 5v14"/></svg></button>
   <button class="btn" id="speedBtn" title="Battle speed (F)">1×</button>
-  <button class="btn" id="aimBtn"><svg class="ic" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M12 2v5M12 17v5M2 12h5M17 12h5M12 12h.01"/></svg>NEAREST</button>
+  <button class="btn" id="aimBtn"><svg class="ic" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M12 2v5M12 17v5M2 12h5M17 12h5M12 12h.01"/></svg>LOCK ON</button>
+  <button class="btn" id="prioBtn" title="Target priority (T)"></button>
   <button class="btn" id="airBtn"><span id="airTxt">AIRSTRIKE</span><div class="cd" id="airCd"></div></button>
   <div id="intel" role="status" aria-live="polite"><canvas id="intelCv" width="128" height="128"></canvas><div class="it"><div class="tag2">NEW CONTACT</div><div class="nm2"><span id="intelName"></span><span class="thr" id="intelThr"></span></div><div class="tip" id="intelTip"></div></div><div class="tm"></div></div>
 </div>
@@ -222,7 +231,7 @@ body.mobile #speedBtn{height:38px!important;min-width:44px;font-size:12px;right:
     <div class="panel side">
       <div id="lastRun"></div>
       <h3 style="margin-top:4px">FIELD MANUAL</h3>
-      <div class="help" id="helpTxt"><kbd>Click</kbd> an enemy to lock on &nbsp;·&nbsp; <kbd>Hold</kbd> to keep firing<br><kbd>Click</kbd> <svg class="ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10M7.5 5l9 4"/></svg> crates for cash &nbsp;·&nbsp; <kbd>Q</kbd> airstrike &nbsp;·&nbsp; <kbd>Esc</kbd> pause<br>Hold waves 3, 5, 10, 15... to earn a Field Commendation: pick one of three directives for the run.<br>Upgrades unlock other upgrades, and reaching deeper waves opens new tech.</div>
+      <div class="help" id="helpTxt"><kbd>Click</kbd> an enemy to lock on &nbsp;·&nbsp; <kbd>Hold</kbd> to keep firing<br><kbd>Click</kbd> <svg class="ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10M7.5 5l9 4"/></svg> crates for cash &nbsp;·&nbsp; <kbd>Q</kbd> airstrike &nbsp;·&nbsp; <kbd>T</kbd> target priority &nbsp;·&nbsp; <kbd>Esc</kbd> pause<br>Hold waves 3, 5, 10, 15... to earn a Field Commendation: pick one of three directives for the run.<br>Upgrades unlock other upgrades, and reaching deeper waves opens new tech.</div>
     </div>
   </div>
   <div class="store"><div class="tabs" id="tabs"></div><div class="grid" id="store"></div></div>
@@ -252,13 +261,14 @@ IC.darmor='M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5zM12 8s3 3.2 3 5.2a3 3 0 0
 IC.ddef='M3 20h18M5 20v-3h14v3M8 17v-3h8v3M12 14V9l7-4M9 9h.01';
 IC.feff='M4 18a8 8 0 1 1 16 0M12 18l4-6M7 14h.01M17 14h.01M12 10h.01';
 function ic(n,s=20){return`<svg class="ic" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[n]}"/></svg>`}
+IC.threat='M12 3L2 20h20zM12 9.5v4.5M12 17h.01';
 const _p2={};function cIcon(n,x,y,s,c,lw=2){const p=_p2[n]||(_p2[n]=new Path2D(IC[n]));ctx.save();ctx.translate(x,y);ctx.scale(s/24,s/24);ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke(p);ctx.restore()}
 // ================= SAVE =================
 const GFX_DEF=matchMedia('(pointer:coarse)').matches&&matchMedia('(hover:none)').matches?'medium':'high';
-const DEF_SET={vol:60,music:true,shake:true,dmgNums:true,ring:true,blurPause:true,speed:1};
+const DEF_SET={vol:60,music:true,shake:true,dmgNums:true,ring:true,blurPause:true,speed:1,prio:'near'};
 let S;
 function loadSave(){try{S=JSON.parse(localStorage.getItem('theFortSave'))}catch(e){}
-  if(!S||typeof S!=='object'||Array.isArray(S))S={};S.bank=S.bank||0;S.best=S.best||0;S.tkills=S.tkills||0;S.lv=S.lv||{};S.seen=S.seen||{};S.set=Object.assign({},DEF_SET,S.set&&typeof S.set==='object'?S.set:{});if(![0.5,0.75,1].includes(+S.set.speed))S.set.speed=1;S.set.speed=+S.set.speed;S.set.vol=Math.max(0,Math.min(100,+S.set.vol||0));if(!['high','medium','low'].includes(S.set.gfx))S.set.gfx=GFX_DEF}
+  if(!S||typeof S!=='object'||Array.isArray(S))S={};S.bank=S.bank||0;S.best=S.best||0;S.tkills=S.tkills||0;S.lv=S.lv||{};S.seen=S.seen||{};S.set=Object.assign({},DEF_SET,S.set&&typeof S.set==='object'?S.set:{});if(![0.5,0.75,1].includes(+S.set.speed))S.set.speed=1;S.set.speed=+S.set.speed;S.set.vol=Math.max(0,Math.min(100,+S.set.vol||0));if(!['high','medium','low'].includes(S.set.gfx))S.set.gfx=GFX_DEF;if(!['near','threat','tough'].includes(S.set.prio))S.set.prio='near'}
 function save(){try{localStorage.setItem('theFortSave',JSON.stringify(S))}catch(e){}}
 loadSave();
 const L=id=>S.lv[id]||0;
@@ -484,6 +494,8 @@ function sfx(n,x,y,k=1){
   case'wall':if(v=voice(0.2,1,null,null,true)){lNoise(v,'lowpass',700,250,0.8,0.22,0.002,0.1);lOsc(v,'sine',90,60,0.12,0.002,0.08)}break;
   case'hurt':if(v=voice(0.3,1,null,null,true)){lOsc(v,'sawtooth',120,60,0.1,0.004,0.15);lNoise(v,'lowpass',400,150,0.7,0.25,0.002,0.18)}break;
   case'breach':if(v=voice(1.2,1,null,null,true)){lNoise(v,'lowpass',900,80,0.9,0.6,0.005,1);lOsc(v,'sawtooth',200,50,0.1,0.01,0.6)}break;
+  case'alarm':if(v=voice(1.7,1,null,null,true)){for(let i=0;i<3;i++){lOsc(v,'sawtooth',540,520,0.035,0.012,0.2,i*0.5);lOsc(v,'sawtooth',400,390,0.035,0.012,0.2,i*0.5+0.25)}
+    lOsc(v,'sine',70,48,0.22,0.02,1.2)}break;   // boss contact: two-tone klaxon over a low swell
   case'wave':if(v=voice(1.3,1,null,null,true)){for(const [f,dl,d] of [[330,0,0.15],[440,0.15,0.15],[660,0.3,0.3]])lOsc(v,'square',f,f,0.05,0.005,d,dl);lOsc(v,'sine',55,50,0.3,0.01,0.9,0.3)}break;
   case'cash':tone(900,0.05,'square',0,0.05);setTimeout(()=>tone(1350,0.1,'square',0,0.05),50);break;
   case'buy':tone(600,0.06);setTimeout(()=>tone(900,0.08),60);break;case'deny':tone(150,0.12,'square',0,0.06);break;
@@ -544,7 +556,7 @@ function startRun(){
     zoomV:vision()*0.3,artyT:3,airT:0,airArmed:false,crateT:10,banner:'',bannerT:0,hurtT:0,breached:false,pk:{},choosing:null,perkAt:0,startBest:S.best,threat:{},breachW:0};
   {const w0=startWaveOk();if(w0>1){G.cp={i:0,n:Math.min(8,Math.floor(w0/10))};G.perkAt=0.5}}
   G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=Math.min(S.set.lastSpeed||1,SPEEDS[L('speed')]);syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;initLogi();
-  skyInit();
+  skyInit();syncPrioBtn();
   running=true;paused=false;mouse.down=false;$('overlay').classList.remove('on');showScreen('game');
 }
 // vision() is hit thousands of times a frame via visible(); levels can't change mid-run, so memoise it per sim tick.
@@ -570,7 +582,8 @@ function pickType(w){const p=[['grunt',10]];if(w>=3)p.push(['runner',4+w*.3]);if
   let t=p.reduce((a,b)=>a+b[1],0)*Math.random();for(const[k,v]of p){if((t-=v)<=0)return k}return'grunt'}
 function spawn(type){if(SKY[type])return spawnSky(type);const d=ET[type],w=G.wave,a=Math.random()*Math.PI*2,hs=waveHp(w);
   G.enemies.push({type,x:Math.cos(a)*(vision()+80),y:Math.sin(a)*(vision()+80),hp:d.hp*hs*hazardHp(),max:d.hp*hs*hazardHp(),spd:d.spd*(1+Math.min(.7,w*.014))*(0.9+Math.random()*.2),
-    dmg:d.dmg*waveDmg(w),rate:d.rate,atk:0.5,rew:d.rew*waveRew(w),r:d.r,col:d.col,range:d.range||0,bomb:d.bomb,boss:d.boss,flash:0,wob:Math.random()*9})}
+    dmg:d.dmg*waveDmg(w),rate:d.rate,atk:0.5,rew:d.rew*waveRew(w),r:d.r,col:d.col,range:d.range||0,bomb:d.bomb,boss:d.boss,flash:0,wob:Math.random()*9});
+  if(d.boss)trackBoss(G.enemies[G.enemies.length-1])}
 function startWave(){
   G.breakT=0;G.wave++;for(const k in G.threat)G.threat[k]*=0.6;G.spawnLeft=waveCount(G.wave);G.waveTotal=G.spawnLeft+(G.wave%10===0?1:0);G.spawnInt=Math.max(0.05,waveWindow(G.wave)/G.spawnLeft);G.spawnT=0.5;
   if(G.wave%10===0)spawn('boss');
@@ -584,6 +597,12 @@ function dropCrate(){const a=Math.random()*7,r=fortHalf()+wallThick()+wireOut()+
 function layMines(){const ml=L('mines');if(!ml)return;const half=fortHalf()+wallThick()/2+wireOut(),n=Math.min(30,2*ml)*(1+pk('minelayer'));
   for(let i=0;i<n&&G.mines.length<n*3;i++){const a=Math.random()*7,r=half+18+Math.random()*(Math.max(50,vision()*0.95-half-18));G.mines.push({x:Math.cos(a)*r,y:Math.sin(a)*r,blink:Math.random()*3})}}
 function banner(t){G.banner=t;G.bannerT=2.5}
+// ---- boss contacts (enemy MBT, heavy gunship): klaxon + WARNING strip on spawn, then a top-of-screen HP bar until it dies
+const BOSS_NAME={boss:'ENEMY MBT',airboss:'HEAVY GUNSHIP'},BOSS_WARN=3,BOSS_FADE=1.6;
+function trackBoss(e){(G.bosses||(G.bosses=[])).push({e,t:0,ghost:1,gone:0});sfx('alarm')}
+function updateBosses(dt){const bs=G.bosses;if(!bs||!bs.length)return;
+  for(const b of bs){b.t+=dt;const r=Math.max(0,b.e.hp/b.e.max);b.ghost=b.ghost>r?Math.max(r,b.ghost-dt*Math.max(0.15,(b.ghost-r)*2.5)):r;if(b.e.dead)b.gone+=dt}
+  if(bs.some(b=>b.gone>=BOSS_FADE))G.bosses=bs.filter(b=>b.gone<BOSS_FADE)}
 // Floating text budget: kill cash (+$) stops spawning past FLOAT_SOFT; headline text (wave clear, crate cash) always spawns.
 const FLOAT_SOFT=40,FLOAT_HARD=90;
 function float(x,y,t,c,s=10){if(s<13&&G.floats.length>=(s<11?FLOAT_HARD:FLOAT_SOFT))return;G.floats.push({x,y,t,c,s,life:0.9})}
@@ -598,7 +617,12 @@ function shake(n){if(S.set.shake)G.shake=Math.min(12,G.shake+n)}
 function hurtEnemy(e,d,crit){if(e.dead)return;d*=1+0.15*pk('overwatch');e.hp-=d;e.flash=0.08;(e.air?skyHit:fxHit)(e,crit);
   if(S.set.dmgNums&&visible(e)&&(crit||_mainHit||S.set.gfx!=='high'))dmgFloat(e,d,crit);
   if(e.hp<=0)kill(e)}
-function kill(e){e.dead=true;const r=money(e.rew);S.bank+=r;G.earned+=r;G.kills++;S.tkills++;(e.air?airDown:fxKill)(e);
+// Kill streak: kills from the player's own aimed rifle (a tapped/clicked lock, not auto-fire) chain within STREAK_T seconds;
+// each link adds +3% to ALL kill bounties (max +30% at 11), and the chain drops if the rifle goes quiet.
+const STREAK_T=3,STREAK_MAX=0.3,streakMul=()=>G.stk>1?1+Math.min(STREAK_MAX,0.03*(G.stk-1)):1;
+let _aimed=false;
+function streakKill(){G.stk=(G.stk||0)+1;G.stkT=STREAK_T;G.stkPop=1;if(G.stk>1&&G.stk<=11)tone(520+G.stk*60,0.07,'square',40,0.03)}
+function kill(e){e.dead=true;if(_mainHit&&_aimed)streakKill();const r=Math.round(money(e.rew)*streakMul());S.bank+=r;G.earned+=r;G.kills++;S.tkills++;(e.air?airDown:fxKill)(e);
   if(S.set.gfx==='high'&&!e.air)corpse(e);
   float(e.x,e.y-e.r-8,'+$'+r,'#7ddc5a',11);sfx('kill',e.x,e.y);
   if(e.boss){shake(10);banner('ENEMY TANK DESTROYED  +$'+r)}}
@@ -621,7 +645,22 @@ function damageFort(d,src){if(src)G.threat[src]=(G.threat[src]||0)+d;
   if(wallsUp()){G.wallHp-=d*(1-Math.min(0.75,0.07*L('armor')));sfx('wall');if(G.wallHp<=0){G.wallHp=0;G.breachW=G.wave;banner('WALLS BREACHED!');sfx('breach');shake(8)}}
   else{G.hp-=d;G.hurtT=0.3;sfx('hurt');shake(3);if(G.hp<=0)endRun()}}
 function enemyAt(x,y,slack){let best=null,bd=1e9;for(const e of G.enemies.concat(G.sky)){if(e.dead||!visible(e))continue;const d=Math.hypot(e.x-x,e.y-y)-e.r;if(d<slack&&d<bd){bd=d;best=e}}return best}
-function nearestVisible(from){let best=null,bd=1e9;for(const e of G.enemies.concat(G.sky)){if(e.dead||!visible(e))continue;const d=Math.hypot(e.x-from.x,e.y-from.y);if(d<bd){bd=d;best=e}}return best}
+// Target doctrine: one player-set priority that every auto-aiming gun respects (rifle auto-fire, squad, MG nests, vehicle guns,
+// helicopter guns, CIWS, gunship guns, AA guns). Specialists keep their role: the sniper always hunts the toughest target, AA stays on aircraft.
+//  NEAREST  closest first.
+//  THREATS  whatever is hurting the fort right now: aircraft, sappers and shooters at their firing line first, then anything
+//           hammering the walls, then the approaching stream, so standoff marksmen, tanks and gunships no longer hide behind it.
+//  TOUGHEST heavy guns (rifle, APC, tank, CIWS, missiles) focus the highest-HP target; machine guns keep sweeping the nearest.
+const PRIO=['near','threat','tough'],PRIO_NAME={near:'NEAREST',threat:'THREATS',tough:'TOUGHEST'};
+const PRIO_TIP={near:'every gun engages the closest enemy',threat:'guns hit whatever is attacking the fort: marksmen, armor, aircraft and sappers first',tough:'heavy guns focus the toughest target, machine guns keep the nearest'};
+const prio=()=>S.set.prio;
+// THREATS weights: standoff shooters in position, aircraft and sappers x0.25; melee halted at the walls x0.5; still approaching x1
+const threatK=e=>e.air||e.bomb||(e.range&&e.moving===false)?0.25:e.moving===false?0.5:1;
+// lower score = engaged first
+const tScore=(e,d,heavy)=>{const p=S.set.prio;return p==='threat'?d*threatK(e):p==='tough'&&heavy?-e.hp:d};
+function bestTarget(list,f,heavy){let best=null,bs=Infinity;for(const e of list){if(e.dead||!visible(e))continue;const s=tScore(e,Math.hypot(e.x-f.x,e.y-f.y),heavy);if(s<bs){bs=s;best=e}}return best}
+function topTargets(list,f,n){const out=[];for(const e of list){if(e.dead||!visible(e))continue;e._s=tScore(e,Math.hypot(e.x-f.x,e.y-f.y),false);out.push(e)}return out.sort((a,b)=>a._s-b._s).slice(0,n)}
+const nearestVisible=f=>bestTarget(G.enemies.concat(G.sky),f,true);
 function endRun(retreat){
   running=false;sfx('die');closePerks();G.choosing=null;
   const tot=Object.values(G.threat).reduce((a,b)=>a+b,0),top=Object.entries(G.threat).filter(([,v])=>v>=tot*0.2).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>k);
@@ -634,7 +673,8 @@ function endRun(retreat){
 
 function update(dt){
   sndCount=0;G.time+=dt;
-  if(G.bannerT>0)G.bannerT-=dt;if(G.hurtT>0)G.hurtT-=dt;G.shake*=0.88;
+  if(G.bannerT>0)G.bannerT-=dt;if(G.hurtT>0)G.hurtT-=dt;G.shake*=0.88;updateBosses(dt);
+  if(G.stkT>0){G.stkT-=dt;G.stkPop=Math.max(0,G.stkPop-dt*4);if(G.stkT<=0)G.stk=0}
   // waves
   if(G.spawnLeft>0){G.spawnT-=dt;if(G.spawnT<=0){spawn(pickType(G.wave));G.spawnLeft--;G.spawnT=G.spawnInt*(0.6+Math.random()*0.8)}}
   else if(G.enemies.length===0&&!G.sky.length){
@@ -651,10 +691,10 @@ function update(dt){
   if(m.tgt&&(m.tgt.dead||!visible(m.tgt)))m.tgt=null;
   if(!m.tgt&&mouse.down&&!G.airArmed)m.tgt=enemyAt(mouse.wx,mouse.wy,Math.max(24,(MOBILE?36:18)/sc));
   let t=m.tgt,rm=1;if(!t&&L('auto')){t=nearestVisible(m);rm=autoAt(L('auto'))}
-  if(t&&m.cd<=0){fire(m,t);m.cd=cd/rm}else if(t)m.ang=Math.atan2(t.y-m.y,t.x-m.x);
-  let near=null;   // visible enemies by distance to the fort, built at most once per tick and shared by the squad
+  if(t&&m.cd<=0){_aimed=t===m.tgt;fire(m,t);_aimed=false;m.cd=cd/rm}else if(t)m.ang=Math.atan2(t.y-m.y,t.x-m.x);
+  let near=null;   // best visible targets by doctrine (measured from the fort), built at most once per tick and shared by the squad
   for(let i=1;i<n;i++){const s=G.sold[i];if(s.cd>0)continue;
-    if(!near){near=G.enemies.concat(G.sky).filter(e=>!e.dead&&visible(e));for(const e of near)e._d=Math.hypot(e.x,e.y);near.sort((a,b)=>a._d-b._d)}
+    if(!near)near=topTargets(G.enemies.concat(G.sky),{x:0,y:0},12);
     const pick=[];for(const e of near){if(!e.dead&&pick.push(e)===3)break}if(!pick.length)continue;
     fire(s,pick[Math.floor(Math.random()*pick.length)],0.7*(1+0.12*Math.max(0,L('squad')-8)));s.cd=cd*1.5}
   updateUnits(dt,half);updateAir(dt,half);updateLogi(dt);
@@ -794,9 +834,9 @@ function buildUnits(){const u=[],ph=wallHalfAt(L('walls'));
   const nt=Math.min(3,Math.ceil(L('tank')/2));for(let i=0;i<nt;i++)u.push({k:'tank',orb:i/nt*Math.PI*2,x:0,y:0,cd:1+Math.random(),ang:0,tur:0,tr:0});
   const nh=Math.min(2,Math.ceil(L('heli')/3));for(let i=0;i<nh;i++)u.push({k:'heli',orb:i*Math.PI,x:0,y:0,cd:0,rk:2+i,ang:0,gun:0,rot:0});
   return u}
-function nearestTo(u){const aa=AA_UNIT[u.k]||0;let b=null,bd=1e9,ba=null,bad=1e9;for(const e of G.enemies){if(e.dead||!visible(e))continue;const d=Math.hypot(e.x-u.x,e.y-u.y);if(d<bd){bd=d;b=e}}
-  if(aa)for(const e of G.sky){if(e.dead||!visible(e))continue;const d=Math.hypot(e.x-u.x,e.y-u.y);if(d<bd){bd=d;b=e}if(d<bad){bad=d;ba=e}}
-  return aa===2&&ba?ba:b}
+const HEAVY={apc:1,tank:1,tesla:1,mlaunch:1};   // TOUGHEST doctrine applies to these; MG-class guns keep sweeping the nearest
+function nearestTo(u){const aa=AA_UNIT[u.k]||0,h=!!HEAVY[u.k],b=bestTarget(aa===1?G.enemies.concat(G.sky):G.enemies,u,h);
+  return aa===2&&bestTarget(G.sky,u,h)||b}
 function updateUnits(dt,ph){
   const fl=L('flame');if(fl&&L('walls')){G.flameT-=dt;if(G.flameT<=0){G.flameT=0.1;const reach=ph+Math.min(60,26+4*fl);
     for(const e of G.enemies){if(e.dead||Math.max(Math.abs(e.x),Math.abs(e.y))>reach)continue;hurtEnemy(e,flameDps(fl)*0.1,false);
@@ -1175,7 +1215,7 @@ function updateAir(dt,ph){
     if(u.k==='gunship'){u.orb-=0.12*dt;const r=Math.max(ph+140,vision()*0.75);u.x=Math.cos(u.orb)*r;u.y=Math.sin(u.orb)*r;u.ang=u.orb-Math.PI/2;
       if(!vis.length)continue;u.gcd-=dt;
       if(u.cd<=0){u.cd=2.4;const c=bestCluster(40,vis);const d=Math.hypot(c.x-u.x,c.y-u.y);G.tshells.push({x:u.x,y:u.y,tx:c.x,ty:c.y,t:0,dur:Math.max(.05,d/500),dmg:gsDmg(L('gunship')),r:40,kind:'shell'});sfx('howitzer',u.x,u.y,1.5)}
-      if(u.gcd<=0){u.gcd=0.22;const t=vis[Math.floor(Math.random()*Math.min(4,vis.length))];explode(t.x+(Math.random()-.5)*8,t.y+(Math.random()-.5)*8,10,gsGun(L('gunship')),false);
+      if(u.gcd<=0){u.gcd=0.22;const top=topTargets(vis,u,4),t=top[Math.floor(Math.random()*top.length)];explode(t.x+(Math.random()-.5)*8,t.y+(Math.random()-.5)*8,10,gsGun(L('gunship')),false);
         G.fx.push({k:'tracer',x:u.x,y:u.y,x2:t.x,y2:t.y,life:0.06,max:0.06,c:'#ffb15a'});sfx('cannon',u.x,u.y)}}
   }
   // homing missiles
@@ -2127,7 +2167,27 @@ $('perkCards').addEventListener('click',e=>{const b=e.target.closest('[data-i]')
 const perkList=()=>PERKS.filter(p=>pk(p.id));
 const perkChips=()=>perkList().map(q=>`<span${q.risk?' class="risk"':''}>${ic(q.ic,14)}${q.name}${pk(q.id)>1?` <b>${rank(pk(q.id))}</b>`:''}</span>`).join('');
 // HUD: one badge per directive held, top-right under the pause/speed buttons
-function drawPerkHud(nar,hk){const ps=perkList();if(!ps.length)return;const s=30,g=6,per=nar?6:10,y0=nar?64/hk:72;
+// Boss bars stack top-center under the money chip (desktop) or under the money/depot column (phones, which also pushes the intel card down)
+let _bossY=-1;
+function drawBossHud(nar,hk){const bs=G.bosses||[],w=nar?VW-40:Math.max(260,Math.min(420,VW-700)),x=VW/2-w/2,h=40;let y=nar?248:96;
+  for(const b of bs.slice(0,2)){const e=b.e,name=BOSS_NAME[e.type],warn=b.t<BOSS_WARN&&!e.dead,r=Math.max(0,e.hp/e.max);
+    ctx.globalAlpha=e.dead?Math.max(0,1-b.gone/BOSS_FADE):Math.min(1,b.t*5);
+    if(warn){const p=0.5+0.5*Math.sin(b.t*12),off=(b.t*28)%18;rrect(x,y,w,h,10,'rgba(60,10,6,.9)');
+      ctx.save();ctx.beginPath();ctx.roundRect(x,y,w,h,10);ctx.clip();ctx.fillStyle='rgba(227,181,60,.13)';
+      for(let sx=x-h-18+off;sx<x+w;sx+=18){ctx.beginPath();ctx.moveTo(sx,y+h);ctx.lineTo(sx+9,y+h);ctx.lineTo(sx+9+h,y);ctx.lineTo(sx+h,y);ctx.fill()}ctx.restore();
+      ctx.strokeStyle=`rgba(255,90,70,${0.4+0.55*p})`;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(x+1,y+1,w-2,h-2,10);ctx.stroke();
+      cIcon('threat',x+11,y+10,20,`rgba(255,138,112,${0.6+0.4*p})`,2.2);ctx.textAlign='left';ctx.font=`800 ${nar?15:16}px Oxanium,sans-serif`;ctx.fillStyle='#ffd0c4';
+      ctx.fillText('WARNING',x+40,y+26);const ww=ctx.measureText('WARNING ').width;ctx.font=`600 ${nar?13:14}px Oxanium,sans-serif`;ctx.fillStyle='#ff9d8a';ctx.fillText('· '+name+' INBOUND',x+40+ww,y+26)}
+    else{panel(x,y,w,h);if(e.flash>0&&!e.dead){ctx.strokeStyle='rgba(239,90,79,.55)';ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(x+.5,y+.5,w-1,h-1,12);ctx.stroke()}
+      cIcon(e.air?'gunship':'tank',x+11,y+6,15,'#ef5a4f');ctx.textAlign='left';ctx.font='800 12px Oxanium,sans-serif';ctx.fillStyle='#e6ead9';ctx.fillText(name,x+33,y+18);
+      ctx.textAlign='right';ctx.font='600 11px Oxanium,sans-serif';ctx.fillStyle=e.dead?'#7fd35a':'#c9cfbd';
+      ctx.fillText(e.dead?'DESTROYED':visible(e)?f1(e.hp)+' / '+f1(e.max):'CLOSING · OUT OF SIGHT',x+w-11,y+18);
+      const bx=x+11,bw=w-22,by=y+25;rrect(bx,by,bw,8,4,'rgba(255,255,255,.08)');rrect(bx,by,bw*b.ghost,8,4,'rgba(255,214,190,.5)');
+      if(r>0){const g=ctx.createLinearGradient(bx,0,bx+bw,0);g.addColorStop(0,'#b8322a');g.addColorStop(1,e.flash>0?'#ffb0a0':'#ef5a4f');rrect(bx,by,Math.max(8,bw*r),8,4,g)}}
+    y+=h+6}
+  ctx.globalAlpha=1;const by=bs.length&&nar?Math.round((y-6)*hk+6):0;   // screen px the intel card must clear on phones
+  if(by!==_bossY){_bossY=by;$('intel').style.setProperty('--boss-y',by+'px')}}
+function drawPerkHud(nar,hk){const ps=perkList();if(!ps.length)return;const s=30,g=6,per=nar?6:10,below=$('prioBtn').classList.contains('on')&&!MOBILE,y0=below?112/hk:nar?64/hk:72;   // desktop: clear the TARGET pill
   ps.forEach((p,i)=>{const col=i%per,row=Math.floor(i/per),x=VW-20-s-col*(s+g),y=y0+row*(s+g),n=pk(p.id);
     rrect(x,y,s,s,8,'rgba(22,27,18,.78)');ctx.strokeStyle=p.risk?'rgba(239,90,79,.55)':'rgba(227,181,60,.3)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(x+.5,y+.5,s-1,s-1,8);ctx.stroke();
     cIcon(p.ic,x+7,y+6,16,p.risk?'#ff9d8a':'#ffcf5a',2.2);
@@ -2138,7 +2198,7 @@ const INTEL={
  grunt:['Grunt',1,'Rifle infantry with fixed bayonets. Weak alone, deadly in numbers. Keep your rate of fire up.'],
  runner:['Light Infantry',2,'Fast SMG troops that sprint for the walls. Lock on early, or let Auto-Fire catch them.'],
  brute:['Heavy Trooper',3,'Plate armor and a ballistic shield soak rifle fire. Focus them down; crits and frag rounds help.'],
- shooter:['Marksman',2,'Scoped rifle. Shoots your walls from range and won\'t close in. Hunt them first.'],
+ shooter:['Marksman',2,'Scoped rifle. Shoots your walls from range and won\'t close in. Set TARGET to THREATS to hunt them first.'],
  bomber:['Sapper',3,'Carries a breaching charge that blasts your walls on contact. Kill them before they arrive.'],
  boss:['Enemy MBT',5,'Main battle tank, every 10th wave. Shrugs off rifles: bring artillery, armor and airstrikes.']};
 const INTEL_MS=4000,seen=()=>S.seen||(S.seen={});
@@ -2172,7 +2232,7 @@ const SKY={
 const SKY_WAVE={drone:7,swarm:12,gunheli:14,strikejet:22,heavybomber:30,airboss:25};
 Object.assign(INTEL,{
  drone:['Strike Drone',2,'FPV kamikaze quadcopter. Flies over wire and mines and dives into your walls. Rifles, MG nests and AA guns can hit it.'],
- gunheli:['Attack Helicopter',3,'Hovers at standoff range raking your walls with cannon and rockets. Ground weapons can\'t reach it: lock on, or build AA.'],
+ gunheli:['Attack Helicopter',3,'Hovers at standoff range raking your walls with cannon and rockets. Ground weapons can\'t reach it: lock on, set TARGET to THREATS, or build AA.'],
  strikejet:['Strike Jet',4,'Strafing runs across the fort, then loops back for more. Too fast for most guns: flak, SAMs and CIWS track it.'],
  heavybomber:['Heavy Bomber',4,'Carpets the fort with bombs on every pass. Tough airframe: kill it before it lines up its run.'],
  airboss:['Heavy Gunship',5,'Armored flying battery circling the fort with a 105mm gun. Mass every AA weapon you have on it.']});
@@ -2195,7 +2255,7 @@ function spawnSky(type,a=Math.random()*TAU,lead=true){const d=SKY[type],w=G.wave
   const e={type,air:true,x:Math.cos(a)*R0,y:Math.sin(a)*R0,vx:0,vy:0,hp:d.hp*hs,max:d.hp*hs,spd:d.spd*(1+Math.min(0.35,w*0.007))*(0.92+Math.random()*0.16),
     dmg:d.dmg*waveDmg(w),rate:d.rate,rew:d.rew*waveRew(w),r:d.r,alt:d.alt,col:d.col,ang:a+Math.PI,flash:0,wob:Math.random()*9,t:0,cd:1+Math.random(),
     st:0,n:0,gt:0,bt:0,burst:0,rk:2+Math.random()*2,bay:0,fl:-9};
-  G.sky.push(e);
+  G.sky.push(e);if(type==='airboss')trackBoss(e);
   if(type==='drone'&&lead&&w>=SKY_WAVE.swarm){const k=Math.min(4,1+Math.floor((w-SKY_WAVE.swarm)/8));for(let i=0;i<k;i++)spawnSky('drone',a+(Math.random()-.5)*0.22,false);
     const take=Math.min(k>>1,G.spawnLeft);G.spawnLeft-=take;G.waveTotal+=k-take}   // half the swarm replaces pending ground spawns
   return e}
@@ -2295,7 +2355,7 @@ function updateSky(dt,h){
   G.wrecks=G.wrecks.filter(w=>!w.done)}
 function updateAAD(dt){const tg=G.sky.length?skyTargets():[];
   for(const u of G.aa){
-    if(u.k==='aagun'){const t=skyNearest(u,tg);if(!t){u.burst=0;continue}
+    if(u.k==='aagun'){const t=bestTarget(tg,u,false);if(!t){u.burst=0;continue}
       u.ang+=Math.max(-7*dt,Math.min(7*dt,angTo(u.ang,Math.atan2(t.y-u.y,t.x-u.x))));
       u.cd-=dt;if(u.cd<=0&&!u.burst){u.burst=4;u.bt=0}
       if(u.burst){u.bt-=dt;if(u.bt<=0){u.bt=0.11;if(!--u.burst)u.cd=0.55;
@@ -2984,7 +3044,7 @@ function draw(){
   // money chip
   ctx.font='700 18px Oxanium,sans-serif';const mt='$'+f1(S.bank),mw=ctx.measureText(mt).width+70,nar=VW<640,mcx=nar?20+mw/2:VW/2,mcy=nar?114:20;panel(mcx-mw/2,mcy,mw,40);
   const tw=ctx.measureText(mt).width;cIcon('coin',mcx-tw/2-14,mcy+11,18,'#ffcf5a');ctx.textAlign='center';ctx.fillStyle='#ffcf5a';ctx.fillText(mt,mcx+10,mcy+26);
-  ctx.font='500 11px Inter,sans-serif';ctx.fillStyle='#7fd35a';ctx.fillText('+$'+f1(G.earned)+' this run',mcx,mcy+56);
+  if(G.stk>1)drawStreak(nar?20:mcx,mcy+(nar?43:47),nar);else{ctx.font='500 11px Inter,sans-serif';ctx.fillStyle='#7fd35a';ctx.fillText('+$'+f1(G.earned)+' this run',mcx,mcy+56)}
   // bars
   const bw=Math.min(380,VW-40),bx=VW/2-bw/2;let by=VH-44;
   bar(bx,by,bw,'HEALTH',G.hp,G.maxHp,'#ef5a4f','#ff8a7a','hp');
@@ -2994,13 +3054,20 @@ function draw(){
   const cds=[];if(L('arty'))cds.push(['ARTILLERY',G.artyT,artyCdNow()]);
   for(const [n,t,m] of cds){panel(20,cy-10,170,32);ctx.fillStyle='#e6ead9';ctx.font='600 12px Oxanium,sans-serif';cIcon('arty',30,cy-1,14,'#e6ead9');ctx.fillText(n,50,cy+10);
     rrect(120,cy+3,58,5,3,'rgba(255,255,255,.08)');rrect(120,cy+3,58*Math.max(0,1-t/m),5,3,t<=0?'#7fd35a':'#e3b53c');cy-=40}
-  drawLogiHud();drawPerkHud(nar,hk);
+  drawLogiHud();drawPerkHud(nar,hk);drawBossHud(nar,hk);
   if(G.bannerT>0){const a=Math.min(1,G.bannerT),y=VW<640?VH*0.44:VH*0.22;ctx.globalAlpha=a;ctx.font=`800 ${VW<640?22:Math.round(Math.min(32,VW/34))}px Oxanium,sans-serif`;ctx.textAlign='center';
     ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillText(G.banner,VW/2+2,y+3);ctx.fillStyle='#ffd76a';ctx.fillText(G.banner,VW/2,y);
     const w=ctx.measureText(G.banner).width;rrect(VW/2-w/2,y+12,w*a,3,2,'#e3b53c');ctx.globalAlpha=1}
-  if(G.wave===1&&G.time<9){ctx.fillStyle='#e6ead9';ctx.font='500 15px Inter,sans-serif';ctx.textAlign='center';ctx.fillText(MOBILE?'Tap an enemy, or the NEAREST button, to shoot':'Click an enemy to lock on · hold to keep firing',VW/2,(VW<640?VH*0.44:VH*0.22)+40)}
+  if(G.wave===1&&G.time<9){ctx.fillStyle='#e6ead9';ctx.font='500 15px Inter,sans-serif';ctx.textAlign='center';ctx.fillText(MOBILE?'Tap an enemy, or the LOCK ON button, to shoot':'Click an enemy to lock on · hold to keep firing',VW/2,(VW<640?VH*0.44:VH*0.22)+40)}
   VW=_VW;VH=_VH;
 }
+// streak pill: takes the "+$ this run" slot under the money chip while a chain is live; the underline drains with the chain timer
+function drawStreak(cx,y,left){const m=streakMul(),hot=m>=1+STREAK_MAX-1e-9,t1='STREAK '+G.stk,t2='×'+m.toFixed(2)+' CASH';ctx.font='800 11px Oxanium,sans-serif';
+  const w1=ctx.measureText(t1).width,w=w1+ctx.measureText(t2).width+34,k=1+0.12*G.stkPop,x=left?0:-w/2;
+  ctx.save();ctx.translate(cx,y+10);ctx.scale(k,k);rrect(x,-10,w,20,10,hot?'rgba(120,52,14,.9)':'rgba(64,44,14,.88)');
+  ctx.strokeStyle=hot?'#ffb347':'rgba(227,181,60,.6)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(x+.5,-9.5,w-1,19,10);ctx.stroke();
+  ctx.textAlign='left';ctx.fillStyle='#ffe3a6';ctx.fillText(t1,x+11,4);ctx.fillStyle=hot?'#ffb347':'#ffcf5a';ctx.fillText(t2,x+23+w1,4);
+  rrect(x+10,6,(w-20)*Math.max(0,G.stkT/STREAK_T),2,1,hot?'#ffb347':'#e3b53c');ctx.restore();ctx.textAlign='center'}
 function rrect(x,y,w,h,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(x,y,Math.max(0,w),h,r);ctx.fill()}
 function panel(x,y,w,h){rrect(x,y,w,h,12,'rgba(22,27,18,.78)');ctx.strokeStyle='rgba(190,210,150,.14)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(x+.5,y+.5,w-1,h-1,12);ctx.stroke()}
 function bar(x,y,w,label,v,m,c1,c2,icon){panel(x-6,y-6,w+12,28);rrect(x,y,w,16,8,'rgba(255,255,255,.07)');
@@ -3011,9 +3078,9 @@ function drawPlane(){if(S.set.gfx==='high'){drawPlaneHQ();return}ctx.scale(2.2,2
 // ================= INPUT =================
 const MOBILE=matchMedia('(pointer:coarse)').matches&&matchMedia('(hover:none)').matches;
 if(MOBILE){document.body.classList.add('mobile');
-  $('helpTxt').innerHTML='<kbd>Tap</kbd> an enemy to lock on · <kbd>Hold</kbd> to keep firing<br><kbd>NEAREST</kbd> button locks the closest enemy<br><kbd>Tap</kbd> '+ic('scav',16)+' crates for cash · <kbd>'+ic('air',14)+'</kbd> button for airstrikes<br>Hold waves 3, 5, 10, 15... to earn a Field Commendation: pick one of three directives for the run.<br>Upgrades unlock other upgrades, and reaching deeper waves opens new tech.';}
+  $('helpTxt').innerHTML='<kbd>Tap</kbd> an enemy to lock on · <kbd>Hold</kbd> to keep firing<br><kbd>LOCK ON</kbd> grabs a target · <kbd>TARGET</kbd> sets what every gun shoots first<br><kbd>Tap</kbd> '+ic('scav',16)+' crates for cash · <kbd>'+ic('air',14)+'</kbd> button for airstrikes<br>Hold waves 3, 5, 10, 15... to earn a Field Commendation: pick one of three directives for the run.<br>Upgrades unlock other upgrades, and reaching deeper waves opens new tech.';}
 if(MOBILE)$('pauseHelp').textContent='Tap Resume to continue';
-$('aimBtn').onclick=()=>{if(!running||paused)return;if(G.airArmed){G.airArmed=false;return}const t=nearestVisible(G.sold[0]);if(t)G.sold[0].tgt=t};
+$('aimBtn').onclick=()=>{if(!running||paused)return;if(G.airArmed){G.airArmed=false;return}const t=nearestVisible(G.sold[0]);if(t)G.sold[0].tgt=t};   // locks by the current target doctrine
 function toWorld(e){mouse.x=e.clientX;mouse.y=e.clientY;mouse.wx=(e.clientX-VW/2)/sc;mouse.wy=(e.clientY-VH/2)/sc}
 cv.addEventListener('mousemove',toWorld);
 cv.addEventListener('mousedown',e=>{if(!running||paused||e.button!==0)return;toWorld(e);mouse.down=true;
@@ -3040,6 +3107,12 @@ const SPEEDS=[1,1.5,2,2.5,3,3.5,4];
 function syncSpeedBtn(){const b=$('speedBtn'),v=G?G.simSpeed||1:1;b.textContent=v+'×';b.classList.toggle('fast',v>1);b.style.display=L('speed')?'block':'none'}
 function cycleSpeed(){if(!running||!L('speed'))return;const opts=SPEEDS.slice(0,L('speed')+1),i=opts.indexOf(G.simSpeed||1);G.simSpeed=opts[(i+1)%opts.length];S.set.lastSpeed=G.simSpeed;save();syncSpeedBtn();sfx('buy')}
 $('speedBtn').onclick=()=>cycleSpeed();
+const prioShown=()=>!!G&&(L('auto')>0||G.sold.length>1||G.units.length>0||G.aa.length>0||G.air.some(u=>u.k==='gunship'));
+function syncPrioBtn(){const b=$('prioBtn'),p=prio(),on=prioShown();b.className='btn'+(on?' on '+p:'');if(!on)return;b.title='Target priority (T): '+PRIO_TIP[p];
+  b.innerHTML=ic(p==='near'?'dmg':p==='threat'?'threat':'armor',16)+(MOBILE?'':'<small>TARGET</small>')+PRIO_NAME[p]}
+function cyclePrio(){if(!running||paused||!prioShown())return;S.set.prio=PRIO[(PRIO.indexOf(prio())+1)%PRIO.length];save();syncPrioBtn();sfx('buy');
+  float(0,-fortHalf()-26,'TARGETING: '+PRIO_NAME[prio()],prio()==='threat'?'#ff9d8a':'#ffcf5a',13)}
+$('prioBtn').onclick=()=>cyclePrio();
 function toggleAir(){if(!running||paused||!L('air'))return;if(G.airArmed)G.airArmed=false;else if(G.airT<=0)G.airArmed=true}
 function setPause(p){if(!running)return;paused=p;mouse.down=false;$('overlay').classList.toggle('on',p);
   if(p)$('pausePerks').innerHTML=perkChips();if(!p)$('settings').classList.remove('on');const b=$('abandonBtn');delete b.dataset.arm;b.textContent='Retreat — end run'}
@@ -3049,7 +3122,7 @@ addEventListener('keydown',e=>{if(!running||e.repeat)return;
   if($('settings').classList.contains('on')){if(e.code==='Escape')closeSettings();return}
   if(G.choosing){if(/^(Digit|Numpad)[1-3]$/.test(e.code))pickPerk(+e.code.slice(-1)-1);return}
   if(e.code==='Escape'){if(G.airArmed)G.airArmed=false;else setPause(!paused)}
-  if(e.code==='KeyQ')toggleAir();if(e.code==='KeyF')cycleSpeed();if(e.code==='KeyP')setPause(!paused)});
+  if(e.code==='KeyQ')toggleAir();if(e.code==='KeyF')cycleSpeed();if(e.code==='KeyT')cyclePrio();if(e.code==='KeyP')setPause(!paused)});
 addEventListener('blur',()=>{mouse.down=false;if(S.set.blurPause)setPause(true)});
 // persist mid-run earnings (phones kill backgrounded apps without warning)
 function persist(){if(G&&running&&G.wave>S.best)S.best=G.wave;save()}
