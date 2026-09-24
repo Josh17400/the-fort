@@ -1179,7 +1179,7 @@ $('speedBtn').onclick=()=>cycleSpeed();
 function toggleAir(){if(!running||paused||!L('air'))return;if(G.airArmed)G.airArmed=false;else if(G.airT<=0)G.airArmed=true}
 function setPause(p){if(!running)return;paused=p;$('overlay').classList.toggle('on',p)}
 $('pauseBtn').onclick=()=>setPause(true);$('resumeBtn').onclick=()=>setPause(false);
-$('abandonBtn').onclick=()=>{setPause(false);endRun()};
+$('abandonBtn').onclick=e=>{const b=e.currentTarget;if(!b.dataset.arm){b.dataset.arm=1;b.textContent='Tap again to retreat';setTimeout(()=>{delete b.dataset.arm;b.textContent='Retreat — end run'},3000);return}delete b.dataset.arm;b.textContent='Retreat — end run';setPause(false);endRun()};
 addEventListener('keydown',e=>{if(!running)return;
   if(e.code==='Escape'){if(G.airArmed)G.airArmed=false;else setPause(!paused)}
   if(e.code==='KeyQ')toggleAir();if(e.code==='KeyF')cycleSpeed();if(e.code==='KeyP')setPause(!paused)});
