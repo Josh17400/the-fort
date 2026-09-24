@@ -399,6 +399,7 @@ body.mobile #medalToast{bottom:calc(236px + env(safe-area-inset-bottom))}
   <div class="set"><div>Screen shake</div><input type="checkbox" class="sw" id="sShake"></div>
   <div class="set"><div>Damage numbers</div><input type="checkbox" class="sw" id="sDmg"></div>
   <div class="set"><div>Vision ring<small>Dashed outline of your sight range</small></div><input type="checkbox" class="sw" id="sRing"></div>
+  <div class="set"><div>Day/Night cycle<small>Time passes with the waves: dusk, night fights, dawn</small></div><input type="checkbox" class="sw" id="sDay"></div>
   <div class="set"><div>Pause on focus loss</div><input type="checkbox" class="sw" id="sBlur"></div>
   <div class="set"><div>Base game speed<small>Buy Command Tempo for faster speeds</small></div><select id="sSpeed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1×</option></select></div>
   <div class="set"><div>Graphics quality<small>Lower it if big battles stutter</small></div><select id="sGfx"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
@@ -428,7 +429,7 @@ IC.nade='M11 15m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M8.5 9.3V6.5h5v2.8M13.5 7.5c2
 const _p2={};function cIcon(n,x,y,s,c,lw=2){const p=_p2[n]||(_p2[n]=new Path2D(IC[n]));ctx.save();ctx.translate(x,y);ctx.scale(s/24,s/24);ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke(p);ctx.restore()}
 // ================= SAVE =================
 const GFX_DEF=matchMedia('(pointer:coarse)').matches&&matchMedia('(hover:none)').matches?'medium':'high';
-const DEF_SET={vol:60,music:true,shake:true,dmgNums:true,ring:true,blurPause:true,speed:1,prio:'near'};
+const DEF_SET={vol:60,music:true,shake:true,dmgNums:true,ring:true,blurPause:true,dayNight:true,speed:1,prio:'near'};
 let S;
 function loadSave(){try{S=JSON.parse(localStorage.getItem('theFortSave'))}catch(e){}
   if(!S||typeof S!=='object'||Array.isArray(S))S={};S.bank=S.bank||0;S.best=S.best||0;S.tkills=S.tkills||0;S.lv=S.lv||{};S.seen=S.seen||{};S.set=Object.assign({},DEF_SET,S.set&&typeof S.set==='object'?S.set:{});if(![0.5,0.75,1].includes(+S.set.speed))S.set.speed=1;S.set.speed=+S.set.speed;S.set.vol=Math.max(0,Math.min(100,+S.set.vol||0));if(!['high','medium','low'].includes(S.set.gfx))S.set.gfx=GFX_DEF;if(!['near','threat','tough'].includes(S.set.prio))S.set.prio='near';
@@ -951,12 +952,13 @@ $('settingsBtn').onclick=()=>{syncSettings();showScreen('settings')};
 const closeSettings=()=>{if(running)$('settings').classList.remove('on');else showScreen('home')};
 $('backBtn').onclick=closeSettings;
 $('pauseSetBtn').onclick=()=>{syncSettings();$('settings').classList.add('on')};$('settings').addEventListener('mousedown',e=>{if(e.target.id==='settings')closeSettings()});
-function syncSettings(){$('sVol').value=S.set.vol;$('sMusic').checked=S.set.music;$('sShake').checked=S.set.shake;$('sDmg').checked=S.set.dmgNums;$('sRing').checked=S.set.ring;$('sBlur').checked=S.set.blurPause;$('sSpeed').value=String(S.set.speed);$('sGfx').value=S.set.gfx;const rb=$('resetBtn');rb.disabled=running;rb.textContent=running?'END RUN FIRST':'RESET';}
+function syncSettings(){$('sVol').value=S.set.vol;$('sMusic').checked=S.set.music;$('sShake').checked=S.set.shake;$('sDmg').checked=S.set.dmgNums;$('sRing').checked=S.set.ring;$('sDay').checked=S.set.dayNight;$('sBlur').checked=S.set.blurPause;$('sSpeed').value=String(S.set.speed);$('sGfx').value=S.set.gfx;const rb=$('resetBtn');rb.disabled=running;rb.textContent=running?'END RUN FIRST':'RESET';}
 $('sVol').oninput=e=>{S.set.vol=+e.target.value;setMasterVol();save()};
 $('sMusic').onchange=e=>{S.set.music=e.target.checked;save()};$('sVol').onchange=()=>sfx('buy');
 $('sShake').onchange=e=>{S.set.shake=e.target.checked;save()};
 $('sDmg').onchange=e=>{S.set.dmgNums=e.target.checked;save()};
 $('sRing').onchange=e=>{S.set.ring=e.target.checked;save()};
+$('sDay').onchange=e=>{S.set.dayNight=e.target.checked;save()};
 $('sBlur').onchange=e=>{S.set.blurPause=e.target.checked;save()};
 $('sSpeed').onchange=e=>{S.set.speed=+e.target.value;save()};
 $('sGfx').onchange=e=>{S.set.gfx=e.target.value;applyGfx();save()};
@@ -1085,8 +1087,13 @@ function audioFrame(){const c=AU.ctx;if(!c||c.state!=='running')return;const t=c
     AU.rotor=bedNoise(c,'lowpass',190,1.2,AU.amb);const am=c.createGain(),r=c.createOscillator(),rg=c.createGain();   // rotor: low noise gated into blade thumps
     AU.rotor.g.disconnect();AU.rotor.g.connect(am).connect(AU.amb);am.gain.value=0.5;r.type='square';r.frequency.value=10.5;rg.gain.value=0.5;r.connect(rg).connect(am.gain);r.start();AU.rotor.lfo=r;
     AU.eng=bedNoise(c,'lowpass',95,1.6,AU.amb);const ea=c.createGain(),eo=c.createOscillator(),eg=c.createGain();   // enemy armor: diesel rumble with a track-link clatter
-    AU.eng.g.disconnect();AU.eng.g.connect(ea).connect(AU.amb);ea.gain.value=0.7;eo.type='sawtooth';eo.frequency.value=7.5;eg.gain.value=0.3;eo.connect(eg).connect(ea.gain);eo.start()}
+    AU.eng.g.disconnect();AU.eng.g.connect(ea).connect(AU.amb);ea.gain.value=0.7;eo.type='sawtooth';eo.frequency.value=7.5;eg.gain.value=0.3;eo.connect(eg).connect(ea.gain);eo.start();
+    const cricket=(f,buzz,pulse)=>{const b=bedNoise(c,'bandpass',f,9,AU.amb),am=c.createGain(),pg=c.createGain();b.g.disconnect();b.g.connect(am).connect(pg).connect(AU.amb);   // night: crickets,
+      for(const[g,fr,ty]of[[am,buzz,'square'],[pg,pulse,'sine']]){const o=c.createOscillator(),og=c.createGain();g.gain.value=0.5;o.type=ty;o.frequency.value=fr;og.gain.value=0.5;o.connect(og).connect(g.gain);o.start()}return b};   // band noise gated into chirps
+    AU.night=[cricket(4700,31,0.9),cricket(5600,38,1.37)]}
   AU.amb.gain.setTargetAtTime(live?0.1:0.04,t,0.8);
+  const nk=live&&Number.isFinite(DN.nk)?Math.max(0,Math.min(1,DN.nk)):0;   // day/night crossfade: wind by day, crickets by night
+  AU.night[0].g.gain.setTargetAtTime(nk*2.4,t,1.5);AU.night[1].g.gain.setTargetAtTime(nk*1.7,t,1.9);AU.bed.g.gain.setTargetAtTime(1-0.35*nk,t,1.5);
   const helis=live&&G.units?G.units.reduce((n,u)=>n+(u.k==='heli'&&(u.spin??1)>0.2),0):0;
   AU.rotor.g.gain.setTargetAtTime(helis?0.5+0.25*helis:0,t,0.4);AU.rotor.lfo.frequency.setTargetAtTime(10.5+helis*0.6,t,0.5);
   const R2=live?Math.pow(vision()+80,2):0,armor=live?G.enemies.reduce((n,e)=>n+(e.veh&&e.moving&&e.x*e.x+e.y*e.y<R2?1:0),0):0;
@@ -1155,9 +1162,10 @@ let _visG=null,_visT=-1,_visV=0;
 const vision=()=>{if(running&&G===_visG&&G.time===_visT)return _visV;_visG=running?G:null;_visT=running?G.time:-1;return _visV=Math.max(visionAt(L('vision')),fortHalf()+wallThick()+120)};
 const wallsUp=()=>L('walls')>0&&G.wallHp>0;
 const blockHalf=()=>wallsUp()?wallHalfAt(L('walls'))+wallThickAt(L('walls'))/2:PLAT;
-// sight(): the live sight line. A sandstorm pulls it in by up to STORM_CUT; radar still reaches the same distance past it.
-const STORM_CUT=0.27,sight=()=>vision()*(1-STORM_CUT*(G&&G.fogK||0));
-const visible=e=>e.rev>0||Math.hypot(e.x,e.y)<=(e.air?skyVision()-vision()+sight():sight())-e.r*0.3;
+// sight(): the live sight line. A sandstorm pulls it in by up to STORM_CUT and night by NIGHT_CUT (ground only: aircraft carry
+// nav lights and radar tracks them); radar still reaches the same distance past the storm line.
+const STORM_CUT=0.27,NIGHT_CUT=0.15,stormSight=()=>vision()*(1-STORM_CUT*(G&&G.fogK||0)),sight=()=>stormSight()*(1-NIGHT_CUT*(G&&G.nightK||0));
+const visible=e=>e.rev>0||Math.hypot(e.x,e.y)<=(e.air?skyVision()-vision()+stormSight():sight())-e.r*0.3;
 const money=v=>Math.round(v*(1+0.15*L('bounty'))*(1+0.25*pk('salvage')+0.4*pk('hazard'))*medalMul());
 
 // Wave scaling. Every stat is exp(curve): its per-wave growth rate starts at d0 (+2b per wave), holds that climb until wave
@@ -1386,7 +1394,7 @@ function endRun(retreat){
 
 function update(dt){
   sndCount=0;G.time+=dt;
-  if(G.bannerT>0)G.bannerT-=dt;if(G.hurtT>0)G.hurtT-=dt;G.shake*=0.88;updateBosses(dt);evUpdate(dt);
+  if(G.bannerT>0)G.bannerT-=dt;if(G.hurtT>0)G.hurtT-=dt;G.shake*=0.88;updateBosses(dt);evUpdate(dt);dayTick(dt);
   if(G.stkT>0){G.stkT-=dt;G.stkPop=Math.max(0,G.stkPop-dt*4);if(G.stkT<=0)G.stk=0}
   // waves
   if(G.spawnLeft>0){G.spawnT-=dt;if(G.spawnT<=0){spawn(nextType());G.spawnLeft--;G.spawnT=G.spawnInt*(0.6+Math.random()*0.8)}}
@@ -2428,7 +2436,7 @@ function drawFx(){const m=HQ&&ctx.getTransform();
     else if(f.k==='ring'){ctx.strokeStyle=`rgba(${f.c},${k*0.8})`;ctx.lineWidth=f.w*k+0.5;ctx.beginPath();ctx.arc(f.x,f.y,f.r*(0.15+0.85*Math.sqrt(t)),0,7);ctx.stroke()}
     else if(f.k==='fire'||f.k==='boom'){const r=f.r*(0.35+0.75*Math.sqrt(t))*(f.k==='boom'?0.8:1);ctx.globalCompositeOperation='lighter';blit(fireSprite(),f.x,f.y,r,k);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}}
 }
-function drawLights(){if(!GFX.lights||!G.lights.length)return;ctx.globalCompositeOperation='lighter';const la=HQ?(BP?.05:.42):.45;
+function drawLights(){if(!GFX.lights||!G.lights.length)return;ctx.globalCompositeOperation='lighter';const la=(HQ?(BP?.05:.42):.45)*(1+.5*DN.dk);   // flashes bloom harder in the dark
   for(const l of G.lights)blit(glowSprite(l.c),l.x,l.y,l.r,la*l.life/l.max);
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
 let _vig=null,_vigK='';
@@ -2696,6 +2704,12 @@ const hqDraw=(s,x=0,y=0)=>ctx.drawImage(s.c,x-s.ox,y-s.oy,s.w,s.h);
 function hqWhite(s,a,x=0,y=0){const w=s.wh||(s.wh=hqTint(s.c,'#fff'));ctx.globalAlpha=a;ctx.drawImage(w,x-s.ox,y-s.oy,s.w,s.h);ctx.globalAlpha=1}
 // soft drop shadow: the silhouette shrunk 4x then stretched back (bilinear upscaling is a free blur on every browser)
 function hqShadow(s,dx,dy,a,x=0,y=0){let d=s.sd;if(!d){const f=4,p=3;d=s.sd=hqCv(s.c.width/f+2*p,s.c.height/f+2*p);d.getContext('2d').drawImage(hqTint(s.c,'#000'),p,p,s.c.width/f,s.c.height/f);d.u=p*f/s.b;d.k=f/s.b}
+  if(SH.on){   // time of day (SH, set by dayFrame): the caller's offset is the noon fall; swing it with the sun, lengthen it
+    a*=SH.a;if(a<.01)return;const rx=dx*SH.c-dy*SH.s,ry=dx*SH.s+dy*SH.c,l=Math.hypot(dx,dy);   // (rotation commutes with the sprite's)
+    if(l>4){dx=rx*SH.air;dy=ry*SH.air}   // aircraft: altitude offset, swung and scaled but never stretched
+    else if(l>.05&&SH.st>1.04){const ux=rx/l,uy=ry/l,k=SH.st-1,o=SH.len+k*(Math.abs(ux)*s.w+Math.abs(uy)*s.h)*.25/l;   // low sun: smear the silhouette away from it
+      ctx.save();ctx.globalAlpha=a;ctx.translate(x+rx*o,y+ry*o);ctx.transform(1+k*ux*ux,k*ux*uy,k*ux*uy,1+k*uy*uy,0,0);ctx.drawImage(d,-s.ox-d.u,-s.oy-d.u,d.width*d.k,d.height*d.k);ctx.restore();return}
+    else{dx=rx*SH.len;dy=ry*SH.len}}
   ctx.globalAlpha=a;ctx.drawImage(d,x+dx-s.ox-d.u,y+dy-s.oy-d.u,d.width*d.k,d.height*d.k);ctx.globalAlpha=1}
 // a world-space vector expressed in a sprite's local frame (rotation a, uniform scale k)
 function hqLoc(wx,wy,a,k){const c=Math.cos(a),s=Math.sin(a);_lv[0]=(wx*c+wy*s)/k;_lv[1]=(-wx*s+wy*c)/k;return _lv}const _lv=[0,0];
@@ -4405,7 +4419,7 @@ const INTEL={
  rpg:['RPG Gunner',3,'Shoulder-fired rockets. Knocks out your gun trucks, APCs, tanks and MG nests for several seconds, or blasts the walls. Fragile: pick them off before they get in range.'],
  mortar:['Mortar Team',3,'Sets up in the fog past your sight line and lobs shells into the fort; red rings mark each impact. Every launch gives their position away for a moment: lock on, or let artillery and TARGET: THREATS hunt them.'],
  technical:['Technical',2,'Pickup with a heavy machine gun. Fast and lightly armored (small arms do 75%). Mines, grenades and heavy guns wreck it.'],
- apc:['Armored Carrier',3,'Drives to your walls and unloads a rifle squad, then covers them with its turret. Kill it before it unloads for a bonus. Rifles do 55%: use mines, grenades, artillery and tanks.'],
+ apc:['Armored Carrier',3,'Drives to your walls and unloads a rifle squad, then covers them with its turret. Kill it before it unloads for a bonus. Small arms do 55%: use mines, grenades, artillery and tanks.'],
  ifv:['Light Tank',4,'Tracked fighting vehicle whose 30mm cannon shells your walls from range. Heavy armor (small arms do 45%): bring artillery, tanks, missiles and mines.'],
  mbt:['Main Battle Tank',5,'Line tanks now roll in with regular waves. Small arms do only 35%: artillery, tanks, missiles, airstrikes and mines.'],
  mlrs:['Rocket Artillery',5,'Launcher truck that parks in the fog and ripples a salvo of rockets onto the fort; red rings mark the impacts. The launch gives it away: kill it before the next salvo.']};
@@ -5315,12 +5329,199 @@ function drawEnemies(){
 function drawFloats(){if(!G.floats.length)return;const k=Math.max(1,0.85/sc);let font='';ctx.textAlign='center';
   for(const f of G.floats){const fs=`bold ${Math.round(f.s*k)}px monospace`;if(fs!==font){font=fs;ctx.font=fs}ctx.globalAlpha=Math.min(1,f.life*2);ctx.fillStyle=f.c;ctx.fillText(f.t,f.x,f.y)}
   ctx.globalAlpha=1}
+// ================= DAY / NIGHT =================
+// A run starts at a random daylight hour and the clock follows the fight: one full day is DAY_WAVES waves (kill progress
+// through a wave plus the break after it), eased so a wave-clearing bomb never snaps the sky. Everything is driven from the
+// hour: an ambient multiply colour (warm dawn/dusk, neutral day, moonlit blue night), the sun/moon shadow vector that
+// hqShadow() reads, and a night factor. At night the world pass is multiplied by a low-res LIGHT MAP (ambient + every light
+// in the scene added into it), so lamps, headlights, fires and blasts genuinely reveal the ground instead of just glowing
+// over black. Emissive FX are re-added afterwards so fire and tracers stay hot. The HUD is drawn after and stays crisp.
+// Presets: High = light map + sun shadows + mist/stars/fireflies; Medium = flat tint with beams, halos and lamps drawn straight
+// over it (no full-screen composites beyond the tint); Low = tint + dots.
+const DAY_WAVES=9;
+const TOD=[[0,[70,82,132]],[4.3,[74,86,136]],[5.2,[124,104,146]],[6.0,[226,168,146]],[6.9,[255,210,178]],[8.2,[255,240,226]],[9.5,[255,255,255]],
+  [15,[255,255,255]],[16.2,[255,238,214]],[17.3,[255,208,160]],[18.2,[236,156,122]],[19,[140,104,138]],[20,[74,86,136]],[24,[70,82,132]]];
+const nightOf=h=>1-sstep(4.4,6.6,h)+sstep(18.2,20.2,h);
+const DN={on:false,h:12,nk:0,dk:0,lamp:0,ambCss:'#fff',farCss:'#fff',near:0,mist:0,haze:0,hazeCss:'',beams:[]};
+const SH={on:false,c:1,s:0,len:1,st:1,air:1,a:1};   // sun vector for hqShadow(): rotation (c,s), length, stretch, altitude scale, alpha
+const hourOf=()=>G&&S.set.dayNight&&G.todT!=null?((G.todT%24)+24)%24:11.5;
+// Gameplay hook (update): advance the clock, publish G.nightK for sight(), and let the tower searchlights reveal what they sweep.
+function dayTick(dt){if(!S.set.dayNight){G.nightK=0;return}
+  if(G.todT==null){G.todH0=5.8+Math.random()*9.4;G.todT=G.todH0}
+  const left=G.spawnLeft+G.enemies.length+G.sky.length+G.drops.length+(G.uavT>0?1:0),cl=v=>Math.max(0,Math.min(1,v)),
+    pr=left>0?0.8*cl(1-left/(G.waveTotal||1)):0.8+0.2*cl(1-G.breakT/(G.breakMax||3)),
+    d=G.todH0+24/DAY_WAVES*(G.wave-(G.startWave||1)+pr)-G.todT;
+  if(d>0&&Number.isFinite(d))G.todT+=Math.min(d,(0.015+d*0.7)*dt);
+  G.nightK=sstep(.3,.9,nightOf(hourOf()));
+  if(G.nightK>0.3&&(G._slT=(G._slT||0)-dt)<=0){G._slT=0.1;const bm=dnBeams(DN.beams);
+    for(const e of G.enemies){if(e.dead)continue;for(const[ox,oy,a,len]of bm){const dx=e.x-ox,dy=e.y-oy,dd=Math.hypot(dx,dy);if(dd>len*1.04||dd<1)continue;
+      let da=Math.atan2(dy,dx)-a;da=Math.atan2(Math.sin(da),Math.cos(da));if(Math.abs(da)<0.15+e.r/dd){e.rev=Math.max(e.rev||0,0.15);break}}}}}
+// Tower searchlights: one per fort corner, each sweeping its own quadrant on two beating sines. [x, y, heading, reach]
+function dnBeams(out){const ph=fortHalf(),V=vision(),t=G.time;out.length=0;
+  for(let i=0;i<4;i++){const sx=i&1?1:-1,sy=i&2?1:-1,a=Math.atan2(sy,sx)+Math.sin(t*0.27+i*1.93)*0.95+Math.sin(t*0.61+i*4.1)*0.2;out.push([sx*ph,sy*ph,a,Math.max(60,V*0.9-ph)])}
+  return out}
+function todAmb(h,o){let i=1;while(i<TOD.length-1&&h>TOD[i][0])i++;const A=TOD[i-1],B=TOD[i],t=Math.max(0,Math.min(1,(h-A[0])/(B[0]-A[0])));
+  for(let c=0;c<3;c++)o[c]=A[1][c]+(B[1][c]-A[1][c])*t;return o}
+// Per-frame lighting state: a handful of lerps and two colour strings.
+const _amb=[255,255,255];
+function dayFrame(){const on=!!(G&&S.set.dayNight&&G.todT!=null);DN.on=on;
+  if(!on){DN.nk=DN.dk=DN.lamp=DN.mist=DN.haze=0;SH.on=false;return}
+  const h=hourOf(),nk=nightOf(h),a=todAmb(h,_amb);DN.h=h;DN.nk=nk;DN.lamp=sstep(.25,.7,nk);
+  DN.dk=1-(a[0]*.3+a[1]*.55+a[2]*.15)/255;
+  // beyond the fort's lit ring the night is much deeper: this is what "vision reduced at night" looks like (light-map presets)
+  const fk=1-0.7*sstep(.35,1,nk)*(GFX.lights?1:0);
+  DN.ambCss=`rgb(${a[0]|0},${a[1]|0},${a[2]|0})`;DN.farCss=`rgb(${a[0]*fk|0},${a[1]*fk|0},${a[2]*fk|0})`;const q=v=>Math.round(v*(1-fk)/10)*10;DN.near=1-fk;DN.nearRgb=q(a[0])+','+q(a[1])+','+q(a[2]);
+  DN.mist=Math.max(0,1-Math.abs(h-6.4)/1.9)*(1-(G.fogK||0));
+  const dh=Math.max(0,1-Math.abs(h-18.1)/1.7);DN.haze=Math.max(dh,DN.mist*.6);DN.hazeCss=dh>=DN.mist*.6?'rgb(255,146,72)':'rgb(196,200,226)';
+  // sun: rises ~6h, sets ~18h; the shadow swings +-50deg around the art's baked bottom-right fall and lengthens toward the horizon.
+  // After dusk a faint moon takes over from the other side (the swap happens while both are at zero strength).
+  const el=Math.sin(Math.PI*(h-6)/12),day=h>=5.5&&h<18.8,ph=day?(h-12)/6:(((h+12)%24)-12)/6,rot=Math.max(-1.2,Math.min(1.2,ph))*0.73;
+  SH.on=HQ;SH.c=Math.cos(rot);SH.s=Math.sin(rot);
+  if(day){const e=Math.max(0.05,el);SH.len=Math.min(2.2,0.85/Math.pow(Math.max(.28,e),.95));SH.st=1+Math.max(0,SH.len-1)*0.6;SH.air=0.8+0.5*(1-e);SH.a=sstep(-.02,.22,el)*(1+.2*sstep(1.2,2.6,SH.len))}
+  else{SH.len=1.5;SH.st=1.25;SH.air=1;SH.a=0.38*sstep(.5,1,nk)}}
+// ---- cached light sprites (built once, tinted once per colour) ----
+const _dn={};
+// Wedge of light, apex at the left edge centre pointing +x, spanning the full height at the right edge (the caller's scale sets
+// length and spread). 'h' headlight: bright near the lamp, fading out; 's' searchlight shaft: faint, brightening toward the end.
+function dnCone(kind){let c=_dn['c'+kind];if(c)return c;const w=192,hh=96,[k,x]=mkCv(w,hh),im=x.createImageData(w,hh),d=im.data;
+  for(let j=0;j<hh;j++)for(let i=0;i<w;i++){const u=(i+.5)/w,v=Math.abs((j+.5)/hh-.5)*2,t=v/Math.max(u,1e-3);if(t>=1)continue;
+    const a=sstep(1,.45,t)*(kind==='h'?sstep(0,.07,u)*Math.pow(1-u,1.25)*(1+.6*sstep(.35,0,Math.abs(u-.22))):sstep(0,.2,u)*(.3+.7*u*u)*sstep(1,.86,u));
+    const o=(j*w+i)*4;d[o]=d[o+1]=d[o+2]=255;d[o+3]=Math.min(1,a)*255}
+  x.putImageData(im,0,0);return _dn['c'+kind]=k}
+function dnConeT(kind,rgb){const key='ct'+kind+rgb;let c=_dn[key];if(c)return c;const src=dnCone(kind),[k,x]=mkCv(src.width,src.height);
+  x.drawImage(src,0,0);x.globalCompositeOperation='source-in';x.fillStyle=`rgb(${rgb})`;x.fillRect(0,0,k.width,k.height);return _dn[key]=k}
+const dnPool=rgb=>radialSprite('dnp'+rgb,[[0,`rgba(${rgb},1)`],[.3,`rgba(${rgb},.72)`],[.65,`rgba(${rgb},.26)`],[1,`rgba(${rgb},0)`]]);
+const dnFlat=rgb=>radialSprite('dnflat'+rgb,[[0,`rgba(${rgb},1)`],[.74,`rgba(${rgb},1)`],[.88,`rgba(${rgb},.5)`],[1,`rgba(${rgb},0)`]]);   // lit-ring lift, colour quantised so few variants exist
+const DN_EN='255,222,150',DN_FR='214,232,255',DN_LAMP='255,178,98',DN_FIRE='255,150,60',DN_TAIL='255,40,30';
+// Set context c to world matrix m, then translate(x,y) . rotate(th) . scale(sx,sy) - no save/restore churn.
+function cxf(c,m,x,y,th,sx,sy){const co=Math.cos(th),si=Math.sin(th);c.setTransform((m.a*co+m.c*si)*sx,(m.b*co+m.d*si)*sx,(m.c*co-m.a*si)*sy,(m.d*co-m.b*si)*sy,m.a*x+m.c*y+m.e,m.b*x+m.d*y+m.f)}
+// ---- light rigs. Ground vehicles: [x, y, heading, front, half-width, tint, beam length, rear] ----
+const _rig=[];
+function dnRigs(){const r=_rig;r.length=0;const V=vision(),R2=Math.pow(V*1.42,2);
+  for(const e of G.enemies){if(!e.veh&&!e.boss||e.dead||e.x*e.x+e.y*e.y>R2)continue;const k=e.r/6,A=HQ&&!e.boss&&VEH_ART[e.type];
+    r.push([e.x,e.y,Math.atan2(-e.y,-e.x),A?(A.hull[0]-A.hull[2])*k:e.r*1.15,A?A.hull[1]*k*.34:e.r*.42,DN_EN,e.boss?130:e.r*6.4,A?-A.hull[2]*k:-e.r])}
+  for(const u of G.units)if(u.k==='truck'||u.k==='apc'||u.k==='tank'){const s=US[u.k];r.push([u.x,u.y,u.ang,8*s,2.6*s,DN_FR,90,-7.5*s])}
+  return r}
+// Aircraft (apron, low jets, strike jets, gunships, helicopters): [x, y, heading, half-span, nose, landing light?]
+const _nav=[];
+function dnNav(){const n=_nav;n.length=0;
+  if(G.fleet)for(const j of G.fleet){if(j.alt>=1)continue;const k=2.1+.4*(j.alt||0);n.push([j.x,j.y,j.ang,11*k,14*k,(j.spd||0)>4||(j.alt||0)>0])}   // alt>=1: up and away (drawn as a strike jet)
+  for(const j of G.jets){const s=-900+700*j.t;n.push([j.x+j.dx*s,j.y+j.dy*s,Math.atan2(j.dy,j.dx),10.5*2.5,14*2.5,false])}
+  for(const u of G.air)if(u.k==='gunship')n.push([u.x,u.y,u.ang,32*US.gunship,23*US.gunship,false]);
+  for(const u of G.units)if(u.k==='heli')n.push([u.x,u.y,u.ang,6.5*US.heli,10*US.heli,false]);
+  return n}
+// Dawn mist banks (High): pale patches drifting low over the ground, drawn under the light map so they take the warm grade.
+let _mistS=null;
+function mistSprite(){if(_mistS)return _mistS;const S2=256,[c,x]=mkCv(S2,S2),r=rng(71);
+  for(let i=0;i<10;i++){const cx=S2/2+(r()-.5)*S2*.46,cy=S2/2+(r()-.5)*S2*.3,rad=S2*(.14+r()*.14),g=x.createRadialGradient(cx,cy,0,cx,cy,rad);
+    g.addColorStop(0,'rgba(236,236,240,.5)');g.addColorStop(.55,'rgba(236,236,240,.24)');g.addColorStop(1,'rgba(236,236,240,0)');x.fillStyle=g;x.fillRect(0,0,S2,S2)}
+  return _mistS=c}
+function dayMist(){if(!DN.on||!HQ||DN.mist<0.02)return;const V=vision(),W=V*3+200,spr=mistSprite(),t=G.time,hw=VW/2/sc,hh=VH/2/sc;ctx.globalAlpha=Math.min(1,DN.mist*.9);
+  for(let i=0;i<7;i++){const c=CLOUDS[i%CLOUDS.length],rw=V*.55*(c.s+.3)*c.sx,rh=V*.34*(c.s+.3),x=((c.v*W+t*2.2+i*97)%W+W)%W-W/2,y=((c.u*W+t*.9+i*53)%W+W)%W-W/2;
+    if(x+rw<-hw||x-rw>hw||y+rh<-hh||y-rh>hh)continue;ctx.drawImage(spr,x-rw,y-rh,rw*2,rh*2)}ctx.globalAlpha=1}
+// The light pass. Runs after the whole world (ground, fx, fog, aircraft) and before world-space UI and postFX.
+function dayLight(V){if(!DN.on)return;const dk=DN.dk,lamp=DN.lamp;if(dk<0.004&&DN.haze<0.02)return;
+  const m=ctx.getTransform(),W=cv.width,H=cv.height;
+  if(dk>=0.004){
+    if(HQ)dnLightMap(m,W,H,V);   // Medium: the flat tint below, with its lights drawn straight over it (no full-screen light-map composite)
+    else{ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='multiply';ctx.fillStyle=DN.ambCss;ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over';xr(m)}
+    // the emissive layer was just multiplied down with everything else: put the heat back (High re-renders it like the bloom pass)
+    if(dk>0.12&&HQ){ctx.save();BP=true;try{drawFx()}finally{BP=false}ctx.restore();xr(m)}}
+  if(DN.haze>0.02&&HQ){ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='screen';ctx.globalAlpha=DN.haze*.07;ctx.fillStyle=DN.hazeCss;ctx.fillRect(0,0,W,H);
+    ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';xr(m)}
+  if(lamp<0.02)return;
+  if(GFX.lights){if(!HQ){dnRigs();dnNav();dnBeams(DN.beams)}dnStars(V,lamp);dnGlow(m,W,H,V,lamp)}
+  dnLamps(lamp,V);xr(m);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
+// Light map: ambient (deep beyond the lit ring, moonlit inside it) plus every light source, multiplied over the world.
+function dnLightMap(m,W,H,V){const q=HQ?5:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Math.max(2,Math.ceil(VH/q)),c=pfCanvas('dnlm',lw,lh),x=c._x,k=lw/W,lamp=DN.lamp,t=G.time;
+  x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation='source-over';x.globalAlpha=1;x.fillStyle=DN.farCss;x.fillRect(0,0,lw,lh);
+  const M={a:m.a*k,b:m.b*k,c:m.c*k,d:m.d*k,e:m.e*k,f:m.f*k},P=(img,wx,wy,r,a)=>{if(a<=0.01||r<=0)return;x.globalAlpha=Math.min(1,a);x.setTransform(M.a,M.b,M.c,M.d,M.a*wx+M.c*wy+M.e,M.b*wx+M.d*wy+M.f);x.drawImage(img,-r,-r,2*r,2*r)};
+  x.globalCompositeOperation='lighter';
+  if(DN.near>0.01)P(dnFlat(DN.nearRgb),0,0,sight()*1.04+8,1);
+  if(G.flashT>0){x.setTransform(1,0,0,1,0,0);x.globalAlpha=Math.min(1,G.flashT*1.5);x.fillStyle='#fff';x.fillRect(0,0,lw,lh)}
+  const fire=dnPool(DN_FIRE);
+  for(const l of G.lights)P(dnPool(l.c),l.x,l.y,l.r*1.35,1.1*l.life/l.max);
+  let nt=0;for(const f of G.fx){const kk=Math.max(0,f.life/f.max);
+    if(f.k==='hfire'||f.k==='fire'||f.k==='boom')P(fire,f.x,f.y,f.r*3.4,kk*1.1);
+    else if(f.k==='flash')P(dnPool(f.c||'255,240,210'),f.x,f.y,f.r*4.5,kk);
+    else if(f.k==='tracer'&&nt++<70)P(dnPool('255,214,140'),f.x2,f.y2,14,kk*.7)}
+  if(HQ&&G.hx)for(const e of G.hx.emit)P(fire,e.x,e.y,62,.85*Math.min(1,e.life/4)*(.8+.2*Math.sin(t*13+e.x)));
+  if(G.depot&&G.depot.dead)P(fire,G.depot.x,G.depot.y,90,.8);
+  for(const n of G.nukes)P(dnPool('255,70,50'),n.x,n.y,110,.35);
+  if(lamp>0.02){
+    // fort: sodium lamp pools in the courtyard, depot / field floodlights, runway edge lights
+    const ph=fortHalf(),lp=dnPool(DN_LAMP);P(lp,0,0,ph*1.3+30,.55*lamp);
+    if(L('walls'))for(let i=0;i<4;i++)P(lp,(i&1?1:-1)*ph*.55,(i&2?1:-1)*ph*.55,ph*.62+14,.7*lamp);
+    if(G.depot&&!G.depot.dead)P(lp,G.depot.x,G.depot.y,80,.8*lamp);
+    if(G.field&&G.fleet)P(lp,G.field.x,G.field.y,54,.55*lamp);
+    if(L('airstrip')&&L('walls')){const w=Math.max(ph*2.8,200),y=runwayY(),rl=dnPool('255,226,160');
+      for(const yy of[y-2.5,y+RWY_H+2.5]){cxf(x,M,0,yy,0,(w/2+10)/64,16/64);x.globalAlpha=.6*lamp;x.drawImage(rl,-64,-64)}}
+    // tower searchlights: shaft + the bright pool where they hit
+    const sc2=dnConeT('s','236,244,255'),sp=dnPool('236,244,255');
+    for(const[ox,oy,a,len]of dnBeams(DN.beams)){cxf(x,M,ox,oy,a,len/192,len*.3/96);x.globalAlpha=.8*lamp;x.drawImage(sc2,0,-48);P(sp,ox+Math.cos(a)*len*.93,oy+Math.sin(a)*len*.93,len*.2,.95*lamp)}
+    // vehicle headlights, aircraft landing lights, helicopter spotlights
+    for(const[vx,vy,a,fr,hw,tint,bl]of dnRigs()){const co=Math.cos(a),si=Math.sin(a),fx=vx+co*fr,fy=vy+si*fr;
+      cxf(x,M,fx,fy,a,bl/192,bl*.78/96);x.globalAlpha=.95*lamp;x.drawImage(dnConeT('h',tint),0,-48);P(dnPool(tint),fx+co*hw*1.6,fy+si*hw*1.6,hw*3.2,.55*lamp)}
+    for(const[jx,jy,a,,nose,ll]of dnNav()){if(!ll)continue;const co=Math.cos(a),si=Math.sin(a);cxf(x,M,jx+co*nose,jy+si*nose,a,110/192,80/96);x.globalAlpha=.8*lamp;x.drawImage(dnConeT('h',DN_FR),0,-48)}
+    for(const u of G.units)if(u.k==='heli'){const a=u.gun??u.ang;P(dnPool(DN_FR),u.x+Math.cos(a)*46,u.y+Math.sin(a)*46,34,.8*lamp)}}
+  x.globalAlpha=1;x.globalCompositeOperation='source-over';
+  ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='multiply';ctx.imageSmoothingEnabled=true;ctx.drawImage(c,0,0,W,H);ctx.globalCompositeOperation='source-over';xr(m)}
+// Glow layer: searchlight shafts, headlight cones (read as lit dust in the air - out in the fog too, a glimpse only: nothing
+// here touches visible(), so an enemy whose lights you can see still can't be targeted until it is in sight), lamp halos, nav
+// halos and fireflies are all drawn into one low-res buffer and added over the frame in a single full-screen pass.
+function dnGlow(m,W,H,V,lamp){const q=HQ?4:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Math.max(2,Math.ceil(VH/q)),c=HQ?pfCanvas('dnvb',lw,lh):null,x=HQ?c._x:ctx,k=HQ?lw/W:1,t=G.time,s=HQ?1:1.6,
+    M={a:m.a*k,b:m.b*k,c:m.c*k,d:m.d*k,e:m.e*k,f:m.f*k},B=(img,wx,wy,r,a)=>{if(a<=0.01)return;x.globalAlpha=Math.min(1,a);x.setTransform(M.a,M.b,M.c,M.d,M.a*wx+M.c*wy+M.e,M.b*wx+M.d*wy+M.f);x.drawImage(img,-r,-r,2*r,2*r)};
+  if(HQ){x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.clearRect(0,0,lw,lh)}x.globalCompositeOperation='lighter';
+  const sh=dnConeT('s','200,220,255'),sp=glowSprite('220,232,255'),hd=glowSprite('235,244,255'),px=1/sc,r0=Math.max(3.2,4*px);
+  for(const[ox,oy,a,len]of DN.beams){if(HQ){cxf(x,M,ox,oy,a,len/192,len*.3/96);x.globalAlpha=.3*lamp;x.drawImage(sh,0,-48)}   // Medium: pools only, no full shaft
+    B(sp,ox+Math.cos(a)*len*.93,oy+Math.sin(a)*len*.93,len*.17,.14*lamp*(HQ?1:.55));B(hd,ox,oy,r0*3,.9*lamp)}
+  const tl=glowSprite(DN_TAIL);
+  for(const[vx,vy,a,fr,hw,tint,bl,rr]of _rig){const far=1-sstep(V*1.05,V*1.42,Math.hypot(vx,vy));if(far<=0)continue;const co=Math.cos(a),si=Math.sin(a),g=glowSprite(tint);
+    cxf(x,M,vx+co*fr,vy+si*fr,a,bl/192,bl*.78/96);x.globalAlpha=.24*lamp*far*s;x.drawImage(dnConeT('h',tint),0,-48);
+    if(HQ)for(const n of[-1,1]){B(g,vx+co*fr-si*hw*n,vy+si*fr+co*hw*n,r0*2.6,lamp*far);B(tl,vx+co*rr-si*hw*n,vy+si*rr+co*hw*n,r0*1.5,.7*lamp*far)}else B(g,vx+co*fr,vy+si*fr,hw+r0*2,lamp*far)}   // Medium: one halo per pair
+  const rd=glowSprite('255,50,40'),gr=glowSprite('60,255,110');
+  if(HQ)for(const[jx,jy,a,span]of _nav){const co=Math.cos(a),si=Math.sin(a);B(rd,jx+si*span,jy-co*span,r0*2.2,lamp);B(gr,jx-si*span,jy+co*span,r0*2.2,lamp)}
+  if(HQ){const ph=fortHalf()+wallThick()+20,rr=Math.max(ph+20,sight()*.9),g=glowSprite('206,255,120');   // fireflies in the grass inside the lit ring
+    for(let i=0;i<34;i++){const u=hash(i,7),v=hash(i,9),a=u*TAU+Math.sin(t*.13+i)*.2,d=ph+(rr-ph)*Math.sqrt(v),b=Math.sin(t*(1.1+u)+i*7);if(b<.15)continue;
+      B(g,Math.cos(a)*d+Math.sin(t*.7+i*3)*6,Math.sin(a)*d+Math.cos(t*.53+i*5)*6,3.2,lamp*b)}}
+  if(HQ){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.drawImage(c,0,0,W,H)}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';xr(m)}
+// Lamp heads: crisp cores for head / tail lights (glimpsed through the fog out past vision), aircraft nav lights and strobes and
+// the tower lamps, batched into one path per colour. Low draws these as square dots and nothing else.
+const _lp={};
+function dnLamps(lamp,V){const t=G.time,lo=!GFX.lights,rigs=lo?dnRigs():_rig,nav=lo?dnNav():_nav,px=1/sc,dot=lo?Math.max(.9,1.3*px):Math.max(.7,1.05*px);
+  for(const k of['hd','tl','nr','ng','wh'])_lp[k]=new Path2D();
+  const P=(k,x,y,r)=>{if(lo)_lp[k].rect(x-r,y-r,2*r,2*r);else{_lp[k].moveTo(x+r,y);_lp[k].arc(x,y,r,0,TAU)}};
+  for(const[vx,vy,a,fr,hw,,,rr]of rigs){if(Math.hypot(vx,vy)>V*1.3)continue;const co=Math.cos(a),si=Math.sin(a);
+    for(const n of[-1,1]){P('hd',vx+co*fr-si*hw*n,vy+si*fr+co*hw*n,dot);P('tl',vx+co*rr-si*hw*n,vy+si*rr+co*hw*n,dot*.7)}}
+  for(const[jx,jy,a,span,nose]of nav){const co=Math.cos(a),si=Math.sin(a);P('nr',jx+si*span,jy-co*span,dot);P('ng',jx-si*span,jy+co*span,dot);
+    if(!lo&&(t*0.83+Math.abs(jx)*.001)%1<.08)P('wh',jx-co*nose*.8,jy-si*nose*.8,dot*1.6)}
+  if(!lo)for(const[ox,oy]of DN.beams)P('wh',ox,oy,dot*1.4);
+  ctx.globalAlpha=lamp;for(const[k,c]of[['hd','#fff4dc'],['tl','#e0342a'],['nr','#ff4a3a'],['ng','#4aff7a'],['wh','#ffffff']]){ctx.fillStyle=c;ctx.fill(_lp[k])}ctx.globalAlpha=1}
+// Stars over the dark beyond the fog line: three twinkle groups, so three fills a frame.
+let _stars=null;
+function dnStars(V,lamp){const px=Math.round(4/sc)/4;if(!_stars||_stars.V!==V||_stars.px!==px){const r=rng(424242),g=[new Path2D(),new Path2D(),new Path2D()];
+    for(let i=0;i<260;i++){const a=r()*TAU,d=V*1.18+Math.pow(r(),.7)*V*1.9,x=Math.cos(a)*d,y=Math.sin(a)*d,s=(.45+r()*r()*1.3)*px;g[i%3].moveTo(x+s,y);g[i%3].arc(x,y,s,0,TAU)}_stars={V,px,g}}   // sizes in screen px: rebuilt only when the zoom settles on a new quarter-step
+  const t=G.time;ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgb(200,214,255)';
+  for(let i=0;i<3;i++){ctx.globalAlpha=Math.max(0,lamp*(.32+.2*Math.sin(t*(.9+i*.37)+i*2.1))*(1-(G.fogK||0)));ctx.fill(_stars.g[i])}
+  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
+// HUD clock: a small horizon dial - sky colour for the hour, the sun or moon riding its arc, stars at night. Returns its label.
+function drawDayDial(cx,cy,r){const h=DN.h,a=_amb,nk=DN.nk;
+  ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.clip();
+  const sk=`rgb(${a[0]*.55+30*(1-nk)|0},${a[1]*.62+40*(1-nk)|0},${a[2]*.7+70*(1-nk)|0})`;ctx.fillStyle=sk;ctx.fillRect(cx-r,cy-r,2*r,2*r);
+  if(nk>.3){ctx.fillStyle=`rgba(230,236,255,${(nk*.9).toFixed(2)})`;for(const[sx,sy]of[[-.5,-.55],[.35,-.62],[.05,-.3],[-.15,-.72],[.6,-.3]])ctx.fillRect(cx+sx*r-.6,cy+sy*r-.6,1.2,1.2)}
+  const day=h>=5&&h<19,p=day?(h-6)/12:((h+6)%24)/12,ang=Math.PI*(1-Math.max(-.08,Math.min(1.08,p))),bx=cx+Math.cos(ang)*r*.68,by=cy+r*.2-Math.sin(ang)*r*.68;
+  if(day){ctx.fillStyle='rgba(255,214,120,.35)';ctx.beginPath();ctx.arc(bx,by,r*.42,0,TAU);ctx.fill();ctx.fillStyle='#ffd35a';ctx.beginPath();ctx.arc(bx,by,r*.24,0,TAU);ctx.fill()}
+  else{ctx.fillStyle='#e4e9f6';ctx.beginPath();ctx.arc(bx,by,r*.26,0,TAU);ctx.fill();ctx.fillStyle=sk;ctx.beginPath();ctx.arc(bx+r*.12,by-r*.08,r*.21,0,TAU);ctx.fill()}
+  ctx.fillStyle='#232a1c';ctx.fillRect(cx-r,cy+r*.2,2*r,r);ctx.fillStyle='rgba(190,210,150,.35)';ctx.fillRect(cx-r,cy+r*.2,2*r,1);ctx.restore();
+  ctx.strokeStyle='rgba(190,210,150,.3)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx,cy,r+.5,0,TAU);ctx.stroke();
+  return nk>.6||h<5||h>=19.5?['NIGHT','#9fb4e6']:h<8.5?['DAWN','#ffcf8a']:h<16.5?['DAY','#c9d2b4']:['DUSK','#ffae6a']}
 function draw(){
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#161a12';ctx.fillRect(0,0,VW,VH);
   if(!G)return;
   G.zoomV+=(vision()-G.zoomV)*0.035;sc=Math.min(VW,VH)/(2*(40+G.zoomV*1.12))*(G.uZoom||1);
   const sx=(Math.random()-.5)*G.shake,sy=(Math.random()-.5)*G.shake;
   ctx.setTransform(dpr*sc,0,0,dpr*sc,dpr*(VW/2+sx),dpr*(VH/2+sy));
+  dayFrame();
   // ground
   drawTerrain();
   drawDecals();
@@ -5335,28 +5536,31 @@ function draw(){
   drawCrates();
   // enemies
   drawEnemies();drawChutes();
-  const tg=G.sold[0].tgt;if(tg){ctx.strokeStyle='#ffd23f';ctx.lineWidth=Math.max(1.2,1.5/sc);const r=Math.max(tg.r+5,(tg.r*sc+6)/sc)+Math.sin(G.time*10);ctx.beginPath();ctx.arc(tg.x,tg.y,r,0,7);ctx.stroke();
-    const tk=Math.max(4,5/sc);for(let i=0;i<4;i++){const a=i*Math.PI/2;ctx.beginPath();ctx.moveTo(tg.x+Math.cos(a)*r,tg.y+Math.sin(a)*r);ctx.lineTo(tg.x+Math.cos(a)*(r+tk),tg.y+Math.sin(a)*(r+tk));ctx.stroke()}}
   // soldiers
   drawAirGround();drawLogiGround();drawUnits();drawArtyGun();drawSkyGround();
   for(const s of G.sold)drawSoldier(s);
   // fx
-  drawSmoke();drawParts();drawFx();drawSigFx();
-  for(const s of G.shells){ctx.strokeStyle='rgba(255,80,60,.9)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(s.x,s.y,s.r*(0.3+s.t*0.8),0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(s.x-5,s.y);ctx.lineTo(s.x+5,s.y);ctx.moveTo(s.x,s.y-5);ctx.lineTo(s.x,s.y+5);ctx.stroke()}
+  drawSmoke();dayMist();drawParts();drawFx();drawSigFx();
   drawArtyShells();drawNades();
-  drawBombMarks();
-  drawStorm();drawFog(V);drawEShots();
-  drawLights();
-  if(S.set.ring){ctx.strokeStyle='rgba(200,220,150,.15)';ctx.lineWidth=1;ctx.setLineDash([6,6]);ctx.beginPath();ctx.arc(0,0,V,0,7);ctx.stroke();ctx.setLineDash([])}
-  // threat indicators
-  const ta=Math.max(1,1/sc),Vs=sight();for(const e of G.enemies)if(!visible(e)){const a=Math.atan2(e.y,e.x),d=Math.hypot(e.x,e.y),al=Math.max(0.15,1-(d-Vs)/300);
-    ctx.save();ctx.translate(Math.cos(a)*(Vs+10*ta),Math.sin(a)*(Vs+10*ta));ctx.rotate(a+Math.PI);ctx.scale(ta,ta);ctx.fillStyle=`rgba(255,70,50,${al*0.8})`;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(7,-4);ctx.lineTo(7,4);ctx.fill();ctx.restore()}
-  drawSky();drawTransports();drawUavMarks();
+  drawStorm();drawFog(V);
+  drawSky();drawTransports();
   // planes (above fog)
   for(const p of G.planes){const s=-800+500*p.t,x=p.x+p.dx*s,y=p.y+p.dy*s,a=Math.atan2(p.dy,p.dx);
     ctx.save();ctx.translate(x+34,y+34);ctx.rotate(a);ctx.fillStyle='rgba(0,0,0,.35)';drawPlane();ctx.restore();
     ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.fillStyle='#8a9a7a';drawPlane();ctx.restore()}
-  drawHelisOps();drawJetsLow(true);drawAirTop();drawFuelBars();
+  drawHelisOps();drawJetsLow(true);drawAirTop();
+  // light pass (dusk/night/dawn): the whole world above is lit by the light map; the world-space UI below stays full-bright
+  dayLight(V);
+  drawEShots();drawLights();
+  const tg=G.sold[0].tgt;if(tg){ctx.strokeStyle='#ffd23f';ctx.lineWidth=Math.max(1.2,1.5/sc);const r=Math.max(tg.r+5,(tg.r*sc+6)/sc)+Math.sin(G.time*10);ctx.beginPath();ctx.arc(tg.x,tg.y,r,0,7);ctx.stroke();
+    const tk=Math.max(4,5/sc);for(let i=0;i<4;i++){const a=i*Math.PI/2;ctx.beginPath();ctx.moveTo(tg.x+Math.cos(a)*r,tg.y+Math.sin(a)*r);ctx.lineTo(tg.x+Math.cos(a)*(r+tk),tg.y+Math.sin(a)*(r+tk));ctx.stroke()}}
+  for(const s of G.shells){ctx.strokeStyle='rgba(255,80,60,.9)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(s.x,s.y,s.r*(0.3+s.t*0.8),0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(s.x-5,s.y);ctx.lineTo(s.x+5,s.y);ctx.moveTo(s.x,s.y-5);ctx.lineTo(s.x,s.y+5);ctx.stroke()}
+  drawBombMarks();
+  if(S.set.ring){ctx.strokeStyle='rgba(200,220,150,.15)';ctx.lineWidth=1;ctx.setLineDash([6,6]);ctx.beginPath();ctx.arc(0,0,V,0,7);ctx.stroke();ctx.setLineDash([])}
+  // threat indicators
+  const ta=Math.max(1,1/sc),Vs=sight();for(const e of G.enemies)if(!visible(e)){const a=Math.atan2(e.y,e.x),d=Math.hypot(e.x,e.y),al=Math.max(0.15,1-(d-Vs)/300);
+    ctx.save();ctx.translate(Math.cos(a)*(Vs+10*ta),Math.sin(a)*(Vs+10*ta));ctx.rotate(a+Math.PI);ctx.scale(ta,ta);ctx.fillStyle=`rgba(255,70,50,${al*0.8})`;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(7,-4);ctx.lineTo(7,4);ctx.fill();ctx.restore()}
+  drawUavMarks();drawFuelBars();
   drawFloats();drawNadeAim();
   if(G.airArmed||G.airAim){const lw=Math.max(1.5,2/sc);ctx.strokeStyle='#ff6a3a';ctx.fillStyle='rgba(255,106,58,.25)';ctx.lineWidth=lw;
     if(G.airAim){const a=G.airAim,dx=mouse.wx-a.x,dy=mouse.wy-a.y,dd=Math.hypot(dx,dy),ok=dd*sc>14,ang=ok?Math.atan2(dy,dx):0,n=Math.min(16,5+L('air')),len=(n-1)*24;
@@ -5367,7 +5571,7 @@ function draw(){
       else{ctx.beginPath();ctx.arc(a.x,a.y,len/2,0,7);ctx.stroke()}
       ctx.setLineDash([]);ctx.beginPath();ctx.arc(a.x,a.y,Math.max(4,5/sc),0,7);ctx.fillStyle='#fff';ctx.fill()}
     else{ctx.setLineDash([4/sc,4/sc]);ctx.beginPath();ctx.arc(mouse.wx,mouse.wy,40,0,7);ctx.stroke();ctx.setLineDash([])}}
-  postFX();
+  postFX();SH.on=false;
   // HUD (scaled down on phones so panels/bars don't dominate a small screen)
   const hk=VW<640?0.82:1,_VW=VW,_VH=VH;VW/=hk;VH/=hk;
   ctx.setTransform(dpr*hk,0,0,dpr*hk,0,0);
@@ -5379,6 +5583,8 @@ function draw(){
   ctx.textAlign='left';ctx.fillStyle='#8f9882';ctx.font='600 11px Inter,sans-serif';ctx.fillText('WAVE',36,42);
   ctx.fillStyle='#e6ead9';ctx.font='800 28px Oxanium,sans-serif';ctx.fillText(G.wave,36,72);
   ctx.fillStyle='#8f9882';ctx.font='600 11px Inter,sans-serif';ctx.fillText('KILLS',120,42);ctx.fillStyle='#e6ead9';ctx.font='600 20px Oxanium,sans-serif';ctx.fillText(G.kills,120,68);
+  if(DN.on){const kw=ctx.measureText(String(G.kills)).width,[lb,lc]=drawDayDial(223,58,10);ctx.font='700 9px Oxanium,sans-serif';ctx.textAlign='right';   // time-of-day clock
+    if(128+kw<207-ctx.measureText(lb).width){ctx.fillStyle=lc;ctx.fillText(lb,207,61)}ctx.textAlign='left'}
   if(G.ev){const E=EVENTS[G.ev],p=0.55+0.35*Math.sin(G.time*4);ctx.font='800 10px Oxanium,sans-serif';const tw=ctx.measureText(E.tag).width,w=tw+16,x=240-w;   // live battlefield event tag
     rrect(x,28,w,16,8,`rgba(${E.col},.16)`);ctx.strokeStyle=`rgba(${E.col},${p.toFixed(2)})`;ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(x+.5,28.5,w-1,15,7.5);ctx.stroke();
     ctx.fillStyle=`rgb(${E.col})`;ctx.fillText(E.tag,x+8,40)}
