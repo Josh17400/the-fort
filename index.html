@@ -462,11 +462,11 @@ const SUF=['','k','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc'];
 const f1=n=>{if(!isFinite(n))return'∞';if(n<1e4)return n>=100?Math.round(n)+'':(Math.round(n*10)/10)+'';const e=Math.min(SUF.length-1,Math.floor(Math.log10(n)/3));return e===SUF.length-1&&n>=1e36?n.toExponential(2):(n/Math.pow(10,e*3)).toFixed(n/Math.pow(10,e*3)>=100?0:1)+SUF[e]};
 const pct=n=>Math.round(n*100)+'%';
 const U=[
- {id:'dmg',late:1,knee:20,cat:'WEAPONS',name:'Rifle Damage',max:Infinity,cost:15,g:1.33,desc:'Harder-hitting rounds for every soldier.',val:l=>f1(dmgAt(l)*rMult('dmg'))+' dmg'},
- {id:'rate',cat:'WEAPONS',name:'Rate of Fire',max:20,cost:20,g:1.38,desc:'Faster bolt cycling.',val:l=>(1/cdAt(l)).toFixed(2)+' shots/s'},
+ {id:'dmg',late:1,knee:20,cat:'WEAPONS',name:'Weapon Damage',max:Infinity,cost:15,g:1.33,desc:'Harder-hitting shots for you and your squad, whatever weapon research has put in your hands.',val:l=>f1(dmgAt(l)*rMult('dmg'))+' dmg'},
+ {id:'rate',cat:'WEAPONS',name:'Rate of Fire',max:20,cost:20,g:1.38,desc:'Faster trigger work and reloads for you and your squad.',val:l=>(1/cdAt(l)).toFixed(2)+' shots/s'},
  {id:'crit',wave:2,need:[["dmg", 3]],cat:'WEAPONS',name:'Marksmanship',max:Infinity,cost:40,g:1.45,desc:'Chance for a critical hit (x2.5 damage).',val:l=>pct(Math.min(0.6,l*0.04))+' crit'+(l>15?' · x'+(2.5+(l-15)*0.1).toFixed(1):'')},
- {id:'frag',wave:6,need:[["dmg", 5]],cat:'WEAPONS',name:'Frag Rounds',max:8,cost:120,g:1.7,desc:'Bullets burst, splashing 35% damage nearby.',val:l=>l?Math.min(40,10+4*l)+'px splash':'none'},
- {id:'nade',late:1,wave:2,cat:'WEAPONS',name:'Hand Grenades',max:20,cost:35,g:1.5,desc:'Your rifleman hurls a frag grenade at any spot you pick (G, or the FRAG button). Hits harder, wider and reloads faster each level; Lv 5 and 10 throw an extra grenade.',
+ {id:'frag',wave:6,need:[["dmg", 5]],cat:'WEAPONS',name:'Frag Rounds',max:8,cost:120,g:1.7,desc:'Your shots burst on impact, splashing 35% damage nearby.',val:l=>l?Math.min(40,10+4*l)+'px splash':'none'},
+ {id:'nade',late:1,wave:2,cat:'WEAPONS',name:'Hand Grenades',max:20,cost:35,g:1.5,desc:'Your commander hurls a frag grenade at any spot you pick (G, or the FRAG button). Hits harder, wider and reloads faster each level; Lv 5 and 10 throw an extra grenade.',
   val:l=>nadeN(l)+'× '+f1(nadeDmg(l))+' dmg · '+nadeR(l)+'m · '+nadeCd(l).toFixed(1)+'s'},
  {id:'auto',wave:3,need:[["rate", 3]],cat:'WEAPONS',name:'Auto-Fire',max:5,cost:80,g:1.8,desc:'Your soldier fires on its own when you are not aiming.',val:l=>l?pct(autoAt(l))+' fire rate':'off'},
  {id:'vision',cat:'FORT',name:'Watchtower',max:30,cost:30,g:1.5,desc:'Raise the watch. The camera pulls back to reveal more battlefield, so bigger bases and bigger battles fit.',val:l=>visionAt(l)+'m vision'},
@@ -476,7 +476,7 @@ const U=[
  {id:'wire',wave:5,need:[["walls", 3]],cat:'FORT',name:'Barbed Wire',max:8,cost:100,g:1.75,desc:'A wire ring that slows and cuts enemies near the fort.',val:l=>l?'-'+pct(Math.min(0.7,0.25+0.06*l))+' speed · '+2*l+' dps':'none'},
  {id:'hp',late:1,cat:'SQUAD',name:'Body Armor',max:Infinity,cost:20,g:1.4,desc:'More soldier health.',val:l=>hpAt(l)+' HP'},
  {id:'medic',wave:3,need:[["hp", 3]],cat:'SQUAD',name:'Field Medic',max:Infinity,cost:60,g:1.6,desc:'Regenerate health over time.',val:l=>(0.4*l).toFixed(1)+' HP/s'},
- {id:'squad',wave:4,need:[["walls", 2]],cat:'SQUAD',name:'Recruit Soldier',max:Infinity,cost:200,g:1.85,desc:'Another rifleman who auto-fires (70% dmg).',val:l=>Math.min(8,l)+' extra soldiers'+(l>8?' · +'+pct(0.12*(l-8))+' dmg':'')},
+ {id:'squad',wave:4,need:[["walls", 2]],cat:'SQUAD',name:'Recruit Soldier',max:Infinity,cost:200,g:1.85,desc:'Another soldier who fights on their own (70% dmg). Their weapon improves with Squad research.',val:l=>Math.min(8,l)+' extra soldiers'+(l>8?' · +'+pct(0.12*(l-8))+' dmg':'')},
  {id:'arty',late:1,wave:6,need:[["walls", 2], ["vision", 3]],cat:'SUPPORT',name:'Artillery',max:Infinity,cost:250,g:1.55,desc:'A gun emplaced in your fort shells the biggest enemy cluster. Starts as a mortar pit; research the M777 Howitzer and HIMARS rocket salvos in R&D.',val:l=>l?f1(artyDmg(l))+' dmg / '+artyCd(l).toFixed(1)+'s':'none'},
  {id:'mines',late:1,wave:3,need:[["vision", 2]],cat:'SUPPORT',name:'Minefield',max:Infinity,cost:120,g:1.55,desc:'Mines are laid at the start of each wave.',val:l=>l?Math.min(30,2*l)+' mines · '+f1(mineDmg(l))+' dmg':'none'},
  {id:'air',late:1,wave:10,need:[["vision", 4]],cat:'SUPPORT',name:'Air Support',max:Infinity,cost:400,g:1.6,desc:'Call a bombing run anywhere (Q, then click).',val:l=>l?Math.min(16,5+l)+' bombs · '+f1(airDmg(l))+' dmg · '+Math.round(airCd(l))+'s cd':'none'},
@@ -484,8 +484,8 @@ const U=[
  {id:'speed',wave:3,cat:'ECONOMY',name:'Command Tempo',max:6,cost:150,g:2.3,desc:'Unlocks faster battle speeds. Tap the speed button (or F) mid-run to switch.',val:l=>'up to '+[1,1.5,2,2.5,3,3.5,4][l]+'×'},
  {id:'scav',wave:2,cat:'ECONOMY',name:'Scavengers',max:Infinity,cost:40,g:1.5,desc:'Supply crates drop more often and hold more cash.',val:l=>'every '+Math.round(crateEvery(l))+'s · x'+crateMul(l).toFixed(1)},
 
- {id:'truck',late:1,wave:6,need:[["walls", 3], ["squad", 1], ["vision", 4]],cat:'HEAVY ARMOR',name:'Gun Trucks',max:Infinity,cost:350,g:1.9,desc:'Pickup trucks with mounted machine guns patrol around the fort. Your first vehicles.',val:l=>l?Math.min(3,Math.ceil(l/2))+' trucks · '+f1(truckDmg(l))+' dmg · 5/s':'none'},
- {id:'apc',late:1,wave:10,need:[["walls", 4], ["truck", 2], ["vision", 6]],cat:'HEAVY ARMOR',name:'APC Squadron',max:Infinity,cost:1100,g:1.85,desc:'8-wheeled armored carriers lobbing grenade bursts.',val:l=>l?Math.min(2,Math.ceil(l/3))+' APCs · '+f1(apcDmg(l))+' splash':'none'},
+ {id:'truck',late:1,wave:6,need:[["walls", 3], ["squad", 1], ["vision", 4]],cat:'HEAVY ARMOR',name:'Patrol Vehicles',max:Infinity,cost:350,g:1.9,desc:'Armed light vehicles patrol around the fort. Your first vehicles; research turns them from pickup technicals into MRAPs and strike vehicles.',val:l=>l?Math.min(3,Math.ceil(l/2))+' trucks · '+f1(truckDmg(l))+' dmg · 5/s':'none'},
+ {id:'apc',late:1,wave:10,need:[["walls", 4], ["truck", 2], ["vision", 6]],cat:'HEAVY ARMOR',name:'APC Squadron',max:Infinity,cost:1100,g:1.85,desc:'Armored carriers that back up the lanes with heavy weapons.',val:l=>l?Math.min(2,Math.ceil(l/3))+' APCs · '+f1(apcDmg(l))+' splash':'none'},
  {id:'turret',late:1,wave:8,need:[["walls", 3], ["squad", 2]],cat:'HEAVY ARMOR',name:'MG Nests',max:Infinity,cost:500,g:1.75,desc:'Machine-gun nests on the fort corners (up to 4), then heavier guns. They can hit aircraft.',val:l=>l?Math.min(4,l)+' nests · '+f1(turretDmg(l)*(l>4?1+0.25*(l-4):1))+' dmg · 5/s':'none'},
  {id:'sniper',late:1,wave:10,need:[["walls", 4], ["vision", 5], ["crit", 2]],cat:'HEAVY ARMOR',name:'Sniper Tower',max:Infinity,cost:900,g:1.6,desc:'A marksman who always picks off the toughest enemy.',val:l=>l?f1(sniperDmg(l))+' dmg / '+sniperCd(l).toFixed(1)+'s':'none'},
  {id:'tank',late:1,wave:15,need:[["walls", 5], ["apc", 1], ["vision", 7]],cat:'HEAVY ARMOR',name:'Tank Platoon',max:Infinity,cost:1800,g:1.9,desc:'Tanks patrol outside the walls firing explosive shells.',val:l=>l?Math.min(3,Math.ceil(l/2))+' tanks · '+f1(tankDmg(l))+' dmg':'none'},
@@ -495,17 +495,17 @@ const U=[
  {id:'ddef',late:1,wave:10,need:[["depot", 1], ["turret", 1]],cat:'LOGISTICS',name:'Depot Defenses',max:Infinity,cost:900,g:1.7,desc:'Sandbag walls cut damage to the depot and MG nests guard its corners. From Lv 3 a 40mm AA gun joins them.',val:l=>l?Math.min(4,l)+' MG · '+f1(dMgDmg(l))+' dmg'+(l>=3?' · AA '+f1(dAaDmg(l)):''):'undefended'},
  {id:'feff',wave:8,need:[["truck", 2]],cat:'LOGISTICS',name:'Fuel Efficiency',max:10,cost:400,g:1.65,desc:'Tuned engines and disciplined crews. Vehicles and aircraft burn less fuel and stay in the fight longer.',val:l=>'-'+pct(1-burnMul(l))+' fuel burn'},
  {id:'flame',late:1,wave:18,need:[["walls", 6], ["wire", 2]],cat:'HEAVY ARMOR',name:'Flame Bunkers',max:Infinity,cost:2500,g:1.8,desc:'Flamethrowers roast anything hugging the walls.',val:l=>l?f1(flameDps(l))+' dps · '+Math.min(60,26+4*l)+'m reach':'none'},
- {id:'heli',late:1,wave:22,need:[["walls", 7], ["tank", 1], ["vision", 8]],cat:'HEAVY ARMOR',name:'Attack Helicopter',max:Infinity,cost:4000,g:1.95,desc:'Gunships circle the fort with chainguns and rockets.',val:l=>l?Math.min(2,Math.ceil(l/3))+' helis · '+f1(heliDmg(l))+' gun / '+f1(rocketDmg(l))+' rocket':'none'},
- {id:'tesla',late:1,wave:30,need:[["walls", 9], ["flame", 1]],cat:'HEAVY ARMOR',name:'CIWS Point Defense',max:Infinity,cost:8000,g:1.9,desc:'Radar-guided rotary autocannon. Rips bursts through packed enemies, hopping target to target. Engages aircraft first (+75% vs air).',val:l=>l?f1(teslaDmg(l))+' dmg · '+Math.min(12,3+l)+' targets':'none'},
+ {id:'heli',late:1,wave:22,need:[["walls", 7], ["tank", 1], ["vision", 8]],cat:'HEAVY ARMOR',name:'Attack Helicopters',max:Infinity,cost:4000,g:1.95,desc:'Gunships circle the fort with chainguns and rockets.',val:l=>l?Math.min(2,Math.ceil(l/3))+' helis · '+f1(heliDmg(l))+' gun / '+f1(rocketDmg(l))+' rocket':'none'},
+ {id:'tesla',late:1,wave:30,need:[["walls", 9], ["flame", 1]],cat:'HEAVY ARMOR',name:'Point Defense',max:Infinity,cost:8000,g:1.9,desc:'Radar-guided rotary autocannon. Rips bursts through packed enemies, hopping target to target. Engages aircraft first (+75% vs air).',val:l=>l?f1(teslaDmg(l))+' dmg · '+Math.min(12,3+l)+' targets':'none'},
  {id:'aagun',late:1,wave:7,need:[["walls", 3], ["squad", 1]],cat:'AIR DEFENSE',name:'AA Gun',max:Infinity,cost:450,g:1.6,desc:'Twin 35mm flak cannon. Radar-laid bursts shred drones and aircraft (air targets only). A second gun joins at Lv 4.',val:l=>l?aaGuns(l)+(aaGuns(l)>1?' guns':' gun')+' · '+f1(aaDmg(l))+' flak dmg':'none'},
  {id:'radar',wave:12,need:[["aagun", 2], ["vision", 5]],cat:'AIR DEFENSE',name:'Air-Search Radar',max:10,cost:900,g:1.7,desc:'Tracks aircraft beyond your sight line so every gun can engage them early, and cues air-defence fire for extra damage.',val:l=>l?'+'+radarR(l)+'m air picture · +'+pct(0.06*l)+' AA dmg':'none'},
  {id:'sam',late:1,wave:20,need:[["aagun", 4], ["walls", 6], ["mlaunch", 1]],cat:'AIR DEFENSE',name:'SAM Site',max:Infinity,cost:5000,g:1.8,desc:'Long-range surface-to-air missiles that hunt the toughest aircraft in the sky. Air targets only.',val:l=>l?samN(l)+(samN(l)>1?' missiles · ':' missile · ')+f1(samDmg(l))+' dmg / '+samCd(l).toFixed(1)+'s':'none'},
 
  {id:'mlaunch',late:1,wave:20,need:[["walls", 6], ["arty", 3]],cat:'AIR & MISSILES',name:'Missile Launcher',max:Infinity,cost:3500,g:1.9,desc:'Fires salvos of homing missiles at the toughest targets, aircraft first (+50% vs air).',val:l=>l?Math.min(8,1+Math.floor(l/2))+' missiles · '+f1(mslDmg(l))+' dmg':'none'},
- {id:'airstrip',wave:24,need:[["walls", 7], ["air", 2], ["vision", 9]],cat:'AIR & MISSILES',name:'Air Strip',max:3,cost:6000,g:2.2,desc:'A runway inside the fort. Unlocks aircraft; higher levels speed up sorties.',val:l=>l?'Lv '+l+' · sorties -'+pct(1-Math.pow(0.85,l-1)):'no runway'},
+ {id:'airstrip',wave:24,need:[["walls", 7], ["air", 2], ["vision", 9]],cat:'AIR & MISSILES',name:'Air Strip',max:3,cost:6000,g:2.2,desc:'A runway outside the south wall. Unlocks aircraft; higher levels speed up sorties.',val:l=>l?'Lv '+l+' · sorties -'+pct(1-Math.pow(0.85,l-1)):'no runway'},
  {id:'fighter',late:1,wave:26,need:[["airstrip", 1], ["vision", 10]],cat:'AIR & MISSILES',name:'Fighter Jets',max:Infinity,cost:8000,g:1.95,desc:'Jets scramble from the strip and strafe enemy columns with cannons.',val:l=>l?Math.min(4,1+Math.floor(l/2))+' jets · '+f1(jetDmg(l))+' dmg/pass':'none'},
  {id:'silo',late:1,wave:30,need:[["walls", 9], ["mlaunch", 3]],cat:'AIR & MISSILES',name:'Missile Silo',max:Infinity,cost:15000,g:2.0,desc:'A ballistic missile that levels the biggest enemy concentration on the map.',val:l=>l?f1(siloDmg(l))+' dmg · every '+Math.round(siloCd(l))+'s':'none'},
- {id:'gunship',late:1,wave:35,need:[["airstrip", 2], ["fighter", 2], ["vision", 12]],cat:'AIR & MISSILES',name:'AC-130 Gunship',max:Infinity,cost:25000,g:2.0,desc:'A heavy gunship circles overhead raining 105mm shells and cannon fire.',val:l=>l?f1(gsDmg(l))+' howitzer · '+f1(gsGun(l))+' cannon':'none'},
+ {id:'gunship',late:1,wave:35,need:[["airstrip", 2], ["fighter", 2], ["vision", 12]],cat:'AIR & MISSILES',name:'Gunship Wing',max:Infinity,cost:25000,g:2.0,desc:'A heavy gunship circles overhead raining 105mm shells and cannon fire.',val:l=>l?f1(gsDmg(l))+' howitzer · '+f1(gsGun(l))+' cannon':'none'},
 ];
 function lockWhy(u){const miss=[];
   for(const[id,l]of u.need||[])if(L(id)<l)miss.push(U.find(x=>x.id===id).name+' Lv '+l);
@@ -540,7 +540,7 @@ function nextUnlockHtml(){const rows=nextUnlocks(MOBILE||innerWidth<820?2:3);if(
 // Doctrine note: standoff shooters, sappers, armor and aircraft are exactly what TARGET: THREATS (or a manual lock-on) is for
 const STANDOFF=new Set(['shooter','bomber','boss','rpg','mortar','technical','ifv','mbt','mlrs','drone','gunheli','strikejet','heavybomber','airboss']);
 function doctrineTip(d){return d==='threat'?`<small class="aardoc">${ic('threat',14)}<span>Your guns were on <b>${PRIO_NAME[prio()]}</b>. ${MOBILE?'Tap <b>TARGET</b>':'Press <b>T</b>'} until it reads <b>THREATS</b> so every gun hits marksmen, sappers and aircraft first.</span></small>`
-  :d==='lock'?`<small class="aardoc">${ic('dmg',14)}<span>${MOBILE?'Tap':'Click'} marksmen and aircraft to lock on: your rifleman only fires at what you pick.</span></small>`:''}
+  :d==='lock'?`<small class="aardoc">${ic('dmg',14)}<span>${MOBILE?'Tap':'Click'} marksmen and aircraft to lock on: your commander only fires at what you pick.</span></small>`:''}
 function counterPick(){if(!lastCause)return null;const ids=[...(lastCause.breachW?COUNTER.walls:[]),...lastCause.top.flatMap(t=>COUNTER[t]||[])];
   const ok=[...new Set(ids)].map(id=>U.find(u=>u.id===id)).filter(u=>u&&L(u.id)<u.max&&!lockWhy(u));
   return ok.find(u=>S.bank>=costOf(u,L(u.id)))||ok[0]||null}
@@ -1235,7 +1235,7 @@ function dmgFloat(e,d,crit){const f=e._df;
 function shake(n){if(S.set.shake)G.shake=Math.min(12,G.shake+n)}
 
 // Armor: _dk is the damage class of the hit being dealt, set by the caller around hurtEnemy/explode ('' = explosive/HEAT, full damage).
-// Small arms ('s': rifles, MGs) lose the plating's share (e.arm); heavy penetrators ('p': sniper .50, CIWS) lose under half of it;
+// Small arms ('s': small arms, MGs) lose the plating's share (e.arm); heavy penetrators ('p': sniper .50, CIWS) lose under half of it;
 // flame ('f') barely warms armor; mines ('m') hit the belly plate and wreck any vehicle (x2.2, the MBT boss included).
 // _pen (set next to _dk from the firing line's research tier, rPen) is the share of that plating the round ignores: small arms start
 // at 0, penetrators at 0.55; Tungsten Cores adds 0.15 to small arms. Explosive, flame and mine rules are unchanged.
@@ -3865,9 +3865,9 @@ const artyCdNow=()=>artyCd(L('arty'))/(1+0.35*pk('firemission'))/rMult('arty','r
 const perkWave=w=>w===3||w%5===0;
 const hasFuel=()=>G.units.some(u=>u.fuel!=null)||G.fleet.length>0;
 const PERKS=[
- {id:'hollow',ic:'dmg',name:'Hollow-Point Rounds',desc:'Rifle damage +25% for you and your squad.'},
- {id:'drill',ic:'rate',name:'Rapid Reload Drill',desc:'Every rifleman fires 15% faster.'},
- {id:'eagle',ic:'crit',name:'Eagle Eye',desc:'+15% critical-hit chance on rifle shots.',ok:()=>critChance()<0.9},
+ {id:'hollow',ic:'dmg',name:'Hollow-Point Rounds',desc:'Small-arms damage +25% for you and your squad.'},
+ {id:'drill',ic:'rate',name:'Rapid Reload Drill',desc:'You and every squad soldier fire 15% faster.'},
+ {id:'eagle',ic:'crit',name:'Eagle Eye',desc:'+15% critical-hit chance on small-arms shots.',ok:()=>critChance()<0.9},
  {id:'tungsten',ic:'crit',name:'Tungsten Cores',desc:'Small-arms rounds pierce 15% more armor.'},
  {id:'overwatch',ic:'vision',name:'Overwatch',desc:'Every gun, shell, missile and bomb you own deals +20% damage.'},
  {id:'masons',ic:'walls',name:'Combat Engineers',desc:'Walls +35% max HP and fully rebuilt right now, even if breached.',ok:()=>G.wallMax>0,go:()=>{G.wallMax*=1.35;G.wallHp=G.wallMax}},
@@ -3944,16 +3944,16 @@ function drawPerkHud(nar,hk){const ps=perkList();if(!ps.length)return;const s=30
 const INTEL={
  grunt:['Grunt',1,'Rifle infantry with fixed bayonets. Weak alone, deadly in numbers. Keep your rate of fire up.'],
  runner:['Light Infantry',2,'Fast SMG troops that sprint for the walls. Lock on early, or let Auto-Fire catch them.'],
- brute:['Heavy Trooper',3,'Plate armor and a ballistic shield soak rifle fire. Focus them down; crits and frag rounds help.'],
+ brute:['Heavy Trooper',3,'Plate armor and a ballistic shield soak small-arms fire. Focus them down; crits and frag rounds help.'],
  shooter:['Marksman',2,'Scoped rifle. Shoots your walls from range and won\'t close in. Set TARGET to THREATS to hunt them first.'],
  bomber:['Sapper',3,'Carries a breaching charge that blasts your walls on contact. Kill them before they arrive.'],
- boss:['Enemy MBT',5,'Main battle tank, every 10th wave. Shrugs off rifles: bring artillery, armor and airstrikes.'],
+ boss:['Enemy MBT',5,'Main battle tank, every 10th wave. Shrugs off small arms: bring artillery, armor and airstrikes.'],
  rpg:['RPG Gunner',3,'Shoulder-fired rockets. Knocks out your gun trucks, APCs, tanks and MG nests for several seconds, or blasts the walls. Fragile: pick them off before they get in range.'],
  mortar:['Mortar Team',3,'Sets up in the fog past your sight line and lobs shells into the fort; red rings mark each impact. Every launch gives their position away for a moment: lock on, or let artillery and TARGET: THREATS hunt them.'],
- technical:['Technical',2,'Pickup with a heavy machine gun. Fast and lightly armored (rifles do 75%). Mines, grenades and heavy guns wreck it.'],
+ technical:['Technical',2,'Pickup with a heavy machine gun. Fast and lightly armored (small arms do 75%). Mines, grenades and heavy guns wreck it.'],
  apc:['Armored Carrier',3,'Drives to your walls and unloads a rifle squad, then covers them with its turret. Kill it before it unloads for a bonus. Rifles do 55%: use mines, grenades, artillery and tanks.'],
- ifv:['Light Tank',4,'Tracked fighting vehicle whose 30mm cannon shells your walls from range. Heavy armor (rifles do 45%): bring artillery, tanks, missiles and mines.'],
- mbt:['Main Battle Tank',5,'Line tanks now roll in with regular waves. Rifles do only 35%: artillery, tanks, missiles, airstrikes and mines.'],
+ ifv:['Light Tank',4,'Tracked fighting vehicle whose 30mm cannon shells your walls from range. Heavy armor (small arms do 45%): bring artillery, tanks, missiles and mines.'],
+ mbt:['Main Battle Tank',5,'Line tanks now roll in with regular waves. Small arms do only 35%: artillery, tanks, missiles, airstrikes and mines.'],
  mlrs:['Rocket Artillery',5,'Launcher truck that parks in the fog and ripples a salvo of rockets onto the fort; red rings mark the impacts. The launch gives it away: kill it before the next salvo.']};
 const INTEL_MS=4000,seen=()=>S.seen||(S.seen={});
 let intelG=null,intelQ=[],intelCur=null,intelEnd=0,intelLast=0;
@@ -4101,7 +4101,7 @@ const SKY={
 // first wave each threat can appear; drones start arriving in swarms at `swarm`; the gunship leads waves 25, 35, 45...
 const SKY_WAVE={drone:7,swarm:12,gunheli:14,strikejet:22,heavybomber:30,airboss:25};
 Object.assign(INTEL,{
- drone:['Strike Drone',2,'FPV kamikaze quadcopter. Flies over wire and mines and dives into your walls. Rifles, MG nests and AA guns can hit it.'],
+ drone:['Strike Drone',2,'FPV kamikaze quadcopter. Flies over wire and mines and dives into your walls. Your commander, squad, MG nests and AA guns can hit it.'],
  gunheli:['Attack Helicopter',3,'Hovers at standoff range raking your walls with cannon and rockets. Ground weapons can\'t reach it: lock on, set TARGET to THREATS, or build AA.'],
  strikejet:['Strike Jet',4,'Strafing runs across the fort, then loops back for more. Too fast for most guns: flak, SAMs and CIWS track it.'],
  heavybomber:['Heavy Bomber',4,'Carpets the fort with bombs on every pass. Tough airframe: kill it before it lines up its run.'],
@@ -5003,7 +5003,7 @@ const MEDALS=[
  {id:'sky',ic:'aagun',name:'Sky Shield',desc:'Down 250 enemy aircraft.',st:'air',goal:250,cash:900},
  {id:'giant',ic:'gunship',name:'Giant Killer',desc:'Bring down a heavy gunship.',st:'gunship',goal:1,cash:2000},
  {id:'demo',ic:'nade',name:'Demolitions',desc:'Score 100 kills with hand grenades.',st:'nade',goal:100,cash:600},
- {id:'streak',ic:'crit',name:'Hot Streak',desc:'Chain an 11-kill rifle streak for the full cash bonus.',st:'streak',goal:11,cash:400},
+ {id:'streak',ic:'crit',name:'Hot Streak',desc:'Chain an 11-kill aimed-fire streak for the full cash bonus.',st:'streak',goal:11,cash:400},
  {id:'flawless',ic:'star',name:'Untouchable',desc:'Clear a wave from 15 on without the fort taking a hit.',st:'flawless',goal:1,cash:1200},
  {id:'decorated',ic:'trophy',name:'Decorated',desc:'Hold 8 directive ranks in a single run.',st:'dirs',goal:8,cash:1000},
  {id:'forward',ic:'play',name:'Forward Deployed',desc:'Deploy straight into a checkpoint wave.',st:'cp',goal:1,cash:500},
