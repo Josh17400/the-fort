@@ -1285,7 +1285,7 @@ function fire(s,e,mult=1){const m0=mult;
 function damageFort(d,src){if(src)G.threat[src]=(G.threat[src]||0)+d;G.wHit=1;
   if(G.shT>0){sgShieldHit();return}   // EM Armor Screen up over a fresh breach
   if(wallsUp()){G.wallHp-=d*(1-Math.min(0.75,0.07*L('armor')));sfx('wall');if(G.wallHp<=0){G.wallHp=0;G.breachW=G.wave;banner('WALLS BREACHED!');sfx('breach');shake(8);sgBreach()}}
-  else{G.hp-=d;G.hurtT=0.3;sfx('hurt');shake(3);if(G.hp<=0)endRun()}}
+  else{G.hp-=d;G.hurtT=0.3;sfx('hurt');shake(3);if(G.hp<=0&&!G.over)endRun()}}
 // ================= ENEMY ARMOR & SUPPORT WEAPONS =================
 // Vehicle guns fire from the muzzle end of the hull toward the aim point (a wall face, or the depot). dep: hit the depot, not the fort.
 const eHit=(e,d,dep)=>dep?hitDepot(d):damageFort(d,e.type);
@@ -1379,7 +1379,7 @@ const tScore=(e,d,heavy)=>{const p=S.set.prio;return p==='threat'?d*threatK(e):p
 function bestTarget(list,f,heavy,hi){let best=null,bs=Infinity;for(const e of list){if(e.dead||e.hi&&!hi||!visible(e))continue;const s=tScore(e,Math.hypot(e.x-f.x,e.y-f.y),heavy);if(s<bs){bs=s;best=e}}return best}
 function topTargets(list,f,n){const out=[];for(const e of list){if(e.dead||e.hi||!visible(e))continue;e._s=tScore(e,Math.hypot(e.x-f.x,e.y-f.y),false);out.push(e)}return out.sort((a,b)=>a._s-b._s).slice(0,n)}
 const nearestVisible=f=>bestTarget(G.enemies.concat(G.sky),f,true);
-function endRun(retreat){
+function endRun(retreat){if(G.over)return;   // several hits in one frame can each drop hp to 0: pay out (checkpoint RP) once
   running=false;sfx('die');closePerks();G.choosing=null;
   const tot=Object.values(G.threat).reduce((a,b)=>a+b,0),top=Object.entries(G.threat).filter(([,v])=>v>=tot*0.2).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>k);
   lastCause=retreat||!top.length?null:{top,breachW:G.breachW&&!wallsUp()?G.breachW:0,doc:top.some(t=>STANDOFF.has(t))&&prio()!=='threat'?prioShown()?'threat':'lock':''};
