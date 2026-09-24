@@ -2391,17 +2391,17 @@ function evUpdate(dt){if(G.uavT>0){G.uavT-=dt;if(G.uavT<=0)launchUav()}
   if(G.transports.length){for(const T of G.transports){T.t+=dt;if(T.t>=0&&!T.snd){T.snd=true;sfx('plane')}if(-T.S0+TRANS_V*T.t>T.S0)T.done=true}G.transports=G.transports.filter(T=>!T.done)}
   for(const e of G.enemies)if(e.landT>0)e.landT-=dt}
 // canopy seen from above: eight alternating gores, a dark hem and the open apex vent
-function chuteArt(R,rot){for(let i=0;i<8;i++){const a=rot+i*TAU/8;ctx.fillStyle=i%2?'#69724d':'#7e895d';ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R,a,a+TAU/8);ctx.closePath();ctx.fill()}
-  ell(-R*0.28,-R*0.3,R*0.5,R*0.38,'rgba(255,255,240,.1)');ctx.strokeStyle='rgba(28,32,18,.75)';ctx.lineWidth=R*0.09;ctx.beginPath();ctx.arc(0,0,R*0.96,0,TAU);ctx.stroke();ell(0,0,R*0.15,R*0.15,'#262a1b')}
+function chuteArt(R,rot){for(let i=0;i<8;i++){const a=rot+i*TAU/8;ctx.fillStyle=i%2?'#a39263':'#cdbd8c';ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R,a,a+TAU/8);ctx.closePath();ctx.fill()}
+  ell(-R*0.28,-R*0.3,R*0.5,R*0.38,'rgba(255,255,240,.1)');ctx.strokeStyle='rgba(58,48,28,.85)';ctx.lineWidth=R*0.09;ctx.beginPath();ctx.arc(0,0,R*0.96,0,TAU);ctx.stroke();ell(0,0,R*0.15,R*0.15,'#262a1b')}
 function drawChutes(){const px=1/sc;
-  for(const e of G.enemies){if(!(e.chute>0)&&!(e.landT>0))continue;const R=e.r*2;
+  for(const e of G.enemies){if(!(e.chute>0)&&!(e.landT>0))continue;const R=e.r*2.3;
     if(e.chute>0){const k=e.chute/e.chuteMax,alt=k*70,z=1+0.5*k;
       ell(e.x+alt*0.45,e.y+alt*0.55,R*0.95,R*0.85,`rgba(0,0,0,${(0.32-0.14*k).toFixed(2)})`);   // shadow slides in under the jumper as he drops
       ctx.save();ctx.translate(e.x,e.y);ctx.scale(z,z);chuteArt(R,Math.sin(G.time*1.6+e.wob)*0.35+e.wob);if(e.flash>0)ell(0,0,R,R,'rgba(255,255,255,.45)');ctx.restore();
       if(e.hp<e.max){const w=R*1.6,bh=Math.max(2.5,1.5*px),y=e.y-R*z-bh-2*px;box(e.x-w/2,y,w,bh,'#000');box(e.x-w/2,y,w*Math.max(0,e.hp/e.max),bh,'#6c4')}}
     else{const a=Math.atan2(e.y,e.x),f=e.landT/LAND_T;   // spent canopy slumps behind the trooper, away from the fort, and fades
       ctx.save();ctx.globalAlpha=Math.min(1,f*1.6);ctx.translate(e.x+Math.cos(a)*R,e.y+Math.sin(a)*R);ctx.rotate(a+Math.PI/2);
-      ell(0,0,R*(0.7+0.3*f),R*0.34,'#69724d');ell(0,-R*0.06,R*(0.5+0.2*f),R*0.18,'#7e895d');ctx.restore()}}}
+      ell(0,0,R*(0.7+0.3*f),R*0.34,'#a39263');ell(0,-R*0.06,R*(0.5+0.2*f),R*0.18,'#cdbd8c');ctx.restore()}}}
 // C-130-style transport, nose along +x
 const TRANS_WING=[[3,-33],[9,-33],[13,-5],[13,5],[9,33],[3,33],[1,5],[1,-5]],TRANS_TAIL=[[-17,-13],[-21,-13],[-25,-3],[-25,3],[-21,13],[-17,13],[-15,3],[-15,-3]];
 function transportArt(shadow){const c=shadow?'rgba(0,0,0,.26)':null;
@@ -2426,7 +2426,8 @@ function drawStorm(){const k=G.fogK;if(!(k>0.005))return;const Vs=sight(),out=vi
   ctx.stroke()}
 // ---- recon UAV side objective ---------------------------------------------------------------------------------------
 const UAV_COL='255,214,90';
-function launchUav(){const e=spawnSky('uav');e.ang+=(Math.random()-.5)*0.7;G.waveTotal++;
+function launchUav(){const e=spawnSky('uav'),R0=Math.hypot(e.x,e.y),d=vision()*(0.45+Math.random()*0.25);   // a chord that skirts the fort, so it is never simply the nearest target
+  e.ang+=(Math.random()<.5?1:-1)*Math.asin(Math.min(0.95,d/R0));G.waveTotal++;
   banner('RECON UAV OVERHEAD','Shoot it down before it escapes · bounty +$'+f1(money(e.rew)),UAV_COL);
   for(let i=0;i<2;i++)setTimeout(()=>tone(1240,0.06,'square',0,0.035),i*160)}
 // Escaped: its spotter calls a barrage. Red target rings mark each impact for ~1.6s before the shells land.
@@ -2463,7 +2464,7 @@ const SKY={
  strikejet:  {hp:110, spd:190,dmg:20,rate:0,  rew:45, r:11,alt:44,col:'#6f746c'},
  heavybomber:{hp:220, spd:64, dmg:12,rate:0,  rew:90, r:18,alt:60,col:'#5d625c'},
  airboss:    {hp:1250,spd:34, dmg:36,rate:3.2,rew:700,r:24,alt:66,col:'#3f4442'},
- uav:        {hp:60,  spd:55, dmg:18,rate:0,  rew:70,  r:9, alt:72,col:'#8d9399'}};
+ uav:        {hp:110, spd:60, dmg:18,rate:0,  rew:70,  r:9, alt:72,col:'#8d9399'}};
 // first wave each threat can appear; drones start arriving in swarms at `swarm`; the gunship leads waves 25, 35, 45...
 const SKY_WAVE={drone:7,swarm:12,gunheli:14,strikejet:22,heavybomber:30,airboss:25};
 Object.assign(INTEL,{
