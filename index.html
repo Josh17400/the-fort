@@ -201,7 +201,7 @@ const U=[
  {id:'frag',wave:6,need:[["dmg", 5]],cat:'WEAPONS',name:'Frag Rounds',max:6,cost:120,g:1.7,desc:'Bullets burst, splashing 35% damage nearby.',val:l=>l?(10+4*l)+'px splash':'none'},
  {id:'auto',wave:3,need:[["rate", 3]],cat:'WEAPONS',name:'Auto-Fire',max:5,cost:80,g:1.8,desc:'Your soldier fires on its own when you are not aiming.',val:l=>l?pct(autoAt(l))+' fire rate':'off'},
  {id:'vision',cat:'FORT',name:'Watchtower',max:12,cost:30,g:1.5,desc:'See (and shoot) further out.',val:l=>visionAt(l)+'m vision'},
- {id:'walls',cat:'FORT',name:'Fort Walls',max:10,cost:45,g:1.72,desc:'Starts as a tiny perch. Each level grows the walls and their HP.',val:l=>l?'size '+(wallHalfAt(l)*2)+' · '+wallMaxAt(l)+' HP':'just a crate'},
+ {id:'walls',cat:'FORT',name:'Fort Walls',max:10,cost:45,g:1.72,desc:'Starts as a tiny perch. Each level makes the fort bigger, the walls thicker and tougher. From Lv 6 they are thick enough for your riflemen to man the ramparts.',val:l=>l?'size '+(wallHalfAt(l)*2)+' · '+wallMaxAt(l)+' HP':'just a crate'},
  {id:'armor',wave:3,need:[["walls", 2]],cat:'FORT',name:'Reinforced Walls',max:8,cost:60,g:1.6,desc:'Walls take less damage.',val:l=>'-'+pct(l*0.07)+' wall dmg'},
  {id:'repair',wave:4,need:[["walls", 2]],cat:'FORT',name:'Engineers',max:8,cost:50,g:1.6,desc:'Walls repair themselves over time.',val:l=>pct(l*0.008)+' HP/s'},
  {id:'wire',wave:5,need:[["walls", 3]],cat:'FORT',name:'Barbed Wire',max:5,cost:100,g:1.75,desc:'A wire ring that slows and cuts enemies near the fort.',val:l=>l?'-'+pct(0.25+0.06*l)+' speed · '+2*l+' dps':'none'},
@@ -328,7 +328,7 @@ function startRun(){
 }
 const vision=()=>visionAt(L('vision'));
 const wallsUp=()=>L('walls')>0&&G.wallHp>0;
-const blockHalf=()=>wallsUp()?wallHalfAt(L('walls')):PLAT;
+const blockHalf=()=>wallsUp()?wallHalfAt(L('walls'))+wallThickAt(L('walls'))/2:PLAT;
 const visible=e=>Math.hypot(e.x,e.y)<=vision()+e.r;
 const money=v=>Math.round(v*(1+0.15*L('bounty')));
 
@@ -402,7 +402,7 @@ function update(dt){
     vis.sort((a,b)=>Math.hypot(a.x,a.y)-Math.hypot(b.x,b.y));fire(s,vis[Math.floor(Math.random()*Math.min(3,vis.length))],0.7);s.cd=cd*1.5}
   updateUnits(dt,half);updateAir(dt,half);
   // enemies
-  const wl=L('wire'),wireR=fortHalf()+wireOut(),slow=1-(0.25+0.06*wl);
+  const wl=L('wire'),wireR=fortHalf()+wallThick()/2+wireOut(),slow=1-(0.25+0.06*wl);
   for(const e of G.enemies){
     if(e.dead)continue;e.flash-=dt;e.wob+=dt*8;
     const d=Math.hypot(e.x,e.y)||1,cheb=Math.max(Math.abs(e.x),Math.abs(e.y)),stop=half+e.range+e.r;
@@ -453,7 +453,8 @@ function callAir(x,y){
 // ================= FORT LAYOUT =================
 // One place that decides where everything stands, so nothing overlaps.
 const fortHalf=()=>L('walls')?wallHalfAt(L('walls')):PLAT;
-const wallThick=()=>Math.min(11,4+L('walls')*0.7);
+const wallThickAt=l=>Math.min(18,4+l*1.4),wallThick=()=>wallThickAt(L('walls'));
+const RAMPART_LV=6;
 const wireOut=()=>L('wire')?20+6*L('wire'):0;
 // vehicle lanes: rounded-square tracks outside the walls and the wire
 function laneHalf(k){return fortHalf()+wallThick()/2+(L('wire')?wireOut()+10:14)+k*16}
@@ -469,7 +470,7 @@ function driveLane(u,lane,speed,dt){const H=laneHalf(lane),rad=18,per=4*(2*(H-ra
 // riflemen stand on the ramparts, two per side at most, clear of towers, gate and flame bunkers
 function placeSquad(){const ph=fortHalf(),sq=G.sold.slice(1),n=sq.length;if(!n)return;
   if(L('walls')<2){sq.forEach((s,i)=>{const a=i/n*Math.PI*2-Math.PI/2,r=ph+8;s.x=Math.cos(a)*r;s.y=Math.sin(a)*r;s.ang=a});return}
-  const inset=ph-wallThick()*0.15,order=[0,1,3,2],fr=[0.3,0.7];
+  const inset=L('walls')>=RAMPART_LV?ph-wallThick()*0.15:ph-wallThick()/2-7,order=[0,1,3,2],fr=[0.3,0.7];
   sq.forEach((s,i)=>{const side=order[i%4],k=Math.floor(i/4),t=(fr[k%2]*2-1)*ph,a=-Math.PI/2+side*Math.PI/2;
     const nx=Math.cos(a),ny=Math.sin(a);s.x=nx*inset-ny*t;s.y=ny*inset+nx*t;s.ang=a;s.home=a})}
 // ================= HEAVY ARMOR =================
@@ -800,7 +801,7 @@ function drawFloor(ph,wlv){
 }
 function drawWalls(ph,wlv){
   const tier=wallTier(wlv),P=WPAL[tier],up=G.wallHp>0,hk=G.wallMax?Math.max(0,G.wallHp/G.wallMax):0;
-  const T=Math.min(11,4+wlv*0.7),h=T/2,o=ph+h,inn=ph-h;
+  const T=wallThickAt(wlv),h=T/2,o=ph+h,inn=ph-h;
   // cast shadow on the ground (fake height, light from top-left)
   const sh=up?3+wlv*0.25:1.5;ctx.fillStyle='rgba(0,0,0,.38)';ctx.beginPath();ctx.rect(-o+sh,-o+sh,o*2,o*2);ctx.rect(-inn+sh,-inn+sh,inn*2,inn*2);ctx.fill('evenodd');
   for(let s=0;s<4;s++){ctx.save();ctx.rotate(s*Math.PI/2);
@@ -865,7 +866,7 @@ function draw(){
   drawDecals();
   const half=blockHalf(),wl=L('wire'),V=vision();
   // wire
-  if(wl){const r=fortHalf()+wireOut();ctx.strokeStyle='#8a8a7a';ctx.lineWidth=1.2;ctx.setLineDash([3,3]);ctx.strokeRect(-r,-r,2*r,2*r);ctx.strokeRect(-r+3,-r+3,2*r-6,2*r-6);ctx.setLineDash([])}
+  if(wl){const r=fortHalf()+wallThick()/2+wireOut();ctx.strokeStyle='#8a8a7a';ctx.lineWidth=1.2;ctx.setLineDash([3,3]);ctx.strokeRect(-r,-r,2*r,2*r);ctx.strokeRect(-r+3,-r+3,2*r-6,2*r-6);ctx.setLineDash([])}
   // mines
   for(const m of G.mines){ctx.fillStyle='#3a3a30';ctx.beginPath();ctx.arc(m.x,m.y,4,0,7);ctx.fill();if(Math.floor(G.time*2+m.blink)%2){ctx.fillStyle='#f33';ctx.fillRect(m.x-1,m.y-1,2,2)}}
   // fort
