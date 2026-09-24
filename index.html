@@ -4581,10 +4581,11 @@ function drawFloats(){if(!G.floats.length)return;const k=Math.max(1,0.85/sc);let
 // hqShadow() reads, and a night factor. At night the world pass is multiplied by a low-res LIGHT MAP (ambient + every light
 // in the scene added into it), so lamps, headlights, fires and blasts genuinely reveal the ground instead of just glowing
 // over black. Emissive FX are re-added afterwards so fire and tracers stay hot. The HUD is drawn after and stays crisp.
-// Presets: High = light map + sun shadows + mist/stars/fireflies; Medium = coarser light map, beams, lamps; Low = tint + dots.
+// Presets: High = light map + sun shadows + mist/stars/fireflies; Medium = flat tint with beams, halos and lamps drawn straight
+// over it (no full-screen composites beyond the tint); Low = tint + dots.
 const DAY_WAVES=9;
-const TOD=[[0,[38,50,96]],[4.3,[42,54,102]],[5.3,[112,94,126]],[6.2,[222,158,124]],[7.3,[255,212,176]],[8.8,[255,245,234]],[10,[255,255,255]],
-  [15,[255,255,255]],[16.4,[255,236,206]],[17.6,[255,182,124]],[18.5,[200,118,106]],[19.3,[96,78,120]],[20.3,[42,54,102]],[24,[38,50,96]]];
+const TOD=[[0,[70,82,132]],[4.3,[74,86,136]],[5.2,[124,104,146]],[6.0,[226,168,146]],[6.9,[255,210,178]],[8.2,[255,240,226]],[9.5,[255,255,255]],
+  [15,[255,255,255]],[16.2,[255,238,214]],[17.3,[255,208,160]],[18.2,[236,156,122]],[19,[140,104,138]],[20,[74,86,136]],[24,[70,82,132]]];
 const nightOf=h=>1-sstep(4.4,6.6,h)+sstep(18.2,20.2,h);
 const DN={on:false,h:12,nk:0,dk:0,lamp:0,ambCss:'#fff',farCss:'#fff',near:0,mist:0,haze:0,hazeCss:'',beams:[]};
 const SH={on:false,c:1,s:0,len:1,st:1,air:1,a:1};   // sun vector for hqShadow(): rotation (c,s), length, stretch, altitude scale, alpha
@@ -4613,15 +4614,15 @@ function dayFrame(){const on=!!(G&&S.set.dayNight&&G.todT!=null);DN.on=on;
   const h=hourOf(),nk=nightOf(h),a=todAmb(h,_amb);DN.h=h;DN.nk=nk;DN.lamp=sstep(.25,.7,nk);
   DN.dk=1-(a[0]*.3+a[1]*.55+a[2]*.15)/255;
   // beyond the fort's lit ring the night is much deeper: this is what "vision reduced at night" looks like (light-map presets)
-  const fk=1-0.62*sstep(.35,1,nk)*(GFX.lights?1:0);
-  DN.ambCss=`rgb(${a[0]|0},${a[1]|0},${a[2]|0})`;DN.farCss=`rgb(${a[0]*fk|0},${a[1]*fk|0},${a[2]*fk|0})`;DN.near=1-fk;
+  const fk=1-0.7*sstep(.35,1,nk)*(GFX.lights?1:0);
+  DN.ambCss=`rgb(${a[0]|0},${a[1]|0},${a[2]|0})`;DN.farCss=`rgb(${a[0]*fk|0},${a[1]*fk|0},${a[2]*fk|0})`;const q=v=>Math.round(v*(1-fk)/10)*10;DN.near=1-fk;DN.nearRgb=q(a[0])+','+q(a[1])+','+q(a[2]);
   DN.mist=Math.max(0,1-Math.abs(h-6.4)/1.9)*(1-(G.fogK||0));
   const dh=Math.max(0,1-Math.abs(h-18.1)/1.7);DN.haze=Math.max(dh,DN.mist*.6);DN.hazeCss=dh>=DN.mist*.6?'rgb(255,146,72)':'rgb(196,200,226)';
   // sun: rises ~6h, sets ~18h; the shadow swings +-50deg around the art's baked bottom-right fall and lengthens toward the horizon.
   // After dusk a faint moon takes over from the other side (the swap happens while both are at zero strength).
   const el=Math.sin(Math.PI*(h-6)/12),day=h>=5.5&&h<18.8,ph=day?(h-12)/6:(((h+12)%24)-12)/6,rot=Math.max(-1.2,Math.min(1.2,ph))*0.73;
   SH.on=HQ;SH.c=Math.cos(rot);SH.s=Math.sin(rot);
-  if(day){const e=Math.max(0.05,el);SH.len=Math.min(2.8,0.85/Math.pow(Math.max(.28,e),.95));SH.st=1+Math.max(0,SH.len-1)*0.55;SH.air=0.8+0.5*(1-e);SH.a=sstep(-.02,.22,el)*(1-.25*sstep(1.2,2.6,SH.len))}
+  if(day){const e=Math.max(0.05,el);SH.len=Math.min(2.2,0.85/Math.pow(Math.max(.28,e),.95));SH.st=1+Math.max(0,SH.len-1)*0.6;SH.air=0.8+0.5*(1-e);SH.a=sstep(-.02,.22,el)*(1+.2*sstep(1.2,2.6,SH.len))}
   else{SH.len=1.5;SH.st=1.25;SH.air=1;SH.a=0.38*sstep(.5,1,nk)}}
 // ---- cached light sprites (built once, tinted once per colour) ----
 const _dn={};
@@ -4635,7 +4636,7 @@ function dnCone(kind){let c=_dn['c'+kind];if(c)return c;const w=192,hh=96,[k,x]=
 function dnConeT(kind,rgb){const key='ct'+kind+rgb;let c=_dn[key];if(c)return c;const src=dnCone(kind),[k,x]=mkCv(src.width,src.height);
   x.drawImage(src,0,0);x.globalCompositeOperation='source-in';x.fillStyle=`rgb(${rgb})`;x.fillRect(0,0,k.width,k.height);return _dn[key]=k}
 const dnPool=rgb=>radialSprite('dnp'+rgb,[[0,`rgba(${rgb},1)`],[.3,`rgba(${rgb},.72)`],[.65,`rgba(${rgb},.26)`],[1,`rgba(${rgb},0)`]]);
-const dnFlat=()=>radialSprite('dnflat',[[0,'rgba(255,255,255,1)'],[.74,'rgba(255,255,255,1)'],[.88,'rgba(255,255,255,.5)'],[1,'rgba(255,255,255,0)']]);
+const dnFlat=rgb=>radialSprite('dnflat'+rgb,[[0,`rgba(${rgb},1)`],[.74,`rgba(${rgb},1)`],[.88,`rgba(${rgb},.5)`],[1,`rgba(${rgb},0)`]]);   // lit-ring lift, colour quantised so few variants exist
 const DN_EN='255,222,150',DN_FR='214,232,255',DN_LAMP='255,178,98',DN_FIRE='255,150,60',DN_TAIL='255,40,30';
 // Set context c to world matrix m, then translate(x,y) . rotate(th) . scale(sx,sy) - no save/restore churn.
 function cxf(c,m,x,y,th,sx,sy){const co=Math.cos(th),si=Math.sin(th);c.setTransform((m.a*co+m.c*si)*sx,(m.b*co+m.d*si)*sx,(m.c*co-m.a*si)*sy,(m.d*co-m.b*si)*sy,m.a*x+m.c*y+m.e,m.b*x+m.d*y+m.f)}
@@ -4649,7 +4650,7 @@ function dnRigs(){const r=_rig;r.length=0;const V=vision(),R2=Math.pow(V*1.42,2)
 // Aircraft (apron, low jets, strike jets, gunships, helicopters): [x, y, heading, half-span, nose, landing light?]
 const _nav=[];
 function dnNav(){const n=_nav;n.length=0;
-  if(G.fleet)for(const j of G.fleet)n.push([j.x,j.y,j.ang,11*2.1,14*2.1,(j.spd||0)>4||(j.alt||0)>0]);
+  if(G.fleet)for(const j of G.fleet){if(j.alt>=1)continue;const k=2.1+.4*(j.alt||0);n.push([j.x,j.y,j.ang,11*k,14*k,(j.spd||0)>4||(j.alt||0)>0])}   // alt>=1: up and away (drawn as a strike jet)
   for(const j of G.jets){const s=-900+700*j.t;n.push([j.x+j.dx*s,j.y+j.dy*s,Math.atan2(j.dy,j.dx),10.5*2.5,14*2.5,false])}
   for(const u of G.air)if(u.k==='gunship')n.push([u.x,u.y,u.ang,32*US.gunship,23*US.gunship,false]);
   for(const u of G.units)if(u.k==='heli')n.push([u.x,u.y,u.ang,6.5*US.heli,10*US.heli,false]);
@@ -4658,7 +4659,7 @@ function dnNav(){const n=_nav;n.length=0;
 let _mistS=null;
 function mistSprite(){if(_mistS)return _mistS;const S2=256,[c,x]=mkCv(S2,S2),r=rng(71);
   for(let i=0;i<10;i++){const cx=S2/2+(r()-.5)*S2*.46,cy=S2/2+(r()-.5)*S2*.3,rad=S2*(.14+r()*.14),g=x.createRadialGradient(cx,cy,0,cx,cy,rad);
-    g.addColorStop(0,'rgba(222,226,232,.34)');g.addColorStop(.55,'rgba(222,226,232,.16)');g.addColorStop(1,'rgba(222,226,232,0)');x.fillStyle=g;x.fillRect(0,0,S2,S2)}
+    g.addColorStop(0,'rgba(236,236,240,.5)');g.addColorStop(.55,'rgba(236,236,240,.24)');g.addColorStop(1,'rgba(236,236,240,0)');x.fillStyle=g;x.fillRect(0,0,S2,S2)}
   return _mistS=c}
 function dayMist(){if(!DN.on||!HQ||DN.mist<0.02)return;const V=vision(),W=V*3+200,spr=mistSprite(),t=G.time,hw=VW/2/sc,hh=VH/2/sc;ctx.globalAlpha=Math.min(1,DN.mist*.9);
   for(let i=0;i<7;i++){const c=CLOUDS[i%CLOUDS.length],rw=V*.55*(c.s+.3)*c.sx,rh=V*.34*(c.s+.3),x=((c.v*W+t*2.2+i*97)%W+W)%W-W/2,y=((c.u*W+t*.9+i*53)%W+W)%W-W/2;
@@ -4667,21 +4668,21 @@ function dayMist(){if(!DN.on||!HQ||DN.mist<0.02)return;const V=vision(),W=V*3+20
 function dayLight(V){if(!DN.on)return;const dk=DN.dk,lamp=DN.lamp;if(dk<0.004&&DN.haze<0.02)return;
   const m=ctx.getTransform(),W=cv.width,H=cv.height;
   if(dk>=0.004){
-    if(GFX.lights)dnLightMap(m,W,H,V);
+    if(HQ)dnLightMap(m,W,H,V);   // Medium: the flat tint below, with its lights drawn straight over it (no full-screen light-map composite)
     else{ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='multiply';ctx.fillStyle=DN.ambCss;ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over';xr(m)}
     // the emissive layer was just multiplied down with everything else: put the heat back (High re-renders it like the bloom pass)
-    if(dk>0.12&&GFX.lights){ctx.save();if(HQ){BP=true;try{drawFx();drawParts()}finally{BP=false}}else drawFx();ctx.restore();xr(m)}}
-  if(DN.haze>0.02&&GFX.vig){ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='screen';ctx.globalAlpha=DN.haze*(HQ?.1:.07);ctx.fillStyle=DN.hazeCss;ctx.fillRect(0,0,W,H);
+    if(dk>0.12&&HQ){ctx.save();BP=true;try{drawFx()}finally{BP=false}ctx.restore();xr(m)}}
+  if(DN.haze>0.02&&HQ){ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='screen';ctx.globalAlpha=DN.haze*.07;ctx.fillStyle=DN.hazeCss;ctx.fillRect(0,0,W,H);
     ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';xr(m)}
   if(lamp<0.02)return;
-  if(GFX.lights){dnStars(V,lamp);dnBeamsVis(m,lamp);if(HQ)dnFireflies(lamp)}
+  if(GFX.lights){if(!HQ){dnRigs();dnNav();dnBeams(DN.beams)}dnStars(V,lamp);dnGlow(m,W,H,V,lamp)}
   dnLamps(lamp,V);xr(m);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
 // Light map: ambient (deep beyond the lit ring, moonlit inside it) plus every light source, multiplied over the world.
-function dnLightMap(m,W,H,V){const q=HQ?4:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Math.max(2,Math.ceil(VH/q)),c=pfCanvas('dnlm',lw,lh),x=c._x,k=lw/W,lamp=DN.lamp,t=G.time;
+function dnLightMap(m,W,H,V){const q=HQ?5:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Math.max(2,Math.ceil(VH/q)),c=pfCanvas('dnlm',lw,lh),x=c._x,k=lw/W,lamp=DN.lamp,t=G.time;
   x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation='source-over';x.globalAlpha=1;x.fillStyle=DN.farCss;x.fillRect(0,0,lw,lh);
   const M={a:m.a*k,b:m.b*k,c:m.c*k,d:m.d*k,e:m.e*k,f:m.f*k},P=(img,wx,wy,r,a)=>{if(a<=0.01||r<=0)return;x.globalAlpha=Math.min(1,a);x.setTransform(M.a,M.b,M.c,M.d,M.a*wx+M.c*wy+M.e,M.b*wx+M.d*wy+M.f);x.drawImage(img,-r,-r,2*r,2*r)};
   x.globalCompositeOperation='lighter';
-  if(DN.near>0.01)P(dnFlat(),0,0,sight()*1.06+8,DN.near*1.25);
+  if(DN.near>0.01)P(dnFlat(DN.nearRgb),0,0,sight()*1.04+8,1);
   if(G.flashT>0){x.setTransform(1,0,0,1,0,0);x.globalAlpha=Math.min(1,G.flashT*1.5);x.fillStyle='#fff';x.fillRect(0,0,lw,lh)}
   const fire=dnPool(DN_FIRE);
   for(const l of G.lights)P(dnPool(l.c),l.x,l.y,l.r*1.35,1.1*l.life/l.max);
@@ -4699,53 +4700,54 @@ function dnLightMap(m,W,H,V){const q=HQ?4:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Ma
     if(G.depot&&!G.depot.dead)P(lp,G.depot.x,G.depot.y,80,.8*lamp);
     if(G.field&&G.fleet)P(lp,G.field.x,G.field.y,54,.55*lamp);
     if(L('airstrip')&&L('walls')){const w=Math.max(ph*2.8,200),y=runwayY(),rl=dnPool('255,226,160');
-      for(const yy of[y-2.5,y+RWY_H+2.5]){cxf(x,M,0,yy,0,w/2+10,16);x.globalAlpha=.6*lamp;x.drawImage(rl,-1,-1,2,2)}}
+      for(const yy of[y-2.5,y+RWY_H+2.5]){cxf(x,M,0,yy,0,(w/2+10)/64,16/64);x.globalAlpha=.6*lamp;x.drawImage(rl,-64,-64)}}
     // tower searchlights: shaft + the bright pool where they hit
     const sc2=dnConeT('s','236,244,255'),sp=dnPool('236,244,255');
-    for(const[ox,oy,a,len]of dnBeams(DN.beams)){cxf(x,M,ox,oy,a,len,len*.3);x.globalAlpha=.55*lamp;x.drawImage(sc2,0,-.5,1,1);P(sp,ox+Math.cos(a)*len*.93,oy+Math.sin(a)*len*.93,len*.2,.95*lamp)}
+    for(const[ox,oy,a,len]of dnBeams(DN.beams)){cxf(x,M,ox,oy,a,len/192,len*.3/96);x.globalAlpha=.8*lamp;x.drawImage(sc2,0,-48);P(sp,ox+Math.cos(a)*len*.93,oy+Math.sin(a)*len*.93,len*.2,.95*lamp)}
     // vehicle headlights, aircraft landing lights, helicopter spotlights
     for(const[vx,vy,a,fr,hw,tint,bl]of dnRigs()){const co=Math.cos(a),si=Math.sin(a),fx=vx+co*fr,fy=vy+si*fr;
-      cxf(x,M,fx,fy,a,bl,bl*.78);x.globalAlpha=.95*lamp;x.drawImage(dnConeT('h',tint),0,-.5,1,1);P(dnPool(tint),fx+co*hw*1.6,fy+si*hw*1.6,hw*3.2,.55*lamp)}
-    for(const[jx,jy,a,,nose,ll]of dnNav()){if(!ll)continue;const co=Math.cos(a),si=Math.sin(a);cxf(x,M,jx+co*nose,jy+si*nose,a,110,80);x.globalAlpha=.8*lamp;x.drawImage(dnConeT('h',DN_FR),0,-.5,1,1)}
+      cxf(x,M,fx,fy,a,bl/192,bl*.78/96);x.globalAlpha=.95*lamp;x.drawImage(dnConeT('h',tint),0,-48);P(dnPool(tint),fx+co*hw*1.6,fy+si*hw*1.6,hw*3.2,.55*lamp)}
+    for(const[jx,jy,a,,nose,ll]of dnNav()){if(!ll)continue;const co=Math.cos(a),si=Math.sin(a);cxf(x,M,jx+co*nose,jy+si*nose,a,110/192,80/96);x.globalAlpha=.8*lamp;x.drawImage(dnConeT('h',DN_FR),0,-48)}
     for(const u of G.units)if(u.k==='heli'){const a=u.gun??u.ang;P(dnPool(DN_FR),u.x+Math.cos(a)*46,u.y+Math.sin(a)*46,34,.8*lamp)}}
   x.globalAlpha=1;x.globalCompositeOperation='source-over';
   ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='multiply';ctx.imageSmoothingEnabled=true;ctx.drawImage(c,0,0,W,H);ctx.globalCompositeOperation='source-over';xr(m)}
-// Volumetric shafts: searchlight beams and headlight cones read as lit dust in the air - out in the fog too (a glimpse only:
-// nothing here touches visible(), so an enemy you can see the lights of still can't be targeted until it is in sight).
-function dnBeamsVis(m,lamp){ctx.globalCompositeOperation='lighter';const V=vision(),q=HQ?1:.75;
-  const sc2=dnConeT('s','200,220,255');for(const[ox,oy,a,len]of DN.beams){cxf(ctx,m,ox,oy,a,len,len*.3);ctx.globalAlpha=.16*lamp*q;ctx.drawImage(sc2,0,-.5,1,1)}
-  xr(m);const sp=glowSprite('220,232,255');for(const[ox,oy,a,len]of DN.beams)blit(sp,ox+Math.cos(a)*len*.93,oy+Math.sin(a)*len*.93,len*.17,.12*lamp*q);
-  for(const[vx,vy,a,fr,,tint,bl]of _rig){const far=1-sstep(V*1.05,V*1.42,Math.hypot(vx,vy));if(far<=0)continue;const co=Math.cos(a),si=Math.sin(a);
-    cxf(ctx,m,vx+co*fr,vy+si*fr,a,bl,bl*.78);ctx.globalAlpha=.2*lamp*far*q;ctx.drawImage(dnConeT('h',tint),0,-.5,1,1)}
-  xr(m);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
-// Lamp heads: head / tail lights on every rig (glimpsed through the fog out past vision), aircraft nav lights and strobes,
-// the tower lamp heads. Low draws plain dots and nothing else.
-function dnLamps(lamp,V){const t=G.time,lo=!GFX.lights,rigs=lo?dnRigs():_rig,px=1/sc,dot=Math.max(.9,1.3*px);
-  if(lo){for(const[vx,vy,a,fr,hw,tint,,rr]of rigs){const far=1-sstep(V*1.05,V*1.4,Math.hypot(vx,vy));if(far<=0)continue;const co=Math.cos(a),si=Math.sin(a);ctx.globalAlpha=lamp*far;
-      ctx.fillStyle=`rgb(${tint})`;for(const s of[-1,1])ctx.fillRect(vx+co*fr-si*hw*s-dot,vy+si*fr+co*hw*s-dot,dot*2,dot*2);
-      ctx.fillStyle='#d42a1e';for(const s of[-1,1])ctx.fillRect(vx+co*rr-si*hw*s-dot*.7,vy+si*rr+co*hw*s-dot*.7,dot*1.4,dot*1.4)}
-    for(const[jx,jy,a,span]of dnNav()){const co=Math.cos(a),si=Math.sin(a);ctx.globalAlpha=lamp;ctx.fillStyle='#ff3a2a';ctx.fillRect(jx+si*span-dot,jy-co*span-dot,dot*2,dot*2);ctx.fillStyle='#3aff6a';ctx.fillRect(jx-si*span-dot,jy+co*span-dot,dot*2,dot*2)}
-    ctx.globalAlpha=1;return}
-  ctx.globalCompositeOperation='lighter';const r0=Math.max(3.2,4*px),w=glowSprite('255,250,236'),tl=glowSprite(DN_TAIL);
-  for(const[vx,vy,a,fr,hw,tint,,rr]of rigs){const far=1-sstep(V*1.05,V*1.42,Math.hypot(vx,vy));if(far<=0)continue;const co=Math.cos(a),si=Math.sin(a),g=glowSprite(tint);
-    for(const s of[-1,1]){const lx=vx+co*fr-si*hw*s,ly=vy+si*fr+co*hw*s;blit(g,lx,ly,r0*1.8,lamp*far);blit(w,lx,ly,r0*.55,lamp*far);
-      blit(tl,vx+co*rr-si*hw*s,vy+si*rr+co*hw*s,r0*.9,.75*lamp*far)}}
-  const rd=glowSprite('255,50,40'),gr=glowSprite('60,255,110'),wh=glowSprite('255,255,255');
-  for(const[jx,jy,a,span,nose]of dnNav()){const co=Math.cos(a),si=Math.sin(a);blit(rd,jx+si*span,jy-co*span,r0*1.3,lamp);blit(gr,jx-si*span,jy+co*span,r0*1.3,lamp);
-    if((t*0.83+Math.abs(jx)*.001)%1<.08)blit(wh,jx-co*nose*.8,jy-si*nose*.8,r0*2.4,lamp)}
-  const hd=glowSprite('235,244,255');for(const[ox,oy]of DN.beams){blit(hd,ox,oy,r0*1.6,lamp);blit(wh,ox,oy,r0*.5,lamp)}
-  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
+// Glow layer: searchlight shafts, headlight cones (read as lit dust in the air - out in the fog too, a glimpse only: nothing
+// here touches visible(), so an enemy whose lights you can see still can't be targeted until it is in sight), lamp halos, nav
+// halos and fireflies are all drawn into one low-res buffer and added over the frame in a single full-screen pass.
+function dnGlow(m,W,H,V,lamp){const q=HQ?4:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Math.max(2,Math.ceil(VH/q)),c=HQ?pfCanvas('dnvb',lw,lh):null,x=HQ?c._x:ctx,k=HQ?lw/W:1,t=G.time,s=HQ?1:1.6,
+    M={a:m.a*k,b:m.b*k,c:m.c*k,d:m.d*k,e:m.e*k,f:m.f*k},B=(img,wx,wy,r,a)=>{if(a<=0.01)return;x.globalAlpha=Math.min(1,a);x.setTransform(M.a,M.b,M.c,M.d,M.a*wx+M.c*wy+M.e,M.b*wx+M.d*wy+M.f);x.drawImage(img,-r,-r,2*r,2*r)};
+  if(HQ){x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.clearRect(0,0,lw,lh)}x.globalCompositeOperation='lighter';
+  const sh=dnConeT('s','200,220,255'),sp=glowSprite('220,232,255'),hd=glowSprite('235,244,255'),px=1/sc,r0=Math.max(3.2,4*px);
+  for(const[ox,oy,a,len]of DN.beams){if(HQ){cxf(x,M,ox,oy,a,len/192,len*.3/96);x.globalAlpha=.3*lamp;x.drawImage(sh,0,-48)}   // Medium: pools only, no full shaft
+    B(sp,ox+Math.cos(a)*len*.93,oy+Math.sin(a)*len*.93,len*.17,.14*lamp*(HQ?1:.55));B(hd,ox,oy,r0*3,.9*lamp)}
+  const tl=glowSprite(DN_TAIL);
+  for(const[vx,vy,a,fr,hw,tint,bl,rr]of _rig){const far=1-sstep(V*1.05,V*1.42,Math.hypot(vx,vy));if(far<=0)continue;const co=Math.cos(a),si=Math.sin(a),g=glowSprite(tint);
+    cxf(x,M,vx+co*fr,vy+si*fr,a,bl/192,bl*.78/96);x.globalAlpha=.24*lamp*far*s;x.drawImage(dnConeT('h',tint),0,-48);
+    if(HQ)for(const n of[-1,1]){B(g,vx+co*fr-si*hw*n,vy+si*fr+co*hw*n,r0*2.6,lamp*far);B(tl,vx+co*rr-si*hw*n,vy+si*rr+co*hw*n,r0*1.5,.7*lamp*far)}else B(g,vx+co*fr,vy+si*fr,hw+r0*2,lamp*far)}   // Medium: one halo per pair
+  const rd=glowSprite('255,50,40'),gr=glowSprite('60,255,110');
+  if(HQ)for(const[jx,jy,a,span]of _nav){const co=Math.cos(a),si=Math.sin(a);B(rd,jx+si*span,jy-co*span,r0*2.2,lamp);B(gr,jx-si*span,jy+co*span,r0*2.2,lamp)}
+  if(HQ){const ph=fortHalf()+wallThick()+20,rr=Math.max(ph+20,sight()*.9),g=glowSprite('206,255,120');   // fireflies in the grass inside the lit ring
+    for(let i=0;i<34;i++){const u=hash(i,7),v=hash(i,9),a=u*TAU+Math.sin(t*.13+i)*.2,d=ph+(rr-ph)*Math.sqrt(v),b=Math.sin(t*(1.1+u)+i*7);if(b<.15)continue;
+      B(g,Math.cos(a)*d+Math.sin(t*.7+i*3)*6,Math.sin(a)*d+Math.cos(t*.53+i*5)*6,3.2,lamp*b)}}
+  if(HQ){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.drawImage(c,0,0,W,H)}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';xr(m)}
+// Lamp heads: crisp cores for head / tail lights (glimpsed through the fog out past vision), aircraft nav lights and strobes and
+// the tower lamps, batched into one path per colour. Low draws these as square dots and nothing else.
+const _lp={};
+function dnLamps(lamp,V){const t=G.time,lo=!GFX.lights,rigs=lo?dnRigs():_rig,nav=lo?dnNav():_nav,px=1/sc,dot=lo?Math.max(.9,1.3*px):Math.max(.7,1.05*px);
+  for(const k of['hd','tl','nr','ng','wh'])_lp[k]=new Path2D();
+  const P=(k,x,y,r)=>{if(lo)_lp[k].rect(x-r,y-r,2*r,2*r);else{_lp[k].moveTo(x+r,y);_lp[k].arc(x,y,r,0,TAU)}};
+  for(const[vx,vy,a,fr,hw,,,rr]of rigs){if(Math.hypot(vx,vy)>V*1.3)continue;const co=Math.cos(a),si=Math.sin(a);
+    for(const n of[-1,1]){P('hd',vx+co*fr-si*hw*n,vy+si*fr+co*hw*n,dot);P('tl',vx+co*rr-si*hw*n,vy+si*rr+co*hw*n,dot*.7)}}
+  for(const[jx,jy,a,span,nose]of nav){const co=Math.cos(a),si=Math.sin(a);P('nr',jx+si*span,jy-co*span,dot);P('ng',jx-si*span,jy+co*span,dot);
+    if(!lo&&(t*0.83+Math.abs(jx)*.001)%1<.08)P('wh',jx-co*nose*.8,jy-si*nose*.8,dot*1.6)}
+  if(!lo)for(const[ox,oy]of DN.beams)P('wh',ox,oy,dot*1.4);
+  ctx.globalAlpha=lamp;for(const[k,c]of[['hd','#fff4dc'],['tl','#e0342a'],['nr','#ff4a3a'],['ng','#4aff7a'],['wh','#ffffff']]){ctx.fillStyle=c;ctx.fill(_lp[k])}ctx.globalAlpha=1}
 // Stars over the dark beyond the fog line: three twinkle groups, so three fills a frame.
 let _stars=null;
-function dnStars(V,lamp){if(!_stars||_stars.V!==V){const r=rng(424242),g=[new Path2D(),new Path2D(),new Path2D()];
-    for(let i=0;i<260;i++){const a=r()*TAU,d=V*1.18+Math.pow(r(),.7)*V*1.9,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.5+r()*r()*1.6;g[i%3].moveTo(x+s,y);g[i%3].arc(x,y,s,0,TAU)}_stars={V,g}}
+function dnStars(V,lamp){const px=Math.round(4/sc)/4;if(!_stars||_stars.V!==V||_stars.px!==px){const r=rng(424242),g=[new Path2D(),new Path2D(),new Path2D()];
+    for(let i=0;i<260;i++){const a=r()*TAU,d=V*1.18+Math.pow(r(),.7)*V*1.9,x=Math.cos(a)*d,y=Math.sin(a)*d,s=(.45+r()*r()*1.3)*px;g[i%3].moveTo(x+s,y);g[i%3].arc(x,y,s,0,TAU)}_stars={V,px,g}}   // sizes in screen px: rebuilt only when the zoom settles on a new quarter-step
   const t=G.time;ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgb(200,214,255)';
   for(let i=0;i<3;i++){ctx.globalAlpha=Math.max(0,lamp*(.32+.2*Math.sin(t*(.9+i*.37)+i*2.1))*(1-(G.fogK||0)));ctx.fill(_stars.g[i])}
-  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
-// Fireflies in the grass inside the lit ring (High).
-function dnFireflies(lamp){const t=G.time,ph=fortHalf()+wallThick()+20,rr=Math.max(ph+20,sight()*.9),g=glowSprite('206,255,120');ctx.globalCompositeOperation='lighter';
-  for(let i=0;i<34;i++){const u=hash(i,7),v=hash(i,9),a=u*TAU+Math.sin(t*.13+i)*.2,d=ph+(rr-ph)*Math.sqrt(v),b=Math.sin(t*(1.1+u)+i*7);if(b<.15)continue;
-    blit(g,Math.cos(a)*d+Math.sin(t*.7+i*3)*6,Math.sin(a)*d+Math.cos(t*.53+i*5)*6,2.6,lamp*b*.8)}
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
 // HUD clock: a small horizon dial - sky colour for the hour, the sun or moon riding its arc, stars at night. Returns its label.
 function drawDayDial(cx,cy,r){const h=DN.h,a=_amb,nk=DN.nk;
