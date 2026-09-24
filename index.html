@@ -308,12 +308,12 @@ const decals=Array.from({length:420},()=>{const a=Math.random()*7,r=Math.sqrt(Ma
 
 // ================= GAME =================
 const ET={
- grunt:{hp:20,spd:24,dmg:5,rate:1,rew:5,r:7,col:'#b83a2e'},
- runner:{hp:11,spd:54,dmg:3,rate:0.6,rew:4,r:5,col:'#e0822a'},
- brute:{hp:95,spd:13,dmg:16,rate:1.4,rew:16,r:11,col:'#6e2530'},
- shooter:{hp:26,spd:20,dmg:4,rate:1.6,rew:10,r:7,col:'#9a45c0',range:150},
- bomber:{hp:16,spd:34,dmg:45,rate:1,rew:8,r:7,col:'#e6c32e',bomb:true},
- boss:{hp:900,spd:10,dmg:40,rate:1.5,rew:250,r:20,col:'#3a0c0c',boss:true},
+ grunt:{hp:20,spd:24,dmg:5,rate:1,rew:5,r:7,col:'#9a7b50'},
+ runner:{hp:11,spd:54,dmg:3,rate:0.6,rew:4,r:5,col:'#b39063'},
+ brute:{hp:95,spd:13,dmg:16,rate:1.4,rew:16,r:11,col:'#565b62'},
+ shooter:{hp:26,spd:20,dmg:4,rate:1.6,rew:10,r:7,col:'#6a5a3e',range:150},
+ bomber:{hp:16,spd:34,dmg:45,rate:1,rew:8,r:7,col:'#857a55',bomb:true},
+ boss:{hp:900,spd:10,dmg:40,rate:2.2,rew:250,r:20,range:55,col:'#6d6450',boss:true},
 };
 let G=null,running=false,paused=false,mouse={x:0,y:0,wx:0,wy:0,down:false};
 function startRun(){
@@ -342,7 +342,7 @@ function startWave(){
   if(G.wave%10===0)spawn('boss');
   const ml=L('mines');if(ml){const half=fortHalf()+wallThick()/2+wireOut(),n=2*ml;for(let i=0;i<n&&G.mines.length<n*3;i++){const a=Math.random()*7,r=laneHalf(2)*1.2+10+Math.random()*(Math.max(50,vision()*0.95-laneHalf(2)*1.2-10));G.mines.push({x:Math.cos(a)*r,y:Math.sin(a)*r,blink:Math.random()*3})}}
   if(G.wallMax){G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.25)}
-  banner(G.wave%10===0?'WAVE '+G.wave+' — BOSS INCOMING':'WAVE '+G.wave);sfx('wave');
+  banner(G.wave%10===0?'WAVE '+G.wave+' — ENEMY ARMOR INCOMING':'WAVE '+G.wave);sfx('wave');
 }
 function banner(t){G.banner=t;G.bannerT=2.5}
 function float(x,y,t,c,s=10){G.floats.push({x,y,t,c,s,life:0.9})}
@@ -353,7 +353,7 @@ function hurtEnemy(e,d,crit){if(e.dead)return;e.hp-=d;e.flash=0.08;fxHit(e,crit)
   if(e.hp<=0)kill(e)}
 function kill(e){e.dead=true;const r=money(e.rew);S.bank+=r;G.earned+=r;G.kills++;S.tkills++;fxKill(e);
   float(e.x,e.y-e.r-8,'+$'+r,'#7ddc5a',11);sfx('kill');
-  if(e.boss){shake(10);banner('BOSS DOWN  +$'+r)}}
+  if(e.boss){shake(10);banner('ENEMY TANK DESTROYED  +$'+r)}}
 function explode(x,y,r,dmg,big=true){
   for(const e of G.enemies)if(!e.dead&&Math.hypot(e.x-x,e.y-y)<r+e.r)hurtEnemy(e,dmg,false);
   G.fx.push({k:'boom',x,y,r,life:0.45,max:0.45});
@@ -410,7 +410,7 @@ function update(dt){
     if(cheb>half+e.r&&(cheb>stop||(e.range&&d>vision()-e.r*1.5))){e.x-=e.x/d*spd*dt;e.y-=e.y/d*spd*dt;e.moving=true}
     else{e.moving=false;e.atk-=dt;if(e.atk<=0){e.atk=e.rate;
       if(e.bomb){e.dead=true;explode(e.x,e.y,30,0);damageFort(e.dmg)}
-      else if(e.range){const tx=Math.max(-half,Math.min(half,e.x)),ty=Math.max(-half,Math.min(half,e.y));G.fx.push({k:'tracer',x:e.x,y:e.y,x2:tx,y2:ty,life:0.08,max:0.08,c:'#ff6a5a'});damageFort(e.dmg)}
+      else if(e.range){const tx=Math.max(-half,Math.min(half,e.x)),ty=Math.max(-half,Math.min(half,e.y));G.fx.push({k:'tracer',x:e.x,y:e.y,x2:tx,y2:ty,life:0.08,max:0.08,c:e.boss?'#ffd08a':'#ff6a5a',w:e.boss?2.4:1.2});if(e.boss)explode(tx,ty,16,0);damageFort(e.dmg)}
       else{damageFort(e.dmg);e.lunge=0.15}}}
     if(e.lunge>0)e.lunge-=dt;
     // mines
@@ -659,7 +659,7 @@ function explode(x,y,r,dmg,big=true){
     decal(x,y,'scorch',r*0.75);light(x,y,r*3.2,'255,165,70',0.4);sfx('boom');shake(4)}
   else light(x,y,r*2.2,'255,170,80',0.15)}
 function fxHit(e,crit){gib(e.x,e.y,2,55,'#8a1414',0.35,1.5);if(crit){spark(e.x,e.y,6,140,['#fff','#ffe07a'],0.3,1.4);light(e.x,e.y,22,'255,230,140',0.1)}}
-function fxKill(e){const b=e.boss;gib(e.x,e.y,b?36:8,b?140:90,'#6e0c0c',0.8,b?3:2);gib(e.x,e.y,b?12:3,70,e.col,0.9,2.4);decal(e.x,e.y,'blood',e.r*(b?2.2:1.5));
+function fxKill(e){const b=e.boss;gib(e.x,e.y,b?36:8,b?140:90,b?'#2e2c28':'#6e0c0c',0.8,b?3:2);gib(e.x,e.y,b?12:3,70,e.col,0.9,2.4);decal(e.x,e.y,b?'scorch':'blood',e.r*(b?2.2:1.5));
   if(b){fireball(e.x,e.y,50,0.8);ring(e.x,e.y,120,0.8,'255,200,150',5);light(e.x,e.y,200,'255,140,60',0.7);puff(e.x,e.y,14,24,3,'50,45,40',40,.6);shake(10)}}
 function fxMuzzle(s){const a=s.ang,mx=s.x+Math.cos(a)*15,my=s.y+Math.sin(a)*15;light(mx,my,s.main?34:24,'255,205,120',0.06);spark(mx,my,2,90,['#ffe7a0'],0.12,1.1);
   if(G.parts.length<FXCAP.parts){const p=a+Math.PI/2+(R()-.5)*.6,sp=50+R()*40;G.parts.push({x:s.x,y:s.y,vx:Math.cos(p)*sp,vy:Math.sin(p)*sp,life:0.7,max:0.7,c:'#d9ad4f',sz:1.3,rot:R()*6,spin:20})}
@@ -747,7 +747,7 @@ function drawEnemy(e,x,y){
       ell(0,0,3.4,5.2,c);box(2.4,0.2,5,1.4,'#6a4a2a');box(7.4,0.4,3,1,'#222');
       ctx.fillStyle='#d8d8d8';ctx.beginPath();ctx.moveTo(10.4,0.4);ctx.lineTo(14,0.9);ctx.lineTo(10.4,1.4);ctx.fill();   // bayonet
       limb(0.5,-4.2,6.5,0.8,1.9,c);limb(0.5,4.2,3,1.6,1.9,c);ell(6.6,0.9,1,1,skin);ell(3,1.7,1,1,skin);
-      ell(0.2,0,2.9,2.9,'#5a1e18');box(2.4,-1.8,1.4,3.6,'#3a120e');break;       // cap + brim
+      ell(0.2,0,3,3,'#6e5e3e');ell(-.4,-.6,1,1,'#8a7a55');box(-2.4,-.5,4.8,1,'#4a3f2a');break;       // cap + brim
     case'runner':   // light infantry: fast, SMG, cap + chest rig
       ell(0,0,2.8,4.4,c);box(-1.2,-3.4,2.4,6.8,'#5a3a1a');
       box(2.4,0.3,4,1.4,'#1d1d1d');box(6.4,0.6,2.2,0.8,'#0e0e0e');box(3.6,1.7,1,1.8,'#2a2a2a');
@@ -765,23 +765,25 @@ function drawEnemy(e,x,y){
       ell(0,0,3.2,5,c);box(0,-0.1,3,1.8,'#3a2a1a');box(3,0,6,1.4,'#1b1b1b');box(9,0.3,6,0.8,'#0c0c0c');
       box(4,-0.9,4,1,'#050505');ell(8,-0.4,.5,.5,'#ff4a3a');                      // scope + red lens
       limb(0.5,-4,8,0.6,1.8,c);limb(0.5,4,3.2,1.7,1.8,c);ell(8.2,0.8,1,1,skin);
-      ell(0,0,3,3,'#5e2a78');ell(1.2,0,1.2,1.8,'#1a0e22');break;                 // hood
+      ell(0,0,3.2,3.2,'#4f4a32');for(let k=0;k<6;k++)ell(Math.cos(k)*2.2,Math.sin(k)*2.2,.9,.6,'#5f5a3a');ell(1.2,0,1.2,1.8,'#1a1a12');break;                 // hood
     case'bomber':   // sapper: demo pack on back, carrying a breaching charge
       ell(0,0,3.4,5.2,c);box(-5,-3,3.2,6,'#4d4a2c');box(-5,-3,3.2,.9,'#6b6740');ell(-3.4,0,.7,.7,'#c0392b');
       limb(0.5,-4,5.4,-1.8,1.9,c);limb(0.5,4,5.4,1.8,1.9,c);
       box(5,-2.6,3.6,5.2,'#6e6a52');box(5,-2.6,3.6,.9,'#8a8668');box(5.6,-0.6,2.4,1.2,'#222');
       if(Math.floor(G.time*6)%2){ell(6.8,0,.7,.7,'#ff3b30');ell(6.8,0,1.6,1.6,'rgba(255,60,50,.35)')}
       ell(0,0,2.8,2.8,'#4f5a36');box(1.6,-1.9,1.2,3.8,'#1c1c1c');break;                      // helmet + goggles
-    case'boss':
-      ell(0,0,4.4,6,c);ell(0,-5.4,2.6,2.2,'#4a4a4a');ell(0,5.4,2.6,2.2,'#4a4a4a');
-      box(-5.5,-3,2.5,6,'#2a2a2a');                                              // ammo pack
-      limb(0,-3,1.5,2.6,.9,'#c9a227');                                           // ammo belt
-      limb(0.5,-5,5,-1.2,2.4,c);limb(0.5,5,5,1.2,2.4,c);
-      box(3.5,-2,5,4,'#2b2b2b');
-      const sp=G.time*30;for(let i=0;i<3;i++)box(8.5,-1.5+i*1.1+Math.sin(sp+i)*.15,6.5,0.8,i%2?'#3a3a3a':'#111');   // minigun barrels
-      ell(0,0,3.3,3.3,'#2e2e2e');box(1.4,-2.2,1.3,4.4,'#e33');break;           // helmet + visor
+    case'boss':{   // enemy main battle tank
+      const tr=(e.wob*3)%2.5;ell(1,1.5,10,8,'rgba(0,0,0,.35)');
+      box(-8.5,-7,17,3.2,'#191919');box(-8.5,3.8,17,3.2,'#191919');for(let i=-8.5+tr;i<8.5;i+=2.5){box(i,-7,.8,3.2,'#3a3a34');box(i,3.8,.8,3.2,'#3a3a34')}
+      box(-8,-4.2,16,8.4,c);box(-8,-4.2,16,1,'#8a8068');box(-8,3.2,16,1,'#4a4436');box(6,-3,2,6,'#4a4436');
+      box(-7.5,-2.5,3,5,'#3a3a30');for(const[x,y]of[[-3,-3.4],[2,2.4],[-1,2.6]])ell(x,y,1.2,.7,'#5a5242');
+      box(-6.5,-3.6,2,1.2,'#b22');
+      box(2,-0.7,11,1.4,'#2d2a22');box(12,-1.1,2,2.2,'#1a1a16');
+      ell(0,0,4.2,3.8,'#5d5544');ctx.strokeStyle='#2a261e';ctx.lineWidth=.4;ctx.stroke();ell(-1.4,-1.4,1.2,1.2,'#3a3528');ell(1.6,1.6,.8,.8,'#2a261e');
+      break}
   }
-  if(e.flash>0){ctx.globalAlpha=.7;ell(0,0,5.5,6,'#fff');ctx.globalAlpha=1}
+  if(!e.boss){ell(-0.6,-4.3,1.3,0.9,'#c62828')}
+  if(e.flash>0){ctx.globalAlpha=.7;ell(0,0,e.boss?9:5.5,e.boss?8:6,'#fff');ctx.globalAlpha=1}
   ctx.restore();
 }
 const WPAL={
