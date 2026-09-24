@@ -407,7 +407,7 @@ function update(dt){
     if(e.dead)continue;e.flash-=dt;e.wob+=dt*8;
     const d=Math.hypot(e.x,e.y)||1,cheb=Math.max(Math.abs(e.x),Math.abs(e.y)),stop=half+e.range+e.r;
     let spd=e.spd;if(wl&&cheb<wireR){spd*=slow;e.hp-=2*wl*dt;if(e.hp<=0){kill(e);continue}}
-    if(cheb>stop){e.x-=e.x/d*spd*dt;e.y-=e.y/d*spd*dt;e.moving=true}
+    if(cheb>half+e.r&&(cheb>stop||(e.range&&d>vision()-e.r*1.5))){e.x-=e.x/d*spd*dt;e.y-=e.y/d*spd*dt;e.moving=true}
     else{e.moving=false;e.atk-=dt;if(e.atk<=0){e.atk=e.rate;
       if(e.bomb){e.dead=true;explode(e.x,e.y,30,0);damageFort(e.dmg)}
       else if(e.range){const tx=Math.max(-half,Math.min(half,e.x)),ty=Math.max(-half,Math.min(half,e.y));G.fx.push({k:'tracer',x:e.x,y:e.y,x2:tx,y2:ty,life:0.08,max:0.08,c:'#ff6a5a'});damageFort(e.dmg)}
@@ -748,26 +748,30 @@ function drawEnemy(e,x,y){
       ctx.fillStyle='#d8d8d8';ctx.beginPath();ctx.moveTo(10.4,0.4);ctx.lineTo(14,0.9);ctx.lineTo(10.4,1.4);ctx.fill();   // bayonet
       limb(0.5,-4.2,6.5,0.8,1.9,c);limb(0.5,4.2,3,1.6,1.9,c);ell(6.6,0.9,1,1,skin);ell(3,1.7,1,1,skin);
       ell(0.2,0,2.9,2.9,'#5a1e18');box(2.4,-1.8,1.4,3.6,'#3a120e');break;       // cap + brim
-    case'runner':
-      ell(0,0,2.8,4.4,c);limb(0.3,3.6,5,3.2,1.6,c);limb(0.3,-3.6,2,-4.6,1.6,c);ell(5.2,3.2,.9,.9,skin);
-      ctx.fillStyle='#cfd3d6';ctx.beginPath();ctx.moveTo(5.6,2.7);ctx.quadraticCurveTo(10,1.4,12.2,3.4);ctx.lineTo(5.6,3.8);ctx.fill();   // machete
-      ell(0.2,0,2.4,2.4,skin);ctx.fillStyle='#e0822a';ctx.beginPath();ctx.arc(0,0,2.5,Math.PI*0.6,Math.PI*1.4);ctx.fill();break;       // bandana
-    case'brute':
-      ell(0,0,4,5.8,c);ell(0,-5,2.2,2,'#6d6d6d');ell(0,5,2.2,2,'#6d6d6d');box(-1.5,-3,3,6,'#555');   // armor
-      limb(0.5,-4.8,6,-1,2.4,c);limb(0.5,4.8,6,1,2.4,c);ell(6,0,1.3,1.3,skin);
-      box(5.5,-0.5,7,1,'#5a3a1c');box(12,-2.4,3,4.8,'#8a8f94');box(12,-2.4,3,.8,'#b5babe');   // sledgehammer
-      ell(0.2,0,3,3,'#707478');ell(-.6,-.8,1,1,'#9aa0a4');break;
+    case'runner':   // light infantry: fast, SMG, cap + chest rig
+      ell(0,0,2.8,4.4,c);box(-1.2,-3.4,2.4,6.8,'#5a3a1a');
+      box(2.4,0.3,4,1.4,'#1d1d1d');box(6.4,0.6,2.2,0.8,'#0e0e0e');box(3.6,1.7,1,1.8,'#2a2a2a');
+      limb(0.3,-3.6,5.6,0.6,1.6,c);limb(0.3,3.6,3,1.6,1.6,c);ell(5.8,0.9,.9,.9,skin);ell(3,1.7,.9,.9,skin);
+      ell(0.2,0,2.4,2.4,'#6b4a22');box(1.8,-1.6,1.3,3.2,'#4a3316');break;
+    case'brute':    // heavy trooper: plate armor, ballistic shield, LMG
+      ell(0,0,4,5.8,c);box(-2.4,-4.4,4.8,8.8,'#3d3f44');box(-2.4,-4.4,4.8,1,'#5a5d63');     // plate carrier
+      ell(-0.6,-5,1.8,1.6,'#3d3f44');ell(-0.6,5,1.8,1.6,'#3d3f44');                        // shoulder armor
+      box(-4.8,-2.2,2,4.4,'#2b2d31');                                                      // back pack
+      limb(0.5,-4.6,5.2,-2.4,2.4,c);limb(0.5,4.6,5.2,2.4,2.4,c);
+      box(5,-2.2,2.2,6.6,'#1b1d20');box(5,-2.2,2.2,.8,'#3a3d42');box(5.4,-0.6,1.4,1.2,'#5aa0c8');   // ballistic shield + viewport
+      box(3,2.6,7.5,1.3,'#141414');box(10.5,2.8,2,0.9,'#0a0a0a');box(4.5,3.9,2,1.6,'#2a2a2a');      // LMG over shield edge
+      ell(0.2,0,3.1,3.1,'#2f3236');box(1.2,-2.4,1.8,4.8,'#101316');ell(2.1,0,.5,2,'rgba(90,160,200,.5)');break;  // full helmet + visor
     case'shooter':
       ell(0,0,3.2,5,c);box(0,-0.1,3,1.8,'#3a2a1a');box(3,0,6,1.4,'#1b1b1b');box(9,0.3,6,0.8,'#0c0c0c');
       box(4,-0.9,4,1,'#050505');ell(8,-0.4,.5,.5,'#ff4a3a');                      // scope + red lens
       limb(0.5,-4,8,0.6,1.8,c);limb(0.5,4,3.2,1.7,1.8,c);ell(8.2,0.8,1,1,skin);
       ell(0,0,3,3,'#5e2a78');ell(1.2,0,1.2,1.8,'#1a0e22');break;                 // hood
-    case'bomber':
-      ell(0,0,3.4,5.2,c);for(let i=-3;i<=2;i+=1.6)box(-4,i,2.4,1.3,'#c0392b');    // dynamite vest
-      limb(0.5,-4,5.4,-1.6,1.9,c);limb(0.5,4,5.4,1.6,1.9,c);
-      ell(6.8,0,2.4,2.4,'#1a1a1a');limb(8.6,-1.2,10,-2.6,.5,'#bba27a');
-      if(Math.floor(G.time*14)%2){ell(10.2,-2.8,1.3,1.3,'#ffd23f');ell(10.2,-2.8,.6,.6,'#fff')}
-      ell(0,0,2.7,2.7,skin);box(-2.5,-.6,5,1.2,'#333');break;                   // goggles strap
+    case'bomber':   // sapper: demo pack on back, carrying a breaching charge
+      ell(0,0,3.4,5.2,c);box(-5,-3,3.2,6,'#4d4a2c');box(-5,-3,3.2,.9,'#6b6740');ell(-3.4,0,.7,.7,'#c0392b');
+      limb(0.5,-4,5.4,-1.8,1.9,c);limb(0.5,4,5.4,1.8,1.9,c);
+      box(5,-2.6,3.6,5.2,'#6e6a52');box(5,-2.6,3.6,.9,'#8a8668');box(5.6,-0.6,2.4,1.2,'#222');
+      if(Math.floor(G.time*6)%2){ell(6.8,0,.7,.7,'#ff3b30');ell(6.8,0,1.6,1.6,'rgba(255,60,50,.35)')}
+      ell(0,0,2.8,2.8,'#4f5a36');box(1.6,-1.9,1.2,3.8,'#1c1c1c');break;                      // helmet + goggles
     case'boss':
       ell(0,0,4.4,6,c);ell(0,-5.4,2.6,2.2,'#4a4a4a');ell(0,5.4,2.6,2.2,'#4a4a4a');
       box(-5.5,-3,2.5,6,'#2a2a2a');                                              // ammo pack
