@@ -168,7 +168,7 @@ kbd{font:600 12px var(--f-display);background:rgba(255,255,255,.08);border:1px s
 /* sheets and modals (shared shell: battle scopes its own overrides under #overlay / #perkModal) */
 .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:var(--z-modal);
   padding:calc(16px + var(--safe-t)) calc(16px + var(--safe-r)) calc(16px + var(--safe-b)) calc(16px + var(--safe-l));
-  background:rgba(5,6,4,.6);backdrop-filter:blur(6px)}
+  background:rgba(5,6,4,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .modal.on{display:flex;animation:fade var(--d-2) var(--e-out)}
 .modal>.panel{width:100%;max-width:520px;max-height:calc(100dvh - 32px - var(--safe-t) - var(--safe-b));display:flex;flex-direction:column;
   overflow:hidden;padding:0;border-radius:var(--rad-xl);background:var(--c-s4);border:1px solid var(--c-line-2);box-shadow:var(--el-3)}
@@ -196,7 +196,7 @@ kbd{font:600 12px var(--f-display);background:rgba(255,255,255,.08);border:1px s
 .ticks::after{bottom:-1px;right:-1px;border-bottom-width:2px;border-right-width:2px;border-radius:0 0 14px 0}
 /* form controls (settings) */
 .set{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 16px;min-height:56px;padding:10px 0;border-bottom:1px solid var(--c-line);cursor:pointer}
-.set .st{font:500 14px/1.35 var(--f-body);color:var(--c-text)}
+div.set{cursor:default}.set .st{font:500 14px/1.35 var(--f-body);color:var(--c-text)}
 .set small{display:block;margin-top:2px;font:400 12px/1.4 var(--f-body);color:var(--c-dim)}
 .set .seg{min-width:228px}
 .set-sec{margin:18px 0 2px}
@@ -329,9 +329,9 @@ body.mobile #speedBtn{height:38px!important;min-width:44px;font-size:12px;right:
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin:0 0 26px}
 .mgrid.close{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .mcard{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:var(--rad-lg);background:var(--g-card);border:1px solid var(--c-line)}
-.mdot,.mcard .mi{width:44px;height:44px;flex:none;border-radius:50%;display:grid;place-items:center;color:var(--c-dim);background:rgba(255,255,255,.03);border:1px dashed var(--c-line-2)}
+.mcard .mi{width:44px;height:44px;flex:none;border-radius:50%;display:grid;place-items:center;color:var(--c-dim);background:rgba(255,255,255,.03);border:1px dashed var(--c-line-2)}
 .mcard.on{border-color:rgba(227,181,60,.4);background:linear-gradient(180deg,rgba(227,181,60,.07),var(--c-s2))}
-.mdot.on,.mcard.on .mi{color:#2a1d04;background:radial-gradient(circle at 50% 32%,#ffe7a0,#e3b53c 55%,#9c7418);border:1px solid #ffd76a;box-shadow:0 0 14px rgba(227,181,60,.3),inset 0 -2px 3px rgba(0,0,0,.25)}
+.mcard.on .mi{color:#2a1d04;background:radial-gradient(circle at 50% 32%,#ffe7a0,#e3b53c 55%,#9c7418);border:1px solid #ffd76a;box-shadow:0 0 14px rgba(227,181,60,.3),inset 0 -2px 3px rgba(0,0,0,.25)}
 .mcard .mb{min-width:0;flex:1}
 .mcard .mn{font:800 15px/1.25 var(--f-display);letter-spacing:.02em}.mcard:not(.on) .mn{color:#d3d9c6}
 .mcard .md{margin-top:3px;font:400 13px/1.4 var(--f-body);color:var(--c-text-2)}
@@ -343,9 +343,9 @@ body.mobile #speedBtn{height:38px!important;min-width:44px;font-size:12px;right:
 .mgrid.close .mcard .mi{width:52px;height:52px}
 .mgrid.close .mcard .mb{width:100%}
 @media (max-width:899px){
-  .mgrid.close{grid-template-columns:1fr}
+  .mgrid.close{grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))}
   .mgrid.close .mcard{flex-direction:row}
-  .mgrid:not(.close){grid-template-columns:1fr;gap:8px}
+  .mgrid:not(.close){grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:8px}
   .mgrid:not(.close) .mcard:not(.on){display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:4px 10px;min-height:68px;padding:10px 12px}
   .mgrid:not(.close) .mcard:not(.on) .mi{width:40px;height:40px;grid-row:1/3}
   .mgrid:not(.close) .mcard:not(.on) .mb{display:contents}
@@ -412,7 +412,7 @@ body.mobile #medalToast{bottom:calc(236px + env(safe-area-inset-bottom))}
   .logo .mark{width:32px;height:32px;border-radius:9px}.logo h1{display:none}
   .nav,#hdrDeploy,#home.dep-off #hdrDeploy{display:none}
   .hdr-r{display:contents}#settingsBtn{grid-column:5}
-  .chip{height:36px;padding:0 12px;gap:6px}.chip b{font-size:15px}
+  .chip{height:36px;padding:0 12px;gap:6px}.chip b{font-size:15px}button.chip::after{content:"";position:absolute;inset:-4px -2px}
   #deployBtn{display:none}
   .vt{font-size:22px}
 }
@@ -453,6 +453,7 @@ body.mobile #medalToast{bottom:calc(236px + env(safe-area-inset-bottom))}
 /* ================= BASE ================= */
 .bgrid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:16px;align-items:start}
 .bcol{display:flex;flex-direction:column;gap:16px;min-width:0}
+body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(22,27,18,.8)}   /* phones: static backdrop, keep scrolling cheap */
 #lastRun:empty,#rdSum:empty,#nextUnl:empty,#picks[hidden]{display:none}
 .deploy{display:flex;flex-direction:column;gap:18px}
 .deploy h2{margin:10px 0 0;font:800 28px/1.1 var(--f-display);letter-spacing:.06em}
@@ -510,7 +511,7 @@ body.mobile #medalToast{bottom:calc(236px + env(safe-area-inset-bottom))}
 .rdc{display:flex;flex-wrap:wrap;gap:8px}
 .pick-row{display:grid;grid-template-columns:40px minmax(0,1fr) minmax(0,auto) auto;align-items:center;gap:12px;min-height:56px;padding:8px 0;border-top:1px solid var(--c-line)}
 .sec-h+.pick-row{border-top:0;padding-top:0}
-.pick-row .ico{width:40px;height:40px;border-radius:11px;cursor:pointer;padding:0}
+.pick-row .ico{position:relative;width:40px;height:40px;border-radius:11px;cursor:pointer;padding:0}.pick-row .ico::after{content:"";position:absolute;inset:-2px}
 .pick-row .pn{font:600 14px/1.3 var(--f-body);color:var(--c-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pick-row .pn em{font-style:normal;color:var(--c-dim);font-weight:500}
 .pick-row .pw{margin-top:2px;font:500 12px/1.3 var(--f-body);color:var(--c-gold-hi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pick-row .pdv{display:flex;flex-direction:column;align-items:flex-end;max-width:200px;min-width:0;font:400 12px/1.35 var(--f-body);color:var(--c-dim);text-align:right}
@@ -541,7 +542,7 @@ body.mobile #medalToast{bottom:calc(236px + env(safe-area-inset-bottom))}
 /* ================= ARMORY ================= */
 .cats-bar{position:sticky;top:calc(var(--hdr-h) + var(--safe-t));z-index:4;display:flex;align-items:center;gap:12px;margin:0 calc(-1 * var(--gutter));padding:0 var(--gutter);
   background:linear-gradient(var(--c-bg) 70%,rgba(11,13,9,0))}
-.cats{flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;padding:10px 2px 14px}
+.cats{position:relative;flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;padding:10px 2px 14px}
 .cats::-webkit-scrollbar{display:none}
 .cats.fl{-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px);mask-image:linear-gradient(90deg,transparent,#000 40px)}
 .cats.fr{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
@@ -552,7 +553,7 @@ body.mobile #medalToast{bottom:calc(236px + env(safe-area-inset-bottom))}
 .cat .ic{opacity:.8}
 @media (hover:hover){.cat:hover{color:var(--c-text);border-color:var(--c-line-3)}}
 .cat .n{font:800 11px var(--f-display);letter-spacing:0;color:var(--c-green)}
-.cat[aria-selected=true]{background:var(--c-text);color:#111;border-color:var(--c-text)}.cat[aria-selected=true] .n{color:#2c6a14}.cat[aria-selected=true] .ic{opacity:1}
+.cat[aria-pressed=true]{background:var(--c-text);color:#111;border-color:var(--c-text)}.cat[aria-pressed=true] .n{color:#2c6a14}.cat[aria-pressed=true] .ic{opacity:1}
 .aff{flex:none;position:relative;display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:var(--rad-pill);border:1px solid var(--c-line-2);background:transparent;
   color:var(--c-dim);font:600 11px var(--f-display);letter-spacing:.12em;cursor:pointer;margin-bottom:4px}
 .aff::before{content:"";width:14px;height:14px;border-radius:4px;border:1.5px solid var(--c-line-3);transition:background var(--d-2),border-color var(--d-2)}
@@ -715,7 +716,8 @@ body.mobile #medalToast{bottom:calc(236px + env(safe-area-inset-bottom))}
   .tiles.t4{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.tiles.t4 .tile{padding:8px 6px}.tiles.t4 .tile b{font-size:15px}.tiles.t4 .tile span{letter-spacing:.08em}.hph{display:none}
   .cp{grid-template-columns:1fr}.cp .cpx{grid-column:1}.cp>.seg{max-width:none}
   .pick-row{grid-template-columns:40px minmax(0,1fr) auto;gap:10px}.pick-row .pdv{display:none}
-  .grid{grid-template-columns:1fr;gap:10px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:10px}
+  #home[data-view=rd]~.toast{bottom:calc(var(--nav-h) + var(--safe-b) + var(--dock-lift,0px) + 84px)}
   .card{padding:12px}.card.rec{padding-top:30px}
   .card .d{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}.card.open .d{display:block}
   .mgrid2{grid-template-columns:1fr}
@@ -787,18 +789,18 @@ body.mobile #medalToast{bottom:calc(236px + env(safe-area-inset-bottom))}
           <button class="btn pri xl" id="deployBtn"><span data-ic="play" data-s="20"></span><span id="depTxt">DEPLOY</span></button>
         </div>
         <div class="panel picks" id="picks" hidden></div>
+        <div id="nextUnl"></div>
       </div>
       <div class="bcol">
         <div id="lastRun"></div>
         <div id="rdSum"></div>
-        <div id="nextUnl"></div>
         <details class="panel manual" id="manual"><summary><span class="eyebrow">FIELD MANUAL</span><span class="cv" data-ic="chevR" data-s="16"></span></summary><div id="manualBody"></div><div id="helpTxt" hidden></div></details>
       </div>
     </div>
   </section>
   <section class="view" data-v="armory" aria-label="Armory">
     <div class="vhead"><div><h1 class="vt">ARMORY</h1><p class="vsub">Upgrades carry across runs.</p></div><div class="vmeta" id="armBank"></div></div>
-    <div class="cats-bar"><div class="cats" id="tabs" role="tablist" aria-label="Upgrade categories"></div><button class="aff" id="affBtn" aria-pressed="true">AFFORDABLE FIRST</button></div>
+    <div class="cats-bar"><div class="cats" id="tabs" role="group" aria-label="Upgrade categories"></div><button class="aff" id="affBtn" aria-pressed="true">AFFORDABLE FIRST</button></div>
     <div id="store" class="armx"></div>
   </section>
   <section class="view" data-v="rd" aria-label="Research and Development"><div id="rd"></div></section>
@@ -1318,7 +1320,9 @@ function renderStartSel(){const c=checkpoints(),el=$('startSel');
   el.innerHTML=`<div class="eyebrow" id="cpLbl">START AT</div><div class="seg${c.length>4?' many':''}${c.length>(ph?5:7)?' scroll':''}" role="group" aria-labelledby="cpLbl">`
     +c.map(w=>`<button data-start="${w}" aria-pressed="${w===cur}">${ph||c.length>5?'W':'WAVE '}${w}</button>`).join('')+'</div>'
     +`<p class="cpx">${cur<=1?'Full run from the first wave.':`Skips ${cur-1} waves · ${n} directive ${pl(n,'pick')} · RP back-pay after you hold 5 waves`}</p>`}
-function renderBase(){renderStartSel();renderMission();renderAAR();renderPicks();renderRdSum();$('nextUnl').innerHTML=nextUnlockHtml();renderManual()}
+function renderBase(){renderStartSel();renderMission();renderAAR();renderPicks();renderRdSum();$('nextUnl').innerHTML=nextUnlockHtml();renderManual();
+  // desktop balance: next unlocks sit under the picks while the After-Action card fills the right column, else on the right
+  const nu=$('nextUnl'),aar=!!(lastAAR&&lastRunMsg),col=aar?$('picks').parentNode:$('rdSum').parentNode;if(nu.parentNode!==col)col.insertBefore(nu,aar?null:$('manual'))}
 function renderMission(){const r=RLINES.dmg,k=rTier('dmg'),t=r.t[k];
   $('kit').innerHTML=`<div class="por" style="${rsEraVars(t)}"><canvas data-th="dmg:${k}" width="192" height="192"></canvas></div>`
     +`<div class="kb"><div class="eyebrow">COMMANDER KIT</div><div class="kn">${t.n}</div><div class="kw">${t.w}</div><button class="chip-btn rd" data-rsgo="dmg">${ic('research',14)}Tier ${rank(k+1)} of ${r.t.length} · R&amp;D<span class="chev">→</span></button></div>`;
@@ -1352,7 +1356,7 @@ function renderPicks(){const el=$('picks'),p=recommend(3);if(!p.length){el.hidde
   el.innerHTML=`<div class="sec-h"><div class="eyebrow">QUARTERMASTER'S PICKS</div><button class="btn ghost sm" data-view-go="armory">ARMORY<span class="chev">→</span></button></div>`
     +p.map(({u,why})=>{const l=L(u.id),c=costOf(u,l),ok=S.bank>=c;
       return`<div class="pick-row"><button class="ico" data-goto="${u.id}" aria-label="Show ${u.name} in the Armory">${ic(u.id,20)}</button><div style="min-width:0"><div class="pn">${u.name} <em>→ Lv ${l+1}</em></div>${why?`<div class="pw">${why}</div>`:''}</div>`
-        +`<div class="pdv"><span>${u.val(l)}</span><b>→ ${u.val(l+1)}</b></div><button class="btn${ok?' pos':''}" data-buy="${u.id}"${ok?'':' disabled'}>${ok?'<span class="nc">$'+fmtN(c)+'</span> · BUY':'SAVE <span class="nc">$'+fmtN(c-S.bank)+'</span>'}</button></div>`}).join('')}
+        +`<div class="pdv"><span>${u.val(l)}</span><b>→ ${u.val(l+1)}</b></div><button class="btn${ok?' pos':''}" data-buy="${u.id}"${ok?'':' disabled'}><span>${ok?'<span class="nc">$'+fmtN(c)+'</span> · BUY':'SAVE <span class="nc">$'+fmtN(c-S.bank)+'</span>'}</span></button></div>`}).join('')}
 function renderRdSum(){const rd=rsReady(),el=$('rdSum');if(!rd.length){el.innerHTML='';return}const n=rsAffordN(),cost=r=>r.t[rsOwned(r.id)+1].cost;
   el.innerHTML=`<div class="panel rdsum"><div class="sec-h"><div class="eyebrow">R&amp;D</div><button class="btn ghost sm" data-view-go="rd">OPEN R&amp;D<span class="chev">→</span></button></div>`
     +`<div class="rdl">${ic('research',18)}<b>${fmtN(S.rp)} RP</b><span>· <em>enough for ${n} ${pl(n,'tier')}</em></span></div><div class="rdc">`
@@ -1406,7 +1410,7 @@ function lrowHtml(u){const reqs=[],o=_open.has('L'+u.id);
 function renderArmory(){const rec=new Map(recommend(3).map(p=>[p.u.id,p.why]));
   $('armBank').innerHTML=`<b>$${fmtN(S.bank)}</b>available`;
   $('tabs').innerHTML=CATS.map(c=>{const n=U.filter(u=>(c==='ALL'||u.cat===c)&&affordable(u)).length;
-    return`<button class="cat" role="tab" data-tab="${c}" aria-selected="${c===armCat}">${c==='ALL'?'':ic(CAT_IC[c],14)}${c}${n?`<span class="n">${n}</span>`:''}</button>`}).join('');
+    return`<button class="cat" data-tab="${c}" aria-pressed="${c===armCat}">${c==='ALL'?'':ic(CAT_IC[c],14)}${c}${n?`<span class="n">${n}</span>`:''}</button>`}).join('');
   $('affBtn').setAttribute('aria-pressed',S.set.affFirst!==false);
   const inCat=U.filter(u=>armCat==='ALL'||u.cat===armCat),lk=inCat.filter(u=>lockWhy(u));let open=inCat.filter(u=>!lockWhy(u));
   // order: recommended, affordable, unaffordable (cheapest first), maxed; frozen while buying so cards never jump under the cursor
@@ -1418,7 +1422,8 @@ function renderArmory(){const rec=new Map(recommend(3).map(p=>[p.u.id,p.why]));
     if(ch)h+=`<div class="callout c-info">${ic('coin',16)}<span>Nothing affordable here yet. Cheapest: <b>${ch.name}</b> · $${fmtN(costOf(ch,L(ch.id)))}</span><button class="btn sm" data-scard="${ch.id}">SHOW</button></div>`}
   if(open.length)h+=`<div class="grid">${open.map(u=>cardHtml(u,rec)).join('')}</div>`;
   if(lk.length)h+=`<div class="lgroup"><div class="eyebrow">LOCKED · ${lk.length}</div><div class="lrows">${lk.map(lrowHtml).join('')}</div></div>`;
-  $('store').innerHTML=h;catMask()}
+  $('store').innerHTML=h;
+  const c=$('tabs'),a=c.querySelector('[aria-pressed=true]');if(a&&(a.offsetLeft<c.scrollLeft||a.offsetLeft+a.offsetWidth>c.scrollLeft+c.clientWidth))c.scrollLeft=Math.max(0,a.offsetLeft-(c.clientWidth-a.offsetWidth)/2);catMask()}
 function catMask(){const c=$('tabs');if(!c)return;c.classList.toggle('fl',c.scrollLeft>2);c.classList.toggle('fr',c.scrollLeft<c.scrollWidth-c.clientWidth-2)}
 $('tabs').addEventListener('scroll',catMask,{passive:true});
 $('tabs').addEventListener('click',e=>{const t=e.target.closest('[data-tab]');if(!t||t.dataset.tab===armCat)return;armCat=t.dataset.tab;_armFreeze=null;renderArmory();
@@ -1513,8 +1518,8 @@ function renderResearch(){const nar=rsNarrow(),r=rsLine(),el=$('rd');
   let h=`<div class="vhead"><div><h1 class="vt">${nar?'R&amp;D':'RESEARCH &amp; DEVELOPMENT'}</h1>${nar?'':'<p class="vsub">New weapons and kit for each unit line. Research carries across runs.</p>'}</div></div>`
     +`<div class="rsw${nar?' nar':''}"><div class="rsh"><div class="rpb"><div class="ico">${ic('research',24)}</div><div><small>RESEARCH POINTS</small><b>${fmtN(S.rp)}<em>RP</em></b></div></div>`
     +(S.rpLast?`<span class="rpl">+${fmtN(S.rpLast)} last run</span>`:'')+(n?`<span class="rpn">Enough for ${n} ${pl(n,'tier')}</span>`:'')
-    +`<p>${fresh?'Hold waves to earn RP. RP starts at wave 10, and every wave you hold after that pays more.':'Hold waves to earn RP. Research carries across runs; new tiers deploy with your next run.'}</p></div>`;
-  if(nar){h+='<div class="rsc" role="tablist" aria-label="Research lines">'+RLINES.lines.map(q=>`<button class="rch${q===r?' on':''}${rsNF(q)?' off':''}" role="tab" aria-selected="${q===r}" data-rsl="${q.id}">${ic(rsNF(q)?'lock':q.u,16)}${q.label}<em>${rsOwned(q.id)+1}/${q.t.length}</em>${rsReadyLine(q)?'<span class="rdot"></span>':''}</button>`).join('')+'</div>';
+    +(nar&&!fresh?'':`<p>${fresh?'Hold waves to earn RP. RP starts at wave 10, and every wave you hold after that pays more.':'Hold waves to earn RP. Research carries across runs; new tiers deploy with your next run.'}</p>`)+'</div>';
+  if(nar){h+='<div class="rsc" role="group" aria-label="Research lines">'+RLINES.lines.map(q=>`<button class="rch${q===r?' on':''}${rsNF(q)?' off':''}" aria-pressed="${q===r}" data-rsl="${q.id}">${ic(rsNF(q)?'lock':q.u,16)}${q.label}<em>${rsOwned(q.id)+1}/${q.t.length}</em>${rsReadyLine(q)?'<span class="rdot"></span>':''}</button>`).join('')+'</div>';
     const own=rsOwned(r.id),sel=Math.max(0,Math.min(r.t.length-1,rsSel[r.id]??Math.min(own+1,r.t.length-1)));
     h+=rsHead(r,true)+'<div class="rtls">'+r.t.map((t,k)=>{const st=rsStL(r,k),on=k===sel;
       return`<div class="rtr ${st}${on?' sel':''}" data-k="${k}" style="${rsEraVars(t)}"><button data-rst="${k}" aria-expanded="${on}"><span class="mth"><canvas data-th="${r.id}:${k}" width="92" height="92"></canvas></span>`
