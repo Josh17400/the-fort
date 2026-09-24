@@ -1634,9 +1634,11 @@ function drawSniperTower(u,flash){const s=US.sniper*bS(),tt=tierOf('sniper');ctx
   box(-8,-8,16,16,'#4f554a');ctx.strokeStyle='rgba(0,0,0,.28)';ctx.lineWidth=.3;for(let g=-7;g<8;g+=1.6){ctx.beginPath();ctx.moveTo(g,-8);ctx.lineTo(g,8);ctx.stroke()}
   for(let k=0;k<4;k++){ctx.save();ctx.rotate(k*Math.PI/2);for(let i=0;i<4;i++){const x=-8+i*4;box(x+.2,-8,3.6,2.2,(i+k)%2?'#8a7650':'#7d6a46');ctx.strokeStyle='#3a2f1c';ctx.lineWidth=.35;ctx.strokeRect(x+.2,-8,3.6,2.2)}ctx.restore()}
   box(-8,-8,16,.7,'#9a8a62');
+  if(tt>=3){const e=eraOf('sniper',tt),a=ERA_ACC[e];box(-8,-8,16,16,tt>=4?'#3b3f44':'#6a6e68');ctx.strokeStyle=tt>=4?'#4a4f56':'#8d8f88';ctx.lineWidth=2.2;ctx.strokeRect(-6.9,-6.9,13.8,13.8);
+    ctx.strokeStyle=a;ctx.lineWidth=.35;ctx.strokeRect(-5.6,-5.6,11.2,11.2);ell(-7,6,.9,.9,'#26292d');ell(6,-7,.9,.9,'#26292d');ell(-7,6,.35,.35,a);ell(6,-7,.35,.35,a)}
   ctx.rotate(u.ang);if(!tt){ell(-2.2,0,3.4,2.2,'#46592a');box(-5,-1.6,2.4,3.2,'#3b4722')}                  // prone body + pack
   if(tt){const e=eraOf('sniper',tt),mz=SN_MZ[tt];if(tt>=3){ell(-1,0,3.2,3.2,e>=5?'#23262a':e===4?'#3b3f44':'#5a5f58');box(1.6,-.5,mz-2,1,tt===5?'#59616a':'#141414');if(tt===5)box(1.8,-.2,mz-2.4,.4,ERA_ACC[e]);tierStripe(-3,-2.2,4,e)}
-    else{ell(-2.2,0,3.4,2.2,tt===1?'#8b7550':'#44533a');box(0,-0.5,mz-1,1,'#0c0c0c');box(2.6,-1.4,5,1.1,'#050505');ell(0.4,0,2.2,2.2,tt===1?'#8b7550':'#4a5a3e')}
+    else{ell(-2.2,0,3.4,2.2,tt===1?'#77744c':'#44533a');box(0,-0.5,mz-1,1,'#0c0c0c');box(2.6,-1.4,5,1.1,'#050505');ell(0.4,0,2.2,2.2,tt===1?'#7a7450':'#4a5a3e')}
     if(flash){const f=tierFx('sniper',tt);ell(mz+.5,0,3,1.5,f.flash?'#dff6ff':f.tr);ell(mz,0,1.4,.8,'#fff')}ctx.restore();return}
   box(0,-0.45,15,0.9,'#0c0c0c');box(3,-1.2,4.2,0.9,'#050505');ell(7.2,-0.75,.35,.45,'#5aa0c8');limb(11,0,12,-1.8,.4,'#222');limb(11,0,12,1.8,.4,'#222');
   ell(0.4,0,2.2,2.2,'#56692e');ctx.strokeStyle='#232b12';ctx.lineWidth=.4;ctx.stroke();
@@ -2924,7 +2926,7 @@ const tierOf=l=>{const n=TIER_G[l]?TIER_G[l].length-1:0;if(_tierOv&&l in _tierOv
   const t=typeof rTier==='function'?rTier(l):l==='arty'?(L('walls')>=8?2:L('walls')>=5?1:0):TIER_BASE[l]||0;return Math.max(0,Math.min(n,t|0))};
 const eraG=g=>g<1?0:g<15?1:g<35?2:g<60?3:g<110?4:5;
 const eraOf=(l,t=tierOf(l))=>TIER_G[l]?eraG(TIER_G[l][t]):1;
-const ERA_C=['#8a7d5a','#5b7132','#8b7550','#44533a','#3b3f44','#23262a'];   // infantry
+const ERA_C=['#6d6f4b','#5b7132','#77744c','#44533a','#3b3f44','#23262a'];   // infantry: militia/coyote eras keep an olive cast so no friendly reads as enemy tan
 const ERA_V=['#6f6a48','#56652f','#6a6a44','#44533a','#3b3f44','#25282c'];   // vehicles: era2 keeps a green cast so it never reads as enemy sand
 const ERA_CAMO=['nato','nato','multi','ranger','graph','matte'];
 const ERA_ACC=[null,null,'#ffe7a0','#ff5a3a','#5fd4ff','#dff8ff'];
@@ -2941,7 +2943,7 @@ function tierFx(line,t=tierOf(line)){const k=(TFX[line]||'')[t]||'b';return k===
 function tierMuzzle(line,x,y,s){const f=tierFx(line);if(f.flash)hqMuzzle(x,y,s);if(!f.glow)return;ctx.globalCompositeOperation='lighter';
   ctx.drawImage(hqGlow('tg'+f.glow,[[0,'rgba(255,255,255,.95)'],[.3,`rgba(${f.glow},.7)`],[1,`rgba(${f.glow},0)`]]),x-2.6*s,y-2.6*s,5.2*s,5.2*s);ctx.globalCompositeOperation='source-over'}
 // Medium/Low: era tint on a body colour and a thin accent stripe
-function tierTint(base,e){return e===1?base:e===0?'#7d7353':ERA_V[e]}
+function tierTint(base,e){return e===1?base:e===0?'#6f6f4c':ERA_V[e]}
 function tierStripe(x,y,w,e){const a=ERA_ACC[e];if(a)box(x,y,w,.6,a)}
 // small 4-rotor escort drone (Vanguard Commander, drone squads, drone-carrier IFV, optionally-crewed MBT)
 function droneSpr(e,px){return hqBake('drn'+e,px,8,8,4,4,()=>{for(const a of[.785,2.356,3.927,5.498]){const x=Math.cos(a)*2.4,y=Math.sin(a)*2.4;limb(0,0,x,y,.45,'#2a2d31');ell(x,y,1.2,1.2,'rgba(190,200,210,.22)');ctx.strokeStyle='rgba(20,22,26,.6)';ctx.lineWidth=.12;ctx.stroke();ell(x,y,.3,.3,'#15171a')}
@@ -2953,14 +2955,15 @@ function drawDrones(x,y,n,e,R,seed){const px=hqPx();for(let i=0;i<n;i++){const a
 const KIT={dmg:[[0,'pistol','cap',''],[1,'','',''],[2,'dmr','helm','p'],[2,'m7s','helm','pr'],[3,'m7gl','nvg','pr'],[3,'smart','nvg','pr'],[4,'gauss','exo','x'],[4,'coil','exo','x'],[5,'laser','exo5','x'],[5,'rail','exo5','xd']],
   squad:[[0,'pistol','cap',''],[1,'','',''],[2,'carbine','helm','p'],[2,'m7','helm','p'],[3,'m7','nvg','p'],[3,'m7','nvg','pd'],[4,'gauss','exo','x'],[5,'laser','exo5','x']]};
 const KIT_ALT={0:'shotgun',2:'iar',3:'lmg',4:'carlg'};   // every third squad member carries the tier's support weapon
-const MUZ={pistol:[8.6,.8],shotgun:[14,.65],carbine:[14.8,.8],dmr:[17.8,.75],m7s:[17,.75],m7:[15.2,.8],m7gl:[15.2,.8],smart:[15.2,.8],iar:[15.8,.8],
+const MUZ={pistol:[11.7,.8],shotgun:[14,.65],carbine:[14.8,.8],dmr:[17.8,.75],m7s:[17,.75],m7:[15.2,.8],m7gl:[15.2,.8],smart:[15.2,.8],iar:[15.8,.8],
   lmg:[16.8,.75],carlg:[9.2,-2.6],gauss:[16.6,.9],coil:[18,.9],laser:[15.8,1],rail:[19.4,.9]};
 const solAlt=s=>s.alt??(!s.main&&G.sold.indexOf(s)%3===2);
 function solKit(s){const main=!!s.main,t=tierOf(main?'dmg':'squad'),K=KIT[main?'dmg':'squad'][t],alt=!main&&!!KIT_ALT[t]&&solAlt(s),w=alt?KIT_ALT[t]:K[1];
   return{main,t,K,alt,w,e:K[0],mz:w?MUZ[w]:[main?15.8:14.8,.8]}}
 function hqRifle(f,r,end){hqBar(-.7,.1,3.3,1.5,f);hqBar(2.6,.15,5.2,1.3,r);for(let x=2.9;x<7.6;x+=.55)box(x,.2,.28,.26,'#46494e');hqBar(7.6,.25,3.4,1.1,f);hqBar(11,.5,end-11,.5,'#121315')}
 function hqWpn(w,e){const f=e===2?'#8b7550':e===3?'#3a4232':'#26272a',r='#1d1e21',acc=ERA_ACC[e];
-  if(w==='pistol'){hqBar(4.4,.25,3.6,1.1,'#222326');box(4.2,.95,1.2,1.3,'#161616');box(7.8,.45,.6,.7,'#0a0a0a');return}
+  if(w==='pistol'){hqRR(5,.5,2.2,2,.4,'#191a1c');hqBar(5.7,.08,5.7,1.5,'#2c2e32');for(let x=6;x<7.2;x+=.36)box(x,.14,.14,1.38,'rgba(0,0,0,.4)');   // M17: grip, slide + serrations
+    box(8.4,.36,1.3,.36,'#0e0f11');box(5.9,.12,5.3,.24,'rgba(255,250,230,.3)');box(10.8,.02,.34,.26,'#e8e2c8');box(11.32,.5,.36,.62,'#050505');return}
   if(w==='shotgun'){hqBar(-.7,.1,3.4,1.5,'#6b4526');hqBar(2.6,.2,4.4,1.2,'#232323');hqCyl(6.8,.2,6.8,.85,'#141414');hqRR(7.6,.95,3,1.05,.45,'#5a3a20');box(13.5,.3,.5,.75,'#050505');return}
   if(w==='carlg'){hqRifle(f,r,14);hqCyl(-8.2,-3.8,16.8,2.5,'#4a5530');hqCyl(-9,-4.1,1.8,3.1,'#1c1d1a');hqRR(-1,-4.4,2.6,1.2,.3,'#26272a');hqCyl(7.8,-4,1.4,2.9,'#262a20');return}
   if(w==='gauss'||w==='coil'||w==='rail'){const L=w==='gauss'?16:w==='coil'?17.4:18.8,body=e>=5?'#1b1d20':'#2e3338';
@@ -2980,11 +2983,11 @@ function hqWpn(w,e){const f=e===2?'#8b7550':e===3?'#3a4232':'#26272a',r='#1d1e21
   else{hqRR(3.6,-.35,2,1,.25,'#141414');ell(5.6,.15,.22,.3,'#6ad0ff')}}   // carbine: red-dot
 function hqPaintSoldierT(main,t,alt){const K=KIT[main?'dmg':'squad'][t];if(!K[1]&&!alt){hqPaintSoldier(main);return}
   const e=K[0],w=alt?KIT_ALT[t]:K[1],head=K[2]||'helm',g=K[3],exo=g.includes('x'),acc=ERA_ACC[e],uni=main?ERA_C[e]:hexOf(hqSh(ERA_C[e],-.1)),
-    rig=e===2?'#7d6a48':e===3?'#3e4a34':'#5f6641',glove=e>=4?'#1c1e21':e===0?SKIN:'#7a6a4c';
+    rig=e===2?'#6b6a48':e===3?'#3e4a34':'#5f6641',glove=e>=4?'#1c1e21':e===0?SKIN:'#7a6a4c';
   hqLegs(0,hexOf(hqSh(uni,-.15)),e>=4?'#15171a':'#1d1b16');
   if(exo){hqPoly([-7.4,-3.2,-4,-4,-3.4,4,-7.4,3.2],e>=5?'#1c1f23':'#2c3035');box(-7.4,-3.2,4,.5,'rgba(255,255,255,.12)');for(let i=0;i<4;i++)box(-6.8,-2.2+i*1.3,2.4,.35,acc)}
-  else if(e===0)hqRR(-5.8,-2.4,2.8,4.4,.9,'#6a5c3e');
-  else{const rk=e===2?'#6d5c40':'#34402c';hqRR(-6.8,-3.5,3.8,7,1.1,rk);box(-6.8,-3.5,3.8,1.1,hexOf(hqSh(rk,.15)));hqCyl(-7.5,-3.1,1.3,6.2,e===2?'#7a6a48':'#4a5540')}
+  else if(e===0){hqRR(-5.8,-2.4,2.8,4.4,.9,'#5a5a3c');box(-5.8,-2.4,2.8,.8,'#6c6c4a');box(-5.2,-.4,1.6,.4,'#3c3c28')}   // militia daypack
+  else{const rk=e===2?'#5d5a3e':'#34402c';hqRR(-6.8,-3.5,3.8,7,1.1,rk);box(-6.8,-3.5,3.8,1.1,hexOf(hqSh(rk,.15)));hqCyl(-7.5,-3.1,1.3,6.2,e===2?'#7a6a48':'#4a5540')}
   if(g.includes('r')&&!exo){hqRR(-6.2,-2.6,2.2,2.6,.3,'#2b2f22');ell(-5.6,-1.9,.35,.35,'#8fd35a');limb(-5.4,-2.4,-11.5,-4.6,.32,'#161616');ell(-11.5,-4.6,.35,.35,'#161616')}
   hqBody(3.8,5.8,uni,e===0?null:ERA_CAMO[e],7);
   if(e===0){limb(-2.4,-4.4,2,4.2,.9,'#4a3a24');for(let i=0;i<4;i++)ell(-1.9+i*1.1,-3.4+i*2,.35,.5,'#b89a4a')}
@@ -2993,29 +2996,29 @@ function hqPaintSoldierT(main,t,alt){const K=KIT[main?'dmg':'squad'][t];if(!K[1]
   else{hqRR(-2,-4.1,4.2,8.2,1.1,rig);ctx.fillStyle='rgba(0,0,0,.3)';for(let i=0;i<4;i++)ctx.fillRect(-1.7,-3.3+i*2.1,3.6,.2);for(const y of[-3,-1.2,.6])hqPouch(.7,y,1.6,1.6,hexOf(hqSh(rig,.08)));
     if(e===3){hqPouch(-1.6,-3.6,1.4,1.4,'#303a28');hqRR(-1.8,2.6,1.4,1.2,.3,'#2a2c24')}}
   hqWpn(w,e);
-  const pistol=w==='pistol',tube=w==='carlg',hx=pistol?5:tube?.6:7.8,hy=pistol?.6:tube?-2.6:.8;
-  hqArm(.6,-4.6,hx-.2,hy-.4,uni,2.2);hqArm(.6,4.6,pistol?4.6:3,pistol?1.4:2,uni,2.2);if(exo){limb(.6,-4.6,hx-.8,hy-.6,.35,'#6b7078');limb(.6,4.6,2.8,2,.35,'#6b7078')}
-  hqHand(hx,hy,glove);hqHand(pistol?4.6:3,pistol?1.4:2,glove);
+  const pistol=w==='pistol',tube=w==='carlg',hx=pistol?6.2:tube?.6:7.8,hy=pistol?.7:tube?-2.6:.8;   // pistol: two-handed, arms out
+  hqArm(.6,-4.6,hx-.2,hy-.4,uni,2.2);hqArm(.6,4.6,pistol?5.9:3,pistol?1.8:2,uni,2.2);if(exo){limb(.6,-4.6,hx-.8,hy-.6,.35,'#6b7078');limb(.6,4.6,2.8,2,.35,'#6b7078')}
+  hqHand(hx,hy,glove);hqHand(pistol?5.9:3,pistol?1.8:2,glove);
   ell(.6,.25,3.9,3.9,'rgba(0,0,0,.28)');
-  if(head==='cap'){hqDome(.1,0,3.1,3,'#7a6d4a',.3,-.45);hqRR(2.2,-1.9,1.9,3.8,.9,'#665a3c');box(-2.6,-.5,.8,1,'#4a3f2a')}
+  if(head==='cap'){hqDome(.1,0,3.1,3,'#646a44',.3,-.45);hqRR(2.2,-1.9,1.9,3.8,.9,'#50573a');box(2.3,-1.6,.5,3.2,'rgba(0,0,0,.25)');box(-2.6,-.5,.8,1,'#3c4029');ell(-.4,-1,.9,.6,'rgba(255,250,220,.14)')}
   else if(head==='exo'||head==='exo5'){const hc=head==='exo5'?'#2a2d31':'#4a4f56';hqPoly([-2.8,-2,-1.4,-3.3,1.6,-3.2,3.4,-1.4,3.4,1.4,1.6,3.2,-1.4,3.3,-2.8,2],hc);
     hqPoly([-2.2,-1.4,-1,-2.5,1.2,-2.4,2.6,-1,2.6,1,1.2,2.4,-1,2.5,-2.2,1.4],hexOf(hqSh(hc,.14)));
     ctx.strokeStyle=acc;ctx.lineWidth=.7;ctx.beginPath();ctx.arc(.3,0,2.9,-.75,.75);ctx.stroke();ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=.2;ctx.beginPath();ctx.arc(.3,0,2.9,-.5,.5);ctx.stroke();
     if(head==='exo5')hqDome(-1.4,0,.9,.9,'#3a3e44',.4,-.4)}
-  else{const hc=e===2?'#8b7550':e===3?'#4a5a3e':'#6b8040';hqDome(.3,0,3.5,3.4,hc,.35,-.5);ctx.save();ctx.beginPath();ctx.arc(.3,0,3.4,0,7);ctx.clip();
+  else{const hc=e===2?'#7a7450':e===3?'#4a5a3e':'#6b8040';hqDome(.3,0,3.5,3.4,hc,.35,-.5);ctx.save();ctx.beginPath();ctx.arc(.3,0,3.4,0,7);ctx.clip();
     if(e===2){ctx.globalAlpha=.7;hqSpeckle(-3.2,-3.4,7,7,22,'#5f6a3a',.9);hqSpeckle(-3.2,-3.4,7,7,14,'#4a3a26',.8);ctx.globalAlpha=1}
     ctx.strokeStyle='rgba(24,28,12,.8)';ctx.lineWidth=.45;ctx.beginPath();ctx.arc(.3,0,2.5,0,7);ctx.stroke();ctx.restore();
     if(head==='nvg'){box(2.8,-.9,.9,1.8,'#1c1c1c');hqCyl(3.5,-1.5,1.5,1,'#1a1a1a');hqCyl(3.5,.5,1.5,1,'#1a1a1a');hqRR(-3.1,-.6,1,1.2,.3,'#222')}
     else box(3,-.75,.9,1.5,'#1c1c1c')}}
 // Medium/Low infantry by tier: era uniform, headgear and weapon length; T1 keeps the original drawing
 function soldierLo(s,k){const e=k.e,main=k.main,uni=main?ERA_C[e]:hexOf(hqSh(ERA_C[e],-.1)),dark='#232b12',w=k.w,exo=k.K[3].includes('x'),acc=ERA_ACC[e],mx=k.mz[0];
-  ell(1,1.4,5.6,6.8,'rgba(0,0,0,.35)');box(-6.2,-3.4,3.4,6.8,exo?'#2c3035':e===0?'#6a5c3e':hexOf(hqSh(uni,-.3)));if(exo)box(-5.8,-2,2.4,.6,acc);
+  ell(1,1.4,5.6,6.8,'rgba(0,0,0,.35)');box(-6.2,-3.4,3.4,6.8,exo?'#2c3035':e===0?'#5a5a3c':hexOf(hqSh(uni,-.3)));if(exo)box(-5.8,-2,2.4,.6,acc);
   ell(0,0,3.8,5.8,uni);ctx.strokeStyle=dark;ctx.lineWidth=.5;ctx.stroke();
-  if(w==='pistol'){box(4.4,.3,3.8,1,'#1d1d1d')}else if(w==='carlg'){box(-0.5,-0.2,3.2,2,'#26272a');box(2.6,0,5.6,1.6,'#1d1d1d');box(-8,-3.6,16.6,2.4,'#4a5530')}
+  if(w==='pistol'){box(5.2,.5,2,1.9,'#161616');box(5.7,.1,5.7,1.5,'#26282b');box(5.9,.12,5.3,.3,'#4a4d52')}else if(w==='carlg'){box(-0.5,-0.2,3.2,2,'#26272a');box(2.6,0,5.6,1.6,'#1d1d1d');box(-8,-3.6,16.6,2.4,'#4a5530')}
   else{box(-0.5,-0.2,3.2,2,e===2?'#8b7550':exo?'#2e3338':'#26272a');box(2.6,0,5.6,1.6,exo?'#2e3338':'#1d1d1d');box(8.2,0.4,mx-9,0.8,'#0e0e0e');if(e>=4)box(9,0.5,mx-10,.5,acc)}
-  const hx=w==='pistol'?5:7.8;limb(0.6,-4.6,hx,0.6,2.1,uni);limb(0.6,4.6,3,2,2.1,uni);ell(hx,0.9,1.1,1.1,exo?'#1c1e21':'#c79a6e');ell(3,1.9,1.1,1.1,exo?'#1c1e21':'#c79a6e');
-  if(k.K[2]==='cap'){ell(0.2,0,3.1,3,'#7a6d4a');box(2.2,-1.8,1.8,3.6,'#665a3c')}
-  else{ell(0.3,0,3.4,3.4,exo?(e>=5?'#2a2d31':'#4a4f56'):e===2?'#8b7550':e===3?'#4a5a3e':'#6b8040');ctx.strokeStyle=dark;ctx.lineWidth=.6;ctx.stroke();
+  const p=w==='pistol',hx=p?6.2:7.8,lx=p?5.9:3;limb(0.6,-4.6,hx,0.6,2.1,uni);limb(0.6,4.6,lx,p?1.8:2,2.1,uni);ell(hx,0.9,1.1,1.1,exo?'#1c1e21':'#c79a6e');ell(lx,p?1.8:1.9,1.1,1.1,exo?'#1c1e21':'#c79a6e');
+  if(k.K[2]==='cap'){ell(0.2,0,3.1,3,'#646a44');box(2.2,-1.8,1.8,3.6,'#50573a')}
+  else{ell(0.3,0,3.4,3.4,exo?(e>=5?'#2a2d31':'#4a4f56'):e===2?'#7a7450':e===3?'#4a5a3e':'#6b8040');ctx.strokeStyle=dark;ctx.lineWidth=.6;ctx.stroke();
     if(exo){ctx.strokeStyle=acc;ctx.lineWidth=.8;ctx.beginPath();ctx.arc(.3,0,2.8,-.7,.7);ctx.stroke()}else if(k.K[2]==='nvg')box(3,-1,1.6,2,'#1a1a1a')}
   if(G.time-(s.fl||-9)<0.05){const f=tierFx(main?'dmg':'squad',k.t);ell(mx+1.6,k.mz[1],3.2,1.6,f.flash?'#ffcf5a':f.tr);ell(mx+1,k.mz[1],1.6,0.8,'#fff')}}
 
@@ -3042,9 +3045,10 @@ function hqMGGun(t){const e=eraOf('turret',t),c=ERA_V[e],acc=ERA_ACC[e];
   hqPoly([-2.2,-3.8,2.6,-3.8,4.4,-1.6,-.4,-1.2],'rgba(255,255,255,.1)');limb(-2,-3.3,2.4,-3.3,.22,acc);limb(-2,3.3,2.4,3.3,.22,acc);
   if(t===4){hqDome(-1.6,0,1.8,1.8,'#26292d',.4,-.4);ell(-1.1,0,.6,.6,acc);for(const y of[-1.3,.5])hqBar(3.6,y,9.2,.8,'#16181a');box(12.6,-1.5,.7,3,'#0a0a0a')}
   else{hqRR(-3.6,-2.4,5.4,4.8,.6,'#2a2e33');for(let i=0;i<3;i++)box(-3,-1.8+i*1.4,4.2,.4,acc);for(const y of[-1.4,.7])box(3.4,y,12,.7,'#59616a');box(3.6,-.55,11.8,1,'#0c0e10');box(3.6,-.2,11.8,.35,acc);box(15.2,-1.6,.6,3.3,'#0a0b0c')}}
-function mgLo(u,t,flash){const e=eraOf('turret',t),c=tierTint('#8a7650',e);ell(0,0,6,6,t>=1?(t>=4?'#3b3f44':'#8d8f88'):'#8a7650');ctx.strokeStyle='#3a2f1c';ctx.lineWidth=.7;ctx.stroke();ctx.rotate(u.ang);
+function mgLo(u,t,flash){const e=eraOf('turret',t),c=tierTint('#8a7650',e);ell(0,0,6,6,t>=1?(t>=4?'#3b3f44':'#8d8f88'):'#8a7650');ctx.strokeStyle=t>=4?'#1c1e22':'#3a2f1c';ctx.lineWidth=.7;ctx.stroke();
+  if(t>=4){ctx.strokeStyle=ERA_ACC[e];ctx.lineWidth=.45;ctx.setLineDash([2.2,1.2]);ctx.beginPath();ctx.arc(0,0,4.9,0,TAU);ctx.stroke();ctx.setLineDash([])}ctx.rotate(u.ang);
   if(t===0){box(0,-1.3,4,2.6,'#2a2a2a');box(4,-0.5,8,1,'#111');box(3,-2.6,1,5.2,'#333');ell(-1.5,0,2.4,2.4,'#56692e')}
-  else{box(-3.6,-3,7,6,t===1?'#6d5c40':ERA_V[e]);tierStripe(-3.6,-3,7,e);const n=t===1||t>=4?2:1;for(let i=0;i<n;i++)box(3,(n>1?-1.4+i*2:-.6),MG_MZ[t]-3,t===3?1.8:1,t===5?'#59616a':'#111');if(t===5)box(3,-.2,MG_MZ[t]-3,.4,ERA_ACC[e])}
+  else{box(-3.6,-3,7,6,t===1?'#5d5a3e':ERA_V[e]);tierStripe(-3.6,-3,7,e);const n=t===1||t>=4?2:1;for(let i=0;i<n;i++)box(3,(n>1?-1.4+i*2:-.6),MG_MZ[t]-3,t===3?1.8:1,t===5?'#59616a':'#111');if(t===5)box(3,-.2,MG_MZ[t]-3,.4,ERA_ACC[e])}
   if(flash){const f=tierFx('turret',t);ell(MG_MZ[t]+.6,0,2.5,1.4,f.flash?'#ffcf5a':f.tr)}}
 
 // ---- tank platoon: Booker -> M1A1 -> SEPv3 + Trophy -> AbramsX -> rail MBT -> optionally-crewed rail MBT ----
@@ -3088,11 +3092,11 @@ function hqSniperTwr(t){const e=eraOf('sniper',t),deck=t>=4?(t>=5?'#2a2d31':'#3b
   if(t===2){ctx.globalAlpha=.85;hqPoly([-8.6,-8.6,4,-8.6,-.5,-2,-8.6,3],'#3c4a34');ctx.globalAlpha=1;ctx.strokeStyle='rgba(20,26,10,.55)';ctx.lineWidth=.15;ctx.beginPath();for(let i=-8;i<4;i+=.8){ctx.moveTo(i,-8.6);ctx.lineTo(-8.6,i)}ctx.stroke()}
   if(t>=3)for(const[x,y]of[[-7,6],[6,-7]]){hqDome(x,y,.9,.9,'#26292d');ell(x+.2,y,.3,.3,acc||'#ff5a3a')}}
 function hqSniperMan(t){const e=eraOf('sniper',t),acc=ERA_ACC[e];
-  if(t<3){const gc=t===1?['#8b7550','#6d5c40','#5f6a3a']:['#44533a','#3a4632','#55634a'];for(let i=0;i<16;i++)ell(-2.6+(sr()-.5)*4.4,(sr()-.5)*3.6,.9,.55,gc[i%3],sr()*3);
+  if(t<3){const gc=t===1?['#7a7450','#5d5a3e','#5f6a3a']:['#44533a','#3a4632','#55634a'];for(let i=0;i<16;i++)ell(-2.6+(sr()-.5)*4.4,(sr()-.5)*3.6,.9,.55,gc[i%3],sr()*3);
     limb(-4,-.8,-6,-1.3,1.1,gc[1]);limb(-4,.8,-6,1.5,1.1,gc[1]);
     if(t===1){hqBar(0,-.6,16.6,1.2,'#141414');hqRR(16.2,-.95,1.8,1.9,.3,'#0a0a0a');box(16.6,-.95,.3,1.9,'#333');hqCyl(2.6,-1.5,5.2,1.1,'#050505');hqRR(4,.6,1.8,1.6,.3,'#1d1d1d')}
     else{hqBar(0,-.5,14.4,1,'#1a1c18');hqCyl(14,-.7,3,1.4,'#262824');hqRR(2.4,-1.8,5.2,1.8,.5,'#1a1c1e');ell(7.6,-.9,.4,.6,'#3a0c08');ell(7.7,-.9,.2,.3,acc)}
-    limb(11,0,12,-1.8,.35,'#222');limb(11,0,12,1.8,.35,'#222');hqArm(-.8,-1.8,2.8,-.3,gc[0],1.2);hqArm(-.8,1.8,.6,.8,gc[0],1.2);hqDome(.4,0,2.2,2.2,t===1?'#8b7550':'#4a5a3e',.35,-.5);return}
+    limb(11,0,12,-1.8,.35,'#222');limb(11,0,12,1.8,.35,'#222');hqArm(-.8,-1.8,2.8,-.3,gc[0],1.2);hqArm(-.8,1.8,.6,.8,gc[0],1.2);hqDome(.4,0,2.2,2.2,t===1?'#7a7450':'#4a5a3e',.35,-.5);return}
   const c=t===3?'#5a5f58':t===4?'#3b3f44':'#23262a';hqDome(-1,0,3.4,3.4,hexOf(hqSh(c,-.2)),.2,-.4);hqRR(-3,-2.4,5.4,4.8,.8,c);hqBevel(-3,-2.4,5.4,4.8,0,.4,.3);
   if(t===3){hqBar(1.6,-.5,14,1,'#141414');hqRR(-2,-3.6,4,1.8,.4,'#26292d');ell(2,-2.7,.45,.55,'#6d97b0');hqRR(-.5,1.4,3,1.6,.3,'#3a3e2c');box(15.2,-.6,.8,1.2,'#050505')}
   else if(t===4){hqBar(1.6,-.5,14.6,1,'#16181a');hqDome(0,-3.2,1.6,1.6,'#2a2d31',.4,-.4);ell(1,-3.2,.8,.8,'#3a0c08');ell(1.1,-3.2,.4,.4,'#ff5a4a');box(-2.6,-1.8,4.4,.35,acc)}
@@ -3291,9 +3295,13 @@ function drawCIWST(u,px,flash,t){const s=US.tesla*bS(),e=eraOf('tesla',t),pad=hq
   ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);hqShadow(pad,.8,1,.45);hqDraw(pad);ctx.rotate(u.ang);hqShadow(mnt,.8,1.1,.4);hqDraw(mnt);
   if(t===1){const sp=firing?G.time*60:0;for(let i=0;i<3;i++){const o=Math.sin(sp+i*2.1)*1;box(6,o-.38,8,.76,'#1c1d1c');box(6,o-.38,8,.2,'#4a4c4a')}box(13.6,-1.25,1.3,2.5,'#111')}
   if(flash){if(t===3){tierMuzzle('tesla',CW_MZ[t],-3.6,.9);tierMuzzle('tesla',CW_MZ[t],3.6,.9)}else tierMuzzle('tesla',CW_MZ[t],0,t===4?1.6:1.2)}ctx.restore()}
-function ciwsLo(u,flash,t){const s=US.tesla*bS(),e=eraOf('tesla',t);ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);ell(1,1.2,8.2,8.2,'rgba(0,0,0,.35)');ell(0,0,8,8,e>=4?'#3b3f44':'#5b5f5a');ell(0,0,5.6,5.6,'#3d413d');ctx.rotate(u.ang);
+function ciwsLo(u,flash,t){const s=US.tesla*bS(),e=eraOf('tesla',t),a=ERA_ACC[e];ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);ell(1,1.2,8.2,8.2,'rgba(0,0,0,.35)');ell(0,0,8,8,e>=4?'#3b3f44':'#5b5f5a');
+  ctx.lineWidth=1.1;ctx.strokeStyle='#1c1c1c';ctx.beginPath();ctx.arc(0,0,6.7,0,TAU);ctx.stroke();ctx.setLineDash([1.4,1.4]);ctx.strokeStyle=e>=4?a:'#d8b23a';ctx.stroke();ctx.setLineDash([]);   // hazard ring
+  ell(0,0,5.6,5.6,e>=4?'#26292d':'#3d413d');for(const[bx,by]of[[-5.4,-5.4],[5.4,-5.4],[-5.4,5.4],[5.4,5.4]])ell(bx,by,.45,.45,'#2a2a2a');ctx.rotate(u.ang);
   if(t===1){box(-3,-3.6,6,7.2,'#b3b8b0');ell(-3.4,0,3.8,3.6,'#eef0ea');box(6,-1,8,2,'#1c1d1c');box(-1.6,-5.6,3,1.8,'#2a2d2b')}
-  else{const ys=t===3?[-3.6,3.6]:[0];box(-3.4,-4,6.4,8,t===4?'#23262a':'#3b3f44');for(const y of ys){ell(0,y,2.4,2.4,'#2c3035');box(1,y-.8,t===4?5:3.6,1.6,'#101214');ell(t===4?6:4.6,y,.6,.6,ERA_ACC[e])}tierStripe(-3.4,-4,6.4,e)}
+  else{const ys=t===3?[-3.6,3.6]:[0],r=t===4?3.2:t===3?1.9:2.6,hl=t===4?5.4:t===3?3.2:4.2;
+    if(t===3){box(-2.4,-6.4,4.8,12.8,'#3b3f44');box(-.15,-5.8,.3,11.6,a)}else{box(t===4?-4.2:-3.4,-4.4,t===4?7:6.2,8.8,t===4?'#23262a':'#3b3f44');if(t===4)for(let i=0;i<5;i++)box(-3.8,-3.6+i*1.8,2.2,.5,'#3a3e44');box(-3.2,-4.1,5.4,.35,a)}
+    for(const y of ys){ell(0,y,r,r,t===4?'#1c1e22':'#2c3035');ell(-r*.3,y-r*.35,r*.45,r*.4,'rgba(255,255,255,.14)');box(r*.3,y-r*.42,hl-r*.3,r*.84,'#101214');ell(hl,y,r*.36,r*.42,a);ell(hl,y,r*.16,r*.2,'#fff')}}
   if(flash){const f=tierFx('tesla',t);ell(CW_MZ[t]+1,0,3,1.6,f.flash?'#ffcf5a':f.tr)}ctx.restore()}
 
 // ---- SAM site: Avenger -> NASAMS -> Patriot PAC-3 -> Enduring Shield -> glide-phase interceptor ----
