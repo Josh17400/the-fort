@@ -882,6 +882,8 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
 @media (max-height:500px) and (orientation:landscape) and (min-width:860px){
   .bgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}.bcol{display:flex;flex-direction:column;gap:12px}
 }
+.panel.aar{border:1px solid rgba(227,181,60,.8)!important;background:linear-gradient(180deg,rgba(227,181,60,.2),rgba(227,181,60,.07)) ,var(--glass,#14180f)!important;box-shadow:0 0 0 1px rgba(227,181,60,.25),0 10px 34px rgba(227,181,60,.16)!important}
+.panel.aar .eyebrow,.panel.aar .sec-h .eyebrow{color:#ffcf5a!important}.panel.aar .tile b{color:#ffe08a}
 </style>
 </head>
 <body>
@@ -1490,7 +1492,7 @@ function renderStartSel(){const c=checkpoints(),el=$('startSel');
     +c.map(w=>`<button data-start="${w}" aria-pressed="${w===cur}">${ph||c.length>5?'W':'WAVE '}${w}</button>`).join('')+'</div>'
     +`<p class="cpx">${cpText(cur)}</p>`}
 const cpText=w=>{const n=Math.min(8,Math.floor(w/10));return w<=1?'Full run from the first wave.':`Skips ${w-1} waves · ${n} directive ${pl(n,'pick')} · RP back-pay after you hold 5 waves`};
-function renderBase(){renderStartSel();renderMission();renderAAR();renderPicks();renderRdSum();$('nextUnl').innerHTML=nextUnlockHtml();renderManual();
+function renderBase(){renderStartSel();renderMission();renderAAR();$('picks').hidden=true;$('picks').innerHTML='';renderRdSum();$('nextUnl').hidden=true;$('nextUnl').innerHTML='';renderManual();
   // desktop balance: next unlocks sit under the picks while the After-Action card fills the right column, else on the right
   const nu=$('nextUnl'),aar=!!(lastAAR&&lastRunMsg),col=aar?$('picks').parentNode:$('rdSum').parentNode;if(nu.parentNode!==col)col.insertBefore(nu,aar?null:$('manual'))}
 function renderMission(){const r=RLINES.dmg,k=rTier('dmg'),t=r.t[k];
@@ -1579,10 +1581,11 @@ function lrowHtml(u){const reqs=[],o=_open.has('L'+u.id);
     +`<span class="lx" aria-hidden="true">${ic('chevR',18)}</span></div>`}
 function renderArmory(){const rec=new Map(recommend(3).map(p=>[p.u.id,p.why]));
   $('armBank').innerHTML=`<b>$${fmtN(S.bank)}</b>available`;
-  $('tabs').innerHTML=CATS.map(c=>{const n=U.filter(u=>(c==='ALL'||u.cat===c)&&affordable(u)).length;
+  const avail=u=>!lockWhy(u)&&L(u.id)<u.max;if(armCat!=='ALL'&&!U.some(u=>u.cat===armCat&&avail(u)))armCat='ALL';
+  $('tabs').innerHTML=CATS.filter(c=>c==='ALL'||U.some(u=>u.cat===c&&avail(u))).map(c=>{const n=U.filter(u=>(c==='ALL'||u.cat===c)&&affordable(u)).length;
     return`<button class="cat" data-tab="${c}" aria-pressed="${c===armCat}">${c==='ALL'?'':ic(CAT_IC[c],14)}${c}${n?`<span class="n">${n}</span>`:''}</button>`}).join('');
   $('affBtn').setAttribute('aria-pressed',S.set.affFirst!==false);
-  const inCat=U.filter(u=>armCat==='ALL'||u.cat===armCat),lk=inCat.filter(u=>lockWhy(u));let open=inCat.filter(u=>!lockWhy(u));
+  const inCat=U.filter(u=>armCat==='ALL'||u.cat===armCat),lk=[];let open=inCat.filter(avail);
   // order: recommended, affordable, unaffordable (cheapest first), maxed; frozen while buying so cards never jump under the cursor
   const grp=u=>rec.has(u.id)?0:L(u.id)>=u.max?3:affordable(u)?1:2;
   if(_armFreeze&&_armFreeze.cat===armCat){const ix=new Map(_armFreeze.ids.map((id,i)=>[id,i]));open.sort((a,b)=>(ix.has(a.id)?ix.get(a.id):999)-(ix.has(b.id)?ix.get(b.id):999))}
@@ -1683,25 +1686,27 @@ function rsCta(r){const own=rsOwned(r.id);
   if(!w)return`<button class="rsgo go" data-rsbuy="${r.id}"><span class="l1">RESEARCH ${t.n.toUpperCase()}</span><span class="l2">TIER ${rank(k+1)} · ${t.cost} RP</span></button>`;
   if(S.best>=t.g)return`<button class="rsgo" disabled><span class="l1">RESEARCH ${t.n.toUpperCase()}</span><span class="l2">NEED ${t.cost-S.rp} MORE RP</span></button>`;
   return`<button class="rsgo" disabled><span class="l1">${ic('lock',14)}TIER ${rank(k+1)} LOCKED</span><span class="l2">${w.toUpperCase()}</span></button>`}
-function renderResearch(){const nar=rsNarrow(),r=rsLine(),el=$('rd');
+const rsVis=q=>{if(rsDone(q.id))return false;const w=rsWhy(q.id,rsOwned(q.id)+1);return!w||w.startsWith('Need ')};
+function renderResearch(){const nar=rsNarrow(),vis=RLINES.lines.filter(rsVis),r0=rsLine(),r=vis.includes(r0)||!vis.length?r0:vis[0],el=$('rd');
   const rail=el.querySelector('.rsl'),railY=rail?rail.scrollTop:0,n=rsAffordN(),fresh=S.rp===0&&RLINES.lines.every(q=>rsOwned(q.id)<=rsDefTier(q.id));
   const tk0=el.querySelector('.rtk'),keepX=!_rsScroll&&tk0&&tk0.dataset.line===r.id?tk0.scrollLeft:null;
   let h=`<div class="vhead"><div><h1 class="vt">${nar?'R&amp;D':'RESEARCH &amp; DEVELOPMENT'}</h1>${nar?'':'<p class="vsub">New weapons and kit for each unit line. Research carries across runs.</p>'}</div></div>`
     +`<div class="rsw${nar?' nar':''}"><div class="rsh"><div class="rpb"><div class="ico">${ic('research',24)}</div><div><small>RESEARCH POINTS</small><b>${fmtN(S.rp)}<em>RP</em></b></div></div>`
     +(S.rpLast?`<span class="rpl">+${fmtN(S.rpLast)} last run</span>`:'')+(n?`<span class="rpn">Enough for ${n} ${pl(n,'tier')}</span>`:'')
     +(nar&&!fresh?'':`<p>${fresh?'Hold waves to earn RP. RP starts at wave 10, and every wave you hold after that pays more.':'Hold waves to earn RP. Research carries across runs; new tiers deploy with your next run.'}</p>`)+'</div>';
-  if(nar){h+='<div class="rsc" role="group" aria-label="Research lines">'+RLINES.lines.map(q=>`<button class="rch${q===r?' on':''}${rsNF(q)?' off':''}" aria-pressed="${q===r}" data-rsl="${q.id}">${ic(rsNF(q)?'lock':q.u,16)}${q.label}<em>${rsOwned(q.id)+1}/${q.t.length}</em>${rsReadyLine(q)?'<span class="rdot"></span>':''}</button>`).join('')+'</div>';
+  if(nar){h+='<div class="rsc" role="group" aria-label="Research lines">'+vis.map(q=>`<button class="rch${q===r?' on':''}${rsNF(q)?' off':''}" aria-pressed="${q===r}" data-rsl="${q.id}">${ic(rsNF(q)?'lock':q.u,16)}${q.label}<em>${rsOwned(q.id)+1}/${q.t.length}</em>${rsReadyLine(q)?'<span class="rdot"></span>':''}</button>`).join('')+'</div>';
     const own=rsOwned(r.id),sel=Math.max(0,Math.min(r.t.length-1,rsSel[r.id]??Math.min(own+1,r.t.length-1)));
-    h+=rsHead(r,true)+'<div class="rtls">'+r.t.map((t,k)=>{const st=rsStL(r,k),on=k===sel;
+    h+=rsHead(r,true)+'<div class="rtls">'+r.t.map((t,k)=>{if(k>rsOwned(r.id)+1)return'';const st=rsStL(r,k),on=k===sel;
       return`<div class="rtr ${st}${on?' sel':''}" data-k="${k}" style="${rsEraVars(t)}"><button data-rst="${k}" aria-expanded="${on}"><span class="mth"><canvas data-th="${r.id}:${k}" width="92" height="92"></canvas></span>`
         +`<span class="rb"><span class="rtn">${t.n}</span><span class="rtl2">TIER ${rank(k+1)} <span class="badge ${RS_B[st]}">${RS_STL[st]}</span></span></span>`
         +`<span class="rc">${st==='own'||st==='act'||st==='kit'?ic('star',16):t.cost+' RP'}</span></button>`
         +(on?`<div class="rtx">${t.w?`<div class="rtw">${t.w}</div>`:''}${rsStats(r,k)}${rsSigHtml(t)}${st==='lk'?rsGate(t)+rsWhyHtml(r,k):''}</div>`:'')+'</div>'}).join('')
       +(rsDone(r.id)?`<div class="rtr" data-k="rf" style="${rsEraVars(r.t[r.t.length-1])}"><button disabled><span class="mth">${ic('repair',22)}</span><span class="rb"><span class="rtn">Refit Mk ${rank(rsRefit(r).n+1)}</span><span class="rtl2">ENDLESS · +8% ${r.id==='walls'?'WALL HP':'DMG'} EACH</span></span><span class="rc">${rsRefit(r).c} RP</span></button></div>`:'')+'</div>';
     h+=rsCta(r)}
-  else{h+='<div class="rsb"><nav class="rsl" aria-label="Research lines">'+CATS.slice(1).filter(c=>RLINES.lines.some(q=>UB[q.u].cat===c)).map(c=>`<h4>${c}</h4>`+RLINES.lines.filter(q=>UB[q.u].cat===c).map(q=>{const lk=rsNF(q);
+  else{h+='<div class="rsb"><nav class="rsl" aria-label="Research lines">'+CATS.slice(1).filter(c=>vis.some(q=>UB[q.u].cat===c)).map(c=>`<h4>${c}</h4>`+vis.filter(q=>UB[q.u].cat===c).map(q=>{const lk=rsNF(q);
       return`<button class="rsr${q===r?' on':''}${lk?' off':''}" data-rsl="${q.id}"${q===r?' aria-current="true"':''}><span class="ico">${ic(lk?'lock':q.u,18)}</span><span class="rb"><span class="rn">${q.label}</span><span class="rt">${lk?'<span class="badge b-nf">NOT FIELDED</span>':q.t[rsOwned(q.id)].n}</span>${lk?'':rsPips(q)}</span>${rsReadyLine(q)?'<span class="rdot" title="Next tier affordable"></span>':''}</button>`}).join('')).join('')+'</nav>';
-    h+=`<section class="rsd">${rsHead(r,false)}<div class="trk"><button class="trk-prev" aria-label="Earlier tiers">${ic('chevL',20)}</button><div class="rtk" data-line="${r.id}">${r.t.map((_,k)=>rsCard(r,k)).join('')}${rsDone(r.id)?rsRefitCard(r):''}</div><button class="trk-next" aria-label="Later tiers">${ic('chevR',20)}</button></div>${rsCompare(r)}</section></div>`}
+    h+=`<section class="rsd">${rsHead(r,false)}<div class="trk"><button class="trk-prev" aria-label="Earlier tiers">${ic('chevL',20)}</button><div class="rtk" data-line="${r.id}">${r.t.map((_,k)=>k>rsOwned(r.id)+1?'':rsCard(r,k)).join('')}${rsDone(r.id)?rsRefitCard(r):''}</div><button class="trk-next" aria-label="Later tiers">${ic('chevR',20)}</button></div>${rsCompare(r)}</section></div>`}
+  if(!vis.length)h+=`<div class="callout c-info" style="margin:16px 0">${ic('research',16)}<span>Nothing to research yet. Hold deeper waves and field new units to open the next tiers.</span></div>`;
   el.innerHTML=h+'</div>';
   for(const c of el.querySelectorAll('canvas[data-th]'))paintThumb(c);
   const nr=el.querySelector('.rsl');if(nr)nr.scrollTop=railY;
