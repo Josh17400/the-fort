@@ -2174,7 +2174,7 @@ function shake(n){if(S.set.shake)G.shake=Math.min(12,G.shake+n)}
 let _dk='',_pen=0;
 function armMul(e){if(_dk==='m')return e.veh||e.boss?2.2:1;if(!e.arm)return 1;
   return _dk==='s'?1-e.arm*(1-Math.min(1,_pen+0.15*pk('tungsten'))):_dk==='p'?1-e.arm*(1-Math.max(0.55,_pen)):_dk==='f'?(1-e.arm)*0.5:1}
-function hurtEnemy(e,d,crit){if(e.dead)return;d*=(1+0.2*pk('overwatch'))*armMul(e)*(e.mkT>G.time?1+e.mkB:1);e.hp-=d;e.flash=0.08;(e.air?skyHit:fxHit)(e,crit);if(crit&&_mainHit&&G.time-(G.crT||0)>0.07){G.crT=G.time;tone(1500,0.045,'square',-500,0.03)}   // crit ping (commander rifle, throttled); e.mkT/e.mkB: research mark (sgMark)
+function hurtEnemy(e,d,crit){if(e.dead)return;d*=(1+0.2*pk('overwatch'))*(e.veh||e.boss?1+0.35*pk('antiarmor'):1)*armMul(e)*(e.mkT>G.time?1+e.mkB:1);e.hp-=d;e.flash=0.08;(e.air?skyHit:fxHit)(e,crit);if(crit&&_mainHit&&G.time-(G.crT||0)>0.07){G.crT=G.time;tone(1500,0.045,'square',-500,0.03)}   // crit ping (commander rifle, throttled); e.mkT/e.mkB: research mark (sgMark)
   if(S.set.dmgNums&&visible(e)&&(crit||_mainHit||S.set.gfx!=='high'))dmgFloat(e,d,crit);
   if(e.hp<=0)kill(e)}
 // Kill streak: kills from the player's own aimed rifle (a tapped/clicked lock, not auto-fire) chain within STREAK_T seconds;
@@ -6229,6 +6229,7 @@ const PERKS=[
  {id:'cas',ic:'air',name:'Close Air Support',desc:'Airstrike cooldown -35%, and a strike is ready now.',ok:()=>L('air')>0,go:()=>{G.airT=0}},
  {id:'minelayer',ic:'mines',name:'Minelayers',desc:'Twice the mines every wave, and a fresh field is laid now.',ok:()=>L('mines')>0,go:()=>layMines()},
  {id:'flak',ic:'aagun',name:'Flak Barrage',desc:'Air-defence fire +40% damage against aircraft.',ok:()=>L('aagun')>0&&G.wave>=SKY_WAVE.drone},
+ {id:'antiarmor',ic:'tank',name:'Anti-Armor Teams',desc:'Every gun, shell, missile and bomb deals +35% damage to vehicles and tanks.',ok:()=>G.wave>=6},
  {id:'cbfire',ic:'arty',name:'Counter-Battery Fire',desc:'Artillery answers every mortar and rocket launch: that crew is shelled first, for +50% damage.',ok:()=>L('arty')>0&&G.wave>=11},
  {id:'aircrew',ic:'heli',name:'Aircrew Countermeasures',desc:'2x faster flares that fool 10% more missiles. Aircraft healed 25%.',ok:()=>G.wave>=14&&flyingCraft(),
   go:()=>{for(const u of[...G.units,...G.fleet,...G.air])if(u.hp!=null&&!u.dead&&FC[u.ck]&&FC[u.ck].air)u.hp=Math.min(u.max,u.hp+u.max*0.25)}},
