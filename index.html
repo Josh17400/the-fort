@@ -2370,10 +2370,14 @@ function exTongue(){let c=_hqc.ext;if(c)return c;c=_hqc.ext=hqCv(64,24);const x=
   const g=x.createRadialGradient(0,0,0,0,0,12);g.addColorStop(0,'rgba(255,255,245,1)');g.addColorStop(.18,'rgba(255,236,170,.95)');g.addColorStop(.5,'rgba(255,150,50,.5)');g.addColorStop(1,'rgba(255,80,20,0)');
   x.fillStyle=g;x.beginPath();x.arc(0,0,12,0,7);x.fill();return c}
 // drawn above the fog: incoming ordnance, impact warning rings, and red brackets on a crew that just gave itself away
+// combat mechanic badge, baked once per state: dark disc, light rim, wrench glyph (same family as the crate icon badges)
+const _mechB=[];function mechBadge(b){let c=_mechB[b];if(c)return c;c=_mechB[b]=hqCv(64,64);const x=c.getContext('2d'),m=ctx;
+  x.fillStyle='rgba(0,0,0,.35)';x.beginPath();x.arc(34,35,27,0,TAU);x.fill();const g=x.createRadialGradient(24,22,2,32,32,27);g.addColorStop(0,b?'#3f6444':'#34452f');g.addColorStop(1,'#12170f');
+  x.fillStyle=g;x.beginPath();x.arc(32,32,26,0,TAU);x.fill();x.lineWidth=3;x.strokeStyle=b?'#c8ffcc':'#9fd39a';x.stroke();x.lineWidth=1.6;x.strokeStyle='#0c0e09';x.beginPath();x.arc(32,32,28.2,0,TAU);x.stroke();
+  ctx=x;try{cIcon('repair',12,12,40,b?'#e2ffe2':'#74e27f',4)}finally{ctx=m}return c}
 function drawEShots(){const px=1/sc,t=G.time,lw=Math.max(1,1.4*px);let bp=0;
-  for(const e of G.enemies){if(!e.mech||e.dead||!visible(e))continue;const c=G.time-(e.mechT??-9)<0.4?'#9cf5a0':'#5fbf6a';   // mechanic: green cross + tag (bright while repairing)
-    box(e.x-0.7*px-1,e.y-e.r-7*px-3,1.4*px+2,5*px+4,c);box(e.x-2.5*px-2,e.y-e.r-5.2*px-1.2,5*px+4,1.4*px+2,c);
-    ctx.font=`700 ${(8*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle=c;ctx.fillText('MECH',e.x,e.y-e.r-10*px-4)}
+  for(const e of G.enemies){if(!e.mech||e.dead||!visible(e))continue;const on=G.time-(e.mechT??-9)<0.4,d=12*px+6,bx=e.x+e.r+d*.3,by=e.y-e.r-d*.5;   // mechanic: wrench badge up-right, clear of the health bar (bright while repairing)
+    if(on){ctx.globalCompositeOperation='lighter';blit(glowSprite('120,255,140'),bx,by,d*.95,.55);ctx.globalCompositeOperation='source-over'}ctx.globalAlpha=1;ctx.drawImage(mechBadge(on?1:0),bx-d/2,by-d/2,d,d)}
   for(const e of G.enemies){if(!e.vbied||e.dead||!visible(e))continue;const on=Math.sin(t*14+e.wob)>0,ha=e.face??Math.atan2(-e.y,-e.x),hx=Math.cos(ha),hy=Math.sin(ha);
     for(let i=0;i<3;i++){const bx=e.x-hx*(3+i*2.6)+(i===1?hy*1.6:-hy*1.6)*(i%2?1:0.3),by=e.y-hy*(3+i*2.6)-(i===1?hx*1.6:-hx*1.6)*(i%2?1:0.3);ell(bx,by,1.7,1.7,'#8a2a1c');ell(bx-.4,by-.4,.7,.7,'#d8553a')}   // car bomb: blinking red beacon + tag
     if(on){ell(e.x,e.y,2.2*px+1,2.2*px+1,'#ff3b30');ell(e.x,e.y,6*px+3,6*px+3,'rgba(255,60,50,.3)')}
@@ -4800,9 +4804,14 @@ function hqCorpseArt(type,col){const tr=type==='brute'?'#43474d':'#7a6242',skin=
   const hc=type==='brute'?'#2f3236':type==='shooter'?'#4f4a32':type==='runner'?'#9c8058':'#6e5e3e';hqDome(-6.8,.5,2.7,2.6,hc,.3,-.5);
   ctx.save();ctx.translate(3,-6.6);ctx.rotate(.35);hqBar(-4,-.6,type==='shooter'?11:8,1.2,'#1c1d20');hqBar(-4,-.6,2.8,1.2,type==='grunt'?'#7b4a26':'#26272a');ctx.restore();
   ell(-2,-4.2,1.3,.95,'#c62828')}
+// combat mechanic (a grunt with e.mech): red toolbox in place of the pack, wrench through its handle, spanner on the hip
+function hqMechKit(){hqRR(-7,-3,3.8,6,.7,'#8e3a24');box(-7,-3,3.8,1.1,'#b1543a');box(-7,2.3,3.8,.7,'rgba(0,0,0,.3)');box(-5.5,-3,.8,6,'rgba(0,0,0,.22)');
+  hqBar(-6.7,-1.1,.55,2.2,'#2a2a28');hqBolts([-6.5,-2.4,-6.5,2.4,-3.7,-2.4,-3.7,2.4],'rgba(20,10,5,.6)');
+  limb(-6.4,-3.6,-3.2,-5.3,.55,'#9aa1a6');ell(-2.9,-5.45,.75,.75,'#9aa1a6');ell(-2.6,-5.6,.32,.32,'#2a2e22');limb(-6.2,-3.7,-3.8,-5,.18,'rgba(255,255,255,.35)');
+  limb(-1.2,4.7,2,5.3,.5,'#b9bec2');ell(2.3,5.35,.62,.62,'#b9bec2');ell(2.55,5.2,.26,.26,'#2a2e22')}
 const _hqEM={};   // per-type [frame] memo in front of hqBake: the hot lookup builds no key string and closure
 function hqEnemySpr(type,col,f,px){const T=_hqEM[type]||(_hqEM[type]=[]),bi=hqBi(px);let s=T[f];if(s&&s._bi===bi)return s;
-  s=hqBake('e'+type+f,px,30,21,11.5,10.5,()=>{if(f===9)hqCorpseArt(type,col);else hqEnemyArt(type,col,f===8?0:Math.sin(f/8*TAU))},.36,.45);s._bi=bi;return T[f]=s}
+  s=hqBake('e'+type+f,px,30,21,11.5,10.5,()=>{if(f===9)hqCorpseArt(type==='mech'?'grunt':type,col);else if(type==='mech'){hqEnemyArt('grunt',col,f===8?0:Math.sin(f/8*TAU));hqMechKit()}else hqEnemyArt(type,col,f===8?0:Math.sin(f/8*TAU))},.36,.45);s._bi=bi;return T[f]=s}
 function hqPaintSoldier(main){const uni=main?'#5b7132':'#4c5f2b',rig=main?'#5f6641':'#566039',glove='#7a6a4c';
   hqLegs(0,hexOf(hqSh(uni,-.15)),'#1d1b16');
   hqRR(-6.8,-3.5,3.8,7,1.1,'#3b4722');box(-6.8,-3.5,3.8,1.1,'#4f5d2d');box(-6.5,-.25,3.2,.5,'rgba(0,0,0,.3)');hqCyl(-7.5,-3.1,1.3,6.2,'#55603a');   // ruck + sleeping mat
@@ -5215,7 +5224,7 @@ let _hqBase=null;
 let _hqDirty=false;   // drawEnemies' sprites leave the matrix set per enemy; layered vehicles (relative transforms) restore it first
 function drawEnemyHQ(e,x,y){const B=_hqBase||ctx.getTransform(),a=Math.atan2(-y,-x),k=e.r/6,px=Math.hypot(B.a,B.b);
   if(e.boss||e.veh){if(_hqDirty){ctx.setTransform(B.a,B.b,B.c,B.d,B.e,B.f);_hqDirty=false}if(e.boss)drawMBTHQ(e,x,y,a,k,px);else drawVehHQ(e,x,y,a,k,px);return}
-  const f=e.moving?(((e.wob/TAU*8)|0)%8+8)%8:8,spr=hqEnemySpr(e.type,e.col,f,px*k),fl=e.flash>0?Math.min(1,e.flash/.08):0,c=Math.cos(a)*k,n=Math.sin(a)*k;
+  const f=e.moving?(((e.wob/TAU*8)|0)%8+8)%8:8,spr=hqEnemySpr(e.mech?'mech':e.type,e.col,f,px*k),fl=e.flash>0?Math.min(1,e.flash/.08):0,c=Math.cos(a)*k,n=Math.sin(a)*k;
   let sx=1,sy=1;if(f===8){const br=Math.sin(G.time*2.4+e.wob);sx=1+br*.012;sy=1+br*.022}else sx=1+Math.abs(Math.sin(e.wob))*.02;
   if(fl||px*k>2.6){ctx.setTransform(B.a*c+B.c*n,B.b*c+B.d*n,B.c*c-B.a*n,B.d*c-B.b*n,B.a*x+B.c*y+B.e,B.b*x+B.d*y+B.f);
     let l=hqLoc(1.2,1.6,a,1);if(px*k>2.6)hqShadow(spr,l[0],l[1],.32);
