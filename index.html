@@ -1027,6 +1027,7 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
       <select id="sGfx" hidden><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
     <label class="set"><span class="st">Screen shake</span><input type="checkbox" class="sw" id="sShake"></label>
     <label class="set"><span class="st">Damage numbers</span><input type="checkbox" class="sw" id="sDmg"></label>
+    <label class="set"><span class="st">Battle callouts<small>INCOMING armor, flank contact and straggler alerts</small></span><input type="checkbox" class="sw" id="sCall"></label>
     <label class="set"><span class="st">Vision ring<small>Dashed outline of your sight range</small></span><input type="checkbox" class="sw" id="sRing"></label>
     <label class="set"><span class="st">Day/Night cycle<small>Time passes with the waves: dusk, night fights, dawn</small></span><input type="checkbox" class="sw" id="sDay"></label>
     <label class="set"><span class="st">Reduce motion<small>Calmer menus, pulses and screen effects</small></span><input type="checkbox" class="sw" id="sRm"></label>
@@ -1075,7 +1076,7 @@ IC.nade='M11 15m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M8.5 9.3V6.5h5v2.8M13.5 7.5c2
 const _p2={};function cIcon(n,x,y,s,c,lw=2){const p=_p2[n]||(_p2[n]=new Path2D(IC[n]));ctx.save();ctx.translate(x,y);ctx.scale(s/24,s/24);ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke(p);ctx.restore()}
 // ================= SAVE =================
 const GFX_DEF=matchMedia('(pointer:coarse)').matches&&matchMedia('(hover:none)').matches?'medium':'high';
-const DEF_SET={vol:60,music:true,shake:true,dmgNums:true,ring:true,blurPause:true,dayNight:true,speed:1,prio:'near'};
+const DEF_SET={vol:60,music:true,shake:true,dmgNums:true,callouts:true,ring:true,blurPause:true,dayNight:true,speed:1,prio:'near'};
 let S;
 function loadSave(){try{S=JSON.parse(localStorage.getItem('theFortSave'))}catch(e){}
   if(!S||typeof S!=='object'||Array.isArray(S))S={};const num=v=>{v=+v;return isFinite(v)&&v>0?v:0};S.bank=num(S.bank);S.best=Math.floor(num(S.best));S.tkills=Math.floor(num(S.tkills));S.lv=S.lv&&typeof S.lv==='object'&&!Array.isArray(S.lv)?S.lv:{};for(const k in S.lv)S.lv[k]=Math.floor(num(S.lv[k]));S.seen=S.seen&&typeof S.seen==='object'?S.seen:{};S.set=Object.assign({},DEF_SET,S.set&&typeof S.set==='object'?S.set:{});if(![0.5,0.75,1].includes(+S.set.speed))S.set.speed=1;S.set.speed=+S.set.speed;S.set.vol=Math.max(0,Math.min(100,+S.set.vol||0));if(!['high','medium','low'].includes(S.set.gfx))S.set.gfx=GFX_DEF;if(!['near','threat','tough'].includes(S.set.prio))S.set.prio='near';
@@ -1839,7 +1840,7 @@ sheetDrag('settings',closeSettings);sheetDrag('howto',closeHowto);
 $('howClose').onclick=$('howDone').onclick=closeHowto;$('howto').addEventListener('mousedown',e=>{if(e.target.id==='howto')closeHowto()});$('howBtn').onclick=openHowto;
 const segSync=(seg,v)=>{for(const b of $(seg).children)b.setAttribute('aria-pressed',b.dataset.v===String(v))};
 const volFill=()=>$('sVol').style.setProperty('--v',$('sVol').value+'%');
-function syncSettings(){$('sVol').value=S.set.vol;volFill();$('sMusic').checked=S.set.music;$('sShake').checked=S.set.shake;$('sDmg').checked=S.set.dmgNums;$('sRing').checked=S.set.ring;$('sDay').checked=S.set.dayNight;$('sBlur').checked=S.set.blurPause;
+function syncSettings(){$('sVol').value=S.set.vol;volFill();$('sMusic').checked=S.set.music;$('sShake').checked=S.set.shake;$('sDmg').checked=S.set.dmgNums;$('sCall').checked=S.set.callouts!==false;$('sRing').checked=S.set.ring;$('sDay').checked=S.set.dayNight;$('sBlur').checked=S.set.blurPause;
   $('sSpeed').value=String(S.set.speed);$('sGfx').value=S.set.gfx;segSync('gfxSeg',S.set.gfx);segSync('spdSeg',S.set.speed);$('sRm').checked=!!S.set.reduceMotion;$('sLeft').checked=!!S.set.leftHand;
   const rb=$('resetBtn');rb.disabled=running;delete rb.dataset.arm;rb.textContent=running?'END RUN FIRST':'RESET'}
 for(const[seg,sel]of[['gfxSeg','sGfx'],['spdSeg','sSpeed']])$(seg).addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;e.preventDefault();const s=$(sel);if(s.value!==b.dataset.v){s.value=b.dataset.v;s.dispatchEvent(new Event('change'))}segSync(seg,b.dataset.v)});
@@ -1847,6 +1848,7 @@ $('sVol').oninput=e=>{S.set.vol=+e.target.value;volFill();setMasterVol();save()}
 $('sMusic').onchange=e=>{S.set.music=e.target.checked;save()};$('sVol').onchange=()=>sfx('buy');
 $('sShake').onchange=e=>{S.set.shake=e.target.checked;save()};
 $('sDmg').onchange=e=>{S.set.dmgNums=e.target.checked;save()};
+$('sCall').onchange=e=>{S.set.callouts=e.target.checked;save()};
 $('sRing').onchange=e=>{S.set.ring=e.target.checked;save()};
 $('sDay').onchange=e=>{S.set.dayNight=e.target.checked;save()};
 $('sBlur').onchange=e=>{S.set.blurPause=e.target.checked;save()};
@@ -2155,7 +2157,7 @@ function vehWave(){const w=G.wave,q=[],f=w%10===0?0.5:1;   // MBT (boss) waves b
   G.spawnLeft=Math.max(q.length+Math.ceil(inf*0.5),inf-cost);G.waveTotal+=G.spawnLeft-inf;G.vq=q}
 // wave-start armor callout: what the vehicle roster holds, so the player can plan (feed line, after the wave banner)
 const VEH_CALL={technical:['TECHNICAL','TECHNICALS'],apc:['APC','APCS'],ifv:['LIGHT TANK','LIGHT TANKS'],mlrs:['ROCKET LAUNCHER','ROCKET LAUNCHERS'],mbt:['TANK','TANKS']};
-function armorCallout(){const q=G.vq;if(!q||!q.length||q.length<3&&q.every(t=>t==='technical'))return;const n={};for(const t of q)n[t]=(n[t]||0)+1;
+function armorCallout(){const q=G.vq;if(S.set.callouts===false||!q||!q.length||q.length<3&&q.every(t=>t==='technical'))return;const n={};for(const t of q)n[t]=(n[t]||0)+1;
   const txt='INCOMING: '+Object.keys(VEH_CALL).filter(t=>n[t]).map(t=>n[t]+' '+VEH_CALL[t][n[t]>1?1:0]).join(' · ');setTimeout(()=>{if(running&&!G.over)feed(txt,'205,215,140','tank')},1400)}
 function nextType(){const q=G.vq;return q&&q.length&&Math.random()<q.length/G.spawnLeft?q.pop():pickType(G.wave)}
 function startWave(){
@@ -2228,7 +2230,7 @@ const ARMOR_KILL={boss:1,mbt:1,ifv:1,apc:1,mlrs:1};
 const STRAG_T=15;
 function stragglers(){if(G.spawnLeft>0||G.vq&&G.vq.length||G.time-(G.lkT??G.time)<STRAG_T)return;let n=0;for(const e of G.enemies)if(!e.dead&&++n>3)return;for(const e of G.sky)if(!e.dead&&++n>3)return;if(!n)return;
   for(const e of G.enemies)if(!e.dead){e.rev=Math.max(e.rev||0,1);if(e.stand)e.fwd=1}for(const e of G.sky)if(!e.dead)e.rev=Math.max(e.rev||0,1)
-  if(G.stragW!==G.wave){G.stragW=G.wave;feed('STRAGGLERS MARKED','255,207,90','threat')}}
+  if(G.stragW!==G.wave&&S.set.callouts!==false){G.stragW=G.wave;feed('STRAGGLERS MARKED','255,207,90','threat')}}
 function kill(e){e.dead=true;G.lkT=G.time;if(e.mech)medalBump('mech');if(e.vbied){e.vbied=0;medalBump('vbied');explode(e.x,e.y,44,e.dmg*0.4);light(e.x,e.y,90,'255,150,60',0.4)}if(_mainHit&&_aimed)streakKill();
   const bonus=e.load>0?money(e.rew*0.15*e.load):0,r=Math.round(money(e.rew)*streakMul())+bonus;S.bank+=r;G.earned+=r;G.kills++;S.tkills++;(e.air?airDown:fxKill)(e);
   if(e.chute>0)medalBump('chute');if(_nadeK)medalBump('nade');if(ARMOR_KILL[e.type]&&!e.air)medalBump('tank');if(e.type==='manpads')medalBump('manpads');if(S.tkills%25===0)medalCheck('kills');
@@ -6404,7 +6406,7 @@ function evStart(){const w=G.wave,k=rollEvent(w);G.ev=k;if(!k)return;const E=EVE
   else if(k==='resupply'){for(const c of['ammo','fix',G.wave>=8?'strike':'cash'])dropCrate(c)}
   else if(k==='ambush'){const n=Math.min(24,Math.round(G.spawnLeft*0.3)),a=Math.random()*TAU,r=Math.max(blockHalf()+90,sight()*0.85);G.spawnLeft=Math.max(0,G.spawnLeft-n);
     for(let i=0;i<n;i++){const b=a+(Math.random()-.5)*0.7,d=r+Math.random()*30;spawn(i%3===2?'shooter':i%2?'runner':'grunt',{x:Math.cos(b)*d,y:Math.sin(b)*d})}
-    const dir=['EAST','SOUTH-EAST','SOUTH','SOUTH-WEST','WEST','NORTH-WEST','NORTH','NORTH-EAST'][Math.round(((a%TAU)+TAU)%TAU/(TAU/8))%8];setTimeout(()=>{if(running)feed('CONTACT '+dir,'255,170,90','threat')},900)}
+    const dir=['EAST','SOUTH-EAST','SOUTH','SOUTH-WEST','WEST','NORTH-WEST','NORTH','NORTH-EAST'][Math.round(((a%TAU)+TAU)%TAU/(TAU/8))%8];setTimeout(()=>{if(running&&S.set.callouts!==false)feed('CONTACT '+dir,'255,170,90','threat')},900)}
   else if(k==='convoy'){for(let i=0;i<3;i++){makeVbied(spawn('technical'));G.waveTotal++}}
   else if(k==='barrage'){const n=w>=25?3:2;for(let i=0;i<n;i++){const t=spawn('mortar');t.atk=2.5+i*1.2}G.waveTotal+=n}
   banner('WAVE '+w+' — '+E.name,E.sub,E.col);if(!seen()['ev_'+k])spotted('ev_'+k);evSting(k)}
