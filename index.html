@@ -3953,7 +3953,16 @@ function drawDecals(){if(HQ){hqDecals();return}const at=!CGL.active(),g=++DA.g;
     ctx.fillStyle=`rgba(90,10,10,${0.55*a})`;for(let i=0;i<6;i++){const an=d.seed*i*1.7,rr=d.r*(0.25+((d.seed*(i+3))%1)*0.6),o=i?d.r*0.55:0;
       ctx.beginPath();ctx.ellipse(d.x+Math.cos(an)*o,d.y+Math.sin(an)*o,rr,rr*0.7,an,0,7);ctx.fill()}}
   if(at)for(let i=0;i<DA.own.length;i++){const o=DA.own[i];if(o&&o._g!==g){DA.own[i]=null;DA.free.push(i)}}}
-function drawSmoke(){if(HQ){hqSmoke();return}for(const s of G.smoke){const k=s.life/s.max;ctx.fillStyle=`rgba(${s.col},${s.a*k*Math.min(1,(1-k)*6)})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fill()}}
+// Medium/Low smoke: one solid disc sprite per colour (128px, cached) drawn at the puff's alpha, instead of a new rgba() string and a
+// path fill per puff per frame. Unbounded colour sets fall back to the path fill after 48 colours.
+const _dsc=new Map();
+function discSpr(col){let c=_dsc.get(col);if(c===undefined){if(_dsc.size>=48)return null;c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');
+  x.fillStyle=`rgb(${col})`;x.beginPath();x.arc(64,64,63,0,7);x.fill();_dsc.set(col,c)}return c}
+function drawSmoke(){if(HQ){hqSmoke();return}
+  for(const s of G.smoke){const k=s.life/s.max,al=s.a*k*Math.min(1,(1-k)*6);if(!(al>0))continue;const im=discSpr(s.col);
+    if(im){ctx.globalAlpha=Math.min(1,al);const r=s.r*64/63;ctx.drawImage(im,s.x-r,s.y-r,r*2,r*2);continue}
+    ctx.globalAlpha=1;ctx.fillStyle=`rgba(${s.col},${al})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fill()}
+  ctx.globalAlpha=1}
 function drawParts(){if(HQ){hqParts();return}const m=ctx.getTransform();let rx=false;   // rotated bits: one setTransform each instead of save/translate/rotate/restore
   for(const p of G.parts){if(p.glow)continue;ctx.globalAlpha=Math.min(1,p.life/((p.max||1)*0.4));ctx.fillStyle=p.c;
     if(p.rot!==undefined){xf(m,p.x,p.y,p.rot);rx=true;ctx.fillRect(-p.sz,-p.sz/2,p.sz*2,p.sz)}else{if(rx){xr(m);rx=false}ctx.fillRect(p.x,p.y,p.sz,p.sz)}}
