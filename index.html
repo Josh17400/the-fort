@@ -2196,11 +2196,11 @@ let _aimed=false;
 function streakKill(){G.stk=(G.stk||0)+1;G.stkT=STREAK_T;G.stkPop=1;medalMax('streak',G.stk);if(G.stk>1&&G.stk<=11)tone(520+G.stk*60,0.07,'square',40,0.03)}
 // armored hulls that count toward Tank Hunter (technicals are soft-skinned pickups)
 const ARMOR_KILL={boss:1,mbt:1,ifv:1,apc:1,mlrs:1};
-// Stragglers: once the wave has fully spawned and at most 3 ground hostiles are left with no kill for STRAG_T seconds, they are
+// Stragglers: once the wave has fully spawned and at most 3 hostiles (ground + air) are left with no kill for STRAG_T seconds, they are
 // marked (revealed) and standoff crews move up, so a wave never ends in a hunt for one hidden rifleman.
 const STRAG_T=15;
-function stragglers(){if(G.spawnLeft>0||G.vq&&G.vq.length||G.time-(G.lkT??G.time)<STRAG_T)return;let n=0;for(const e of G.enemies)if(!e.dead&&++n>3)return;if(!n)return;
-  for(const e of G.enemies)if(!e.dead){e.rev=Math.max(e.rev||0,1);if(e.stand)e.fwd=1}
+function stragglers(){if(G.spawnLeft>0||G.vq&&G.vq.length||G.time-(G.lkT??G.time)<STRAG_T)return;let n=0;for(const e of G.enemies)if(!e.dead&&++n>3)return;for(const e of G.sky)if(!e.dead&&++n>3)return;if(!n)return;
+  for(const e of G.enemies)if(!e.dead){e.rev=Math.max(e.rev||0,1);if(e.stand)e.fwd=1}for(const e of G.sky)if(!e.dead)e.rev=Math.max(e.rev||0,1)
   if(G.stragW!==G.wave){G.stragW=G.wave;feed('STRAGGLERS MARKED','255,207,90','threat')}}
 function kill(e){e.dead=true;G.lkT=G.time;if(e.vbied){e.vbied=0;medalBump('vbied');explode(e.x,e.y,44,e.dmg*0.4);light(e.x,e.y,90,'255,150,60',0.4)}if(_mainHit&&_aimed)streakKill();
   const bonus=e.load>0?money(e.rew*0.15*e.load):0,r=Math.round(money(e.rew)*streakMul())+bonus;S.bank+=r;G.earned+=r;G.kills++;S.tkills++;(e.air?airDown:fxKill)(e);
@@ -6594,7 +6594,7 @@ const SKY_AI={drone:aiDrone,gunheli:aiHeli,airboss:aiBoss,uav:aiUav,
   strikejet:(e,dt,h)=>aiPasses(e,dt,h,1.5,0.6,3,jetRun),heavybomber:(e,dt,h)=>aiPasses(e,dt,h,0.55,0.35,2,bomberRun)};
 // ---- per-tick update, driven from update() after the ground enemies -----------------------------------------------
 function updateSky(dt,h){
-  for(const e of G.sky){if(e.dead)continue;e.t+=dt;e.flash-=dt;if(e.sup)e.sup=Math.max(0,e.sup-dt*0.22);
+  for(const e of G.sky){if(e.dead)continue;e.t+=dt;e.flash-=dt;if(e.rev>0)e.rev-=dt;if(e.sup)e.sup=Math.max(0,e.sup-dt*0.22);
     if(!seen()[e.type]&&visible(e))spotted(e.type);
     if(sigStatus(e,dt)){if(!e.dead)advance(e,e.spd*0.35,dt);continue}   // burning / stunned: fried avionics, it drifts and holds fire
     SKY_AI[e.type](e,dt,h);if(!running)return}
