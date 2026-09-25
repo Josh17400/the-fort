@@ -1358,7 +1358,7 @@ function drawEShots(){const px=1/sc,t=G.time,lw=Math.max(1,1.4*px);
 // burning hulks on Medium/Low (High keeps its baked wrecks in drawCorpses plus a smoke-and-fire emitter)
 const VWRECK_T=7,VEH_LEN={technical:[17,9],apc:[23,12],ifv:[20.4,11],mbt:[20.4,11.2],mlrs:[20,8.4]};
 function drawVWrecks(){for(const w of G.vwrecks){const t=G.time-w.t0;if(t>VWRECK_T)continue;const k=w.r/6*(w.type==='mbt'?1/1.15:1),[l,b]=VEH_LEN[w.type],fade=Math.min(1,(VWRECK_T-t)/1.2);
-  ctx.save();ctx.translate(w.x,w.y);ctx.rotate(w.a);ctx.scale(k,k);ctx.globalAlpha=fade;vehLo(w.type,null);ctx.globalAlpha=0.78*fade;box(-l/2-.3,-b/2-.3,l+.6,b+.6,'#1b1814');ctx.restore();
+  ctx.save();ctx.translate(w.x,w.y);ctx.rotate(w.a);ctx.scale(k,k);ctx.globalAlpha=fade;if(ctx===CGL.rec)hqDraw(hqBake('lx'+w.type,hqPx(),36,20,13,10,()=>vehLo(w.type,null),0));else vehLo(w.type,null);ctx.globalAlpha=0.78*fade;box(-l/2-.3,-b/2-.3,l+.6,b+.6,'#1b1814');ctx.restore();
   ctx.globalCompositeOperation='lighter';const f=Math.max(0,1-t/VWRECK_T);blit(fireSprite(),w.x+Math.sin(t*9)*1.5,w.y+Math.cos(t*7),w.r*(0.75+0.2*Math.sin(t*13))*f,0.8*f);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}}
 function enemyAt(x,y,slack){let best=null,bd=1e9;for(const e of G.enemies.concat(G.sky)){if(e.dead||!visible(e))continue;const d=Math.hypot(e.x-x,e.y-y)-e.r;if(d<slack&&d<bd){bd=d;best=e}}return best}
 // Target doctrine: one player-set priority that every auto-aiming gun respects (rifle auto-fire, squad, MG nests, vehicle guns,
@@ -2323,7 +2323,7 @@ function sgGunship(u,vis){const n=sg('gunship','salvo')||1,c=bestCluster(40,vis)
     G.tshells.push(sgShell('gunship',{x:u.x,y:u.y,tx:e.x+(i?(R()-.5)*12:0),ty:e.y+(i?(R()-.5)*12:0),t:0,dur:Math.max(.05,d/500)*(1+i*0.12),dmg:gsDmg(l)*(i?0.5:1),r:40,kind:'shell'}))}
   sfx('howitzer',u.x,u.y,1.5)}
 // ---- drawing: mark reticles, stun crackle, burn glow, beams, arcs, cones, EM screen, loitering munitions, escort drones ----
-function drawSigFx(){if(!G.sgfx)return;const px=1/sc,lo=GFX.fx<0.5,t=G.time,mk=new Path2D(),st=new Path2D();let nm=0,ns=0;
+function drawSigFx(){if(!G.sgfx)return;const px=1/sc,lo=GFX.fx<0.5,t=G.time,mk=CGL.path(),st=CGL.path();let nm=0,ns=0;
   const tag=e=>{if(e.dead)return;if(e.mkT>t){const r=e.r+4+Math.sin(t*9)*0.8,k=Math.min(4,r*0.5);nm++;
       for(let i=0;i<4;i++){const cx=e.x+(i&1?r:-r),cy=e.y+(i&2?r:-r),sx=i&1?-1:1,sy=i&2?-1:1;mk.moveTo(cx+sx*k,cy);mk.lineTo(cx,cy);mk.lineTo(cx,cy+sy*k)}}
     if(e.stun>0&&!lo){ns++;const r=e.r+2;for(let i=0;i<2;i++){const a=R()*TAU,b=a+0.6+R();st.moveTo(e.x+Math.cos(a)*r,e.y+Math.sin(a)*r);
@@ -2337,7 +2337,7 @@ function drawSigFx(){if(!G.sgfx)return;const px=1/sc,lo=GFX.fx<0.5,t=G.time,mk=n
     if(f.k==='beam'){ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.x2,f.y2);
       if(!lo){ctx.strokeStyle=`rgba(${f.c},${(0.3*k).toFixed(3)})`;ctx.lineWidth=f.w*4;ctx.stroke()}
       ctx.strokeStyle=`rgba(${f.c},${(0.85*k).toFixed(3)})`;ctx.lineWidth=f.w*1.3;ctx.stroke();ctx.strokeStyle=`rgba(255,255,255,${(0.9*k).toFixed(3)})`;ctx.lineWidth=f.w*0.5;ctx.stroke()}
-    else if(f.k==='arc'){const p=new Path2D(),seg=lo?2:4;for(let i=0;i<f.pts.length;i++){const[x,y]=f.pts[i];if(!i){p.moveTo(x,y);continue}const[qx,qy]=f.pts[i-1];
+    else if(f.k==='arc'){const p=CGL.path(),seg=lo?2:4;for(let i=0;i<f.pts.length;i++){const[x,y]=f.pts[i];if(!i){p.moveTo(x,y);continue}const[qx,qy]=f.pts[i-1];
         for(let j=1;j<seg;j++){const q=j/seg;p.lineTo(qx+(x-qx)*q+(R()-.5)*9,qy+(y-qy)*q+(R()-.5)*9)}p.lineTo(x,y)}
       if(!lo){ctx.strokeStyle=`rgba(${f.c},${(0.4*k).toFixed(3)})`;ctx.lineWidth=5;ctx.stroke(p)}
       ctx.strokeStyle=`rgba(${f.c},${k.toFixed(3)})`;ctx.lineWidth=1.8;ctx.stroke(p);ctx.strokeStyle=`rgba(255,255,255,${k.toFixed(3)})`;ctx.lineWidth=0.7;ctx.stroke(p)}
@@ -2372,7 +2372,9 @@ applyGfx();
 const _spr={};
 function radialSprite(key,stops){let c=_spr[key];if(c)return c;c=_spr[key]=document.createElement('canvas');c.width=c.height=128;
   const x=c.getContext('2d'),g=x.createRadialGradient(64,64,0,64,64,64);for(const[o,col]of stops)g.addColorStop(o,col);x.fillStyle=g;x.fillRect(0,0,128,128);return c}
-const glowSprite=c=>_spr['l'+c]||radialSprite('l'+c,[[0,`rgba(${c},1)`],[1,`rgba(${c},0)`]]);
+// single-colour radial sprites remember their white twin: ChaosGL keeps one atlas copy and tints it per instance
+function tintOf(c,rgb,white){if(rgb!=='255,255,255'){const[r,g,b]=rgb.split(',').map(Number);c._tr=(r|g<<8|b<<16)>>>0;c._tb=white}return c}
+const glowSprite=c=>_spr['l'+c]||tintOf(radialSprite('l'+c,[[0,`rgba(${c},1)`],[1,`rgba(${c},0)`]]),c,()=>glowSprite('255,255,255'));
 const fireSprite=()=>_spr.fire||radialSprite('fire',[[0,'rgba(255,255,235,1)'],[0.25,'rgba(255,215,110,.95)'],[0.6,'rgba(255,110,30,.6)'],[1,'rgba(160,30,0,0)']]);
 const scorchSprite=()=>radialSprite('scorch',[[0,'rgba(8,6,4,.6)'],[0.6,'rgba(20,15,10,.35)'],[1,'rgba(20,15,10,0)']]);
 function blit(img,x,y,r,a){if(a<=0||r<=0)return;ctx.globalAlpha=Math.min(1,a);ctx.drawImage(img,x-r,y-r,r*2,r*2)}
@@ -2424,13 +2426,16 @@ function drawParts(){if(HQ){hqParts();return}
   for(const p of G.parts){if(!p.glow)continue;const k=Math.max(0,p.life/(p.max||0.5));ctx.strokeStyle=p.c;ctx.globalAlpha=Math.min(1,k*1.4);ctx.lineWidth=p.sz;
     ctx.beginPath();ctx.moveTo(p.x-p.vx*0.035,p.y-p.vy*0.035);ctx.lineTo(p.x,p.y);ctx.stroke()}
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
+// smoke, dawn mist, particles/debris/casings/embers, explosions/tracers and research signatures: one ChaosGL layer (see CGL) when there's enough of it
+function drawFxLayer(){drawSmoke();dayMist();drawParts();drawFx();drawSigFx()}
+function fxCount(){const h=G.hx;return G.smoke.length+G.parts.length+G.fx.length+(h?h.emb.length+h.deb.length*2+h.cas.length*2:0)}
 function drawFx(){const m=HQ&&ctx.getTransform();
   for(const f of G.fx){const k=Math.max(0,f.life/f.max),t=1-k;
     if(HQ&&hqFx(f,k,t,m))continue;
     if(f.k==='tracer'){ctx.globalCompositeOperation='lighter';ctx.lineCap='round';ctx.strokeStyle=f.c;ctx.globalAlpha=k*0.3;ctx.lineWidth=(f.w||1.2)*3;
       ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.x2,f.y2);ctx.stroke();ctx.globalAlpha=k;ctx.lineWidth=(f.w||1.2)*0.8;ctx.strokeStyle='#fffbe8';ctx.stroke();
       ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
-    else if(f.k==='bolt'){ctx.globalCompositeOperation='lighter';ctx.lineJoin='round';const path=new Path2D();
+    else if(f.k==='bolt'){ctx.globalCompositeOperation='lighter';ctx.lineJoin='round';const path=CGL.path();
       f.pts.forEach(([x,y],i)=>{if(!i){path.moveTo(x,y);return}const[px,py]=f.pts[i-1];for(let j=1;j<4;j++){const q=j/4;path.lineTo(px+(x-px)*q+(R()-.5)*10,py+(y-py)*q+(R()-.5)*10)}path.lineTo(x,y);
         if(R()<.4){path.moveTo(x,y);path.lineTo(x+(R()-.5)*24,y+(R()-.5)*24)}});
       ctx.strokeStyle=`rgba(90,170,255,${k*0.45})`;ctx.lineWidth=6;ctx.stroke(path);ctx.strokeStyle=`rgba(190,235,255,${k})`;ctx.lineWidth=2;ctx.stroke(path);
@@ -2634,12 +2639,13 @@ function postFX(){if(!HQ||!G)return;const m=ctx.getTransform(),h=hx(),W=cv.width
 function bloom(m,W,H){const bw=Math.max(2,Math.ceil(VW/4)),bh=Math.max(2,Math.ceil(VH/4)),b1=pfCanvas('b1',bw,bh),b2=pfCanvas('b2',bw>>1,bh>>1),b3=pfCanvas('b3',bw>>2||1,bh>>2||1),x=b1._x,q=bw/W;
   x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation='source-over';x.globalAlpha=1;x.clearRect(0,0,bw,bh);
   x.setTransform(m.a*q,m.b*q,m.c*q,m.d*q,m.e*q,m.f*q);x.save();x.beginPath();x.arc(0,0,vision()*1.06+6,0,TAU);x.clip();
-  const main=ctx;ctx=x;BP=true;try{drawFx();drawParts();drawLights()}finally{BP=false;ctx=main}x.restore();
+  BP=true;try{CGL.into('bloom',fxCount()+G.lights.length,x,bw,bh,drawBloomSrc,false)}finally{BP=false}x.restore();
   // Blur chain b1 -> b2 -> b3, then fold the wider octaves back into b1 so only one full-screen upscale is paid.
   b2._x.clearRect(0,0,b2.width,b2.height);b2._x.drawImage(b1,0,0,b2.width,b2.height);b3._x.clearRect(0,0,b3.width,b3.height);b3._x.drawImage(b2,0,0,b3.width,b3.height);
   x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation='lighter';x.drawImage(b2,0,0,bw,bh);x.drawImage(b3,0,0,bw,bh);x.drawImage(b3,0,0,bw,bh);x.globalCompositeOperation='source-over';
   ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='lighter';ctx.imageSmoothingEnabled=true;ctx.globalAlpha=.22;ctx.drawImage(b1,0,0,W,H);
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
+function drawBloomSrc(){drawFx();drawParts();drawLights()}
 // Shockwave: the band of the frame under an expanding ring is re-drawn slightly magnified, which reads as refraction.
 function shockwaves(m,h,W,H){const s=Math.hypot(m.a,m.b),c=pfCanvas('sw',W,H);ctx.setTransform(1,0,0,1,0,0);
   for(const w of h.waves){const t=1-w.life/w.max,R=w.R*(1-(1-t)*(1-t))*s,th=Math.max(4*dpr,R*.16*(1-t)),amp=.035*(1-t),cx=m.a*w.x+m.c*w.y+m.e,cy=m.b*w.x+m.d*w.y+m.f;
@@ -2675,6 +2681,327 @@ function grade(W,H,h){
   if(h.flash>0){ctx.globalCompositeOperation='screen';ctx.fillStyle=`rgba(255,244,222,${h.flash})`;ctx.fillRect(0,0,W,H)}
   ctx.globalCompositeOperation='source-over'}
 
+// ================= CHAOS ENGINE (ChaosGL) =================
+// Instanced WebGL2 sprite batcher (WebGL1 + ANGLE_instanced_arrays fallback) for everything drawn by the thousand:
+//   ground  enemies, corpses, vehicle wrecks, LOD rims/silhouettes, health bars   (drawEnemies)
+//   fx      smoke, dawn mist, particles/debris/casings/embers/sparks, explosions, tracers, research signatures
+//   sky     aircraft, their wrecks, SAMs, flak, bombs, CAP fighters, brackets, bars (drawSky, after its radar ring)
+//   bloom / emis / lmap / glow   the emissive re-renders and the night light map + glow buffer (low-res offscreen targets)
+// The Canvas2D drawing code stays the single source of truth: while a layer is recorded the global `ctx` (or the caller's buffer
+// context) is swapped for CGL.rec, a recording context that implements the part of the 2D API those functions use and turns every
+// drawImage, fillRect, full ellipse/arc fill and line/ring stroke into one instance of a single instanced draw. Sprites come from a
+// shelf-packed atlas (2048px, 4096 if it keeps overflowing) filled on demand from the canvases the game already bakes; Medium/Low
+// enemy vector art and aircraft are baked per quantised animation frame first (drawEnemyLoGL, drawCraftGL). A finished layer is
+// composited into its target with one drawImage of its bounding box at exactly the point it used to be drawn, so fog, the light
+// map, bloom and the HUD keep their order. 'lighter' is premultiplied additive (rgb added, alpha kept), which composites
+// identically through source-over onto an opaque target (a transparent target whose alpha is used later gets true additive).
+// Anything the recorder can't express (text, clip, polygon fills, gradients...) demotes the rest of the layer to Canvas2D after
+// compositing what was recorded so far, so draw order is always preserved. Layers switch on above an entity count (CGL.min, with
+// hysteresis), below which the extra composite isn't worth it. WebGL missing or software-only, a failed self-test, context loss
+// or any GL error fall back to Canvas2D. Internal flag S.set.chaosGL (default on, no Settings row); console: chaosGL(false) /
+// chaosGL(true) persist it, chaosGL() returns status and stats (per last layer, and totals since load).
+const CGL=(()=>{
+  let AS=2048,lastReset=-1e9;const FULL=Math.PI*2-1e-6,AC=[0,2,2,6,8,4,0,4,6,5,5];   // atlas size; args per path op (1 moveTo 2 lineTo 3 arc 4 ellipse 5 rect 6 close 7 quad 8 bezier 9 arcTo 10 roundRect)
+  const MP=['globalAlpha','globalCompositeOperation','fillStyle','strokeStyle','lineWidth','lineCap','lineJoin','miterLimit','font','textAlign','textBaseline',
+    'imageSmoothingEnabled','shadowBlur','shadowColor','shadowOffsetX','shadowOffsetY','lineDashOffset'];
+  const GCO={'source-over':0,'lighter':1};
+  let gl=null,glc=null,ofs=false,v2=false,ia=null,prog=null,qb=null,ib=null,ibBytes=0,tex=null,uR=null,uP=null,LOC=null,
+    ok=false,dead=false,why='idle',inited=false,lost=false,chain=true,
+    cap=4096,F=new Float32Array(cap*16),U=new Uint32Array(F.buffer),n=0,
+    GW=1,GH=1,W=1,H=1,x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,drawn=false,cleared=false,
+    real=null,demoted=false,rec=false,swap=true,plus=false,bm=0,gen=1,atop=0,aent=0,aarea=0;const shelves=[];   // GW/GH: GL canvas; W/H: current target (drawn in its top-left corner)
+  // recording state: matrix A..Fm (canvas a..f), styles, save stack, the current default path (with the matrix of each command)
+  let A=1,B=0,C=0,D=1,E=0,Fm=0,ga=1,lw=1,fsS='#000000',fsC=null,ssS='#000000',ssC=null,gco='source-over',add=0,gok=true,dash=[],sp=0,pn=0;
+  const stk=[],pk=[],reg=[],rv={},LS={},st={layers:0,inst:0,draws:0,comps:0,up:0,resets:0,demote:{}};
+  let fr={inst:0,draws:0,comps:0,up:0};
+  // ---------- colours: string -> {u: packed rgb, a} (cached; a scratch 2D context normalises anything unusual) ----------
+  const CC=new Map();let cx2=null;
+  function pcs(s){let r,g,b,a=1;const t=s.trim();
+    if(t[0]==='#'){const h=t.slice(1),l=h.length;if(l===3||l===4){r=parseInt(h[0]+h[0],16);g=parseInt(h[1]+h[1],16);b=parseInt(h[2]+h[2],16);if(l===4)a=parseInt(h[3]+h[3],16)/255}
+      else if(l===6||l===8){r=parseInt(h.slice(0,2),16);g=parseInt(h.slice(2,4),16);b=parseInt(h.slice(4,6),16);if(l===8)a=parseInt(h.slice(6,8),16)/255}}
+    else{const m=/^rgba?\(\s*([\d.]+)\s*[, ]\s*([\d.]+)\s*[, ]\s*([\d.]+)\s*(?:[,/]\s*([\d.]+)(%?))?\s*\)$/i.exec(t);if(m){r=+m[1];g=+m[2];b=+m[3];if(m[4]!==undefined)a=m[5]?m[4]/100:+m[4]}}
+    if(!(r>=0&&g>=0&&b>=0&&a>=0)){if(!cx2)cx2=document.createElement('canvas').getContext('2d');cx2.fillStyle='#010203';cx2.fillStyle=s;const q=cx2.fillStyle;
+      return q==='#010203'||q===s?null:pcs(q)}
+    r=Math.min(255,Math.round(r));g=Math.min(255,Math.round(g));b=Math.min(255,Math.round(b));return{u:(r|g<<8|b<<16)>>>0,a:Math.min(1,a)}}
+  function pc(s){let c=CC.get(s);if(c!==undefined)return c;c=pcs(s);if(CC.size>4000)CC.clear();CC.set(s,c);return c}
+  const col=(c,a)=>(c.u|((a*255+.5)|0)<<24)>>>0;
+  // ---------- GL ----------
+  const VS='attribute vec2 q;attribute vec4 m;attribute vec2 t;attribute vec4 r;attribute vec4 u;attribute vec4 c;attribute vec4 k;uniform vec2 R;'+
+    'varying vec2 vU;varying vec2 vL;varying vec4 vP;varying vec4 vC;varying vec4 vK;'+
+    'void main(){vec2 s=vec2(length(m.xy),length(m.zw)),h=abs(r.zw)*.5,lp;'+
+    'if(k.x<.5){lp=r.xy+q*r.zw;vU=mix(u.xy,u.zw,q);vL=vec2(0.);}'+
+    'else{vL=(q*2.-1.)*(h+1./max(s,vec2(1e-4)));lp=r.xy+r.zw*.5+vL;vU=vec2(0.);}'+
+    'vec2 p=m.xy*lp.x+m.zw*lp.y+t;gl_Position=vec4(p.x/R.x*2.-1.,1.-p.y/R.y*2.,0.,1.);'+
+    'vC=vec4(c.rgb*c.a,c.a);vP=vec4(h,u.xy);vK=vec4(k.x,k.y,s);}';
+  const FS='#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n'+
+    'uniform sampler2D T;uniform float P;varying vec2 vU;varying vec2 vL;varying vec4 vP;varying vec4 vC;varying vec4 vK;'+
+    'float bd(float d,float h){return clamp(min(h,d+.5)-max(-h,d-.5),0.,1.);}'+   // 1-D box-filter coverage of |x|<=h at distance d (px)
+    'void main(){vec4 o;float md=vK.x;if(md<.5)o=texture2D(T,vU)*vC;else{vec2 s=vK.zw;float cv;'+
+    'if(md<1.5)cv=bd(abs(vL.x)*s.x,vP.x*s.x)*bd(abs(vL.y)*s.y,vP.y*s.y);'+
+    'else if(md<2.5){vec2 rr=max(vP.xy,vec2(1e-5)),qq=vL/rr;float f=length(qq),g=length(qq/rr),sm=sqrt(s.x*s.y),hp=min(rr.x,rr.y)*sm;'+
+      'float d=f>1e-5?(f-1.)*f/max(g,1e-9)*sm:-hp;cv=bd(max(0.,d+hp),hp);}'+
+    'else if(md<3.5){float dx=max(abs(vL.x)-vP.z,0.);cv=bd(length(vec2(dx*s.x,vL.y*s.y)),vP.w*s.y);}'+
+    'else{float sm=sqrt(s.x*s.y);cv=bd(abs(length(vL)-vP.z)*sm,vP.w*sm);}'+
+    'o=vC*cv;}if(vK.y>.5&&P<.5)o.a=0.;gl_FragColor=o;}';   // additive: premultiplied rgb with alpha kept (P=1: true 'lighter', alpha added too)
+  function mk(c,at){let g=null,w2=false,x=null;if(!CGL.v1)try{g=c.getContext('webgl2',at);w2=!!g}catch(e){}   // CGL.v1 (QA): force the WebGL1 path
+    if(!g){try{g=c.getContext('webgl',at)}catch(e){}if(g){x=g.getExtension('ANGLE_instanced_arrays');if(!x)g=null}}return g?{g,w2,x}:null}
+  function fail(e){if(gl&&gl.isContextLost()){lost=true;ok=false;why='context lost';return}dead=true;ok=false;why='error: '+(e&&e.message||e);try{console.warn('ChaosGL off:',why)}catch(_){}}
+  function setup(){const g=gl,sh=(t,s)=>{const o=g.createShader(t);g.shaderSource(o,s);g.compileShader(o);if(!g.getShaderParameter(o,g.COMPILE_STATUS))throw new Error(g.getShaderInfoLog(o));return o};
+    const p=g.createProgram();g.attachShader(p,sh(g.VERTEX_SHADER,VS));g.attachShader(p,sh(g.FRAGMENT_SHADER,FS));g.linkProgram(p);
+    if(!g.getProgramParameter(p,g.LINK_STATUS))throw new Error(g.getProgramInfoLog(p));prog=p;g.useProgram(p);
+    LOC={};for(const a of['q','m','t','r','u','c','k'])LOC[a]=g.getAttribLocation(p,a);uR=g.getUniformLocation(p,'R');uP=g.getUniformLocation(p,'P');g.uniform1i(g.getUniformLocation(p,'T'),0);
+    qb=g.createBuffer();g.bindBuffer(g.ARRAY_BUFFER,qb);g.bufferData(g.ARRAY_BUFFER,new Float32Array([0,0,1,0,0,1,1,1]),g.STATIC_DRAW);ib=g.createBuffer();ibBytes=0;
+    tex=g.createTexture();g.bindTexture(g.TEXTURE_2D,tex);g.texImage2D(g.TEXTURE_2D,0,g.RGBA,AS,AS,0,g.RGBA,g.UNSIGNED_BYTE,null);
+    for(const[k,v]of[[g.TEXTURE_MIN_FILTER,g.LINEAR],[g.TEXTURE_MAG_FILTER,g.LINEAR],[g.TEXTURE_WRAP_S,g.CLAMP_TO_EDGE],[g.TEXTURE_WRAP_T,g.CLAMP_TO_EDGE]])g.texParameteri(g.TEXTURE_2D,k,v);
+    g.pixelStorei(g.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);g.pixelStorei(g.UNPACK_FLIP_Y_WEBGL,false);g.pixelStorei(g.UNPACK_COLORSPACE_CONVERSION_WEBGL,g.NONE);
+    g.disable(g.DEPTH_TEST);g.disable(g.CULL_FACE);g.enable(g.BLEND);g.blendFunc(g.ONE,g.ONE_MINUS_SRC_ALPHA);gen++;atop=0;aent=aarea=0;shelves.length=0}
+  // OffscreenCanvas first (transferToImageBitmap hands the frame over without a copy), then a detached <canvas>; each must pass the self-test
+  function tryInit(useOfs){let c=null,g=null;try{
+      const at={alpha:true,premultipliedAlpha:true,antialias:false,depth:false,stencil:false,preserveDrawingBuffer:false,failIfMajorPerformanceCaveat:true};
+      if(useOfs)c=new OffscreenCanvas(1,1);else{c=document.createElement('canvas');c.width=c.height=1}
+      const r=mk(c,at);if(!r)return false;g=r.g;glc=c;gl=g;v2=r.w2;ia=r.x;ofs=useOfs;dead=false;
+      c.addEventListener('webglcontextlost',e=>{e.preventDefault();if(gl!==g)return;lost=true;ok=false;why='context lost'},false);
+      c.addEventListener('webglcontextrestored',()=>{if(gl!==g)return;lost=false;try{setup();ok=true;why='ok'}catch(e){fail(e)}},false);
+      setup();ok=true;why='ok';if(selfTest()&&!dead)return true}catch(e){why='error: '+(e&&e.message||e)}
+    ok=false;try{const x=g&&g.getExtension('WEBGL_lose_context');if(x)x.loseContext()}catch(e){}gl=null;return false}
+  function init(){inited=true;const w0=why;
+    if(CGL.ofs!==false&&typeof OffscreenCanvas==='function'&&OffscreenCanvas.prototype.transferToImageBitmap&&tryInit(true))return;
+    if(tryInit(false))return;
+    dead=true;ok=false;if(why===w0||why==='ok')why='no webgl'}
+  // premultiplied / additive round trip through drawImage (catches browsers that unpremultiply or clamp a WebGL canvas on the way into 2D)
+  function selfTest(){try{const t=document.createElement('canvas');t.width=4;t.height=1;const x=t.getContext('2d',{willReadFrequently:true});x.fillStyle='rgb(64,64,64)';x.fillRect(0,0,4,1);
+      const sp1=document.createElement('canvas');sp1.width=sp1.height=1;const s1=sp1.getContext('2d');s1.fillStyle='rgba(255,255,255,.5)';s1.fillRect(0,0,1,1);
+      size(4,1);W=4;H=1;plus=false;bm=0;real=x;A=1;B=0;C=0;D=1;E=0;Fm=0;n=0;
+      put(1,0,0,1,0,0,0,0,1,1,0,0,0,0,col({u:255},.5),1);                       // pixel 0: red at 50% (normal)
+      put(1,0,0,1,0,0,2,0,1,1,0,0,0,0,col({u:0x646464},1),1|256);                 // pixel 2: grey 100 additive
+      const e=ent(sp1);put(1,0,0,1,0,0,3,0,1,1,e.x/AS,e.y/AS,(e.x+1)/AS,(e.y+1)/AS,0xffffffff,0);   // pixel 3: atlas sprite, white 50%
+      comp();real=null;const d=x.getImageData(0,0,4,1).data,near=(i,v)=>Math.abs(d[i]-v)<=8;
+      const good=near(0,160)&&near(1,32)&&near(4,64)&&near(8,164)&&near(9,164)&&near(12,160);
+      if(!good){why='self-test failed: '+Array.from(d).join(',');return false}
+      // an additive-only layer stored in a transparent canvas, then added onto an opaque one (bloom buffer chain): only rgb may be used downstream
+      const t2=document.createElement('canvas');t2.width=t2.height=1;const x2=t2.getContext('2d');real=x2;put(1,0,0,1,0,0,0,0,1,1,0,0,0,0,col({u:0x505050},1),1|256);comp();real=null;
+      x.globalCompositeOperation='lighter';x.drawImage(t2,1,0);x.globalCompositeOperation='source-over';const d2=x.getImageData(1,0,1,1).data;
+      chain=Math.abs(d2[0]-144)<=10&&Math.abs(d2[1]-144)<=10;return true}catch(e){fail(e);return false}}
+  function size(w,h){GW=w;GH=h;if(glc.width!==w||glc.height!==h){glc.width=w;glc.height=h}}
+  // ---------- atlas: shelves bucketed by height (first fit among shelves up to ~1/3 taller), 1px transparent gutter; a full atlas
+  // flushes what's pending and starts over (sprites re-upload on their next use) ----------
+  function slot(w,h){const H2=h+2,W2=w+2;for(let i=0;i<shelves.length;i++){const q=shelves[i];if(q.h>=H2&&q.h<=H2*1.34+4&&q.x+W2<=AS){const x=q.x;q.x+=W2;return[x+1,q.y+1]}}
+    const sh=Math.min(AS,(H2+7)&~7);if(atop+sh>AS)return null;shelves.push({y:atop,h:sh,x:W2});atop+=sh;return[1,atop-sh+1]}
+  function ent(img){const w=img.width,h=img.height;let e=img._cg;
+    if(e!==undefined&&e.g===gen&&e.w===w&&e.h===h)return e;
+    if(!(w>0&&h>0)||w>AS-2||h>AS-2)return null;
+    let xy=slot(w,h);
+    if(!xy){flushGL();gen++;atop=0;aent=aarea=0;shelves.length=0;st.resets++;const t=performance.now();
+      if(t-lastReset<3000&&AS<4096&&gl.getParameter(gl.MAX_TEXTURE_SIZE)>=4096)AS=4096;lastReset=t;   // resetting often: the working set outgrew 2048, go 4096
+      gl.bindTexture(gl.TEXTURE_2D,tex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,AS,AS,0,gl.RGBA,gl.UNSIGNED_BYTE,null);xy=slot(w,h)}
+    const x=xy[0],y=xy[1];aent++;aarea+=(w+2)*(h+2);
+    gl.bindTexture(gl.TEXTURE_2D,tex);gl.texSubImage2D(gl.TEXTURE_2D,0,x,y,gl.RGBA,gl.UNSIGNED_BYTE,img);fr.up++;
+    if(e===undefined)e=img._cg={g:0,x:0,y:0,w:0,h:0};e.g=gen;e.x=x;e.y=y;e.w=w;e.h=h;return e}
+  // ---------- instances: 16 floats = matrix a..f, local rect x,y,w,h, uv rect (or shape params), rgba8, flags8 (mode, additive) ----------
+  function grow(){const nf=new Float32Array(F.length*2);nf.set(F);F=nf;U=new Uint32Array(F.buffer);cap*=2}
+  function put(a,b,c,d,e,f,x,y,w,h,u0,v0,u1,v1,rgba,fl){
+    const hw=(w<0?-w:w)*.5,hh=(h<0?-h:h)*.5,cx=x+w*.5,cy=y+h*.5,X=a*cx+c*cy+e,Y=b*cx+d*cy+f,
+      ex=(a<0?-a:a)*hw+(c<0?-c:c)*hh+1.5,ey=(b<0?-b:b)*hw+(d<0?-d:d)*hh+1.5;
+    if(X+ex<0||X-ex>W||Y+ey<0||Y-ey>H)return;   // off screen (NaN falls through and draws nothing on the GPU)
+    if(plus){const ad=fl>>8&1;if(ad!==bm){flushGL();bm=ad}}   // true 'lighter' needs its own blend state: one draw per run of same-mode instances
+    if(n>=cap)grow();const o=n<<4;
+    F[o]=a;F[o+1]=b;F[o+2]=c;F[o+3]=d;F[o+4]=e;F[o+5]=f;F[o+6]=x;F[o+7]=y;F[o+8]=w;F[o+9]=h;F[o+10]=u0;F[o+11]=v0;F[o+12]=u1;F[o+13]=v1;U[o+14]=rgba;U[o+15]=fl;n++;
+    if(X-ex<x0)x0=X-ex;if(X+ex>x1)x1=X+ex;if(Y-ey<y0)y0=Y-ey;if(Y+ey>y1)y1=Y+ey}
+  function attr(l,sz,ty,nm,off){if(l<0)return;gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,sz,ty,nm,64,off);if(v2)gl.vertexAttribDivisor(l,1);else ia.vertexAttribDivisorANGLE(l,1)}
+  function flushGL(){if(!n)return;const g=gl;
+    if(!cleared){g.viewport(0,0,GW,GH);g.disable(g.SCISSOR_TEST);g.clearColor(0,0,0,0);g.clear(g.COLOR_BUFFER_BIT);cleared=true}
+    g.viewport(0,GH-H,W,H);g.useProgram(prog);g.uniform2f(uR,W,H);g.uniform1f(uP,plus?1:0);g.activeTexture(g.TEXTURE0);g.bindTexture(g.TEXTURE_2D,tex);g.enable(g.BLEND);
+    if(plus&&bm)g.blendFunc(g.ONE,g.ONE);else g.blendFunc(g.ONE,g.ONE_MINUS_SRC_ALPHA);
+    g.bindBuffer(g.ARRAY_BUFFER,qb);g.enableVertexAttribArray(LOC.q);g.vertexAttribPointer(LOC.q,2,g.FLOAT,false,0,0);if(v2)g.vertexAttribDivisor(LOC.q,0);else ia.vertexAttribDivisorANGLE(LOC.q,0);
+    g.bindBuffer(g.ARRAY_BUFFER,ib);const bytes=n*64;if(bytes>ibBytes)ibBytes=Math.max(bytes,ibBytes*2,65536);
+    g.bufferData(g.ARRAY_BUFFER,ibBytes,g.STREAM_DRAW);g.bufferSubData(g.ARRAY_BUFFER,0,F.subarray(0,n*16));   // orphan + fill: never waits on the previous frame's draw
+    attr(LOC.m,4,g.FLOAT,false,0);attr(LOC.t,2,g.FLOAT,false,16);attr(LOC.r,4,g.FLOAT,false,24);attr(LOC.u,4,g.FLOAT,false,40);attr(LOC.c,4,g.UNSIGNED_BYTE,true,56);attr(LOC.k,4,g.UNSIGNED_BYTE,false,60);
+    if(v2)g.drawArraysInstanced(g.TRIANGLE_STRIP,0,4,n);else ia.drawArraysInstancedANGLE(g.TRIANGLE_STRIP,0,4,n);
+    fr.inst+=n;fr.draws++;n=0;drawn=true}
+  // draw what's recorded, then blit its bounding box into the 2D canvas (identity transform, source-over)
+  function comp(){if(lost||gl.isContextLost()){n=0;drawn=false;cleared=false;x0=y0=1e9;x1=y1=-1e9;return}flushGL();if(drawn){const a=Math.max(0,Math.floor(x0)),b=Math.max(0,Math.floor(y0)),c=Math.min(W,Math.ceil(x1)),d=Math.min(H,Math.ceil(y1)),R=real;
+      if(c>a&&d>b){R.setTransform(1,0,0,1,0,0);R.globalAlpha=1;R.globalCompositeOperation='source-over';rv.globalAlpha=1;rv.globalCompositeOperation='source-over';
+        if(ofs){const bm=glc.transferToImageBitmap();R.drawImage(bm,a,b,c-a,d-b,a,b,c-a,d-b);bm.close()}else R.drawImage(glc,a,b,c-a,d-b,a,b,c-a,d-b);fr.comps++}}
+    drawn=false;cleared=false;x0=y0=1e9;x1=y1=-1e9}
+  // ---------- state sync with the real context ----------
+  function pull(R){const t=R.getTransform();A=t.a;B=t.b;C=t.c;D=t.d;E=t.e;Fm=t.f;
+    for(let i=0;i<MP.length;i++){const p=MP[i];rv[p]=R[p]}
+    ga=rv.globalAlpha;lw=rv.lineWidth;fsS=rv.fillStyle;fsC=typeof fsS==='string'?pc(fsS):null;ssS=rv.strokeStyle;ssC=typeof ssS==='string'?pc(ssS):null;
+    gco=rv.globalCompositeOperation;add=gco==='lighter'?1:0;gok=gco in GCO;
+    for(let i=5;i<MP.length;i++)REC[MP[i]]=rv[MP[i]];dash=R.getLineDash()}
+  function push(R){R.setTransform(A,B,C,D,E,Fm);const v=[ga,gco,fsS,ssS,lw];
+    for(let i=0;i<MP.length;i++){const p=MP[i],x=i<5?v[i]:REC[p];if(rv[p]!==x){R[p]=x;rv[p]=x}}if(dash.length||R.getLineDash().length)R.setLineDash(dash)}
+  // ---------- demotion: the rest of this layer is drawn by Canvas2D (after compositing everything recorded before it) ----------
+  function demote(op){st.demote[op]=(st.demote[op]||0)+1;try{comp()}catch(e){fail(e)}
+    const R=real,cur=snap([]);for(let i=0;i<sp;i++){load(stk[i]);push(R);R.save()}load(cur);push(R);
+    for(const p of reg)p._m();R.beginPath();if(pn)replay(R,pk,pn,true);R.setTransform(A,B,C,D,E,Fm);
+    demoted=true;ctx=R;return R}
+  function snap(s){s[0]=A;s[1]=B;s[2]=C;s[3]=D;s[4]=E;s[5]=Fm;s[6]=ga;s[7]=lw;s[8]=fsS;s[9]=fsC;s[10]=ssS;s[11]=ssC;s[12]=gco;s[13]=add;s[14]=gok;s[15]=dash;
+    for(let i=5;i<MP.length;i++)s[11+i]=REC[MP[i]];return s}
+  function load(s){A=s[0];B=s[1];C=s[2];D=s[3];E=s[4];Fm=s[5];ga=s[6];lw=s[7];fsS=s[8];fsC=s[9];ssS=s[10];ssC=s[11];gco=s[12];add=s[13];gok=s[14];dash=s[15];
+    for(let i=5;i<MP.length;i++)REC[MP[i]]=s[11+i]}
+  function replay(R,k,len,hasM){for(let i=0;i<len;){const op=k[i];let o=i+1;if(hasM){R.setTransform(k[o],k[o+1],k[o+2],k[o+3],k[o+4],k[o+5]);o+=6}
+    switch(op){case 1:R.moveTo(k[o],k[o+1]);break;case 2:R.lineTo(k[o],k[o+1]);break;case 3:R.arc(k[o],k[o+1],k[o+2],k[o+3],k[o+4],!!k[o+5]);break;
+      case 4:R.ellipse(k[o],k[o+1],k[o+2],k[o+3],k[o+4],k[o+5],k[o+6],!!k[o+7]);break;case 5:R.rect(k[o],k[o+1],k[o+2],k[o+3]);break;case 6:R.closePath();break;
+      case 7:R.quadraticCurveTo(k[o],k[o+1],k[o+2],k[o+3]);break;case 8:R.bezierCurveTo(k[o],k[o+1],k[o+2],k[o+3],k[o+4],k[o+5]);break;
+      case 9:R.arcTo(k[o],k[o+1],k[o+2],k[o+3],k[o+4]);break;case 10:R.roundRect(k[o],k[o+1],k[o+2],k[o+3],k[o+4]);break}
+    i=o+AC[op]}}
+  // ---------- path -> instances (full circles/ellipses and rects fill; line strips and full circles stroke) ----------
+  function fillPath(k,len,hasM,rgba){
+    for(let i=0;i<len;){const op=k[i],o=i+1+(hasM?6:0);
+      if(op===3){if(!(Math.abs(k[o+4]-k[o+3])>=FULL))return false}else if(op===4){if(!(Math.abs(k[o+6]-k[o+5])>=FULL))return false}else if(op!==1&&op!==5&&op!==6)return false;
+      i=o+AC[op]}
+    const fl=add<<8;
+    for(let i=0;i<len;){const op=k[i];let o=i+1,a=A,b=B,c=C,d=D,e=E,f=Fm;if(hasM){a=k[o];b=k[o+1];c=k[o+2];d=k[o+3];e=k[o+4];f=k[o+5];o+=6}
+      if(op===3){const x=k[o],y=k[o+1],r=k[o+2];put(a,b,c,d,a*x+c*y+e,b*x+d*y+f,-r,-r,2*r,2*r,0,0,0,0,rgba,2|fl)}
+      else if(op===4){const x=k[o],y=k[o+1],rx=k[o+2],ry=k[o+3],ro=k[o+4],cr=Math.cos(ro),sr=Math.sin(ro);
+        put(a*cr+c*sr,b*cr+d*sr,c*cr-a*sr,d*cr-b*sr,a*x+c*y+e,b*x+d*y+f,-rx,-ry,2*rx,2*ry,0,0,0,0,rgba,2|fl)}
+      else if(op===5)put(a,b,c,d,e,f,k[o],k[o+1],k[o+2],k[o+3],0,0,0,0,rgba,1|fl);
+      i=o+AC[op]}
+    return true}
+  const fade=(rgba,k)=>((rgba&0xffffff)|((rgba>>>24)*k+.5|0)<<24)>>>0;
+  function seg(a,b,c,d,e,f,px,py,qx,qy,hw,cap,rgba,fl){const dx=qx-px,dy=qy-py,L=Math.sqrt(dx*dx+dy*dy),sc=Math.sqrt(Math.abs(a*d-b*c)),wp=2*hw*sc;
+    if(wp<1&&sc>0){   // thinner than a device pixel: a 1px hairline with alpha scaled by the width, as Skia strokes it (caps add ~0.6px at most)
+      const Lp=L*sc,ex=cap==='butt'||Lp<.4?0:Math.min(.6,(Lp-.4)*.4)*.5/sc,h=.5/sc;rgba=fade(rgba,wp);if(L<1e-9&&!ex)return;
+      const co=L<1e-9?1:dx/L,si=L<1e-9?0:dy/L;put(a*co+c*si,b*co+d*si,c*co-a*si,d*co-b*si,a*px+c*py+e,b*px+d*py+f,-ex,-h,L+2*ex,2*h,0,0,0,0,rgba,1|fl);return}
+    if(L<1e-9){if(cap==='round')put(a,b,c,d,a*px+c*py+e,b*px+d*py+f,-hw,-hw,2*hw,2*hw,0,0,0,0,rgba,2|fl);return}
+    const co=dx/L,si=dy/L,na=a*co+c*si,nb=b*co+d*si,nc=c*co-a*si,nd=d*co-b*si,ne=a*px+c*py+e,nf=b*px+d*py+f;
+    if(cap==='round')put(na,nb,nc,nd,ne,nf,-hw,-hw,L+2*hw,2*hw,L*.5,hw,0,0,rgba,3|fl);
+    else{const x=cap==='square'?hw:0;put(na,nb,nc,nd,ne,nf,-x,-hw,L+2*x,2*hw,0,0,0,0,rgba,1|fl)}}
+  // strokes: every subpath is a line strip or one full circle, recorded under the current matrix. Round joins are overlapping capsules;
+  // miter/bevel joins are butt segments stretched to the miter point (bevel: not stretched). Pass 1 (dry) only validates.
+  const PL=[];
+  function strokePath(k,len,hasM,rgba,dry){const cap=REC.lineCap,join=REC.lineJoin,hw=lw*.5,fl=add<<8,ms=hasM?6:0;
+    let i=0,np=0,st2=0,zl=false;   // st2: 0 no current point, 1 line strip, 2 just after a full circle; zl: a zero-length segment (round cap: a dot)
+    const out=closed=>{if(dry)return;if(np>1)poly(np,closed,cap,join,hw,rgba,fl);else if(np===1&&zl)seg(A,B,C,D,E,Fm,PL[0],PL[1],PL[0],PL[1],hw,cap,rgba,fl)};
+    while(i<len){const op=k[i],o=i+1+ms;
+      if(hasM&&(k[i+1]!==A||k[i+2]!==B||k[i+3]!==C||k[i+4]!==D||k[i+5]!==E||k[i+6]!==Fm))return false;
+      if(op===1){out(false);PL[0]=k[o];PL[1]=k[o+1];np=1;st2=1;zl=false}
+      else if(op===2){if(st2===2)return false;if(!st2){PL[0]=k[o];PL[1]=k[o+1];np=1;st2=1}else if(k[o]!==PL[np*2-2]||k[o+1]!==PL[np*2-1]){PL[np*2]=k[o];PL[np*2+1]=k[o+1];np++}else zl=true}
+      else if(op===6){if(st2===2)return false;if(np>1){if(PL[np*2-2]!==PL[0]||PL[np*2-1]!==PL[1]){PL[np*2]=PL[0];PL[np*2+1]=PL[1];np++}out(true)}np=st2?1:0}
+      else if(op===3){if(np>1||!(Math.abs(k[o+4]-k[o+3])>=FULL))return false;const x=k[o],y=k[o+1],r=k[o+2];
+        if(!dry){const sc=Math.sqrt(Math.abs(A*D-B*C)),wp=2*hw*sc,h=wp<1&&sc>0?.5/sc:hw;put(A,B,C,D,A*x+C*y+E,B*x+D*y+Fm,-r-h,-r-h,2*(r+h),2*(r+h),r,h,0,0,wp<1?fade(rgba,wp):rgba,4|fl)}st2=2;np=0}
+      else return false;
+      i=o+AC[op]}
+    out(false);return true}
+  const DX=[],DY=[];
+  function poly(np,closed,cap,join,hw,rgba,fl){const ns=np-1;
+    if(join==='round'||ns===1&&!closed){for(let j=0;j<ns;j++)seg(A,B,C,D,E,Fm,PL[2*j],PL[2*j+1],PL[2*j+2],PL[2*j+3],hw,ns===1&&!closed?cap:'round',rgba,fl);return}
+    for(let j=0;j<ns;j++){const dx=PL[2*j+2]-PL[2*j],dy=PL[2*j+3]-PL[2*j+1],L=Math.sqrt(dx*dx+dy*dy)||1;DX[j]=dx/L;DY[j]=dy/L}
+    const ext=(a,b)=>{if(join==='bevel')return 0;const c=DX[a]*DX[b]+DY[a]*DY[b];if(1+c<1e-6||Math.sqrt(2/(1+c))>REC.miterLimit)return 0;return hw*Math.sqrt(Math.max(0,(1-c)/(1+c)))};
+    for(let j=0;j<ns;j++){const es=j>0?ext(j-1,j):closed?ext(ns-1,0):cap==='square'?hw:0,ee=j<ns-1?ext(j,j+1):closed?ext(ns-1,0):cap==='square'?hw:0;
+      const x0=PL[2*j]-DX[j]*es,y0=PL[2*j+1]-DY[j]*es,x1=PL[2*j+2]+DX[j]*ee,y1=PL[2*j+3]+DY[j]*ee;seg(A,B,C,D,E,Fm,x0,y0,x1,y1,hw,'butt',rgba,fl);
+      if(cap==='round'&&!closed&&(j===0||j===ns-1)){const px=j===0?PL[0]:PL[2*ns],py=j===0?PL[1]:PL[2*ns+1];seg(A,B,C,D,E,Fm,px,py,px,py,hw,'round',rgba,fl)}}}
+  // recording paths: real Path2D objects (so a demoted layer can still fill them) that also keep their commands for instancing
+  const PP=typeof Path2D==='function'?Path2D.prototype:null;
+  class RPath extends (PP?Path2D:Object){constructor(){super();this.k=[];this.m=false}
+    moveTo(x,y){if(this.m)PP.moveTo.call(this,x,y);else this.k.push(1,x,y)}
+    lineTo(x,y){if(this.m)PP.lineTo.call(this,x,y);else this.k.push(2,x,y)}
+    arc(x,y,r,a,b,c){if(this.m)PP.arc.call(this,x,y,r,a,b,c);else this.k.push(3,x,y,r,a,b,c?1:0)}
+    ellipse(x,y,rx,ry,ro,a,b,c){if(this.m)PP.ellipse.call(this,x,y,rx,ry,ro,a,b,c);else this.k.push(4,x,y,rx,ry,ro,a,b,c?1:0)}
+    rect(x,y,w,h){if(this.m)PP.rect.call(this,x,y,w,h);else this.k.push(5,x,y,w,h)}
+    closePath(){if(this.m)PP.closePath.call(this);else this.k.push(6)}
+    quadraticCurveTo(a,b,c,d){this._m();PP.quadraticCurveTo.call(this,a,b,c,d)}
+    bezierCurveTo(a,b,c,d,e,f){this._m();PP.bezierCurveTo.call(this,a,b,c,d,e,f)}
+    arcTo(a,b,c,d,e){this._m();PP.arcTo.call(this,a,b,c,d,e)}
+    roundRect(...a){this._m();PP.roundRect.apply(this,a)}
+    addPath(p,t){this._m();PP.addPath.call(this,p,t)}
+    _m(){if(this.m)return;this.m=true;const self=this,R={};for(const f of['moveTo','lineTo','arc','ellipse','rect','closePath','quadraticCurveTo','bezierCurveTo','arcTo','roundRect'])R[f]=(...a)=>PP[f].apply(self,a);
+      replay(R,this.k,this.k.length,false)}}
+  // ---------- the recording context ----------
+  const P1=op=>{pk[pn++]=op;pk[pn++]=A;pk[pn++]=B;pk[pn++]=C;pk[pn++]=D;pk[pn++]=E;pk[pn++]=Fm};
+  const fin=v=>v===v&&v!==Infinity&&v!==-Infinity;
+  const REC={
+    get globalAlpha(){return ga},set globalAlpha(v){if(v>=0&&v<=1)ga=+v},
+    get lineWidth(){return lw},set lineWidth(v){if(v>0&&v<Infinity)lw=+v},
+    get fillStyle(){return fsS},set fillStyle(v){if(typeof v==='string'){const c=pc(v);if(c){fsS=v;fsC=c}}else if(v&&typeof v==='object'){fsS=v;fsC=null}},
+    get strokeStyle(){return ssS},set strokeStyle(v){if(typeof v==='string'){const c=pc(v);if(c){ssS=v;ssC=c}}else if(v&&typeof v==='object'){ssS=v;ssC=null}},
+    get globalCompositeOperation(){return gco},set globalCompositeOperation(v){if(typeof v==='string'&&v){gco=v;add=v==='lighter'?1:0;gok=v in GCO}},
+    get canvas(){return real?real.canvas:null},
+    lineCap:'butt',lineJoin:'miter',miterLimit:10,font:'10px sans-serif',textAlign:'start',textBaseline:'alphabetic',imageSmoothingEnabled:true,
+    shadowBlur:0,shadowColor:'rgba(0, 0, 0, 0)',shadowOffsetX:0,shadowOffsetY:0,lineDashOffset:0,
+    save(){snap(stk[sp]||(stk[sp]=[]));sp++},
+    restore(){if(sp>0)load(stk[--sp])},
+    translate(x,y){if(fin(x)&&fin(y)){E+=A*x+C*y;Fm+=B*x+D*y}},
+    scale(x,y){if(fin(x)&&fin(y)){A*=x;B*=x;C*=y;D*=y}},
+    rotate(r){if(!fin(r))return;const c=Math.cos(r),s=Math.sin(r),a=A*c+C*s,b=B*c+D*s;C=C*c-A*s;D=D*c-B*s;A=a;B=b},
+    transform(a,b,c,d,e,f){if(!(fin(a)&&fin(b)&&fin(c)&&fin(d)&&fin(e)&&fin(f)))return;const na=A*a+C*b,nb=B*a+D*b,nc=A*c+C*d,nd=B*c+D*d;E+=A*e+C*f;Fm+=B*e+D*f;A=na;B=nb;C=nc;D=nd},
+    setTransform(a,b,c,d,e,f){if(typeof a==='object'){if(a){A=a.a;B=a.b;C=a.c;D=a.d;E=a.e;Fm=a.f}else{A=D=1;B=C=E=Fm=0}}else if(a===undefined){A=D=1;B=C=E=Fm=0}
+      else if(fin(a)&&fin(b)&&fin(c)&&fin(d)&&fin(e)&&fin(f)){A=a;B=b;C=c;D=d;E=e;Fm=f}},
+    resetTransform(){A=D=1;B=C=E=Fm=0},
+    getTransform(){return{a:A,b:B,c:C,d:D,e:E,f:Fm,is2D:true}},
+    setLineDash(d){dash=Array.from(d)},getLineDash(){return dash.slice()},
+    beginPath(){pn=0},
+    moveTo(x,y){P1(1);pk[pn++]=x;pk[pn++]=y},lineTo(x,y){P1(2);pk[pn++]=x;pk[pn++]=y},
+    arc(x,y,r,a,b,c){P1(3);pk[pn++]=x;pk[pn++]=y;pk[pn++]=r;pk[pn++]=a;pk[pn++]=b;pk[pn++]=c?1:0},
+    ellipse(x,y,rx,ry,ro,a,b,c){P1(4);pk[pn++]=x;pk[pn++]=y;pk[pn++]=rx;pk[pn++]=ry;pk[pn++]=ro;pk[pn++]=a;pk[pn++]=b;pk[pn++]=c?1:0},
+    rect(x,y,w,h){P1(5);pk[pn++]=x;pk[pn++]=y;pk[pn++]=w;pk[pn++]=h},closePath(){P1(6)},
+    quadraticCurveTo(a,b,c,d){P1(7);pk[pn++]=a;pk[pn++]=b;pk[pn++]=c;pk[pn++]=d},
+    bezierCurveTo(a,b,c,d,e,f){P1(8);pk[pn++]=a;pk[pn++]=b;pk[pn++]=c;pk[pn++]=d;pk[pn++]=e;pk[pn++]=f},
+    arcTo(a,b,c,d,e){P1(9);pk[pn++]=a;pk[pn++]=b;pk[pn++]=c;pk[pn++]=d;pk[pn++]=e},
+    roundRect(x,y,w,h,r){P1(10);pk[pn++]=x;pk[pn++]=y;pk[pn++]=w;pk[pn++]=h;pk[pn++]=typeof r==='number'?r:r&&r.length?+r[0]||0:0},
+    fillRect(x,y,w,h){if(!fsC||!gok)return fwd('fillRect',arguments);if(!w||!h)return;const a=fsC.a*ga;if(a>0)put(A,B,C,D,E,Fm,x,y,w,h,0,0,0,0,col(fsC,a),1|add<<8)},
+    strokeRect(x,y,w,h){if(!ssC||!gok||dash.length)return fwd('strokeRect',arguments);const a=ssC.a*ga;if(!(a>0))return;const r=col(ssC,a),f=1|add<<8,h2=lw*.5;
+      put(A,B,C,D,E,Fm,x-h2,y-h2,w+lw,lw,0,0,0,0,r,f);put(A,B,C,D,E,Fm,x-h2,y+h-h2,w+lw,lw,0,0,0,0,r,f);
+      put(A,B,C,D,E,Fm,x-h2,y+h2,lw,h-lw,0,0,0,0,r,f);put(A,B,C,D,E,Fm,x+w-h2,y+h2,lw,h-lw,0,0,0,0,r,f)},
+    fill(p){let k=pk,len=pn,hm=true;if(p!==undefined&&typeof p!=='string'){if(!(p instanceof RPath)||p.m)return fwd('fill',arguments);k=p.k;len=k.length;hm=false}
+      if(!fsC||!gok)return fwd('fill',arguments);const a=fsC.a*ga;if(!(a>0))return;
+      if(!fillPath(k,len,hm,col(fsC,a)))return fwd('fill',arguments)},
+    stroke(p){let k=pk,len=pn,hm=true;if(p!==undefined){if(!(p instanceof RPath)||p.m)return fwd('stroke',arguments);k=p.k;len=k.length;hm=false}
+      if(!ssC||!gok||dash.length)return fwd('stroke',arguments);const a=ssC.a*ga;if(!(a>0))return;const c=col(ssC,a);
+      if(!strokePath(k,len,hm,c,true))return fwd('stroke',arguments);strokePath(k,len,hm,c,false)},
+    drawImage(img,a,b,c,d,e,f,g,h){const na=arguments.length;if(!gok)return fwd('drawImage',arguments);if(!(ga>0))return;
+      let tn=0xffffff;if(img._tb!==undefined){tn=img._tr;img=img._tb()}   // tinted twin of a white sprite
+      const iw=img.width,ih=img.height;if(!(iw>0&&ih>0))return;
+      let sx=0,sy=0,sw=iw,sh=ih,dx,dy,dw,dh;if(na===3){dx=a;dy=b;dw=sw;dh=sh}else if(na===5){dx=a;dy=b;dw=c;dh=d}else{sx=a;sy=b;sw=c;sh=d;dx=e;dy=f;dw=g;dh=h;
+        if(sw<0){sx+=sw;sw=-sw}if(sh<0){sy+=sh;sh=-sh}   // canvas normalises a negative source rect; clip one that leaves the image, shrinking the destination to match
+        if(sx<0||sy<0||sx+sw>iw||sy+sh>ih){const kx=dw/sw,ky=dh/sh,l=Math.max(0,sx),t=Math.max(0,sy),r=Math.min(iw,sx+sw),bt=Math.min(ih,sy+sh);if(r<=l||bt<=t)return;
+          dx+=(l-sx)*kx;dy+=(t-sy)*ky;dw=(r-l)*kx;dh=(bt-t)*ky;sx=l;sy=t;sw=r-l;sh=bt-t}}
+      if(!dw||!dh)return;const en=ent(img);if(en===null)return fwd('drawImage',arguments);   // plain bilinear, no mips: what a GPU-backed 2D canvas does
+      put(A,B,C,D,E,Fm,dx,dy,dw,dh,(en.x+sx)/AS,(en.y+sy)/AS,(en.x+sx+sw)/AS,(en.y+sy+sh)/AS,(tn|((ga*255+.5)|0)<<24)>>>0,add<<8)},
+    clearRect(x,y,w,h){return fwd('clearRect',arguments)}
+  };
+  // everything else a 2D context can do runs on the real one (after demotion, so it lands in order); factories and queries that draw nothing
+  // are answered by the real context without demoting; unknown state reads/writes go straight to it
+  function fwd(k,args){if(swap){const R=demote(k);return R[k].apply(R,args)}return inter(k,args)}
+  // local-context layers (the caller holds CGL.rec in a variable, so it can't be swapped out): composite, run the op on the real context, keep recording
+  function inter(op,args){st.demote[op]=(st.demote[op]||0)+1;try{comp()}catch(e){fail(e)}const R=real;push(R);for(const p of reg)p._m();
+    if((op==='fill'||op==='stroke'||op==='clip')&&(!args.length||typeof args[0]==='string')){R.beginPath();if(pn)replay(R,pk,pn,true);R.setTransform(A,B,C,D,E,Fm)}
+    return R[op].apply(R,args)}
+  const NODEM=new Set(['createLinearGradient','createRadialGradient','createConicGradient','createPattern','createImageData','getContextAttributes','isContextLost','measureText']);
+  try{const pr=CanvasRenderingContext2D.prototype;for(const k of Object.getOwnPropertyNames(pr)){if(k==='constructor'||k in REC)continue;const d=Object.getOwnPropertyDescriptor(pr,k);
+    if(typeof d.value==='function')REC[k]=NODEM.has(k)?function(){const R=real;if(k==='measureText'&&R.font!==REC.font){R.font=REC.font;rv.font=REC.font}return R[k].apply(R,arguments)}:function(){return fwd(k,arguments)};
+    else if(d.get)Object.defineProperty(REC,k,{get(){return real?real[k]:undefined},set(v){if(real)(swap?demote(k):(comp(),real))[k]=v},configurable:true})}}catch(e){}
+  // ---------- public ----------
+  function want(name,count){if(dead||S.set.chaosGL===false||lost||rec)return false;if(!inited)init();if(!ok)return false;
+    if(gl.isContextLost()){lost=true;return false}
+    let s=LS[name];if(!s)s=LS[name]={on:false,n:0};const lo=CGL.min[name]||40;s.n=count;s.on=s.on?count>=lo*.5:count>=lo;return s.on}   // hysteresis: on at lo, off below lo/2
+  // open a recording into target (a 2D context, tw x th device px, drawn in the GL canvas' top-left corner)
+  function open(target,tw,th,pl,sw){real=target;rec=true;swap=sw;plus=pl;bm=0;demoted=false;n=0;pn=0;sp=0;reg.length=0;drawn=false;cleared=false;x0=y0=1e9;x1=y1=-1e9;
+    try{size(cv.width,cv.height);if(tw>GW||th>GH)throw 0;W=tw;H=th;pull(real);return true}catch(e){rec=false;real=null;if(e!==0)fail(e);return false}}
+  function close(){rec=false;if(!demoted){try{comp();push(real)}catch(e){fail(e);try{push(real)}catch(_){}}}
+    reg.length=0;real=null;st.layers++;st.inst+=fr.inst;st.draws+=fr.draws;st.comps+=fr.comps;st.up+=fr.up;CGL.last=fr;fr={inst:0,draws:0,comps:0,up:0}}
+  // Runs fn() recorded into a GL layer when it pays (count = entities it will draw), else plain Canvas2D.
+  function layer(name,count,fn){if(ctx!==cv2d||!want(name,count)||!open(ctx,cv.width,cv.height,false,true)){fn();return}
+    const R=real;ctx=REC;try{fn()}finally{ctx=R;close()}}
+  // Same, but fn() draws through the global ctx into another 2D context (an offscreen buffer; its clip applies to the composite).
+  // pl: true 'lighter' (alpha added) for a target whose alpha is used later; without it additive light keeps alpha, which is exact
+  // on an opaque target or wherever only the rgb is used downstream (pl===false additionally requires the self-tested buffer chain).
+  function into(name,count,target,tw,th,fn,pl){const m=ctx;if(!want(name,count)||pl===false&&!chain||!open(target,tw,th,!!pl,true)){ctx=target;try{fn()}finally{ctx=m}return}
+    ctx=REC;try{fn()}finally{ctx=m;close()}}
+  // Local form for code that draws through its own context variable: x=CGL.begin(...)||x ... CGL.end() before the buffer is used.
+  function begin(name,count,target,tw,th,pl){return want(name,count)&&open(target,tw,th,!!pl,false)?REC:null}
+  const cv2d=cv.getContext('2d');
+  return{layer,into,begin,end:close,rec:REC,min:{ground:40,fx:150,glow:60,lmap:60,bloom:120,sky:40},ofs:undefined,v1:false,last:null,
+    path:()=>{if(ctx!==REC)return new Path2D();const p=new RPath();reg.push(p);return p},
+    active:()=>ctx===REC,
+    status:()=>({on:S.set.chaosGL!==false,ok,why,webgl:gl?(v2?2:1):0,offscreen:ofs,chain,atlas:{size:AS,gen,rows:Math.round(atop/AS*100)+'%',fill:Math.round(aarea/AS/AS*100)+'%',sprites:aent,shelves:shelves.length},layers:JSON.parse(JSON.stringify(LS)),
+      total:Object.assign({},st,{demote:Object.assign({},st.demote)}),last:CGL.last}),
+    kill:why_=>{dead=true;ok=false;why=why_||'killed'},
+    lose:ms=>{const x=gl&&gl.getExtension('WEBGL_lose_context');if(!x)return false;x.loseContext();setTimeout(()=>x.restoreContext(),ms||500);return true}}   // QA: simulate a GPU reset
+})();
+function chaosGL(on){if(on===undefined)return CGL.status();S.set.chaosGL=!!on;save();return CGL.status()}
+
 // ================= RENDER =================
 // ================= SPRITES =================
 function ell(x,y,rx,ry,c,rot=0){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(x,y,rx,ry,rot,0,7);ctx.fill()}
@@ -2686,7 +3013,7 @@ function limb(x1,y1,x2,y2,w,c){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='ro
 // the moving parts (legs, turrets, barrels, tracks, rotors, props) and the lighting are added. Light is fixed in WORLD space
 // (top-left): soft shadows fall bottom-right and glints / edge bevels go through the inverse rotation, so they never swing
 // around with the sprite. Bake-time gradients are fine; nothing below creates a gradient per frame.
-const _hq=new Map();
+const _hq=new Map(),_hqk=new Map();   // id -> sprite (FIFO order for eviction); key -> (bucket -> sprite) for the per-frame lookup
 const hqPx=()=>{const m=ctx.getTransform();return Math.hypot(m.a,m.b)};
 const hqCv=(w,h)=>{const c=document.createElement('canvas');c.width=Math.max(1,Math.ceil(w));c.height=Math.max(1,Math.ceil(h));return c};
 let _sd=1;const sr=()=>(_sd=_sd*16807%2147483647)/2147483647;
@@ -2694,14 +3021,15 @@ function hqSh(c,f){const n=parseInt(c.slice(1),16),t=f<0?0:255,k=Math.abs(f),m=v
 function hqTint(src,col){const c=hqCv(src.width,src.height),x=c.getContext('2d');x.drawImage(src,0,0);x.globalCompositeOperation='source-in';x.fillStyle=col;x.fillRect(0,0,c.width,c.height);return c}
 // paint(): draws with the normal helpers (ell/box/limb use the global ctx, which is swapped to the bake canvas)
 function hqBake(key,px,w,h,ox,oy,paint,line=0.36,ao=0){
-  const b=Math.pow(2,Math.ceil(Math.log2(Math.min(24,Math.max(0.35,px)))*4)/4),id=key+'@'+b;let s=_hq.get(id);if(s)return s;
+  const b=Math.pow(2,Math.ceil(Math.log2(Math.min(24,Math.max(0.35,px)))*4)/4);let hm=_hqk.get(key),s=hm&&hm.get(b);if(s)return s;const id=key+'@'+b;
   const P=3,art=hqCv(w*b+2*P,h*b+2*P),a=art.getContext('2d');a.setTransform(b,0,0,b,ox*b+P,oy*b+P);a.lineJoin=a.lineCap='round';
   const m=ctx;ctx=a;_sd=11;try{paint()}finally{ctx=m}
   let c=art;if(line){c=hqCv(art.width,art.height);const x=c.getContext('2d'),d=hqTint(art,'#0c0e09'),o=Math.max(0.9,line*b);
     for(let i=0;i<8;i++){const t=i*Math.PI/4;x.drawImage(d,Math.cos(t)*o,Math.sin(t)*o)}x.drawImage(art,0,0)}
   if(ao){const f=4,q=hqCv(c.width/f,c.height/f),x=c.getContext('2d');q.getContext('2d').drawImage(hqTint(c,'#000'),0,0,q.width,q.height);   // baked contact shadow (rotation-free)
     x.globalCompositeOperation='destination-over';x.globalAlpha=ao;x.drawImage(q,-.3*b,-.3*b,c.width+.9*b,c.height+.9*b);x.globalAlpha=1;x.globalCompositeOperation='source-over'}
-  s={c,w:c.width/b,h:c.height/b,ox:ox+P/b,oy:oy+P/b,b};_hq.set(id,s);if(_hq.size>1400)_hq.delete(_hq.keys().next().value);return s}
+  s={c,w:c.width/b,h:c.height/b,ox:ox+P/b,oy:oy+P/b,b,k:key};_hq.set(id,s);if(!hm)_hqk.set(key,hm=new Map());hm.set(b,s);
+  if(_hq.size>1400){const k0=_hq.keys().next().value,o=_hq.get(k0);_hq.delete(k0);const mm=_hqk.get(o.k);if(mm){mm.delete(o.b);if(!mm.size)_hqk.delete(o.k)}}return s}
 const hqDraw=(s,x=0,y=0)=>ctx.drawImage(s.c,x-s.ox,y-s.oy,s.w,s.h);
 function hqWhite(s,a,x=0,y=0){const w=s.wh||(s.wh=hqTint(s.c,'#fff'));ctx.globalAlpha=a;ctx.drawImage(w,x-s.ox,y-s.oy,s.w,s.h);ctx.globalAlpha=1}
 // soft drop shadow: the silhouette shrunk 4x then stretched back (bilinear upscaling is a free blur on every browser)
@@ -2719,8 +3047,9 @@ const _hqc={};
 function hqGlow(key,stops){let c=_hqc[key];if(c)return c;c=_hqc[key]=hqCv(64,64);const x=c.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);for(const[o,s]of stops)g.addColorStop(o,s);x.fillStyle=g;x.fillRect(0,0,64,64);return c}
 const hqGlint=(x,y,r,a)=>{ctx.globalAlpha=a;ctx.drawImage(hqGlow('gl',[[0,'rgba(255,255,238,.95)'],[.35,'rgba(255,255,230,.32)'],[1,'rgba(255,255,230,0)']]),x-r,y-r,2*r,2*r);ctx.globalAlpha=1};
 // world-lit bevel on a local box: edges facing the top-left light brighten, the far ones darken
+const _bvS=[[],[]],bvStyle=(k,v)=>{const i=Math.round(v*100),q=_bvS[k];return q[i]||(q[i]=(k?'rgba(0,0,0,':'rgba(255,248,220,')+(i/100).toFixed(2)+')')};
 function hqBevel(x,y,w,h,a,t=0.8,s=0.34){const c=Math.cos(a),n=Math.sin(a),lx=-.7071*(c+n),ly=-.7071*(c-n);
-  const e=(d,X,Y,W,H)=>{ctx.fillStyle=d>0?`rgba(255,248,220,${(d*s).toFixed(2)})`:`rgba(0,0,0,${(-d*s*1.2).toFixed(2)})`;ctx.fillRect(X,Y,W,H)};
+  const e=(d,X,Y,W,H)=>{ctx.fillStyle=d>0?bvStyle(0,d*s):bvStyle(1,-d*s*1.2);ctx.fillRect(X,Y,W,H)};
   e(-ly,x,y,w,t);e(ly,x,y+h-t,w,t);e(lx,x+w-t,y+t,t,h-2*t);e(-lx,x,y+t,t,h-2*t)}
 // muzzle flash: baked star, scaled per shot
 function hqMuzzle(x,y,s){let c=_hqc.mf;if(!c){c=_hqc.mf=hqCv(96,48);const g=c.getContext('2d');g.translate(12,24);g.scale(6,6);
@@ -2839,7 +3168,8 @@ function hqCorpseArt(type,col){const tr=type==='brute'?'#43474d':'#7a6242',skin=
   const hc=type==='brute'?'#2f3236':type==='shooter'?'#4f4a32':type==='runner'?'#9c8058':'#6e5e3e';hqDome(-6.8,.5,2.7,2.6,hc,.3,-.5);
   ctx.save();ctx.translate(3,-6.6);ctx.rotate(.35);hqBar(-4,-.6,type==='shooter'?11:8,1.2,'#1c1d20');hqBar(-4,-.6,2.8,1.2,type==='grunt'?'#7b4a26':'#26272a');ctx.restore();
   ell(-2,-4.2,1.3,.95,'#c62828')}
-function hqEnemySpr(type,col,f,px){return hqBake('e'+type+f,px,30,21,11.5,10.5,()=>{if(f===9)hqCorpseArt(type,col);else hqEnemyArt(type,col,f===8?0:Math.sin(f/8*TAU))},.36,.45)}
+const _eKey={};
+function hqEnemySpr(type,col,f,px){const K=_eKey[type]||(_eKey[type]=[]);return hqBake(K[f]||(K[f]='e'+type+f),px,30,21,11.5,10.5,()=>{if(f===9)hqCorpseArt(type,col);else hqEnemyArt(type,col,f===8?0:Math.sin(f/8*TAU))},.36,.45)}
 function hqPaintSoldier(main){const uni=main?'#5b7132':'#4c5f2b',rig=main?'#5f6641':'#566039',glove='#7a6a4c';
   hqLegs(0,hexOf(hqSh(uni,-.15)),'#1d1b16');
   hqRR(-6.8,-3.5,3.8,7,1.1,'#3b4722');box(-6.8,-3.5,3.8,1.1,'#4f5d2d');box(-6.5,-.25,3.2,.5,'rgba(0,0,0,.3)');hqCyl(-7.5,-3.1,1.3,6.2,'#55603a');   // ruck + sleeping mat
@@ -4242,6 +4572,7 @@ function drawSoldier(s){
 }
 function drawEnemy(e,x,y){
   if(S.set.gfx==='high'){drawEnemyHQ(e,x,y);return}
+  if(ctx===CGL.rec){drawEnemyLoGL(e,x,y);return}
   const k=e.r/6,a=Math.atan2(-y,-x);
   ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.scale(k,k);
   if(e.veh&&e.type!=='mbt'){vehLo(e.type,e);if(e.flash>0){ctx.globalAlpha=.55;ell(0,0,10,6,'#fff');ctx.globalAlpha=1}ctx.restore();return}
@@ -4325,6 +4656,23 @@ function vehLo(t,e){const c=VC,tr=e?(e.odo||0)%3:0,since=e?G.time-(e.fl??-9):9,f
       if(e){box(-9,-3.9,12,7.8,'#7d7050');for(let r=0;r<4;r++){const y=-3.35+r*1.72;box(-8.6,y,11.2,1.4,'#716a4b');ell(2.55,y+.7,.55,.55,'#0d0d0b')}box(-5.4,-3.9,1.1,7.8,'#b3261e');
         if(since<.9){ctx.globalAlpha=1-since/.9;ell(-11,0,3,4,'#ffb13b');ctx.globalAlpha=1}}break;
     case'mbt':box(-10.4,-8.3,20.8,3.6,'#191919');box(-10.4,4.7,20.8,3.6,'#191919');box(-10.2,-5.6,20.4,11.2,'#5a4f38');ell(0,0,5,4.5,'#4a4230');box(3,-1,13,2,'#2d2a22');break}}
+// Medium/Low under ChaosGL: each enemy look (type, stride phase in 1/8 steps, bomber lamp, track links in 1/4-unit steps, gun flash) is
+// baked once per zoom bucket from the exact vector art above (hqBake, no outline) and drawn as one instance. The hit flash, tank muzzle
+// flash and MLRS launch glow stay live on top. Quantising the stride moves a boot by at most ~0.14 world units.
+const _loF={type:'',r:6,col:'',moving:false,wob:0,flash:0,fl:-1e9,veh:0,boss:false,odo:0};
+function drawEnemyLoGL(e,x,y){const k=e.r/6,a=Math.atan2(-y,-x),t=e.type,o=_loF;
+  ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.scale(k,k);const px=hqPx();
+  if(e.veh&&t!=='mbt'){const since=G.time-(e.fl??-9),fire=t!=='mlrs'&&since<.06,tr=t==='ifv'?Math.round(((e.odo||0)%3)*4)/4:0;
+    hqDraw(hqBake('lv'+t+(fire?'f':'')+tr,px,36,20,13,10,()=>{o.odo=tr;o.fl=fire?G.time:-1e9;vehLo(t,o)},0));
+    if(t==='mlrs'&&since<.9){ctx.globalAlpha=1-since/.9;ell(-11,0,3,4,'#ffb13b');ctx.globalAlpha=1}
+    if(e.flash>0){ctx.globalAlpha=.55;ell(0,0,10,6,'#fff');ctx.globalAlpha=1}
+    ctx.restore();return}
+  const tk=e.boss||t==='mbt',ph=tk||!e.moving?0:Math.round(Math.sin(e.wob)*8)/8,bl=t==='bomber'?Math.floor(G.time*6)%2:0,tr=tk?Math.round(((e.wob*3)%2.5)*4)/4:0;
+  hqDraw(hqBake('le'+t+e.col+(e.boss?'B':'')+ph+'|'+tr+'|'+bl,px,34,24,12,12,()=>{o.type=t;o.col=e.col;o.boss=e.boss;o.veh=e.veh;o.moving=ph!==0;o.wob=tk?tr/3:Math.asin(ph);
+    o.flash=0;o.fl=-1e9;drawEnemy(o,-1e-9,0)},0));
+  if(e.flash>0){ctx.globalAlpha=.7;ell(0,0,tk?9:5.5,tk?8:6,'#fff');ctx.globalAlpha=1}
+  if(tk&&G.time-(e.fl??-9)<.06){ell(15.5,0,3,1.6,'#ffcf5a');ell(14.8,0,1.5,.8,'#fff')}
+  ctx.restore()}
 // ================= FIELD COMMENDATIONS =================
 // Run-only directives: after waves 3, 5, 10, 15... the battle freezes and the player picks one of three. They stack (rank I, II, III...)
 // and vanish when the run ends, so every run builds differently on top of the permanent upgrade tree.
@@ -4779,13 +5127,14 @@ function skySil(type){let p=_skySil[type];if(p)return p;p=_skySil[type]=new Path
 // never let an aircraft shrink below ~4.5px radius when the camera is far out; SKY_EXT = drawn half-span, for brackets and bars
 const SKY_EXT={drone:7.5,gunheli:20,strikejet:22,heavybomber:46,airboss:56,uav:21};
 const craftK=e=>Math.max(1,4.5/(sc*e.r));
-function drawCraft(e,x,y,k){const t=G.time,hot=t-(e.fl??-9)<0.06;ctx.save();ctx.translate(x,y);ctx.rotate(e.ang);ctx.scale(k,k);
+// Q (ChaosGL bakes only): quantised rotor phase / lamp / gun flash, and no afterburner or hit flash (drawn live on top of the bake)
+function drawCraft(e,x,y,k,Q){const t=G.time,hot=Q?Q.hot:t-(e.fl??-9)<0.06;ctx.save();ctx.translate(x,y);ctx.rotate(e.ang);ctx.scale(k,k);
   switch(e.type){
   case'drone':
     for(const[a,b]of DRONE_ARMS)limb(0,0,a,b,1.3,'#26282a');
     box(-2.6,-1.8,5.2,3.6,e.col);box(-2.6,-1.8,5.2,.7,'#6c7066');box(2.2,-.75,3.2,1.5,'#6b5a3a');ell(5.5,0,.95,.8,'#8f7c4c');ell(-1.2,0,.8,.8,'#111');   // airframe + strapped-on warhead
-    for(const[a,b]of DRONE_ARMS){const r=t*80+a*1.3+e.wob;ell(a,b,3,3,'rgba(200,205,210,.16)');limb(a-Math.cos(r)*2.8,b-Math.sin(r)*2.8,a+Math.cos(r)*2.8,b+Math.sin(r)*2.8,.5,'rgba(20,20,20,.6)');ell(a,b,.75,.75,'#111')}
-    if(Math.floor(t*5+e.wob)%2){ell(-2.3,0,.55,.55,'#ff3b30');ell(-2.3,0,1.4,1.4,'rgba(255,60,50,.3)')}
+    for(const[a,b]of DRONE_ARMS){const r=Q?Q.rot+a*1.3:t*80+a*1.3+e.wob;ell(a,b,3,3,'rgba(200,205,210,.16)');limb(a-Math.cos(r)*2.8,b-Math.sin(r)*2.8,a+Math.cos(r)*2.8,b+Math.sin(r)*2.8,.5,'rgba(20,20,20,.6)');ell(a,b,.75,.75,'#111')}
+    if(Q?Q.blink:Math.floor(t*5+e.wob)%2){ell(-2.3,0,.55,.55,'#ff3b30');ell(-2.3,0,1.4,1.4,'rgba(255,60,50,.3)')}
     break;
   case'gunheli':
     box(-23,-1.1,15,2.2,'#55543f');box(-24.5,-5,2.4,10,'#44432f');ell(-23.3,6.2,3,.8,'rgba(40,40,40,.35)');box(-17,-1.1,2.2,2.2,'#b3261e');   // boom, fin, tail rotor, red band
@@ -4794,7 +5143,7 @@ function drawCraft(e,x,y,k){const t=G.time,hot=t-(e.fl??-9)<0.06;ctx.save();ctx.
     ell(5.5,0,3.2,2.3,'#1b2a33');ell(9.2,0,2.3,1.8,'#1b2a33');ell(8.8,-.7,.9,.45,'rgba(170,220,255,.5)');                                          // tandem cockpits
     ell(11.2,0,1.5,1.5,'#2a2a22');box(11.2,-.45,5.6,.9,'#111');if(hot){ell(17.8,0,2.4,1.3,'#ffcf5a');ell(17.4,0,1.1,.6,'#fff')}                       // chin cannon
     ell(0,0,20,20,'rgba(25,25,25,.07)');ctx.strokeStyle='rgba(20,20,20,.4)';ctx.lineWidth=1.1;ctx.lineCap='round';ctx.beginPath();
-    for(let i=0;i<5;i++){const a=t*26+e.wob+i*TAU/5;ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*19.5,Math.sin(a)*19.5)}ctx.stroke();ell(0,0,1.8,1.8,'#222');
+    for(let i=0;i<5;i++){const a=Q?Q.rot+i*TAU/5:t*26+e.wob+i*TAU/5;ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*19.5,Math.sin(a)*19.5)}ctx.stroke();ell(0,0,1.8,1.8,'#222');
     break;
   case'strikejet':{const P=skySil('strikejet'),ab=0.75+0.25*Math.sin(t*40+e.wob);
     ctx.fillStyle=e.col;ctx.fill(P);ctx.save();ctx.clip(P);ell(-6,-9,4,2,'#585d55',0.5);ell(-4,8,3.6,1.8,'#585d55',-0.4);ell(-16,-4,3,1.4,'#80867c');ell(8,1.8,5,1,'#81877d');ctx.restore();   // two-tone camo
@@ -4803,7 +5152,7 @@ function drawCraft(e,x,y,k){const t=G.time,hot=t-(e.fl??-9)<0.06;ctx.save();ctx.
     box(-22.5,-9.5,3,1.8,'#b3261e');box(-22.5,7.7,3,1.8,'#b3261e');
     ell(9.5,0,4.2,1.5,'#1c2a33');ell(10.5,-.5,1.6,.5,'rgba(170,220,255,.5)');                                                                     // canopy
     if(hot){ell(24,0,2.6,1.2,'#ffcf5a');ell(23.4,0,1.2,.6,'#fff')}
-    ctx.globalCompositeOperation='lighter';for(const s of[-2.6,2.6]){ell(-20.5,s,2.8*ab,1.2,'rgba(255,150,60,.75)');ell(-19.8,s,1.2,.7,'#fff3c0')}ctx.globalCompositeOperation='source-over';
+    if(!Q)craftAB(ab);
     break}
   case'heavybomber':
     for(const s of[1,-1]){fpoly(s>0?BMR_WING:flipY(BMR_WING),'#50554f');fpoly(s>0?BMR_TAIL:flipY(BMR_TAIL),'#50554f')}
@@ -4816,19 +5165,38 @@ function drawCraft(e,x,y,k){const t=G.time,hot=t-(e.fl??-9)<0.06;ctx.save();ctx.
   case'uav':
     fpoly(UAV_WING,'#9aa0a5');box(0.7,-21,3.6,.7,'rgba(255,255,255,.2)');for(const s of[1,-1])fpoly(s>0?UAV_TAIL:flipY(UAV_TAIL),'#80868b');
     ell(0,0,10,2,e.col);ell(-1,-.7,8,.6,'rgba(255,255,255,.18)');ell(6.8,0,3.4,2.4,'#a9aeb2');ell(8.4,0,1.3,1.3,'#1a1d20');ell(8.1,-.4,.45,.45,'rgba(140,210,255,.8)');   // pod, sensor dome, EO/IR ball
-    {const r=t*70+e.wob;ell(-10.4,0,1,3.2,'rgba(210,214,218,.18)');limb(-10.4,-Math.cos(r)*3,-10.4,Math.cos(r)*3,.6,'rgba(25,25,25,.7)')}   // pusher prop
-    if(Math.floor(t*3+e.wob)%2){ell(-2,0,.6,.6,'#ff3b30');ell(-2,0,1.8,1.8,'rgba(255,60,50,.28)')}
+    {const r=Q?Q.rot:t*70+e.wob;ell(-10.4,0,1,3.2,'rgba(210,214,218,.18)');limb(-10.4,-Math.cos(r)*3,-10.4,Math.cos(r)*3,.6,'rgba(25,25,25,.7)')}   // pusher prop
+    if(Q?Q.blink:Math.floor(t*3+e.wob)%2){ell(-2,0,.6,.6,'#ff3b30');ell(-2,0,1.8,1.8,'rgba(255,60,50,.28)')}
     break;
   default:   // airboss: four-turboprop heavy gunship
     fpoly(BOSS_WING,'#474d4a');box(-6.5,-56,3,112,'rgba(255,250,230,.07)');box(-41,-18,7,36,'#474d4a');box(-41,-18,7,1,'#5d6460');
-    for(const ey of[-32,-16,16,32]){const r=t*50+ey;box(2,ey-2.6,12,5.2,'#2b2f2d');ell(15,ey,1.1,7.5,'rgba(200,205,200,.14)');limb(15,ey-Math.cos(r)*7,15,ey+Math.cos(r)*7,.9,'rgba(25,25,25,.7)');ell(15,ey,1,1,'#111')}
+    for(const ey of[-32,-16,16,32]){const r=Q?Q.rot+ey:t*50+ey;box(2,ey-2.6,12,5.2,'#2b2f2d');ell(15,ey,1.1,7.5,'rgba(200,205,200,.14)');limb(15,ey-Math.cos(r)*7,15,ey+Math.cos(r)*7,.9,'rgba(25,25,25,.7)');ell(15,ey,1,1,'#111')}
     ell(0,0,40,7.5,e.col);ell(-2,-3,34,2.2,'rgba(255,250,230,.08)');ell(37,0,4,5,'#2f3432');ell(35,0,3,3.8,'#1c2a33');box(-40,-.8,12,1.6,'#2b2f2d');
     for(const gx of[-8,4,14]){box(gx-1.6,-8.6,3.2,2.4,'#151515');box(gx-.5,-12.4,1,3.8,'#0c0c0c')}                                                   // left-side gun battery
     if(hot){ell(4,-14.5,1.4,2.8,'#ffcf5a');ell(4,-14,.7,1.3,'#fff')}
     box(-28,-7.2,3,14.4,'#b3261e');ell(20,-40,2.4,2.4,'#b3261e');ell(20,40,2.4,2.4,'#b3261e');
   }
-  if(e.flash>0){ctx.fillStyle='rgba(255,255,255,.35)';ctx.fill(skySil(e.type))}
+  if(e.flash>0&&!Q){ctx.fillStyle='rgba(255,255,255,.35)';ctx.fill(skySil(e.type))}
   ctx.restore()}
+// strike-jet afterburner (additive: stays live on top of a baked airframe)
+function craftAB(ab){ctx.globalCompositeOperation='lighter';for(const s of[-2.6,2.6]){ell(-20.5,s,2.8*ab,1.2,'rgba(255,150,60,.75)');ell(-19.8,s,1.2,.7,'#fff3c0')}ctx.globalCompositeOperation='source-over'}
+// ChaosGL: each aircraft look (type, colour, rotor/prop phase in 8-16 steps, lamp, gun flash, bomb bay, and the layer alpha, which is baked
+// shape by shape so it composites exactly like the direct draw) is baked once per zoom bucket from drawCraft itself; the additive
+// afterburner and the hit flash (a baked silhouette) are drawn live on top in the original order.
+const _cq={rot:0,blink:0,hot:false},_cf={type:'',col:'',ang:0,wob:0,fl:-9,bay:0,flash:0},CRAFT_Q={drone:[Math.PI,6,80],gunheli:[TAU/5,8,26],uav:[Math.PI,6,70],airboss:[Math.PI,8,50]};   // [blade period, steps, rad/s]: 2-blade props repeat every half turn
+const craftBox=ty=>(SKY_EXT[ty]||40)*1.25+3;
+function silSpr(ty,c){const h=craftBox(ty);return hqBake('sil'+ty+c,hqPx(),2*h,2*h,h,h,()=>{ctx.fillStyle=c;ctx.fill(skySil(ty))},0)}
+function drawCraftGL(e,x,y,k,aq=50){const ty=e.type,t=G.time,Qd=CRAFT_Q[ty],ga=ctx.globalAlpha,al=Math.round(ga*aq)/aq,q=_cq,f=_cf,h=craftBox(ty);
+  let qi=0,bl=0;if(Qd){const r=Qd[2]*t+(ty==='airboss'?0:e.wob),p=Qd[0];qi=Math.round((r%p+p)%p/p*Qd[1])%Qd[1]}
+  if(ty==='drone')bl=Math.floor(t*5+e.wob)%2;else if(ty==='uav')bl=Math.floor(t*3+e.wob)%2;
+  const hot=t-(e.fl??-9)<0.06,bay=ty==='heavybomber'&&e.bay>0;
+  ctx.save();ctx.translate(x,y);ctx.rotate(e.ang);ctx.scale(k,k);ctx.globalAlpha=1;
+  hqDraw(hqBake('cr'+ty+e.col+'|'+qi+'|'+bl+(hot?'h':'')+(bay?'y':'')+'|'+al,hqPx(),2*h,2*h,h,h,()=>{q.rot=Qd?qi*Qd[0]/Qd[1]:0;q.blink=bl;q.hot=hot;
+    f.type=ty;f.col=e.col;f.bay=bay?1:0;ctx.globalAlpha=al;drawCraft(f,0,0,1,q)},0));
+  ctx.globalAlpha=ga;if(ty==='strikejet')craftAB(0.75+0.25*Math.sin(t*40+e.wob));
+  if(e.flash>0){ctx.globalAlpha=ga*.35;hqDraw(silSpr(ty,'#fff'))}
+  ctx.globalAlpha=ga;ctx.restore()}
+function capArt(){ctx.fillStyle='#8a969e';drawJet(2.2);ell(8.8,0,6.6,2.6,'#1c2a33')}
 function craftShadow(type,x,y,ang,alt,k){ctx.save();ctx.translate(x+alt*0.55,y+alt*0.7);ctx.rotate(ang);ctx.scale(k,k);ctx.fillStyle='rgba(0,0,0,.26)';ctx.fill(skySil(type));
   if(type==='gunheli')ell(0,0,20,20,'rgba(0,0,0,.05)');ctx.restore()}
 // AA emplacement: every tier (incl. tier 0 twin 35) goes through the tier painters (baked on High, flat on Medium/Low)
@@ -4850,8 +5218,10 @@ function drawSkyGround(){
   for(const s of G.skyShots)if(s.k==='bomb'&&s.t>0){const k=Math.min(1,s.t/s.dur),x=s.x+(s.tx-s.x)*k,y=s.y+(s.ty-s.y)*k,z=s.alt*(1-k);ell(x+z*0.55,y+z*0.7,1.8,1,'rgba(0,0,0,.3)')}}
 // air pass (after the fog, like friendly aircraft): ordnance, wrecks, aircraft, radar contacts, fog-edge warnings
 const ARW=new Path2D('M9 0L-3 -3L-6 -8L-8.5 -8L-6.5 -2L-8.5 0L-6.5 2L-8.5 8L-6 8L-3 3Z');
-function drawSky(){const V=vision(),SV=skyVision(),ta=Math.max(1,1/sc),lw=Math.max(1,1/sc),t=G.time;
+function drawSky(){const SV=skyVision(),ta=Math.max(1,1/sc),lw=Math.max(1,1/sc);
   if(L('radar')&&S.set.ring){ctx.strokeStyle='rgba(110,195,255,.16)';ctx.lineWidth=lw;ctx.setLineDash([3*ta,9*ta]);ctx.beginPath();ctx.arc(0,0,SV,0,TAU);ctx.stroke();ctx.setLineDash([])}
+  CGL.layer('sky',G.sky.length*6+G.skyShots.length+G.flak.length+G.sams.length+G.wrecks.length*6+G.caps.length*6,drawSkyL)}
+function drawSkyL(){const V=vision(),SV=skyVision(),ta=Math.max(1,1/sc),lw=Math.max(1,1/sc),t=G.time,gl=ctx===CGL.rec;
   for(const s of G.skyShots){if(s.t<0)continue;const k=Math.min(1,s.t/s.dur),x=s.x+(s.tx-s.x)*k,y=s.y+(s.ty-s.y)*k,a=Math.atan2(s.ty-s.y,s.tx-s.x);
     if(s.k==='shell'){ctx.globalCompositeOperation='lighter';ell(x,y,3.4,3.4,'rgba(255,170,80,.35)');ell(x,y,1.6,1.6,'#fff0c8');ctx.globalCompositeOperation='source-over';continue}
     ctx.save();ctx.translate(x,y);ctx.rotate(a);
@@ -4864,12 +5234,12 @@ function drawSky(){const V=vision(),SV=skyVision(),ta=Math.max(1,1/sc),lw=Math.m
   ctx.globalCompositeOperation='source-over';
   for(const m of G.sams){if(m.delay>0)continue;ctx.save();ctx.translate(m.x,m.y);ctx.rotate(Math.atan2(m.vy,m.vx));
     box(-4.5,-.9,8,1.8,'#eceae2');box(3.5,-.9,1.5,1.8,m.aam?'#6b7a86':'#b3261e');box(-4.5,-1.8,1.6,3.6,'#9a9890');ctx.globalCompositeOperation='lighter';ell(-6,0,2.6,1.2,'rgba(255,170,80,.9)');ctx.restore()}
-  for(const c of G.caps){const p=capPos(c);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(c.a);ctx.fillStyle='#8a969e';drawJet(2.2);ell(8.8,0,6.6,2.6,'#1c2a33');ctx.restore()}
-  for(const w of G.wrecks){const k=w.t/w.dur;ctx.globalAlpha=1-k*0.3;drawCraft(w,w.x,w.y,1-0.25*k);ctx.globalAlpha=1;
-    ctx.save();ctx.translate(w.x,w.y);ctx.rotate(w.ang);ctx.scale(1-0.25*k,1-0.25*k);ctx.fillStyle='rgba(18,14,10,.5)';ctx.fill(skySil(w.type));ctx.restore();
+  for(const c of G.caps){const p=capPos(c);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(c.a);if(gl)hqDraw(hqBake('cap'+tierOf('fighter'),hqPx(),90,90,45,45,capArt,0));else capArt();ctx.restore()}
+  for(const w of G.wrecks){const k=w.t/w.dur;ctx.globalAlpha=1-k*0.3;(gl?drawCraftGL:drawCraft)(w,w.x,w.y,1-0.25*k,10);ctx.globalAlpha=1;
+    ctx.save();ctx.translate(w.x,w.y);ctx.rotate(w.ang);ctx.scale(1-0.25*k,1-0.25*k);if(gl){ctx.globalAlpha=.5;hqDraw(silSpr(w.type,'#120e0a'));ctx.globalAlpha=1}else{ctx.fillStyle='rgba(18,14,10,.5)';ctx.fill(skySil(w.type))}ctx.restore();
     ctx.globalCompositeOperation='lighter';blit(fireSprite(),w.x,w.y,w.r*(0.9+Math.random()*0.3),0.85);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
-  const live=G.sky.filter(e=>!e.dead&&visible(e)).sort((a,b)=>a.alt-b.alt),bars=[new Path2D(),new Path2D(),new Path2D()],bh=Math.max(2.5,1.5/sc);
-  for(const e of live){const k=craftK(e),far=Math.hypot(e.x,e.y)>V;if(far)ctx.globalAlpha=0.72;drawCraft(e,e.x,e.y,k);ctx.globalAlpha=1;
+  const live=G.sky.filter(e=>!e.dead&&visible(e)).sort((a,b)=>a.alt-b.alt),bars=[CGL.path(),CGL.path(),CGL.path()],bh=Math.max(2.5,1.5/sc);
+  for(const e of live){const k=craftK(e),far=Math.hypot(e.x,e.y)>V;if(far)ctx.globalAlpha=0.72;(gl?drawCraftGL:drawCraft)(e,e.x,e.y,k);ctx.globalAlpha=1;
     const ext=SKY_EXT[e.type]*k;
     if(far){const r=ext+4*ta,q=Math.min(r*0.45,10*ta);ctx.strokeStyle='rgba(110,195,255,.85)';ctx.lineWidth=lw;ctx.beginPath();    // radar contact bracket
       for(const[sx,sy]of[[-1,-1],[1,-1],[1,1],[-1,1]]){ctx.moveTo(e.x+sx*r,e.y+sy*(r-q));ctx.lineTo(e.x+sx*r,e.y+sy*r);ctx.lineTo(e.x+sx*(r-q),e.y+sy*r)}ctx.stroke()}
@@ -5310,17 +5680,18 @@ function drawWalls(ph,wlv){
 // Enemies. Far-zoom readability: anything under ~6px across gets a dark-rimmed hostile marker underneath so it never
 // melts into the ground. On Medium/Low, enemies below GFX.lod px radius skip the ~20-op sprite for a batched silhouette.
 // Markers, silhouettes and health bars are each built into one path per colour, so 200 enemies cost a handful of fills.
-function drawEnemies(){
+function drawEnemies(){CGL.layer('ground',G.enemies.length+(G.corpses?G.corpses.length:0)+(G.vwrecks?G.vwrecks.length:0),drawEnemiesL)}
+function drawEnemiesL(){
   if(S.set.gfx==='high'){_hqBase=ctx.getTransform();drawCorpses()}else drawVWrecks();
-  const es=G.enemies,px=1/sc,mk=3*px,lod=GFX.lod*px,rims={},sil={},bars=[new Path2D(),new Path2D(),new Path2D()];let nb=0;
+  const es=G.enemies,px=1/sc,mk=3*px,lod=GFX.lod*px,rims={},sil={},bars=[CGL.path(),CGL.path(),CGL.path()];let nb=0;
   for(const e of es){let x=e.x,y=e.y;if(e.lunge>0){const d=Math.hypot(x,y);x-=x/d*3;y-=y/d*3}
     let top=e.r;
     if(e.r<mk){const a=Math.min(1,(mk-e.r)*sc*0.8+0.35).toFixed(1),R1=Math.max(e.r,2.4*px)+px;top=R1;
-      const g=rims[a]||(rims[a]={o:new Path2D(),i:new Path2D()});g.o.moveTo(x+R1,y);g.o.arc(x,y,R1,0,7);g.i.moveTo(x+R1-px,y);g.i.arc(x,y,R1-px,0,7)}
+      const g=rims[a]||(rims[a]={o:CGL.path(),i:CGL.path()});g.o.moveTo(x+R1,y);g.o.arc(x,y,R1,0,7);g.i.moveTo(x+R1-px,y);g.i.arc(x,y,R1-px,0,7)}
     e._sx=x;e._sy=y;e._top=top}
   for(const a in rims){ctx.globalAlpha=+a;ctx.fillStyle='rgba(12,8,6,.9)';ctx.fill(rims[a].o);ctx.fillStyle='#e8553f';ctx.fill(rims[a].i)}ctx.globalAlpha=1;
   for(const e of es){const x=e._sx,y=e._sy;
-    if(e.r<lod){const c=e.flash>0?'#fff':e.col,p=sil[c]||(sil[c]=new Path2D()),r=e.r*0.65;p.moveTo(x+r,y);p.arc(x,y,r,0,7)}
+    if(e.r<lod){const c=e.flash>0?'#fff':e.col,p=sil[c]||(sil[c]=CGL.path()),r=e.r*0.65;p.moveTo(x+r,y);p.arc(x,y,r,0,7)}
     else drawEnemy(e,x,y);
     if(e.hp<e.max){const w=Math.max(12,e.r*2),bh=Math.max(2.5,1.5*px),by=y-Math.max(e.r+7,e._top+bh+1.5*px);nb++;
       bars[0].rect(x-w/2,by,w,bh);bars[e.boss?2:1].rect(x-w/2,by,w*Math.max(0,e.hp/e.max),bh)}}
@@ -5392,8 +5763,8 @@ function dnCone(kind){let c=_dn['c'+kind];if(c)return c;const w=192,hh=96,[k,x]=
   x.putImageData(im,0,0);return _dn['c'+kind]=k}
 function dnConeT(kind,rgb){const key='ct'+kind+rgb;let c=_dn[key];if(c)return c;const src=dnCone(kind),[k,x]=mkCv(src.width,src.height);
   x.drawImage(src,0,0);x.globalCompositeOperation='source-in';x.fillStyle=`rgb(${rgb})`;x.fillRect(0,0,k.width,k.height);return _dn[key]=k}
-const dnPool=rgb=>radialSprite('dnp'+rgb,[[0,`rgba(${rgb},1)`],[.3,`rgba(${rgb},.72)`],[.65,`rgba(${rgb},.26)`],[1,`rgba(${rgb},0)`]]);
-const dnFlat=rgb=>radialSprite('dnflat'+rgb,[[0,`rgba(${rgb},1)`],[.74,`rgba(${rgb},1)`],[.88,`rgba(${rgb},.5)`],[1,`rgba(${rgb},0)`]]);   // lit-ring lift, colour quantised so few variants exist
+const dnPool=rgb=>_spr['dnp'+rgb]||tintOf(radialSprite('dnp'+rgb,[[0,`rgba(${rgb},1)`],[.3,`rgba(${rgb},.72)`],[.65,`rgba(${rgb},.26)`],[1,`rgba(${rgb},0)`]]),rgb,()=>dnPool('255,255,255'));
+const dnFlat=rgb=>_spr['dnflat'+rgb]||tintOf(radialSprite('dnflat'+rgb,[[0,`rgba(${rgb},1)`],[.74,`rgba(${rgb},1)`],[.88,`rgba(${rgb},.5)`],[1,`rgba(${rgb},0)`]]),rgb,()=>dnFlat('255,255,255'));   // lit-ring lift, colour quantised so few variants exist
 const DN_EN='255,222,150',DN_FR='214,232,255',DN_LAMP='255,178,98',DN_FIRE='255,150,60',DN_TAIL='255,40,30';
 // Set context c to world matrix m, then translate(x,y) . rotate(th) . scale(sx,sy) - no save/restore churn.
 function cxf(c,m,x,y,th,sx,sy){const co=Math.cos(th),si=Math.sin(th);c.setTransform((m.a*co+m.c*si)*sx,(m.b*co+m.d*si)*sx,(m.c*co-m.a*si)*sy,(m.d*co-m.b*si)*sy,m.a*x+m.c*y+m.e,m.b*x+m.d*y+m.f)}
@@ -5428,14 +5799,16 @@ function dayLight(V){if(!DN.on)return;const dk=DN.dk,lamp=DN.lamp;if(dk<0.004&&D
     if(HQ)dnLightMap(m,W,H,V);   // Medium: the flat tint below, with its lights drawn straight over it (no full-screen light-map composite)
     else{ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='multiply';ctx.fillStyle=DN.ambCss;ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over';xr(m)}
     // the emissive layer was just multiplied down with everything else: put the heat back (High re-renders it like the bloom pass)
-    if(dk>0.12&&HQ){ctx.save();BP=true;try{drawFx()}finally{BP=false}ctx.restore();xr(m)}}
+    if(dk>0.12&&HQ){ctx.save();BP=true;try{CGL.layer('emis',G.fx.length,drawFx)}finally{BP=false}ctx.restore();xr(m)}}
   if(DN.haze>0.02&&HQ){ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='screen';ctx.globalAlpha=DN.haze*.07;ctx.fillStyle=DN.hazeCss;ctx.fillRect(0,0,W,H);
     ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';xr(m)}
   if(lamp<0.02)return;
   if(GFX.lights){if(!HQ){dnRigs();dnNav();dnBeams(DN.beams)}dnStars(V,lamp);dnGlow(m,W,H,V,lamp)}
   dnLamps(lamp,V);xr(m);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
 // Light map: ambient (deep beyond the lit ring, moonlit inside it) plus every light source, multiplied over the world.
-function dnLightMap(m,W,H,V){const q=HQ?5:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Math.max(2,Math.ceil(VH/q)),c=pfCanvas('dnlm',lw,lh),x=c._x,k=lw/W,lamp=DN.lamp,t=G.time;
+function dnLightMap(m,W,H,V){const q=HQ?5:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Math.max(2,Math.ceil(VH/q)),c=pfCanvas('dnlm',lw,lh),x0=c._x,k=lw/W,lamp=DN.lamp,t=G.time,
+    x=CGL.begin('lmap',G.lights.length+G.fx.length+_rig.length*2+DN.beams.length*2,x0,lw,lh)||x0;   // opaque base: premultiplied additive is exact
+  try{
   x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation='source-over';x.globalAlpha=1;x.fillStyle=DN.farCss;x.fillRect(0,0,lw,lh);
   const M={a:m.a*k,b:m.b*k,c:m.c*k,d:m.d*k,e:m.e*k,f:m.f*k},P=(img,wx,wy,r,a)=>{if(a<=0.01||r<=0)return;x.globalAlpha=Math.min(1,a);x.setTransform(M.a,M.b,M.c,M.d,M.a*wx+M.c*wy+M.e,M.b*wx+M.d*wy+M.f);x.drawImage(img,-r,-r,2*r,2*r)};
   x.globalCompositeOperation='lighter';
@@ -5467,13 +5840,16 @@ function dnLightMap(m,W,H,V){const q=HQ?5:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Ma
     for(const[jx,jy,a,,nose,ll]of dnNav()){if(!ll)continue;const co=Math.cos(a),si=Math.sin(a);cxf(x,M,jx+co*nose,jy+si*nose,a,110/192,80/96);x.globalAlpha=.8*lamp;x.drawImage(dnConeT('h',DN_FR),0,-48)}
     for(const u of G.units)if(u.k==='heli'){const a=u.gun??u.ang;P(dnPool(DN_FR),u.x+Math.cos(a)*46,u.y+Math.sin(a)*46,34,.8*lamp)}}
   x.globalAlpha=1;x.globalCompositeOperation='source-over';
+  }finally{if(x!==x0)CGL.end()}
   ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='multiply';ctx.imageSmoothingEnabled=true;ctx.drawImage(c,0,0,W,H);ctx.globalCompositeOperation='source-over';xr(m)}
 // Glow layer: searchlight shafts, headlight cones (read as lit dust in the air - out in the fog too, a glimpse only: nothing
 // here touches visible(), so an enemy whose lights you can see still can't be targeted until it is in sight), lamp halos, nav
 // halos and fireflies are all drawn into one low-res buffer and added over the frame in a single full-screen pass.
-function dnGlow(m,W,H,V,lamp){const q=HQ?4:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Math.max(2,Math.ceil(VH/q)),c=HQ?pfCanvas('dnvb',lw,lh):null,x=HQ?c._x:ctx,k=HQ?lw/W:1,t=G.time,s=HQ?1:1.6,
+function dnGlow(m,W,H,V,lamp){let x;const q=HQ?4:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Math.max(2,Math.ceil(VH/q)),c=HQ?pfCanvas('dnvb',lw,lh):null,x0=HQ?c._x:ctx,k=HQ?lw/W:1,t=G.time,s=HQ?1:1.6,
     M={a:m.a*k,b:m.b*k,c:m.c*k,d:m.d*k,e:m.e*k,f:m.f*k},B=(img,wx,wy,r,a)=>{if(a<=0.01)return;x.globalAlpha=Math.min(1,a);x.setTransform(M.a,M.b,M.c,M.d,M.a*wx+M.c*wy+M.e,M.b*wx+M.d*wy+M.f);x.drawImage(img,-r,-r,2*r,2*r)};
-  if(HQ){x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.clearRect(0,0,lw,lh)}x.globalCompositeOperation='lighter';
+  x=x0;if(HQ){x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.clearRect(0,0,lw,lh)}
+  const gx=CGL.begin('glow',_rig.length*(HQ?5:2)+DN.beams.length*2+(HQ?34:0),x0,HQ?lw:W,HQ?lh:H,HQ);if(gx)x=gx;
+  try{x.globalCompositeOperation='lighter';
   const sh=dnConeT('s','200,220,255'),sp=glowSprite('220,232,255'),hd=glowSprite('235,244,255'),px=1/sc,r0=Math.max(3.2,4*px);
   for(const[ox,oy,a,len]of DN.beams){if(HQ){cxf(x,M,ox,oy,a,len/192,len*.3/96);x.globalAlpha=.3*lamp;x.drawImage(sh,0,-48)}   // Medium: pools only, no full shaft
     B(sp,ox+Math.cos(a)*len*.93,oy+Math.sin(a)*len*.93,len*.17,.14*lamp*(HQ?1:.55));B(hd,ox,oy,r0*3,.9*lamp)}
@@ -5486,6 +5862,7 @@ function dnGlow(m,W,H,V,lamp){const q=HQ?4:6,lw=Math.max(2,Math.ceil(VW/q)),lh=M
   if(HQ){const ph=fortHalf()+wallThick()+20,rr=Math.max(ph+20,sight()*.9),g=glowSprite('206,255,120');   // fireflies in the grass inside the lit ring
     for(let i=0;i<34;i++){const u=hash(i,7),v=hash(i,9),a=u*TAU+Math.sin(t*.13+i)*.2,d=ph+(rr-ph)*Math.sqrt(v),b=Math.sin(t*(1.1+u)+i*7);if(b<.15)continue;
       B(g,Math.cos(a)*d+Math.sin(t*.7+i*3)*6,Math.sin(a)*d+Math.cos(t*.53+i*5)*6,3.2,lamp*b)}}
+  }finally{if(gx)CGL.end()}
   if(HQ){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.drawImage(c,0,0,W,H)}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';xr(m)}
 // Lamp heads: crisp cores for head / tail lights (glimpsed through the fog out past vision), aircraft nav lights and strobes and
 // the tower lamps, batched into one path per colour. Low draws these as square dots and nothing else.
@@ -5542,7 +5919,7 @@ function draw(){
   drawAirGround();drawLogiGround();drawUnits();drawArtyGun();drawSkyGround();
   for(const s of G.sold)drawSoldier(s);
   // fx
-  drawSmoke();dayMist();drawParts();drawFx();drawSigFx();
+  CGL.layer('fx',fxCount(),drawFxLayer);
   drawArtyShells();drawNades();
   drawStorm();drawFog(V);
   drawSky();drawTransports();
