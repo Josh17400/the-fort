@@ -2127,9 +2127,9 @@ function startWave(){
 }
 // Supply crates: mostly cash, but from wave 3 some are MUNITIONS (grenade ready + rapid fire) and, while the fort is hurt, ENGINEER kits
 // (walls +25% even when breached, plus a field dressing). Specials pay 40% of a cash crate on top so grabbing one never feels like a loss.
-const CRATE={cash:{c:'255,210,70',ic:'coin',t:'$'},ammo:{c:'255,110,70',ic:'nade',t:'!'},fix:{c:'120,220,120',ic:'repair',t:'+'}},RAPID_T=8;
+const CRATE={cash:{c:'255,210,70',ic:'coin',t:'$'},ammo:{c:'255,110,70',ic:'nade',t:'!'},fix:{c:'120,220,120',ic:'repair',t:'+'},intel:{c:'130,190,255',ic:'radar',t:'?'}},RAPID_T=8,INTEL_T=6;
 function crateKind(){if(G.wave<3)return'cash';const r=Math.random(),hurt=G.hp<G.maxHp*0.8||G.wallMax&&G.wallHp<G.wallMax*0.7;
-  return r<0.2?'ammo':hurt&&r<0.5?'fix':'cash'}
+  return r<0.2?'ammo':hurt&&r<0.5?'fix':G.wave>=10&&r>0.9?'intel':'cash'}   // blue INTEL (wave 10+): every ground hostile, fog crews included, marked for INTEL_T
 function dropCrate(kind){const a=Math.random()*7,r=fortHalf()+wallThick()+wireOut()+18+Math.random()*Math.max(20,sight()-fortHalf()-wireOut()-40),k=kind||crateKind();
   G.crates.push({x:Math.cos(a)*r,y:Math.sin(a)*r,life:12,k,val:k==='cash'?crateVal(G.wave,L('scav')):money(crateVal(G.wave,L('scav'))*0.4)});
   if(k!=='cash'&&!seen()['crate_'+k])spotted('crate_'+k)}   // first special crate ever: a SUPPLY DROP briefing card (seen once shown)
@@ -2137,6 +2137,7 @@ function grabCrate(c){c.life=0;fxCrate(c);S.bank+=c.val;G.earned+=c.val;sfx('cas
   if(c.k==='ammo'){G.nadeT=0;G.rapidT=RAPID_T;syncNadeBtn(true);float(c.x,c.y-10,'RAPID FIRE · GRENADE READY','#ff9d7a',13);setTimeout(()=>tone(990,0.1,'square',0,0.05),90)}
   else if(c.k==='fix'){const w=G.wallMax&&G.wallHp<G.wallMax,was=G.wallHp<=0;if(w)G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.25);G.hp=Math.min(G.maxHp,G.hp+G.maxHp*0.15);
     float(c.x,c.y-10,w?(was?'WALLS REBUILT':'WALLS +25%'):'FIELD DRESSING +15%','#8fe08a',13);sfx('wall')}
+  else if(c.k==='intel'){let n=0;for(const e of G.enemies)if(!e.dead&&!e.air){e.rev=Math.max(e.rev||0,INTEL_T);n++}float(c.x,c.y-10,'INTEL · '+n+' HOSTILES MARKED','#9cc8ff',13);setTimeout(()=>tone(1320,0.12,'sine',0,0.05),90)}
   else float(c.x,c.y-10,'+$'+c.val,'#ffe066',13)}
 function layMines(){const ml=L('mines');if(!ml)return;const half=fortHalf()+wallThick()/2+wireOut(),n=Math.round(Math.min(30,2*ml)*rMult('mines','count'))*(1+pk('minelayer'));
   for(let i=0;i<n&&G.mines.length<n*3;i++){const a=Math.random()*7,r=half+18+Math.random()*(Math.max(50,vision()*0.95-half-18));G.mines.push({x:Math.cos(a)*r,y:Math.sin(a)*r,blink:Math.random()*3})}}
@@ -7545,7 +7546,8 @@ function readHudSafe(){const p=$('hudSafe');if(!p)return;const c=getComputedStyl
 const hN=n=>isFinite(n)&&Math.abs(n)<1e4?Math.round(n).toLocaleString('en-US'):f1(n);   // 2,595 · 13.2k
 const hRGB=c=>!c?'':c.indexOf(',')>0&&c[0]!=='r'?'rgb('+c+')':c;
 Object.assign(INTEL,{crate_ammo:['Munitions Crate',0,'Red crates reload your grenade and add 8s of rapid fire. Grab them before they fade.'],
-  crate_fix:['Engineer Crate',0,'Green crates rebuild a quarter of the walls, even after a breach, and patch up the fort.']});
+  crate_fix:['Engineer Crate',0,'Green crates rebuild a quarter of the walls, even after a breach, and patch up the fort.'],
+  crate_intel:['Intel Crate',0,'Blue crates carry captured maps: every ground hostile, even mortar crews in the fog, is marked for 6s so your guns can hunt them.']});
 function cratePreview(k){const c=$('intelCv'),W=c.width,K=CRATE[k],main=ctx;ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,W);ctx.drawImage(crateSprite(),W*0.12,W*0.2,W*0.76,W*0.76);
   ctx.fillStyle='rgba(20,24,16,.88)';ctx.beginPath();ctx.arc(W*0.5,W*0.22,W*0.17,0,TAU);ctx.fill();cIcon(K.ic,W*0.5-W*0.11,W*0.22-W*0.11,W*0.22,'rgb('+K.c+')',2.4)}finally{ctx=main}}
 IC.near=IC.near||'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0M12 12m-4.5 0a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0 -9 0M12 12l6.4-6.4M12 12h.01';
