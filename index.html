@@ -2481,7 +2481,7 @@ function update(dt){
   // air
   if(G.gun&&G.gun.recoil>0)G.gun.recoil=Math.max(0,G.gun.recoil-dt*3);
   if(G.airT>0)G.airT-=dt;
-  for(const p of G.planes)p.t+=dt;G.planes=G.planes.filter(p=>p.t<3.5);
+  for(const p of G.planes)p.t+=dt;keepT(G.planes,3.5);
   for(const b of G.bombs){b.t-=dt;if(b.t<=0){b.done=true;sigBomb(b)}}keepUndone(G.bombs);
   // crates
   G.crateT-=dt;if(G.crateT<=0){G.crateT=crateEvery(L('scav'))/(1+0.4*pk('supply'))*(0.7+Math.random()*0.6);dropCrate()}
@@ -2498,6 +2498,7 @@ function update(dt){
 function keepLive(a){const n=a.length;let j=0;while(j<n&&a[j].life>0)j++;for(let i=j+1;i<n;i++){const v=a[i];if(v.life>0)a[j++]=v}if(j<n)a.length=j;return a}
 function keepUndone(a){const n=a.length;let j=0;while(j<n&&!a[j].done)j++;for(let i=j+1;i<n;i++){const v=a[i];if(!v.done)a[j++]=v}if(j<n)a.length=j;return a}
 function keepAlive(a){const n=a.length;let j=0;while(j<n&&!a[j].dead)j++;for(let i=j+1;i<n;i++){const v=a[i];if(!v.dead)a[j++]=v}if(j<n)a.length=j;return a}
+function keepT(a,lim){const n=a.length;let j=0;while(j<n&&a[j].t<lim)j++;for(let i=j+1;i<n;i++){const v=a[i];if(v.t<lim)a[j++]=v}if(j<n)a.length=j;return a}
 function keepUnused(a){const n=a.length;let j=0;while(j<n&&!a[j].used)j++;for(let i=j+1;i<n;i++){const v=a[i];if(!v.used)a[j++]=v}if(j<n)a.length=j;return a}
 // Enemy separation on a uniform grid (cell = largest diameter), so only neighbouring cells are tested instead of all O(n^2) pairs.
 // The grid is a counting sort into reused typed arrays (no Map, no per-cell arrays), and positions/radii are copied into flat
@@ -2876,9 +2877,10 @@ function heliOps(u,dt){const rad=laneHalf(1)+10;u.rk-=dt;u.rot+=dt*30*u.spin;
 function jetFly(j,tx,ty,v,turn,dt){j.ang=turnTo(j.ang,Math.atan2(ty-j.y,tx-j.x),turn*dt);j.spd+=Math.max(-150*dt,Math.min(120*dt,v-j.spd));j.x+=Math.cos(j.ang)*j.spd*dt;j.y+=Math.sin(j.ang)*j.spd*dt}
 function jetFollow(j,v,dt){while(j.path.length){const p=j.path[0];j.spd=v;if(!moveTo(j,p.x,p.y,v,dt,3.5))return false;j.path.shift()}j.spd=0;return true}
 function jetSfx(){if(G.jetSfxT<=0){G.jetSfxT=1.4;sfx('jet')}}
-function updateJets(dt){G.jets=[];G.jetSfxT-=dt;if(!G.fleet.length)return;
+const NO_VIS=Object.freeze([]);
+function updateJets(dt){if(G.jets)G.jets.length=0;else G.jets=[];G.jetSfxT-=dt;if(!G.fleet.length)return;let vNeed=false;for(const j of G.fleet)if(j.fs==='air'||j.fs==='strafe'){vNeed=true;break}   // only the 'air' and 'strafe' cases read vis (at the state they start the tick in)
   const g=rwyGeo(),fl=L('fighter'),cdBase=Math.max(5,20*Math.pow(0.9,fl-1))*stripMul()*(sg('fighter','stealth')?0.65:1),combat=combatOn(),W1={x:g.x0-340,y:g.cy},T={x:g.x0+24,y:g.cy},
-    vis=G.enemies.filter(e=>!e.dead&&visible(e)),orbit=Math.max(fortHalf()+170,vision()*0.6),holding=G.fleet.some(j=>j.fs==='hold'||j.fs==='final');
+    vis=vNeed?G.enemies.filter(e=>!e.dead&&visible(e)):NO_VIS,orbit=Math.max(fortHalf()+170,vision()*0.6),holding=G.fleet.some(j=>j.fs==='hold'||j.fs==='final');
   for(const j of G.fleet){
     if(j.alt>0||j.fs==='roll')j.fuel=Math.max(j.fs==='air'||j.fs==='strafe'?0:RESERVE,j.fuel-burnRate('jet')*dt);
     j.thr=j.fs==='roll'||j.fs==='climb'?1:j.alt>0?0.4:0;
@@ -3166,11 +3168,12 @@ function fcFx(o,dt){const r=o.hp/o.max;if(r>=0.6)return;const c=FC[o.ck],k=0.6-r
   if(r<ABORT){if(R()<dt*9)G.fx.push({k:'fire',x:o.x+(R()-.5)*c.r*0.7,y:o.y+(R()-.5)*c.r*0.7,r:c.r*(0.35+R()*0.3),life:0.3,max:0.3});if(R()<dt*3)light(o.x,o.y,c.r*4,'255,140,50',0.15)}}
 
 // ---- recovery and repair sites ----
+const _siteQ=[];
 function siteTick(s,dt){
   if(s.dead){if(R()<dt*6){const x=s.x+(R()-.5)*s.hw*1.4,y=s.y+s.top+R()*(s.bot-s.top);puff(x,y,1,12,4,'22,20,18',10,0.6);if(R()<.4)G.fx.push({k:'fire',x,y,r:10+R()*8,life:0.4,max:0.4})}return}
   s.hitT-=dt;s.sfxT-=dt;if(s.wave!==G.wave){s.wave=G.wave;s.hp=Math.min(s.max,s.hp+s.max*0.25)}
   s.hp=Math.min(s.max,s.hp+s.max*repairAt(L('repair'))*dt);
-  for(const gn of s.guns){gn.cd-=dt;let t=null,bd=150;for(const e of G.enemies){if(e.dead||!visible(e))continue;const d=Math.hypot(e.x-gn.x,e.y-gn.y);if(d<bd){bd=d;t=e}}
+  for(const gn of s.guns){gn.cd-=dt;let t=null,bd=150;for(const e of G.enemies){if(e.dead)continue;const dx=e.x-gn.x;if(dx>=bd||dx<=-bd)continue;const dy=e.y-gn.y;if(dy>=bd||dy<=-bd||!visible(e))continue;const d=Math.hypot(dx,dy);if(d<bd){bd=d;t=e}}   // box test first: hypot is never below |dx| or |dy|, so the same nearest wins
     if(!t)continue;gn.ang=Math.atan2(t.y-gn.y,t.x-gn.x);if(gn.cd>0)continue;gn.cd=0.2;gn.fl=G.time;
     G.fx.push({k:'tracer',x:gn.x+Math.cos(gn.ang)*10,y:gn.y+Math.sin(gn.ang)*10,x2:t.x+(R()-.5)*5,y2:t.y+(R()-.5)*5,life:0.05,max:0.05,c:'#ffe28a'});_dk='s';hurtEnemy(t,dMgDmg(L('ddef')),false);_dk='';sfx('mg',gn.x,gn.y)}
   // bays: rebuild; a free bay takes the longest-waiting wreck from the hardstand
@@ -3178,7 +3181,7 @@ function siteTick(s,dt){
     if(!w.svc&&R()<dt*5)spark(w.x+(R()-.5)*18,w.y+(R()-.5)*18,3,70,['#e8f6ff','#9fd8ff','#ffffff'],0.25,1.2);if(!w.svc&&R()<dt*2)light(w.x,w.y,22,'180,220,255',0.08);
     if(w.prog>=1)fcRestore(w,s,b)}
   for(const b of s.bays)if(!b.w){let q=null;for(const w of G.fw)if(w.site===s&&w.st==='queue'&&(!q||w.qT<q.qT))q=w;if(!q)break;fcToBay(q,s,b)}
-  G.fw.filter(w=>w.site===s&&w.st==='queue').sort((a,b)=>a.qT-b.qT).forEach((w,i)=>w.qi=i);   // hardstand slots in arrival order
+  {const Q=_siteQ;Q.length=0;for(const w of G.fw)if(w.site===s&&w.st==='queue'){let j=Q.length;Q.push(w);while(j>0&&Q[j-1].qT>w.qT){Q[j]=Q[j-1];j--}Q[j]=w}for(let i=0;i<Q.length;i++)Q[i].qi=i;Q.length=0}   // hardstand slots in arrival order (stable insertion sort into a reused list: same order as filter+sort)
   // recovery crews: out to the wreck -> hook -> tow home -> park
   for(const c of s.crews){const w=c.w;
     switch(c.st){
@@ -3257,9 +3260,11 @@ function fcLeash(o,m){const d=Math.hypot(o.x,o.y),mx=sight()-m;if(d>mx&&d>0){o.x
 // ---- ground vehicles off the lanes ----
 const VEH_RNG={truck:210,apc:230,tank:280},VEH_HOLD={truck:115,apc:135,tank:175},VEH_V={truck:58,apc:46,tank:42};
 // the vehicle's own gun: doctrine pick inside its weapon range (aircraft only for an anti-air tier)
-function vehGunTarget(u){const R2=VEH_RNG[u.k]*VEH_RNG[u.k],h=!!HEAVY[u.k];let best=null,bs=Infinity;
-  const scan=list=>{for(const e of list){if(e.dead||e.hi||!visible(e))continue;const dx=e.x-u.x,dy=e.y-u.y,d2=dx*dx+dy*dy;if(d2>R2)continue;const s=tScore(e,Math.sqrt(d2),h);if(s<bs){bs=s;best=e}}};
-  scan(G.enemies);if(sg(u.k,'aaBonus'))scan(G.sky);return best}
+function vehGunTarget(u){const R2=VEH_RNG[u.k]*VEH_RNG[u.k],h=!!HEAVY[u.k];_vgB=null;_vgS=Infinity;
+  vgScan(G.enemies,u.x,u.y,R2,h);if(sg(u.k,'aaBonus'))vgScan(G.sky,u.x,u.y,R2,h);const b=_vgB;_vgB=null;return b}
+// the scan body, range test before visible() (both pure, so the same contacts pass), with no per-call closure
+let _vgB=null,_vgS=Infinity;
+function vgScan(list,ux,uy,R2,h){for(let i=0;i<list.length;i++){const e=list[i];if(e.dead||e.hi)continue;const dx=e.x-ux,dy=e.y-uy,d2=dx*dx+dy*dy;if(d2>R2||!visible(e))continue;const s=tScore(e,Math.sqrt(d2),h);if(s<_vgS){_vgS=s;_vgB=e}}}
 // what it drives toward: the doctrine's pick among every ground contact inside the sight line
 function roamPick(u){const h=!!HEAVY[u.k];let b=null,bs=Infinity;for(const e of G.enemies){if(e.dead||e.chute>0||!visible(e))continue;const s=tScore(e,Math.hypot(e.x-u.x,e.y-u.y),h);if(s<bs){bs=s;b=e}}return b}
 // from 'patrol': leaves the lane when there is something worth closing on (true = it left this tick)
@@ -3485,7 +3490,7 @@ function buildAir(){const ph=wallHalfAt(L('walls')),a=[];
   return a}
 function bestCluster(R,list){let best=null,bc=-1;for(let i=0,nc=Math.min(30,list.length);i<nc;i++){const c=list[i];let k=0;for(const o of list)if(within(o,c.x,c.y,R))k+=o.boss?5:o.veh?3:1;if(k>bc){bc=k;best=c}}return best}
 function updateAir(dt,ph){
-  const vis=G.enemies.filter(e=>!e.dead&&visible(e));
+  const vis=G.air.length?G.enemies.filter(e=>!e.dead&&visible(e)):null;   // only read inside the G.air loop
   for(const u of G.air){u.cd-=dt;
     if(u.k==='mlaunch'&&(vis.length||G.sky.length&&skyTargets().length)){const t=nearestTo(u);u.ang=Math.atan2(t.y-u.y,t.x-u.x);
       if(u.cd<=0){u.cd=2.8;const n=Math.min(8,1+Math.floor(L('mlaunch')/2))*(sg('mlaunch','salvo')||1),tg=[...vis,...skyTargets()].sort((a,b)=>b.hp*(b.air?3:1)-a.hp*(a.air?3:1));
@@ -6647,7 +6652,7 @@ function updateSky(dt,h){
     if(!seen()[e.type]&&visible(e))spotted(e.type);
     if(sigStatus(e,dt)){if(!e.dead)advance(e,e.spd*0.35,dt);continue}   // burning / stunned: fried avionics, it drifts and holds fire
     SKY_AI[e.type](e,dt,h);if(!running)return}
-  const ds=G.sky.filter(e=>e.type==='drone'&&!e.dead);   // keep swarms loose so flak bursts read one by one
+  const ds=G.sky.length?G.sky.filter(e=>e.type==='drone'&&!e.dead):G.sky;   // keep swarms loose so flak bursts read one by one
   for(let i=0;i<ds.length;i++)for(let j=i+1;j<ds.length;j++){const a=ds[i],b=ds[j],dx=b.x-a.x,dy=b.y-a.y,dd=dx*dx+dy*dy;
     if(dd<81&&dd>0.01){const dl=Math.sqrt(dd),p=(9-dl)/2/dl;a.x-=dx*p;a.y-=dy*p;b.x+=dx*p;b.y+=dy*p}}
   keepAlive(G.sky);
@@ -6660,7 +6665,7 @@ function updateSky(dt,h){
     if(Math.random()<.6)puff(w.x,w.y,1,w.r*0.35,1.4,'40,36,32',6,0.55);
     if(w.t>=w.dur){w.done=true;skyBlast(w.x,w.y,w.big?1.5:w.type==='drone'?0.35:0.85)}}
   keepUndone(G.wrecks)}
-function updateAAD(dt){const tg=G.sky.length?skyTargets():[];
+function updateAAD(dt){const tg=G.sky.length?skyTargets():NO_VIS;let tgHp=null;   // tgHp: tg by hp, sorted once per tick for every SAM site (nothing in the loop changes hp)
   for(const u of G.aa){
     if(u.k==='aagun'){const t=bestTarget(tg,u,false,true);if(!t){u.burst=0;continue}
       u.ang+=Math.max(-7*dt,Math.min(7*dt,angTo(u.ang,Math.atan2(t.y-u.y,t.x-u.x))));
@@ -6670,7 +6675,7 @@ function updateAAD(dt){const tg=G.sky.length?skyTargets():[];
         const d=Math.hypot(t.x-mx,t.y-my),T=d/720,sp=d*0.035;u.fl=G.time;u.side^=1;   // lead the target, a little dispersion with range
         G.flak.push(sgFlak(t,{x:mx,y:my,tx:t.x+t.vx*T+(Math.random()-.5)*sp,ty:t.y+t.vy*T+(Math.random()-.5)*sp,t:0,dur:Math.max(0.03,T),dmg:aaDmg(L('aagun'))*aaMul(),pct:flakPct(L('aagun'))*aaMul()}));
         light(mx,my,20,'255,200,120',0.05);sfx('cannon',u.x,u.y)}}}
-    else if(u.k==='sam'){u.cd-=dt;if(!tg.length)continue;const s=[...tg].sort((a,b)=>b.hp-a.hp);
+    else if(u.k==='sam'){u.cd-=dt;if(!tg.length)continue;const s=tgHp||(tgHp=[...tg].sort((a,b)=>b.hp-a.hp));
       u.ang+=Math.max(-3*dt,Math.min(3*dt,angTo(u.ang,Math.atan2(s[0].y-u.y,s[0].x-u.x))));
       if(u.cd<=0){const l=L('sam');u.cd=samCd(l);u.fl=G.time;
         const focus=s[0].type==='airboss'||s[0].type==='heavybomber';   // a heavy airframe draws the whole salvo
@@ -6683,7 +6688,7 @@ function updateAAD(dt){const tg=G.sky.length?skyTargets():[];
   for(const c of G.caps){c.t+=dt;if(!c.fired&&c.t>=0.9){c.fired=1;const p=capPos(c),s=skyTargets().sort((a,b)=>b.hp-a.hp);
     for(let i=0;i<c.n&&s.length;i++){const e=s[i%s.length];G.sams.push(sgAam('fighter',p,{x:p.x,y:p.y,h:c.a,v:260,vx:0,vy:0,tgt:e,tx:e.x,ty:e.y,life:4,dmg:jetDmg(fl)*1.6*(1+(sg('fighter','aaBonus')||0)),pct:AAM_PCT,delay:i*0.15,spd:420,acc:900,turn:6,aam:1}))}
     if(s.length)sfx('launch',p.x,p.y)}}
-  G.caps=G.caps.filter(c=>c.t<2.6);
+  keepT(G.caps,2.6);
   for(const m of G.sams){if(m.delay>0){m.delay-=dt;continue}m.life-=dt;
     if(!m.tgt||m.tgt.dead)m.tgt=skyNearest(m,tg);if(m.tgt){m.tx=m.tgt.x;m.ty=m.tgt.y}
     const dx=m.tx-m.x,dy=m.ty-m.y,d=Math.hypot(dx,dy)||1;   // turn-rate-limited seeker: tight enough to catch a jetting target
