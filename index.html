@@ -814,7 +814,8 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
 .stp.own{background:rgba(110,195,255,.28);border-color:transparent;color:var(--c-text)}
 .stp.act{background:var(--c-blue);border-color:transparent;color:var(--c-on-blue);box-shadow:0 0 0 2px var(--c-bg),0 0 0 4px var(--c-gold-hi)}
 .stp.ok{border-color:var(--c-green);color:var(--c-green)}.stp.kit{border-color:var(--c-line-3);color:var(--c-text-2)}
-@media (hover:hover){.stp:hover{filter:brightness(1.2);transform:translateY(-1px)}}
+@media (hover:hover){.stp:not(:disabled):hover{filter:brightness(1.2);transform:translateY(-1px)}}
+.stp:disabled{cursor:default}   /* owner decision 4: only the tier in service and the next have cards to jump to */
 .trk{position:relative}
 .rtk{position:relative;display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 2px 14px;scrollbar-width:thin;scrollbar-color:rgba(190,210,150,.25) transparent;scroll-behavior:smooth}
 .rtk.fl{-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px);mask-image:linear-gradient(90deg,transparent,#000 40px)}
@@ -1702,7 +1703,7 @@ function rsRefit(r){const n=S.rf[r.id]||0,c=refitCost(n),ok=S.rp>=c;return{n,c,o
 function rsHead(r,nar){const k=rsOwned(r.id),t=r.t[k],n=S.rf[r.id]||0,lock=rsLineLock(r),nf=rsNF(r),u=UB[r.u],lw=lockWhy(u);
   return`<div class="rsdh"><div class="hd"><div class="ico">${ic(r.u,26)}</div><div class="rb"><h3>${r.label}${n?`<span class="badge b-own">REFIT MK ${rank(n)}</span>`:''}${nf?'<span class="badge b-nf">NOT FIELDED</span>':''}</h3>`
     +`<div class="rt">${nf?'Starting kit':'In service'}: <b>${t.n}</b>${t.w?' · '+t.w:''}</div></div></div>`
-    +(nar?'':`<div class="stepper" role="group" aria-label="Tiers">${r.t.map((q,i)=>`<button class="stp ${rsStL(r,i)}" data-stp="${i}" title="Tier ${rank(i+1)}: ${q.n} · ${RS_STL[rsStL(r,i)].toLowerCase()}">${rank(i+1)}</button>`).join('')}</div>`)
+    +(nar?'':`<div class="stepper" role="group" aria-label="Tiers">${r.t.map((q,i)=>`<button class="stp ${rsStL(r,i)}"${i<k||i>k+1?' disabled':` data-stp="${i}"`} title="Tier ${rank(i+1)}: ${q.n} · ${RS_STL[rsStL(r,i)].toLowerCase()}">${rank(i+1)}</button>`).join('')}</div>`)
     +(lock?`<div class="callout c-lock">${ic('lock',16)}<span>${nf?`Not fielded: buy ${u.name} Lv 1 in the Armory${lw?' ('+lw.replace(/^Needs /,'needs ')+')':''}.`:`Buy ${u.name} Lv 1 in the Armory to start ${r.label} research.`}</span><button class="btn sm" data-goto="${r.u}">OPEN IN ARMORY →</button></div>`:'')+'</div>'}
 function rsCard(r,k){const t=r.t[k],st=rsStL(r,k);
   return`<div class="rtc ${st}" data-k="${k}" style="${rsEraVars(t)}"><div class="rth"><canvas data-th="${r.id}:${k}" width="192" height="192"></canvas></div>`
