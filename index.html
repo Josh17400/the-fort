@@ -6220,7 +6220,7 @@ const PERKS=[
  {id:'cas',ic:'air',name:'Close Air Support',desc:'Airstrike cooldown -35%, and a strike is ready now.',ok:()=>L('air')>0,go:()=>{G.airT=0}},
  {id:'minelayer',ic:'mines',name:'Minelayers',desc:'Twice the mines every wave, and a fresh field is laid now.',ok:()=>L('mines')>0,go:()=>layMines()},
  {id:'flak',ic:'aagun',name:'Flak Barrage',desc:'Air-defence fire +40% damage against aircraft.',ok:()=>L('aagun')>0&&G.wave>=SKY_WAVE.drone},
- {id:'aircrew',ic:'heli',name:'Aircrew Countermeasures',desc:'Aircraft flares recycle twice as fast and spoof 10% more missiles. Every aircraft is patched up 25% now.',ok:()=>G.wave>=14&&flyingCraft(),
+ {id:'aircrew',ic:'heli',name:'Aircrew Countermeasures',desc:'2x faster flares that fool 10% more missiles. Aircraft healed 25%.',ok:()=>G.wave>=14&&flyingCraft(),
   go:()=>{for(const u of[...G.units,...G.fleet,...G.air])if(u.hp!=null&&!u.dead&&FC[u.ck]&&FC[u.ck].air)u.hp=Math.min(u.max,u.hp+u.max*0.25)}},
  {id:'fuel',ic:'dcap',name:'Fuel Convoy',desc:'Every vehicle and aircraft is topped off now. Fuel burn -30%.',ok:hasFuel,
   go:()=>{for(const u of G.units)if(u.fuel!=null){u.fuel=1;if(u.fs==='dry')u.fs='patrol'}for(const j of G.fleet)j.fuel=1}}];
