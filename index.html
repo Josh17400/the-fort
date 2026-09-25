@@ -2440,7 +2440,7 @@ function update(dt){
   updateUnits(dt,half);updateAir(dt,half);updateLogi(dt);sigUpdate(dt);repairTick(dt);
   // enemies
   intelTick();stragglers();
-  const wl=L('wire'),wireR=fortHalf()+wallThick()/2+wireOut(),slow=1-(Math.min(0.7,0.25+0.06*wl)),sgt=sight(),mR=G.mines.length?sgMineR():0;   // sight line and mine reach are fixed for the whole loop
+  const wl=L('wire'),wireR=fortHalf()+wallThick()/2+wireOut(),slow=1-(Math.min(0.7,0.25+0.06*wl)),sgt=sight(),mR=G.mines.length?sgMineR():0;if(G.mines.length)mineIdx();   // sight line and mine reach are fixed for the whole loop
   for(const e of G.enemies){
     if(e.dead)continue;e.flash-=dt;e.wob+=dt*8;if(e.rev>0)e.rev-=dt;
     if(!seen()[e.type]&&visible(e))spotted(e.type);
@@ -2461,7 +2461,7 @@ function update(dt){
       else{damageFort(e.dmg,e.type);e.lunge=0.15;sigThorns(e)}}}
     if(e.lunge>0)e.lunge-=dt;
     // mines
-    if(G.mines.length){const r=e.r+6+mR;for(const mi of G.mines)if(!mi.used&&!e.dead&&within(mi,e.x,e.y,r))sigMine(mi,e)}
+    if(G.mines.length)mineScan(e,e.r+6+mR);
     if(!running)return;
   }
   keepUnused(G.mines);
@@ -2498,6 +2498,17 @@ function update(dt){
 function keepLive(a){const n=a.length;let j=0;while(j<n&&a[j].life>0)j++;for(let i=j+1;i<n;i++){const v=a[i];if(v.life>0)a[j++]=v}if(j<n)a.length=j;return a}
 function keepUndone(a){const n=a.length;let j=0;while(j<n&&!a[j].done)j++;for(let i=j+1;i<n;i++){const v=a[i];if(!v.done)a[j++]=v}if(j<n)a.length=j;return a}
 function keepAlive(a){const n=a.length;let j=0;while(j<n&&!a[j].dead)j++;for(let i=j+1;i<n;i++){const v=a[i];if(!v.dead)a[j++]=v}if(j<n)a.length=j;return a}
+// Mine field index for the enemy loop. Mines never move and are only added at wave start (before the loop) and by the Minelayers
+// directive (from the perk menu, between ticks), so an x-sorted index (rebuilt whenever G.mines holds different objects) lets each
+// enemy test only the mines in its x-band, visited in array order: the same within() tests on the same mines in the same order as
+// the full scan, so the same mine goes off first. The band is widened by 1 so float rounding can't drop a mine the full scan hits.
+let _mRef=[],_mSX=new Float64Array(64),_mSI=new Int32Array(64),_mC=new Int32Array(64);
+function mineIdx(){const ms=G.mines,n=ms.length;let ok=_mRef.length===n;if(ok)for(let i=0;i<n;i++)if(_mRef[i]!==ms[i]){ok=false;break}
+  if(ok)return;_mRef=ms.slice();if(_mSX.length<n){_mSX=new Float64Array(n*2);_mSI=new Int32Array(n*2);_mC=new Int32Array(n*2)}
+  const o=[];for(let i=0;i<n;i++)o.push(i);o.sort((a,b)=>ms[a].x-ms[b].x||a-b);for(let i=0;i<n;i++){_mSI[i]=o[i];_mSX[i]=ms[o[i]].x}}
+function mineScan(e,r){const ms=_mRef,n=ms.length,x=e.x,lo=x-r-1,hi=x+r+1;let a=0,b=n;while(a<b){const m=(a+b)>>1;if(_mSX[m]<lo)a=m+1;else b=m}
+  let k=0;for(let i=a;i<n&&_mSX[i]<=hi;i++){const v=_mSI[i];let j=k++;while(j>0&&_mC[j-1]>v){_mC[j]=_mC[j-1];j--}_mC[j]=v}
+  for(let i=0;i<k;i++){const mi=ms[_mC[i]];if(!mi.used&&!e.dead&&within(mi,x,e.y,r))sigMine(mi,e)}}
 function keepT(a,lim){const n=a.length;let j=0;while(j<n&&a[j].t<lim)j++;for(let i=j+1;i<n;i++){const v=a[i];if(v.t<lim)a[j++]=v}if(j<n)a.length=j;return a}
 function keepUnused(a){const n=a.length;let j=0;while(j<n&&!a[j].used)j++;for(let i=j+1;i<n;i++){const v=a[i];if(!v.used)a[j++]=v}if(j<n)a.length=j;return a}
 // Enemy separation on a uniform grid (cell = largest diameter), so only neighbouring cells are tested instead of all O(n^2) pairs.
