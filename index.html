@@ -1561,7 +1561,7 @@ function renderAAR(){const el=$('lastRun'),a=lastAAR;
     +`<button class="rprow" data-rsgo="">${ic('research',16)}<span>${a.rp||S.best>=10?`<b>+${fmtN(a.rp)} RP</b> · ${fmtN(S.rp)} banked`:'<b>RP starts at wave 10</b> · hold that far to fund R&amp;D'}${n?'<span class="hph"> · enough for '+n+' '+pl(n,'tier')+'</span>':''}</span><span class="chev">→</span></button>`
     +afterAction()
     +(a.perks||nm||ne?`<details class="rund"${narrow()?'':' open'}><summary>${ic('chevR',14)}Run details${a.nPerk?' · '+a.nPerk+' '+pl(a.nPerk,'directive'):''}${nm?' · '+nm+' '+pl(nm,'medal'):''}${ne?' · '+ne+' '+pl(ne,'event'):''}</summary><div class="rdx">`
-      +(ne?`<div><div class="eyebrow">EVENTS REPELLED</div><div class="pperks">${a.evs.map(k=>EVENTS[k]?`<span>${ic('threat',14)}${EVENTS[k].name}</span>`:'').join('')}</div></div>`:'')
+      +(ne?`<div><div class="eyebrow">EVENTS CLEARED</div><div class="pperks">${a.evs.map(k=>EVENTS[k]?`<span>${ic('threat',14)}${EVENTS[k].name}</span>`:'').join('')}</div></div>`:'')
       +(a.perks?`<div><div class="eyebrow">DIRECTIVES</div><div class="pperks">${a.perks}</div></div>`:'')
       +(nm?`<div><div class="eyebrow">MEDALS EARNED</div><div class="pperks medal">${a.medals.map(id=>{const q=MEDALS.find(x=>x.id===id);return q?`<span>${ic(q.ic,14)}${q.name}</span>`:''}).join('')}</div></div>`:'')+'</div></details>':'')
     +'</div>'}
@@ -6359,7 +6359,7 @@ const EVENTS={
  para:{name:'AIRBORNE ASSAULT',tag:'AIRBORNE',from:8,bonus:0.5,col:'150,200,255',sub:'Paratroopers dropping at the walls · shoot the canopies'},
  blitz:{name:'BLITZ',tag:'BLITZ',from:5,bonus:0.5,col:'255,150,95',sub:'Light infantry rush · more hostiles, arriving faster'},
  armor:{name:'ARMORED COLUMN',tag:'ARMOR',from:13,bonus:0.6,col:'205,215,140',sub:'An enemy tank leads a heavy trooper column'},
- resupply:{name:'RESUPPLY DROP',tag:'RESUPPLY',from:6,bonus:0.2,col:'140,220,150',sub:'Three supply crates inbound · grab them while you can'},
+ resupply:{name:'RESUPPLY DROP',tag:'RESUPPLY',good:1,from:6,bonus:0.2,col:'140,220,150',sub:'Three supply crates inbound · grab them while you can'},
  ambush:{name:'AMBUSH',tag:'AMBUSH',from:7,bonus:0.5,col:'255,170,90',sub:'Infantry already inside your sight line on one flank'},
  convoy:{name:'SUICIDE CONVOY',tag:'CONVOY',from:18,bonus:0.6,col:'255,110,80',sub:'Car bombs racing for the walls · kill them early'},
  swarm:{name:'DRONE SWARM',tag:'SWARM',from:12,bonus:0.5,col:'255,210,110',sub:'Kamikaze drone flights inbound · AA, MG nests and auto-fire'},
@@ -6396,7 +6396,7 @@ function evWeights(p){const k=G&&G.ev;if(k!=='blitz'&&k!=='armor'&&k!=='barrage'
   if(k==='swarm'){for(const q of p)q[1]*=q[0]==='drone'?4:q[0]==='runner'?0.6:1;return}
   if(k==='barrage'){for(const q of p)q[1]*=q[0]==='mortar'?4:q[0]==='shooter'?1.6:q[0]==='runner'?0.6:1;return}
   for(const q of p)q[1]*=k==='blitz'?(q[0]==='runner'?3:q[0]==='grunt'?0.7:q[0]==='brute'?0.3:1):(q[0]==='brute'?3:q[0]==='runner'?0.5:1)}
-function evClear(b){const E=EVENTS[G.ev],x=Math.round(b*E.bonus);medalBump(G.ev);(G.evDone||(G.evDone=[])).push(G.ev);G.ev=null;feed(E.name+' REPELLED · +$'+f1(x),E.col,'star');
+function evClear(b){const E=EVENTS[G.ev],x=Math.round(b*E.bonus);medalBump(G.ev);(G.evDone||(G.evDone=[])).push(G.ev);G.ev=null;feed(E.name+(E.good?' COMPLETE':' REPELLED')+' · +$'+f1(x),E.col,'star');
   setTimeout(()=>tone(660,0.08,'square',0,0.04),120);setTimeout(()=>tone(990,0.14,'square',0,0.04),230);return x}
 function evSting(k){
   if(k==='storm'){const v=voice(3.2,1,null,null,true);if(v){lNoise(v,'bandpass',260,700,0.7,0.26,1.1,2);lNoise(v,'highpass',2600,4200,0.5,0.07,1.4,1.6,0.4)}}
