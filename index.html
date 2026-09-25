@@ -497,8 +497,8 @@ const U=[
  {id:'darmor',late:1,wave:8,need:[["depot", 1]],cat:'LOGISTICS',name:'Depot Hardening',max:Infinity,cost:500,g:1.6,desc:'Blast berms and armored tanks. The depot soaks up far more punishment.',val:l=>f1(depotHpAt(l))+' depot HP'},
  {id:'ddef',late:1,wave:10,need:[["depot", 1], ["turret", 1]],cat:'LOGISTICS',name:'Depot Defenses',max:Infinity,cost:900,g:1.7,desc:'Sandbag walls cut damage to the depot and MG nests guard its corners. From Lv 3 a 40mm AA gun joins them.',val:l=>l?Math.min(4,l)+' MG · '+f1(dMgDmg(l))+' dmg'+(l>=3?' · AA '+f1(dAaDmg(l)):''):'undefended'},
  {id:'feff',wave:8,need:[["truck", 2]],cat:'LOGISTICS',name:'Fuel Efficiency',max:10,cost:400,g:1.65,desc:'Tuned engines and disciplined crews. Vehicles and aircraft burn less fuel and stay in the fight longer.',val:l=>'-'+pct(1-burnMul(l))+' fuel burn'},
- {id:'rfac',wave:12,need:[["truck", 2]],cat:'LOGISTICS',name:'Repair Facility',max:10,cost:1500,g:1.7,desc:'A motor pool beyond the western lanes. Recovery trucks tow destroyed vehicles home once no hostiles are near the wreck, and repair bays rebuild them. Levels add bays (parallel repairs), heavier classes (APCs at Lv 2, tanks at Lv 3, top research tiers at Lv 5) and speed; from Lv 4 a field team patches damaged vehicles mid-wave. Without one, a destroyed vehicle is lost for the run.',val:l=>siteVal('rfac',l)},
- {id:'hangar',wave:24,need:[["airstrip", 1]],cat:'LOGISTICS',name:'Maintenance Hangar',max:10,cost:6000,g:1.7,desc:'Service pads and a workshop beside the runway. Tugs recover aircraft that go down inside your sight line and the bays rebuild them; damaged helicopters and jets repair on the pad before the next sortie. Levels add bays, heavier airframes (jets at Lv 2, the gunship at Lv 3, top research tiers at Lv 5) and speed; Lv 3 adds hot-pit repairs. Without one, a downed aircraft is lost for the run.',val:l=>siteVal('hangar',l)},
+ {id:'rfac',wave:12,need:[["truck", 2]],cat:'LOGISTICS',name:'Repair Facility',max:10,cost:1500,g:1.7,desc:'A motor pool beyond the western lanes. Recovery trucks tow wrecked vehicles home once the fighting around them dies down, and repair bays rebuild them. Levels add bays, heavier classes and speed; Lv 4 adds a field repair team. Without one, a destroyed vehicle is lost for the run.',val:l=>siteVal('rfac',l)},
+ {id:'hangar',wave:24,need:[["airstrip", 1]],cat:'LOGISTICS',name:'Maintenance Hangar',max:10,cost:6000,g:1.7,desc:'Service pads beside the runway. Tugs recover aircraft downed inside your sight line and the bays rebuild them; damaged aircraft repair on the pad between sorties. Levels add bays, heavier airframes and speed; Lv 3 adds hot-pit repairs. Without one, a downed aircraft is lost for the run.',val:l=>siteVal('hangar',l)},
  {id:'flame',late:1,wave:18,need:[["walls", 6], ["wire", 2]],cat:'HEAVY ARMOR',name:'Flame Bunkers',max:Infinity,cost:2500,g:1.8,desc:'Flamethrowers roast anything hugging the walls.',val:l=>l?f1(flameDps(l))+' dps · '+Math.min(60,26+4*l)+'m reach':'none'},
  {id:'heli',late:1,wave:22,need:[["walls", 7], ["tank", 1], ["vision", 8]],cat:'HEAVY ARMOR',name:'Attack Helicopters',max:Infinity,cost:4000,g:1.95,desc:'Gunships circle the fort with chainguns and rockets.',val:l=>l?Math.min(2,Math.ceil(l/3))+' helis · '+f1(heliDmg(l))+' gun / '+f1(rocketDmg(l))+' rocket':'none'},
  {id:'tesla',late:1,wave:30,need:[["walls", 9], ["flame", 1]],cat:'HEAVY ARMOR',name:'Point Defense',max:Infinity,cost:8000,g:1.9,desc:'Radar-guided rotary autocannon. Rips bursts through packed enemies, hopping target to target. Engages aircraft first (+75% vs air).',val:l=>l?f1(teslaDmg(l))+' dmg · '+Math.min(12,3+l)+' targets':'none'},
@@ -796,7 +796,7 @@ const SIGT={
  fogSight:()=>'Thermal optics engage targets in the fog',
  execute:x=>`Finishes off enemies below ${pct(x)} HP`,
  executeAir:x=>`Finishes off aircraft below ${pct(x)} HP`,
- armor:x=>`Armor kit: RPG knockouts ${pct(x)} shorter`,
+ armor:x=>`Armor kit: thicker plating, RPG knockouts ${pct(x)} shorter`,
  atgm:n=>`Fires an anti-tank missile every ${n}s`,
  noFuel:()=>'Never needs to refuel',
  dismount:n=>`Drops ${n} rifle teams to hold the lane`,
@@ -2072,7 +2072,7 @@ function fcDown(o){if(o.dead)return;o.dead=true;o.stun=0;o.hold=false;const k=o.
   st.frO[c.air?'air':'veh']=o;fcBrief(c.air?'air':'veh')}
 function fcWreck(o,x,y,a){const k=o.ck,air=!!FC[k].air,far=air&&Math.hypot(x,y)>sight()+10;
   const w={o,k,air,x,y,a,tr0:air?0:wrapA((o.tur??o.gun??a)-a)+(R()-.5)*1.2+0.5,t:0,st:'burn',prog:0,T:0,site:null,seed:R()*999|0,far,spr:{}};
-  G.fw.push(w);if(HQ){const h=hx();if(h.emit.length<6)h.emit.push({x,y,life:9,t:0})}decal(x,y,'scorch',FC[k].r*2.4);return w}
+  G.fw.push(w);decal(x,y,'scorch',FC[k].r*2.4);return w}
 // first loss of each kind (ever): a field-report card on the intel pipeline explaining how repairs work
 function fcBrief(cat){const key='fr_'+cat;if(seen()[key]||G.cst.seen[key])return;G.cst.seen[key]=1;const air=cat==='air',site=air?G.hg:G.mp;
   INTEL[key]=air?['Aircraft Shot Down',0,site?'Tugs drag the wreck to the Maintenance Hangar once the sky around it is clear, then a free bay rebuilds it. Damaged aircraft also repair on the pad. Levels add bays, heavier airframes and speed.':'It is lost for the rest of the run. A Maintenance Hangar (Logistics, needs the Air Strip) recovers downed aircraft and repairs damaged ones on the pad.']
@@ -2122,6 +2122,7 @@ function siteTick(s,dt){
     if(!w.svc&&R()<dt*5)spark(w.x+(R()-.5)*18,w.y+(R()-.5)*18,3,70,['#e8f6ff','#9fd8ff','#ffffff'],0.25,1.2);if(!w.svc&&R()<dt*2)light(w.x,w.y,22,'180,220,255',0.08);
     if(w.prog>=1)fcRestore(w,s,b)}
   for(const b of s.bays)if(!b.w){let q=null;for(const w of G.fw)if(w.site===s&&w.st==='queue'&&(!q||w.qT<q.qT))q=w;if(!q)break;fcToBay(q,s,b)}
+  G.fw.filter(w=>w.site===s&&w.st==='queue').sort((a,b)=>a.qT-b.qT).forEach((w,i)=>w.qi=i);   // hardstand slots in arrival order
   // recovery crews: out to the wreck -> hook -> tow home -> park
   for(const c of s.crews){const w=c.w;
     switch(c.st){
@@ -2145,7 +2146,7 @@ function fcWreckTick(w,dt){w.t+=dt;
     if(f>0.35&&R()<dt*10*f)G.fx.push({k:'fire',x:w.x+(R()-.5)*r*.8,y:w.y+(R()-.5)*r*.8,r:r*(0.3+0.5*f),life:0.35,max:0.35});
     if(f>0.4&&R()<dt*3)light(w.x,w.y,r*4*f,'255,130,50',0.18)}
   if(w.st==='burn'&&w.t>=4)fcAssign(w);
-  if((w.st==='queue'||w.st==='bay')&&!w.svc){const p=w.st==='bay'?w.bay:w.site.q[0],k=Math.min(1,dt*3);w.x+=(p.x-w.x)*k;w.y+=(p.y-w.y)*k;w.a=turnTo(w.a,p.a,2*dt)}}
+  if((w.st==='queue'||w.st==='bay')&&!w.svc){const q=w.site.q,p=w.st==='bay'?w.bay:q[Math.min(w.qi||0,q.length-1)],k=Math.min(1,dt*3);w.x+=(p.x-w.x)*k;w.y+=(p.y-w.y)*k;w.a=turnTo(w.a,p.a,2*dt)}}
 function fcAssign(w){const s=w.air?G.hg:G.mp,msg=m=>{if(!G.cst.seen[m]){G.cst.seen[m]=1;float(w.x,w.y-24,m,'#ff9d8a',11)}};
   if(!s||s.dead){w.st='lost';msg(w.air?'NO HANGAR · AIRCRAFT LOST':'NO REPAIR FACILITY · VEHICLE LOST');return}
   if(fcCls(w.k)>siteCls(s.lv)){w.st='lost';msg((w.air?'HANGAR':'MOTOR POOL')+' CAN\'T TAKE THE '+FC[w.k].n+' · LOST');return}
@@ -5830,6 +5831,7 @@ function dnRigs(){const r=_rig;r.length=0;const V=vision(),R2=Math.pow(V*1.42,2)
   for(const e of G.enemies){if(!e.veh&&!e.boss||e.dead||e.x*e.x+e.y*e.y>R2)continue;const k=e.r/6,A=HQ&&!e.boss&&VEH_ART[e.type];
     r.push([e.x,e.y,Math.atan2(-e.y,-e.x),A?(A.hull[0]-A.hull[2])*k:e.r*1.15,A?A.hull[1]*k*.34:e.r*.42,DN_EN,e.boss?130:e.r*6.4,A?-A.hull[2]*k:-e.r])}
   for(const u of G.units)if(u.k==='truck'||u.k==='apc'||u.k==='tank'){const s=US[u.k];r.push([u.x,u.y,u.ang,8*s,2.6*s,DN_FR,90,-7.5*s])}
+  for(const q of fcSites())for(const c of q.crews)if(c.st!=='home'){const s=q.air?2:2.3;r.push([c.x,c.y,c.ang,8.6*s,2.8*s,DN_FR,70,-10*s])}   // recovery crews drive with lights on
   return r}
 // Aircraft (apron, low jets, strike jets, gunships, helicopters): [x, y, heading, half-span, nose, landing light?]
 const _nav=[];
@@ -5882,6 +5884,7 @@ function dnLightMap(m,W,H,V){const q=HQ?5:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Ma
     const ph=fortHalf(),lp=dnPool(DN_LAMP);P(lp,0,0,ph*1.3+30,.55*lamp);
     if(L('walls'))for(let i=0;i<4;i++)P(lp,(i&1?1:-1)*ph*.55,(i&2?1:-1)*ph*.55,ph*.62+14,.7*lamp);
     if(G.depot&&!G.depot.dead)P(lp,G.depot.x,G.depot.y,80,.8*lamp);
+    for(const q of fcSites())if(!q.dead)P(lp,q.x,q.y+(q.top+q.bot)/2,q.rad*1.05,.75*lamp);   // floodlit repair yards
     if(G.field&&G.fleet)P(lp,G.field.x,G.field.y,54,.55*lamp);
     if(L('airstrip')&&L('walls')){const w=Math.max(ph*2.8,200),y=runwayY(),rl=dnPool('255,226,160');
       for(const yy of[y-2.5,y+RWY_H+2.5]){cxf(x,M,0,yy,0,(w/2+10)/64,16/64);x.globalAlpha=.6*lamp;x.drawImage(rl,-64,-64)}}
