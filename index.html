@@ -1482,6 +1482,13 @@ function toast(msg,icon='star',cls=''){_toastQ.push([msg,icon,cls]);if(!_toastOn
 function toastNext(){const el=$('toast'),n=_toastQ.shift();if(!n){_toastOn=false;return}_toastOn=true;el.className='toast '+n[2];el.innerHTML=ic(n[1],16)+'<span>'+n[0]+'</span>';
   void el.offsetWidth;el.classList.add('on');setTimeout(()=>{el.classList.remove('on');setTimeout(toastNext,340)},2400)}
 const flash=el=>{if(!el)return;el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')};
+// ================= OWNER DECISIONS (do NOT revert in UI passes) =================
+// 1) After-action report (.panel.aar) is GOLD/yellow so it stands out from other panels.
+// 2) Base screen: Quartermaster's Picks (#picks) and Next Unlocks (#nextUnl) stay REMOVED - the Armory covers them.
+//    Keep: Mission Briefing (commander kit, stats, checkpoint, Deploy), after-action report, R&D summary, Field Manual.
+// 3) Armory shows ONLY unlocked, not-maxed upgrades; no locked list; category tabs with nothing buyable are hidden.
+// 4) R&D shows ONLY lines whose next tier is open (an RP shortfall still shows) and only the current + next tier per line.
+// Goal: a slow, non-overwhelming roll-out of progression for new players.
 // ---------------- BASE ----------------
 const checkpoints=()=>{const c=[1];for(let w=20;w<=S.best;w+=20)c.push(w);return c};
 const startWaveOk=()=>{const w=S.set.startWave||1;return checkpoints().includes(w)?w:1};
