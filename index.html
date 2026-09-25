@@ -2407,12 +2407,13 @@ function update(dt){
     if(e.chute>0){e.chute-=dt;if(e.chute<=0)chuteLand(e);continue}   // paratroopers are helpless until they touch down
     if(sigStatus(e,dt))continue;   // burning / stunned (research signatures)
     const d=hyp(e.x,e.y)||1,cheb=Math.max(Math.abs(e.x),Math.abs(e.y)),stop=half+e.range+e.r;
-    let spd=e.slT>G.time?e.spd*(1-e.slF):e.spd;if(wl&&cheb<wireR){if(e.veh)spd*=(1+slow)/2;else{spd*=slow;e.hp-=2*wl*dt;if(e.hp<=0){kill(e);continue}}}   // tracks and tyres crush the wire
+    let spd=e.slT>G.time?e.spd*(1-e.slF):e.spd;if(e.veh&&pk('barriers')&&cheb<wireR+40)spd*=0.8;   // Vehicle Barriers: jersey blocks outside the wire
+    if(wl&&cheb<wireR){if(e.veh)spd*=(1+slow)/2;else{spd*=slow;e.hp-=2*wl*dt;if(e.hp<=0){kill(e);continue}}}   // tracks and tyres crush the wire
     if(vehEnemy(e,dt)||depotEnemy(e,spd,dt)||siteEnemy(e,spd,dt))continue;
     if(e.stand)standOff(e,spd,dt);
     else if(cheb>half+e.r&&(cheb>stop||(e.range&&d>sgt-e.r*1.5))){e.x-=e.x/d*spd*dt;e.y-=e.y/d*spd*dt;e.moving=true;e.odo+=spd*dt}
     else{e.moving=false;if(e.load)apcUnload(e);e.atk-=dt;if(e.atk<=0){e.atk=e.rate;
-      if(e.bomb){e.dead=true;explode(e.x,e.y,30,0);damageFort(e.dmg,e.type)}
+      if(e.bomb){e.dead=true;explode(e.x,e.y,30,0);damageFort(e.dmg*(e.vbied?Math.pow(0.5,pk('barriers')):1),e.type)}
       else if(EFIRE[e.type]){const tx=Math.max(-half,Math.min(half,e.x)),ty=Math.max(-half,Math.min(half,e.y));EFIRE[e.type](e,tx,ty,false)}
       else if(e.range){const tx=Math.max(-half,Math.min(half,e.x)),ty=Math.max(-half,Math.min(half,e.y));G.fx.push({k:'tracer',x:e.x,y:e.y,x2:tx,y2:ty,life:0.08,max:0.08,c:e.boss?'#ffd08a':'#ff6a5a',w:e.boss?2.4:1.2});if(e.boss)explode(tx,ty,16,0);damageFort(e.dmg,e.type)}
       else{damageFort(e.dmg,e.type);e.lunge=0.15;sigThorns(e)}}}
@@ -6246,6 +6247,7 @@ const PERKS=[
  {id:'cas',ic:'air',name:'Close Air Support',desc:'Airstrike cooldown -35%, and a strike is ready now.',ok:()=>L('air')>0,go:()=>{G.airT=0}},
  {id:'minelayer',ic:'mines',name:'Minelayers',desc:'Twice the mines every wave, and a fresh field is laid now.',ok:()=>L('mines')>0,go:()=>layMines()},
  {id:'flak',ic:'aagun',name:'Flak Barrage',desc:'Air-defence fire +40% damage against aircraft.',ok:()=>L('aagun')>0&&G.wave>=SKY_WAVE.drone},
+ {id:'barriers',ic:'walls',name:'Vehicle Barriers',desc:'Car bombs deal half damage to the walls, and vehicles slow 20% near the wire.',ok:()=>G.wave>=VBIED_W},
  {id:'antiarmor',ic:'tank',name:'Anti-Armor Teams',desc:'Every gun, shell, missile and bomb deals +35% damage to vehicles and tanks.',ok:()=>G.wave>=6},
  {id:'cbfire',ic:'arty',name:'Counter-Battery Fire',desc:'Artillery answers every mortar and rocket launch: that crew is shelled first, for +50% damage.',ok:()=>L('arty')>0&&G.wave>=11},
  {id:'aircrew',ic:'heli',name:'Aircrew Countermeasures',desc:'2x faster flares that fool 10% more missiles. Aircraft healed 25%.',ok:()=>G.wave>=14&&flyingCraft(),
