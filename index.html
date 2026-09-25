@@ -2083,7 +2083,7 @@ const wallsUp=()=>L('walls')>0&&G.wallHp>0;
 const blockHalf=()=>wallsUp()?wallHalfAt(L('walls'))+wallThickAt(L('walls'))/2:PLAT;
 // sight(): the live sight line. A sandstorm pulls it in by up to STORM_CUT and night by NIGHT_CUT (ground only: aircraft carry
 // nav lights and radar tracks them); radar still reaches the same distance past the storm line.
-const STORM_CUT=0.27,NIGHT_CUT=0.15,stormSight=()=>vision()*(1-STORM_CUT*(G&&G.fogK||0)),sight=()=>stormSight()*(1-NIGHT_CUT*(G&&G.nightK||0));
+const STORM_CUT=0.27,NIGHT_CUT=0.15,stormSight=()=>vision()*(1-STORM_CUT*(G&&G.fogK||0)),sight=()=>stormSight()*(1-NIGHT_CUT*(G&&G.nightK||0)*(pk('illum')?0:1));   // Illumination Rounds directive: no night penalty
 // hyp(x,y) === Math.hypot(x,y), bit for bit: the algorithm V8 and JavaScriptCore both use (scale by the larger magnitude, sum the
 // squares, sqrt, scale back) written out so it inlines instead of calling a builtin that allocates. Hot sim scans use it, so every distance, tie-break and
 // position is exactly what Math.hypot produced. HB: a 1e-12 relative band; a squared distance outside it can't flip a comparison.
@@ -6282,6 +6282,7 @@ const PERKS=[
  {id:'cas',ic:'air',name:'Close Air Support',desc:'Airstrike cooldown -35%, and a strike is ready now.',ok:()=>L('air')>0,go:()=>{G.airT=0}},
  {id:'minelayer',ic:'mines',name:'Minelayers',desc:'Twice the mines every wave, and a fresh field is laid now.',ok:()=>L('mines')>0,go:()=>layMines()},
  {id:'flak',ic:'aagun',name:'Flak Barrage',desc:'Air-defence fire +40% damage against aircraft.',ok:()=>L('aagun')>0&&G.wave>=SKY_WAVE.drone},
+ {id:'illum',ic:'vision',name:'Illumination Rounds',desc:'Parachute flares over the field: night no longer shortens your sight line.',ok:()=>S.set.dayNight&&G.wave>=4&&!pk('illum')},
  {id:'sappers',ic:'repair',name:'Sapper Teams',desc:'Wall repairs restart twice as fast after a hit and run 50% faster.',ok:()=>L('repair')>0&&G.wave>=8},
  {id:'barriers',ic:'walls',name:'Vehicle Barriers',desc:'Car bombs deal half damage to the walls, and vehicles slow 20% near the wire.',ok:()=>G.wave>=VBIED_W},
  {id:'antiarmor',ic:'tank',name:'Anti-Armor Teams',desc:'Every gun, shell, missile and bomb deals +35% damage to vehicles and tanks.',ok:()=>G.wave>=6},
