@@ -2224,7 +2224,7 @@ function fire(s,e,mult=1){const m0=mult;
 // src = attacker type; G.threat keeps a decaying tally (x0.6 per wave) so the after-action report names what actually broke you
 function damageFort(d,src){d*=fortPress(G.wave);if(src)G.threat[src]=(G.threat[src]||0)+d;G.wHit=1;
   if(G.shT>0){sgShieldHit();return}   // EM Armor Screen up over a fresh breach
-  if(wallsUp()){G.wallHitT=G.time;if(L('repair')&&G.wallHp<G.wallMax*0.7&&!seen().ev_wallhold)spotted('ev_wallhold');G.wallHp-=d*(1-Math.min(0.5,0.05*L('armor')));sfx('wall');if(G.wallHp<=0){G.wallHp=0;G.breachW=G.wave;banner('WALLS BREACHED!','','','crit');sfx('breach');shake(8);sgBreach()}}
+  if(wallsUp()){G.wallHitT=G.time;if(L('repair')&&G.wallHp<G.wallMax*0.7&&!seen().ev_wallhold)spotted('ev_wallhold');G.wallHp-=d*(1-Math.min(0.5,0.05*L('armor')));sfx('wall');if(G.wallHp<=0){G.wallHp=0;G.breachW=G.wave;banner('WALLS BREACHED!','','','crit');sfx('breach');shake(8);sgBreach();if(!G.lastStand){G.lastStand=1;G.rapidT=Math.max(G.rapidT,10);setTimeout(()=>{if(running)feed('LAST STAND · RAPID FIRE 10s','255,120,90','threat')},700)}}}
   else{G.hp-=d;G.hurtT=0.3;sfx('hurt');shake(3);if(G.hp<=0&&!G.over)endRun()}}
 // ================= ENEMY ARMOR & SUPPORT WEAPONS =================
 // Vehicle guns fire from the muzzle end of the hull toward the aim point (a wall face, or the depot). dep: hit the depot, not the fort.
