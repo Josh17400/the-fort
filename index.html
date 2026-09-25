@@ -1587,7 +1587,7 @@ function manualHtml(full){const ctl=MOBILE?[['Tap','an enemy to lock on and fire
       ['Tap','a crate to grab it (colours in Battle Tips)'],['FRAG','then touch the ground to throw'],['AIR','then drag a line for an airstrike'],['Pinch','to zoom the battlefield']]
     :[['Click','an enemy to lock on and fire'],['Hold','to keep firing'],['G','throws a grenade at the cursor'],['Q','calls an airstrike'],['T','cycles the target doctrine'],['F','changes battle speed'],['Esc','pauses'],['Click','a crate to grab it (colours in Battle Tips)']];
   const tips=['Hold waves <b>3, 5, 10, 15…</b> to earn a Field Commendation: pick one of three directives for the run.',
-    'Battlefield events (sandstorms, paratroopers, blitzes, armor columns, drone swarms, barrages, car-bomb convoys) pay a bonus when you clear them.',
+    'Battlefield events (sandstorms, paratroopers, blitzes, ambushes, armor columns, drone swarms, barrages, car-bomb convoys) pay a bonus when you clear them.',
     'Crates: <b>gold</b> cash, <b>red</b> munitions, <b>green</b> wall repair, <b>blue</b> intel on hidden enemies, <b>orange</b> a free airstrike.',
     'Walls only self-repair after <b>3s</b> without a hit: kill whatever is shooting them.',
     'From <b>wave 6</b> the enemy brings armor. Rifles barely scratch it: lean on mines, grenades, artillery and heavy guns.',
@@ -7969,6 +7969,7 @@ const MEDALS=[
  {id:'stonewall',ic:'threat',name:'Stonewall',desc:'Repel 5 blitz waves.',st:'blitz',goal:5,cash:700,tiers:[20,60]},
  {id:'bombsquad',ic:'truck',name:'Bomb Squad',desc:'Stop 25 car bombs before they reach the walls.',st:'vbied',goal:25,cash:900,tiers:[150,750]},
  {id:'holdout',ic:'hp',name:'Holdout',desc:'Clear 3 waves in one run with the walls breached.',st:'holdout',goal:3,cash:1000,tiers:[6,12]},
+ {id:'flankguard',ic:'threat',name:'Flank Guard',desc:'Repel 5 ambushes.',st:'ambush',goal:5,cash:800,tiers:[20,60]},
  {id:'roadblock',ic:'walls',name:'Roadblock',desc:'Repel 5 suicide convoys.',st:'convoy',goal:5,cash:900,tiers:[20,60]},
  {id:'swatter',ic:'aagun',name:'Swatter',desc:'Repel 5 drone swarms.',st:'swarm',goal:5,cash:800,tiers:[20,60]},
  {id:'counterbat',ic:'arty',name:'Counter-Battery',desc:'Repel 5 artillery barrages.',st:'barrage',goal:5,cash:800,tiers:[20,60]},
