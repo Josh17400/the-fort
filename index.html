@@ -3857,12 +3857,34 @@ const _sdM=[];function sigDroneSpr(lo,pk){const i=lo?1:0,bi=hqBi(pk);let s=_sdM[
     if(!lo)for(const[ax,ay]of DRONE_ARMS)ell(ax*0.8,ay*0.8,2.4,2.4,'rgba(190,210,220,.28)');
     box(-2.2,-1.6,4.4,3.2,'#3b3f44');box(-2.2,-1.6,4.4,0.8,'#5a6068');box(1.6,-0.7,1.4,1.4,'#1a1d20')},0,0);s._bi=bi;return _sdM[i]=s}
 // ================= VFX =================
-const FXCAP={parts:700,smoke:260,decals:160,lights:70,sig:180};
+const FXCAP={parts:700,smoke:260,decals:160,lights:70,sig:180,emb:320,deb:200,cas:180};
 const FXBASE=Object.assign({},FXCAP);
 let HQ=false;   // High preset: cinematic VFX + post-processing. Medium/Low never enter a code path gated on it.
 function applyGfx(){GFX=GFX_PRESET[S.set.gfx]||GFX_PRESET.high;HQ=GFX===GFX_PRESET.high;document.body.dataset.gfx=S.set.gfx||'high';
   for(const k in FXBASE)FXCAP[k]=Math.round(FXBASE[k]*(k==='smoke'?GFX.smoke:k==='lights'?+GFX.lights:GFX.fx));if(HQ)FXCAP.smoke=340;resize()}
 applyGfx();
+// ADAPTIVE QUALITY governor (cosmetic FX only, never gameplay). Its own rAF chain measures the real frame interval while a battle
+// is live (not paused/choosing/hidden). A 1s window whose mean is slow AND hitchy (>30ms with >8% of frames over 45ms), or plainly
+// slow (>38ms), steps AQ.lv up (max 3); a steady 30fps cap (iOS Low Power) is not hitchy, so it never trips, and a fast desktop
+// never gets near it. AQ.lv scales the cosmetic caps (particles, smoke, decals, lights, embers, debris, casings) and thins spawns by
+// AQ.q. Recovery needs 3*AQ.back fast windows (<20ms, <2% hitches) in a row; back doubles each time a recovered level trips again,
+// so it can't oscillate. AQ.force (0-3) pins a level for testing.
+const AQ={lv:0,q:1,n:0,sum:0,slow:0,t0:0,last:0,good:0,back:1,rec:false,force:null};
+const AQ_Q=[1,.7,.5,.35];
+function aqApply(){const q=AQ.q=AQ_Q[AQ.lv];
+  for(const k in FXBASE){if(k==='sig')continue;const b=k==='smoke'&&HQ?340:FXBASE[k]*(k==='smoke'?GFX.smoke:k==='lights'?+GFX.lights:GFX.fx);FXCAP[k]=Math.round(b*q)}
+  if(G&&G.decals&&G.decals.length>FXCAP.decals)G.decals.splice(0,G.decals.length-FXCAP.decals)}
+function aqSet(lv){lv=Math.max(0,Math.min(3,lv|0));if(lv===AQ.lv)return;AQ.lv=lv;aqApply()}
+function aqFrame(now){requestAnimationFrame(aqFrame);const dt=now-AQ.last;AQ.last=now;
+  if(AQ.force!=null){aqSet(AQ.force);return}
+  if(!running||paused||!G||G.choosing||G.over||document.hidden||!(dt>0)||dt>250){AQ.n=AQ.sum=AQ.slow=0;AQ.t0=now;return}
+  AQ.n++;AQ.sum+=dt;if(dt>45)AQ.slow++;if(now-AQ.t0<1000||AQ.n<10)return;
+  const mean=AQ.sum/AQ.n,hitch=AQ.slow/AQ.n;AQ.n=AQ.sum=AQ.slow=0;AQ.t0=now;
+  if((mean>30&&hitch>.08)||mean>38){AQ.good=0;if(AQ.lv<3){if(AQ.rec){AQ.back=Math.min(8,AQ.back*2);AQ.rec=false}aqSet(AQ.lv+1)}}
+  else if(mean<20&&hitch<.02){if(AQ.lv&&++AQ.good>=3*AQ.back){AQ.good=0;AQ.rec=true;aqSet(AQ.lv-1)}}
+  else AQ.good=0;
+  if(AQ.lv)aqApply()}
+requestAnimationFrame(aqFrame);
 // Pre-rendered radial sprites: one gradient raster per look instead of createRadialGradient per object per frame.
 // Hot getters check the cache first so a cache hit allocates no stop arrays/strings (called ~200x per busy frame).
 // Stops are authored at full strength; per-object fade is applied through globalAlpha, which is equivalent since every stop scales linearly.
@@ -3878,9 +3900,9 @@ function blit(img,x,y,r,a){if(a<=0||r<=0)return;ctx.globalAlpha=Math.min(1,a);ct
 const R=Math.random;
 // Every G.parts entry uses one field layout {x,y,vx,vy,life,max,c,sz,glow,rot,spin} (fields it doesn't use are undefined, exactly
 // what an absent field reads as), so the per-frame particle loops see a single hidden class.
-function spark(x,y,n,spd,cols,life=0.5,sz=1.6){for(let i=0;i<n&&G.parts.length<FXCAP.parts;i++){const a=R()*6.283,s=spd*(0.3+R()*0.9);G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:life*(0.5+R()*0.7),max:life,c:cols[i%cols.length],sz,glow:1,rot:undefined,spin:undefined})}}
-function gib(x,y,n,spd,c,life=0.7,sz=2){for(let i=0;i<n&&G.parts.length<FXCAP.parts;i++){const a=R()*6.283,s=spd*(0.3+R()*0.9);G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:life*(0.6+R()*0.6),max:life,c,sz:sz*(0.6+R()*0.8),glow:undefined,rot:R()*6,spin:undefined})}}
-function puff(x,y,n,r,life,col='60,60,60',spd=15,a=0.5){for(let i=0;i<n&&G.smoke.length<FXCAP.smoke;i++){if(GFX.smoke<1&&R()>GFX.smoke)continue;const an=R()*6.283,s=spd*R();
+function spark(x,y,n,spd,cols,life=0.5,sz=1.6){if(AQ.lv)n=Math.ceil(n*AQ.q);for(let i=0;i<n&&G.parts.length<FXCAP.parts;i++){const a=R()*6.283,s=spd*(0.3+R()*0.9);G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:life*(0.5+R()*0.7),max:life,c:cols[i%cols.length],sz,glow:1,rot:undefined,spin:undefined})}}
+function gib(x,y,n,spd,c,life=0.7,sz=2){if(AQ.lv)n=Math.ceil(n*AQ.q);for(let i=0;i<n&&G.parts.length<FXCAP.parts;i++){const a=R()*6.283,s=spd*(0.3+R()*0.9);G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:life*(0.6+R()*0.6),max:life,c,sz:sz*(0.6+R()*0.8),glow:undefined,rot:R()*6,spin:undefined})}}
+function puff(x,y,n,r,life,col='60,60,60',spd=15,a=0.5){if(AQ.lv)n=Math.ceil(n*AQ.q);for(let i=0;i<n&&G.smoke.length<FXCAP.smoke;i++){if(GFX.smoke<1&&R()>GFX.smoke)continue;const an=R()*6.283,s=spd*R();
   G.smoke.push({x:x+(R()-.5)*r*.6,y:y+(R()-.5)*r*.6,vx:Math.cos(an)*s,vy:Math.sin(an)*s,r:r*(0.5+R()*0.5),grow:r*(0.6+R()*0.6),life:life*(0.7+R()*0.5),max:life,col,a});
   if(HQ){const p=G.smoke[G.smoke.length-1];p.rot=(R()-.5)*.8;p.spin=(R()-.5)*.3;p.v=(R()*3)|0;p.rise=-6}}}
 function light(x,y,r,c,life){if(G.lights.length<FXCAP.lights)G.lights.push({x,y,r,c,life,max:life})}
@@ -4034,7 +4056,7 @@ const dustRing=()=>radialSprite('dustring',[[0,'rgba(152,134,104,0)'],[.5,'rgba(
 // Set the world matrix m, then translate/rotate/scale — without save()/restore() churn per sprite.
 function xf(m,x,y,th,s=1){const c=Math.cos(th)*s,n=Math.sin(th)*s;ctx.setTransform(m.a*c+m.c*n,m.b*c+m.d*n,m.c*c-m.a*n,m.d*c-m.b*n,m.a*x+m.c*y+m.e,m.b*x+m.d*y+m.f)}
 const xr=m=>ctx.setTransform(m.a,m.b,m.c,m.d,m.e,m.f);
-function hpuff(x,y,o){if(G.smoke.length>=FXCAP.smoke)return;
+function hpuff(x,y,o){if(G.smoke.length>=FXCAP.smoke||(AQ.lv&&R()>AQ.q))return;
   G.smoke.push({x,y,vx:o.vx||0,vy:o.vy||0,r:o.r,grow:o.grow,life:o.life,max:o.life,col:o.col,a:o.a,rise:o.rise||0,d:o.d||0,rot:(R()-.5)*.8,spin:(R()-.5)*.3,v:(R()*3)|0})}
 
 // ---- spawners ----
@@ -4043,12 +4065,12 @@ function hqBurst(x,y,r,big){const h=hx(),k=Math.max(.35,Math.min(3.5,r/30)),fl=.
   G.fx.push({k:'hfire',x,y,r:r*.95,life:fl2,max:fl2,rot:R()*TAU,sp:(R()<.5?-1:1)*(.7+R()*.8),v:(R()*3)|0});
   ring(x,y,r*1.35,big?.38:.2,'255,236,200',big?2.2:1.1);
   light(x,y,r*(big?2.6:1.8),'255,150,60',big?.4:.14);
-  for(let i=0,n=Math.round((big?14:4)*k);i<n&&h.emb.length<320;i++){const a=R()*TAU,s=r*(1.4+R()*4.2),l=.35+R()*(big?1.1:.35);
+  for(let i=0,n=Math.round((big?14:4)*k);i<n&&h.emb.length<FXCAP.emb;i++){const a=R()*TAU,s=r*(1.4+R()*4.2),l=.35+R()*(big?1.1:.35);
     h.emb.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:l,max:l,sz:.7+R()*1.1,c:R()<.3?'#fff0c0':'#ff9a3c',cu:(R()-.5)*3})}
   spark(x,y,Math.round((big?8:3)*k),r*5,['#fff6d0','#ffc04a'],big?.32:.22,big?1.7:1.1);
   if(!big){if(r>=14){puff(x,y,2,r*.5,.9,'96,90,80',r*.8,.42);decal(x,y,'scorch',r*.5)}return}
   const dl=.55+.2*k;G.fx.push({k:'dust',x,y,r:r*2.2,life:dl,max:dl});
-  for(let i=0,n=Math.round(4+k*5);i<n&&h.deb.length<200;i++){const a=R()*TAU,s=r*(1.1+R()*2.4);
+  for(let i=0,n=Math.round(4+k*5);i<n&&h.deb.length<FXCAP.deb;i++){const a=R()*TAU,s=r*(1.1+R()*2.4);
     h.deb.push({x,y,z:2,vx:Math.cos(a)*s,vy:Math.sin(a)*s,vz:70+R()*120*Math.sqrt(k),rot:R()*TAU,spin:(R()-.5)*18,life:2.6+R()*2,max:4.6,sz:(1+R()*1.6)*Math.sqrt(k),
       c:['#2a2620','#443c33','#5b5145'][(R()*3)|0],tr:R()<.5,hot:R()<.4})}
   for(let i=0,n=Math.round(6+k*4);i<n;i++){const a=i/n*TAU+R()*.4,s=r*(1.5+R()*1.2);
@@ -4068,7 +4090,7 @@ function hqKill(e){const b=e.boss||e.veh;decal(e.x,e.y,b?'scorch':'stain',e.r*(b
 function vfxMuzzle(s){const a=s.ang,mx=s.x+Math.cos(a)*15,my=s.y+Math.sin(a)*15,h=hx();light(mx,my,s.main?42:30,'255,200,110',0.06);
   G.fx.push({k:'mf',x:mx-Math.cos(a)*2,y:my-Math.sin(a)*2,a:a+(R()-.5)*.22,s:(s.main?.16:.12)*(.75+R()*.5),v:(R()*4)|0,life:.05,max:.05});
   spark(mx,my,2,110,['#ffe7a0'],0.1,1);
-  const p=a+Math.PI/2+(R()-.5)*.6,sp=45+R()*35;if(h.cas.length>=180)h.cas.shift();
+  const p=a+Math.PI/2+(R()-.5)*.6,sp=45+R()*35;if(h.cas.length>=FXCAP.cas)h.cas.shift();
   h.cas.push({x:s.x,y:s.y,z:4,vx:Math.cos(p)*sp,vy:Math.sin(p)*sp,vz:45+R()*40,rot:R()*6,spin:(R()-.5)*40,life:3+R()*1.5});
   if(s.main||R()<.3)hpuff(mx,my,{vx:Math.cos(a)*16,vy:Math.sin(a)*16,r:1.8,grow:6,life:.6,col:'176,172,162',a:.2})}
 
@@ -4088,7 +4110,7 @@ function hqUpdate(dt){const h=hx(),dr=Math.pow(.97,dt*60);
     while(e.t<=0&&e.life>0){e.t+=.09;hpuff(e.x+(R()-.5)*8,e.y+(R()-.5)*8,{vx:(R()-.5)*6,vy:(R()-.5)*6,r:6+R()*4,grow:28+R()*18,life:2.6+R(),col:R()<.6?'20,18,17':'36,32,29',a:.62*f,rise:-24});
       if(R()<.45*f){const l=.3+R()*.2;G.fx.push({k:'hfire',x:e.x+(R()-.5)*12,y:e.y+(R()-.5)*12,r:(6+R()*7)*(.4+.6*f),life:l,max:l,rot:R()*TAU,sp:2,v:(R()*3)|0})}
       if(R()<.3*f)light(e.x,e.y,50+R()*24,'255,140,50',.16);
-      if(R()<.2*f&&h.emb.length<320){const l=.6+R()*.6;h.emb.push({x:e.x,y:e.y,vx:(R()-.5)*40,vy:-20-R()*30,life:l,max:l,sz:.8,c:'#ff9a3c',cu:(R()-.5)*4})}}}
+      if(R()<.2*f&&h.emb.length<FXCAP.emb){const l=.6+R()*.6;h.emb.push({x:e.x,y:e.y,vx:(R()-.5)*40,vy:-20-R()*30,life:l,max:l,sz:.8,c:'#ff9a3c',cu:(R()-.5)*4})}}}
   for(const f of G.fx)if(f.k==='tracer'&&!f.hq){f.hq=1;G.fx.push({k:'flash',x:f.x2,y:f.y2,r:4+(f.w||1.2)*2,life:.05,max:.05,c:'255,236,190'})}
   keepLive(h.deb);keepLive(h.cas);keepLive(h.emb);keepLive(h.waves);keepLive(h.emit);
   if(h.flash>0)h.flash=Math.max(0,h.flash-dt*1.4)}
