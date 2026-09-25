@@ -1098,7 +1098,7 @@ const dmgAt=l=>10*Math.pow(1.22,l)*late('dmg',l,1.22),
       cdAt=l=>Math.max(0.08,0.65*Math.pow(0.9,l)), visionAt=l=>110+42*l;
 // Late-game pressure (owner playtest: walls became unbreakable and armor took minutes to kill). Past WALL_KNEE each wall level adds
 // x1.3*WALL_SOFT instead of x1.3, enemy fire on the fort grows FORT_PRESS per wave from wave 20, and vehicles lose VEH_THIN of HP per wave from 15.
-const REPAIR_HOLD=3,WALL_KNEE=12,WALL_SOFT=0.95,VEH_THIN=0.965,BOMB_PCT=0.06;
+const REPAIR_HOLD=3,repairHold=()=>REPAIR_HOLD/(1+pk('sappers')),WALL_KNEE=12,WALL_SOFT=0.95,VEH_THIN=0.965,BOMB_PCT=0.06;
 // fort pressure: from wave FP_W, fire on the fort grows with the gap between enemy HP and enemy damage growth (parity with HP), so walls
 // bought on the curve keep taking real damage instead of shrugging off whole armored columns
 const FP_W=25,FP_EXP=1;let _fpW=-1,_fpV=1;const fortPress=w=>{if(w<=FP_W)return 1;if(w!==_fpW){_fpW=w;_fpV=Math.pow((waveHp(w)/waveDmg(w))/(waveHp(FP_W)/waveDmg(FP_W)),FP_EXP)}return _fpV};
@@ -2385,7 +2385,7 @@ function update(dt){
   if(G.perkAt&&G.time>=G.perkAt){G.perkAt=0;offerPerks()}
   // regen
   G.hp=Math.min(G.maxHp,G.hp+0.4*L('medic')*dt);
-  if(G.wallHp>0&&G.time-(G.wallHitT??-9)>REPAIR_HOLD)G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*repairAt(L('repair'))*dt);   // engineers can't work under fire
+  if(G.wallHp>0&&G.time-(G.wallHitT??-9)>repairHold())G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*repairAt(L('repair'))*(1+0.5*pk('sappers'))*dt);   // engineers can't work under fire
   // soldiers
   const half=blockHalf(),n=G.sold.length;
   for(const s of G.sold)s.cd-=dt;
@@ -3622,7 +3622,7 @@ const sgKo=u=>u.k==='truck'?1-(sg('truck','armor')||0):u.k==='tank'&&sg('tank','
 function sigUpdate(dt){G._bf=Math.round(14*GFX.fx);
   for(const f of G.sgfx)f.life-=dt;keepLive(G.sgfx);
   sgFuel();
-  if(L('walls')){let p;if(G.wallHp>0&&G.time-(G.wallHitT??-9)>REPAIR_HOLD&&(p=sg('walls','regen')))G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*p*dt);
+  if(L('walls')){let p;if(G.wallHp>0&&G.time-(G.wallHitT??-9)>repairHold()&&(p=sg('walls','regen')))G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*p*dt);
     if(G.shT>0){G.shT-=dt;G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.3*dt/SHIELD_T);if(G.shT<=0)float(0,-fortHalf()-30,'BREACH SEALED','#9fe8ff',13)}
     if((p=sg('walls','intercept'))&&G.wallHp>0)sgAps(G,0,0,170,p,3,dt,'170,230,255',1)}
   for(const u of G.units){let p;   // active protection is automatic: it keeps working while the crew is knocked out
@@ -6251,6 +6251,7 @@ const PERKS=[
  {id:'cas',ic:'air',name:'Close Air Support',desc:'Airstrike cooldown -35%, and a strike is ready now.',ok:()=>L('air')>0,go:()=>{G.airT=0}},
  {id:'minelayer',ic:'mines',name:'Minelayers',desc:'Twice the mines every wave, and a fresh field is laid now.',ok:()=>L('mines')>0,go:()=>layMines()},
  {id:'flak',ic:'aagun',name:'Flak Barrage',desc:'Air-defence fire +40% damage against aircraft.',ok:()=>L('aagun')>0&&G.wave>=SKY_WAVE.drone},
+ {id:'sappers',ic:'repair',name:'Sapper Teams',desc:'Wall repairs restart twice as fast after a hit and run 50% faster.',ok:()=>L('repair')>0&&G.wave>=8},
  {id:'barriers',ic:'walls',name:'Vehicle Barriers',desc:'Car bombs deal half damage to the walls, and vehicles slow 20% near the wire.',ok:()=>G.wave>=VBIED_W},
  {id:'antiarmor',ic:'tank',name:'Anti-Armor Teams',desc:'Every gun, shell, missile and bomb deals +35% damage to vehicles and tanks.',ok:()=>G.wave>=6},
  {id:'cbfire',ic:'arty',name:'Counter-Battery Fire',desc:'Artillery answers every mortar and rocket launch: that crew is shelled first, for +50% damage.',ok:()=>L('arty')>0&&G.wave>=11},
