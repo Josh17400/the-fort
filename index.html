@@ -131,6 +131,7 @@ kbd{font:600 12px var(--f-display);background:rgba(255,255,255,.08);border:1px s
 @media (hover:hover){.seg button:hover{color:var(--c-text)}}
 .seg button[aria-pressed=true]{background:var(--t-gold);box-shadow:inset 0 0 0 1px var(--b-gold);color:var(--c-gold-hi)}
 .seg.many button{font-size:12px;letter-spacing:.04em}
+.seg button::after{content:"";position:absolute;inset:-3px -1px}   /* 44px hit area inside the 44px track */
 .seg.scroll{grid-auto-columns:minmax(58px,1fr);overflow-x:auto;scrollbar-width:none}.seg.scroll::-webkit-scrollbar{display:none}
 /* panels, section headers, cards, tiles */
 .panel{position:relative;background:var(--c-s1);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));border:1px solid var(--c-line);border-radius:var(--rad-lg);padding:20px;box-shadow:var(--hi-top)}
@@ -144,7 +145,7 @@ kbd{font:600 12px var(--f-display);background:rgba(255,255,255,.08);border:1px s
 .tile{background:var(--c-inset);border:1px solid var(--c-line);border-radius:var(--rad-md);padding:10px 12px;min-width:0}
 .tile span{display:flex;align-items:center;gap:5px;font:600 11px/1.2 var(--f-display);letter-spacing:.14em;color:var(--c-dim);white-space:nowrap}
 .tile span .ic{color:var(--c-dim);opacity:.85}
-.tile b{display:block;margin-top:5px;font:800 18px/1.15 var(--f-display);color:var(--c-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tile b small{font-size:.7em;font-weight:600;color:var(--c-text-2);margin-left:1px}
+.tile b{display:block;margin-top:5px;font:800 18px/1.15 var(--f-display);color:var(--c-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tile b small{font-size:max(11px,.7em);font-weight:600;color:var(--c-text-2);margin-left:1px}
 .ico{width:44px;height:44px;flex:none;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.05);border:1px solid var(--c-line);color:var(--c-gold-hi)}
 .ic{vertical-align:-4px;flex:none}
 /* callouts */
@@ -186,6 +187,9 @@ kbd{font:600 12px var(--f-display);background:rgba(255,255,255,.08);border:1px s
   .modal.sheet-b .sh-foot{padding-bottom:calc(12px + var(--safe-b))}.modal.sheet-b .sh-foot .btn{flex:1}
   .modal.sheet-b .sh-head{position:relative}.modal.sheet-b .sh-head::before{content:"";position:absolute;left:50%;top:6px;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:rgba(255,255,255,.2)}}
 @keyframes sheetUp{from{transform:translateY(40px);opacity:0}}
+/* short landscape phones: sheets drop the footer (the header keeps its close button) so the content gets the height */
+@media (max-height:500px) and (orientation:landscape){.modal.sheet-b .sh-foot{display:none}.modal.sheet-b .sh-head{min-height:48px}.modal.sheet-b>.panel{max-width:640px}
+  #home .grid,#home .mgrid{grid-template-columns:repeat(2,minmax(0,1fr))}#home .grid{align-items:start}.card{gap:8px}}
 /* home toast */
 .toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + var(--safe-b) + var(--dock-lift,0px) + 16px);z-index:var(--z-toast);display:flex;align-items:center;gap:8px;height:44px;padding:0 16px;border-radius:var(--rad-pill);
   background:var(--c-s4);border:1px solid var(--c-line-2);box-shadow:var(--el-2);font:500 13px var(--f-body);color:var(--c-text);white-space:nowrap;max-width:calc(100vw - 32px);
@@ -399,7 +403,7 @@ body[data-gfx=high] #intel{background:rgba(22,27,18,.78);-webkit-backdrop-filter
   left:calc(10px + var(--bsL));right:auto;margin:0;width:var(--gw,176px);top:var(--intel-yl,74px);max-height:var(--intel-hl,160px);padding:8px 10px 10px 9px;pointer-events:none}
 #hud[data-mode=land] #intel .it{display:contents}
 #hud[data-mode=land] #intel canvas{grid-area:cv;width:36px;height:36px}
-#hud[data-mode=land] #intel .tag2{padding-right:22px}
+#hud[data-mode=land] #intel .tag2{padding-right:24px;letter-spacing:.12em;overflow:hidden}
 #hud[data-mode=land] #intel .nm2{font-size:15px;white-space:normal;padding-right:18px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 #hud[data-mode=land] #intel .tip{-webkit-line-clamp:var(--intel-tl,6)}
 /* pause: the shared sheet shell, scoped here so it stands alone */
@@ -441,6 +445,10 @@ body:not([data-gfx=high]) #overlay{-webkit-backdrop-filter:none;backdrop-filter:
 #overlay .pperks{justify-content:flex-start}
 #overlay .help{font-size:12px;line-height:1.6;color:var(--c-text-2,#b9c1aa);margin-top:2px;padding-top:12px;border-top:1px solid var(--c-line,rgba(190,210,150,.12))}
 #overlay .help kbd{font:600 11px/1 var(--f-display,Oxanium,sans-serif);padding:2px 5px}
+@media (max-width:599px) and (min-height:501px){#overlay{align-items:flex-end;padding:calc(12px + var(--bsT)) 0 0}
+  #overlay>.panel{max-width:none;border-radius:20px 20px 0 0;border-bottom:0;max-height:calc(100dvh - 12px - var(--bsT));animation:sheetUp var(--d-3,320ms) var(--e-out,ease-out)}
+  #overlay .sh-body{padding-bottom:calc(18px + var(--bsB))}
+  #pauseStats{order:1}#pauseHow{order:2}#pausePerksH{order:3}#pausePerks{order:4}#pauseHelp{order:5;margin-bottom:6px}#abandonBtn{order:6}#overlay .prow{order:7}#resumeBtn{order:8}}   /* resume sits last, under the thumb; retreat furthest from it */
 #pauseHow{display:none;font-size:13px;line-height:1.6;color:var(--c-text-2,#b9c1aa)}#pauseHow.on{display:block}
 #pauseHow kbd{font-family:Oxanium,sans-serif;background:rgba(255,255,255,.08);border:1px solid var(--c-line-2,rgba(190,210,150,.25));border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--c-text,#e6ead9)}
 .pperks{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.pperks:empty{display:none}
@@ -548,6 +556,8 @@ body[data-gfx=high] #medalToast{background:rgba(22,27,18,.93);-webkit-backdrop-f
   transition:background var(--d-2),border-color var(--d-2)}
 .hdr-in{max-width:var(--maxw);height:var(--hdr-h);margin:0 auto;padding:0 calc(var(--gutter) + var(--safe-r)) 0 calc(var(--gutter) + var(--safe-l));display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px}
 .logo{display:flex;align-items:center;gap:12px;min-width:0}
+.logo .mark{position:relative;padding:0;border:0;cursor:pointer;touch-action:manipulation;transition:transform var(--d-1,120ms)}.logo .mark::after{content:"";position:absolute;inset:-6px}
+.logo .mark:focus-visible{outline:none;box-shadow:0 0 0 2px #0b0d09,0 0 0 4px var(--c-gold-hi)}.logo .mark:active{transform:scale(.94)}
 .logo .mark{width:36px;height:36px;flex:none;border-radius:10px;display:grid;place-items:center;background:var(--g-gold);color:var(--c-on-gold);box-shadow:0 6px 18px rgba(227,181,60,.28),inset 0 1px 0 rgba(255,255,255,.4)}
 .logo h1{margin:0;font:800 20px var(--f-display);letter-spacing:.3em;white-space:nowrap}
 .nav{display:flex;justify-content:center;gap:4px;min-width:0}
@@ -863,10 +873,11 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
 .rtr .rb{flex:1;min-width:0}.rtr .rtn{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rtr .rtl2{margin-top:4px;justify-content:flex-start;letter-spacing:.1em}
 .rtr .rc{flex:none;font:800 12px var(--f-display);color:var(--c-dim)}.rtr.ok .rc{color:var(--c-green)}.rtr .rc .ic{color:var(--c-blue)}
 .rtx{display:flex;flex-direction:column;gap:8px;padding:0 12px 12px}
-.rsgo{position:sticky;bottom:calc(var(--nav-h) + var(--safe-b) + var(--dock-lift,0px) + 12px);z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:100%;min-height:56px;margin-top:6px;padding:6px 16px;
+.rsgo{position:sticky;bottom:calc(var(--nav-h) + var(--safe-b) + var(--dock-lift,0px) + 36px);z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:100%;min-height:56px;margin-top:6px;padding:6px 16px;
   border-radius:14px;cursor:pointer;touch-action:manipulation;color:var(--c-dim);background:rgba(28,34,24,.97);border:1px solid var(--c-line-2);box-shadow:0 12px 30px rgba(0,0,0,.55);transition:transform var(--d-1)}
 .rsgo:active{transform:scale(.98)}
 .rsgo .l1{display:flex;align-items:center;gap:6px;max-width:100%;font:800 15px var(--f-display);letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rsgo .l1 .t{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .rsgo .l2{max-width:100%;font:600 12px var(--f-display);letter-spacing:.1em;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rsgo.go{background:var(--g-green);color:var(--c-on-green);border-color:transparent}.rsgo.rf{background:var(--g-blue);color:var(--c-on-blue);border-color:transparent}
 .rsgo.nf{color:var(--c-text);border-color:rgba(255,207,154,.45)}.rsgo.nf .l1{color:var(--c-amber)}
@@ -890,7 +901,11 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
   .grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:10px}
   #home[data-view=rd]~.toast{bottom:calc(var(--nav-h) + var(--safe-b) + var(--dock-lift,0px) + 84px)}
   .card{padding:12px}.card.rec{padding-top:30px}
-  .card .d{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}.card.open .d{display:block}
+  .card .d{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}.card.open .d{display:block}
+  /* armory cards: value line and buy button share a row; the unlock note drops to the end */
+  #store .card{display:grid;grid-template-columns:minmax(0,1fr) auto;align-content:start;gap:8px}#store .card>*{grid-column:1/-1;min-width:0}
+  #store .card>.v{grid-column:1;align-content:center}#store .card>.buy{grid-column:2;margin-top:0;max-width:176px;min-height:44px;padding:4px 12px;font-size:13px;line-height:1.2;white-space:normal}
+  #store .card>.unl{order:1}
   .mgrid2{grid-template-columns:1fr}
 }
 @media (min-width:900px) and (max-width:1099px) and (min-height:501px){
@@ -948,7 +963,7 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
 <div class="screen on" id="home" data-view="base">
   <header class="hdr" id="hdr">
     <div class="hdr-in">
-      <div class="logo"><div class="mark" data-ic="fort" data-s="22"></div><h1>THE FORT</h1></div>
+      <div class="logo"><button class="mark" data-ic="fort" data-s="22" data-view-go="base" aria-label="Base"></button><h1>THE FORT</h1></div>
       <nav class="nav" aria-label="Home sections">
         <button class="nv" data-view="base" title="Base (1)"><span class="ni" data-ic="fort" data-s="18"></span>BASE</button>
         <button class="nv" data-view="armory" title="Armory (2)"><span class="ni"><span data-ic="armory" data-s="18"></span><i class="dot" data-d="armory"></i></span>ARMORY</button>
@@ -1671,7 +1686,7 @@ function paintThumb(cv){const[id,ks]=cv.dataset.th.split(':'),k=+ks,r=RLINES[id]
 function rsStats(r,k){const t=r.t[k],d=t.mul/r.t[rsOwned(r.id)].mul;
   return`<div class="rts"><span>${r.id==='walls'?'WALL HP':'DMG'} <b>×${fxm(t.mul)}</b>${d>1.001?` <em>×${fxm(d)} vs now</em>`:''}</span>`
     +(t.pen?`<span>AP <b>${pct(t.pen)}</b></span>`:'')+(t.hp&&t.hp!==1?`<span>HP <b>×${fxm(t.hp)}</b></span>`:'')+'</div>'}
-const rsGate=t=>S.best>=t.g?'':`<div class="rgt">${ic('trophy',12)}Reach wave ${t.g}<em>best ${S.best}</em><i style="width:${Math.round(100*Math.min(1,S.best/t.g))}%"></i></div>`;
+const rsGate=t=>S.best>=t.g||t.g<=1?'':`<div class="rgt">${ic('trophy',12)}Reach wave ${t.g}<em>best ${S.best}</em><i style="width:${Math.round(100*Math.min(1,S.best/t.g))}%"></i></div>`;
 const rsSigHtml=t=>{const s=sigText(t.sig);return s?`<div class="rsg">${ic('star',14)}<span>${s}</span></div>`:''};
 // why the next tier is blocked, said once (the wave gate already has its own progress chip)
 function rsWhyHtml(r,k){const own=rsOwned(r.id),t=r.t[k];if(rsNF(r)||k<=own)return'';
@@ -1708,8 +1723,8 @@ function rsCta(r){const own=rsOwned(r.id);
   if(rsLineLock(r)){const nf=rsNF(r);return`<button class="rsgo nf" data-goto="${r.u}"><span class="l1">${ic('lock',14)}${nf?'NOT FIELDED':'TIER '+rank(own+2)+' LOCKED'}</span><span class="l2">${nf?'OPEN ARMORY →':'BUY '+UB[r.u].name.toUpperCase()+' LV 1 IN THE ARMORY →'}</span></button>`}
   if(rsDone(r.id)){const f=rsRefit(r);return`<button class="rsgo${f.ok?' rf':''}"${f.ok?` data-rsbuy="${r.id}"`:' disabled'}><span class="l1">REFIT MK ${rank(f.n+1)}</span><span class="l2">${f.ok?f.c+' RP':'NEED '+(f.c-S.rp)+' MORE RP'}</span></button>`}
   const k=own+1,t=r.t[k],w=rsWhy(r.id,k);
-  if(!w)return`<button class="rsgo go" data-rsbuy="${r.id}"><span class="l1">RESEARCH ${t.n.toUpperCase()}</span><span class="l2">TIER ${rank(k+1)} · ${t.cost} RP</span></button>`;
-  if(S.best>=t.g)return`<button class="rsgo" disabled><span class="l1">RESEARCH ${t.n.toUpperCase()}</span><span class="l2">NEED ${t.cost-S.rp} MORE RP</span></button>`;
+  if(!w)return`<button class="rsgo go" data-rsbuy="${r.id}" aria-label="Research ${t.n}, tier ${rank(k+1)}, ${t.cost} RP"><span class="l1"><span class="t">${t.n.toUpperCase()}</span></span><span class="l2">RESEARCH · TIER ${rank(k+1)} · ${t.cost} RP</span></button>`;
+  if(S.best>=t.g)return`<button class="rsgo" disabled><span class="l1"><span class="t">${t.n.toUpperCase()}</span></span><span class="l2">NEED ${t.cost-S.rp} MORE RP</span></button>`;
   return`<button class="rsgo" disabled><span class="l1">${ic('lock',14)}TIER ${rank(k+1)} LOCKED</span><span class="l2">${w.toUpperCase()}</span></button>`}
 const rsVis=q=>{if(rsDone(q.id))return false;const w=rsWhy(q.id,rsOwned(q.id)+1);return!w||w.startsWith('Need ')};
 function renderResearch(){const nar=rsNarrow(),vis=RLINES.lines.filter(rsVis),r0=rsLine(),r=vis.includes(r0)||!vis.length?r0:vis[0],el=$('rd');
@@ -1719,9 +1734,9 @@ function renderResearch(){const nar=rsNarrow(),vis=RLINES.lines.filter(rsVis),r0
     +`<div class="rsw${nar?' nar':''}"><div class="rsh"><div class="rpb"><div class="ico">${ic('research',24)}</div><div><small>RESEARCH POINTS</small><b>${fmtN(S.rp)}<em>RP</em></b></div></div>`
     +(S.rpLast?`<span class="rpl">+${fmtN(S.rpLast)} last run</span>`:'')+(n?`<span class="rpn">Enough for ${n} ${pl(n,'tier')}</span>`:'')
     +(nar&&!fresh?'':`<p>${fresh?'Hold waves to earn RP. RP starts at wave 10, and every wave you hold after that pays more.':'Hold waves to earn RP. Research carries across runs; new tiers deploy with your next run.'}</p>`)+'</div>';
-  if(nar){h+='<div class="rsc" role="group" aria-label="Research lines">'+vis.map(q=>`<button class="rch${q===r?' on':''}${rsNF(q)?' off':''}" aria-pressed="${q===r}" data-rsl="${q.id}">${ic(rsNF(q)?'lock':q.u,16)}${q.label}<em>${rsOwned(q.id)+1}/${q.t.length}</em>${rsReadyLine(q)?'<span class="rdot"></span>':''}</button>`).join('')+'</div>';
-    const own=rsOwned(r.id),sel=Math.max(0,Math.min(r.t.length-1,rsSel[r.id]??Math.min(own+1,r.t.length-1)));
-    h+=rsHead(r,true)+'<div class="rtls">'+r.t.map((t,k)=>{if(k>rsOwned(r.id)+1)return'';const st=rsStL(r,k),on=k===sel;
+  if(nar){if(vis.length)h+='<div class="rsc" role="group" aria-label="Research lines">'+vis.map(q=>`<button class="rch${q===r?' on':''}${rsNF(q)?' off':''}" aria-pressed="${q===r}" data-rsl="${q.id}">${ic(rsNF(q)?'lock':q.u,16)}${q.label}<em>${rsOwned(q.id)+1}/${q.t.length}</em>${rsReadyLine(q)?'<span class="rdot"></span>':''}</button>`).join('')+'</div>';   // no open lines: no empty chip rail
+    const own=rsOwned(r.id),sel=Math.max(own,Math.min(r.t.length-1,rsSel[r.id]??Math.min(own+1,r.t.length-1)));   // owner decision 4: only the tier in service and the next one
+    h+=rsHead(r,true)+'<div class="rtls">'+r.t.map((t,k)=>{if(k<own||k>own+1)return'';const st=rsStL(r,k),on=k===sel;
       return`<div class="rtr ${st}${on?' sel':''}" data-k="${k}" style="${rsEraVars(t)}"><button data-rst="${k}" aria-expanded="${on}"><span class="mth"><canvas data-th="${r.id}:${k}" width="92" height="92"></canvas></span>`
         +`<span class="rb"><span class="rtn">${t.n}</span><span class="rtl2">TIER ${rank(k+1)} <span class="badge ${RS_B[st]}">${RS_STL[st]}</span></span></span>`
         +`<span class="rc">${st==='own'||st==='act'||st==='kit'?ic('star',16):t.cost+' RP'}</span></button>`
@@ -1730,13 +1745,13 @@ function renderResearch(){const nar=rsNarrow(),vis=RLINES.lines.filter(rsVis),r0
     h+=rsCta(r)}
   else{h+='<div class="rsb"><nav class="rsl" aria-label="Research lines">'+(vis.length?'':`<div class="rsl-empty">${ic('lock',18)}<b>No lines open yet</b><span>Hold deeper waves and field new units in the Armory to open research lines.</span></div>`)+CATS.slice(1).filter(c=>vis.some(q=>UB[q.u].cat===c)).map(c=>`<h4>${c}</h4>`+vis.filter(q=>UB[q.u].cat===c).map(q=>{const lk=rsNF(q);
       return`<button class="rsr${q===r?' on':''}${lk?' off':''}" data-rsl="${q.id}"${q===r?' aria-current="true"':''}><span class="ico">${ic(lk?'lock':q.u,18)}</span><span class="rb"><span class="rn">${q.label}</span><span class="rt">${lk?'<span class="badge b-nf">NOT FIELDED</span>':q.t[rsOwned(q.id)].n}</span>${lk?'':rsPips(q)}</span>${rsReadyLine(q)?'<span class="rdot" title="Next tier affordable"></span>':''}</button>`}).join('')).join('')+'</nav>';
-    h+=`<section class="rsd">${rsHead(r,false)}<div class="trk"><button class="trk-prev" aria-label="Earlier tiers">${ic('chevL',20)}</button><div class="rtk" data-line="${r.id}">${r.t.map((_,k)=>k>rsOwned(r.id)+1?'':rsCard(r,k)).join('')}${rsDone(r.id)?rsRefitCard(r):''}</div><button class="trk-next" aria-label="Later tiers">${ic('chevR',20)}</button></div>${rsCompare(r)}</section></div>`}
+    h+=`<section class="rsd">${rsHead(r,false)}<div class="trk"><button class="trk-prev" aria-label="Earlier tiers">${ic('chevL',20)}</button><div class="rtk" data-line="${r.id}">${r.t.map((_,k)=>k<rsOwned(r.id)||k>rsOwned(r.id)+1?'':rsCard(r,k)).join('')}${rsDone(r.id)?rsRefitCard(r):''}</div><button class="trk-next" aria-label="Later tiers">${ic('chevR',20)}</button></div>${rsCompare(r)}</section></div>`}
   if(!vis.length&&nar)h+=`<div class="callout c-info" style="margin:16px 0">${ic('research',16)}<span>Nothing to research yet. Hold deeper waves and field new units to open the next tiers.</span></div>`;
   el.innerHTML=h+'</div>';
   for(const c of el.querySelectorAll('canvas[data-th]'))paintThumb(c);
   const nr=el.querySelector('.rsl');if(nr)nr.scrollTop=railY;
-  const tk=el.querySelector('.rtk');if(tk){tk.style.scrollBehavior='auto';const c=tk.children[Math.max(0,rsOwned(r.id)-1)];tk.scrollLeft=keepX!=null?keepX:c?Math.max(0,c.offsetLeft-4):0;tk.style.scrollBehavior='';
-    tk.addEventListener('scroll',trkUi,{passive:true});tk.addEventListener('wheel',trkWheel,{passive:false});trkUi({target:tk})}   // the tier before the one in service stays in view for context
+  const tk=el.querySelector('.rtk');if(tk){tk.style.scrollBehavior='auto';const c=tk.children[0];tk.scrollLeft=keepX!=null?keepX:c?Math.max(0,c.offsetLeft-4):0;tk.style.scrollBehavior='';
+    tk.addEventListener('scroll',trkUi,{passive:true});tk.addEventListener('wheel',trkWheel,{passive:false});trkUi({target:tk})}   // the tier in service leads the track
   const cr=el.querySelector('.rsc'),ch=cr&&cr.querySelector('.rch.on');if(ch)cr.scrollLeft=Math.max(0,ch.offsetLeft-16);
   if(nar&&_rsScroll){const row=el.querySelector('.rtr.sel');if(row&&homeView==='rd')requestAnimationFrame(()=>row.scrollIntoView({block:'center'}))}
   _rsScroll=false}
@@ -1796,6 +1811,13 @@ $('pauseSetBtn').onclick=()=>{syncSettings();$('settings').classList.add('on')};
 let _howFrom=null;
 function openHowto(){fillIcons();$('howBody').innerHTML=manualHtml(true);$('howBody').scrollTop=0;_howFrom=document.activeElement;$('howto').classList.add('on');setTimeout(()=>$('howClose').focus({preventScroll:true}),30)}
 function closeHowto(){$('howto').classList.remove('on');const f=_howFrom;_howFrom=null;if(f&&f.focus&&document.contains(f))f.focus({preventScroll:true})}
+// phone sheets: drag the header (grabber) down past 80px to close; shorter drags spring back
+function sheetDrag(id,close){const m=$(id),hd=m.querySelector('.sh-head'),pn=m.querySelector('.panel');let y0=null,dy=0;
+  hd.addEventListener('pointerdown',e=>{if(innerWidth>=600||e.button>0||e.target.closest('button'))return;y0=e.clientY;dy=0;hd.setPointerCapture(e.pointerId);pn.style.transition='none'});
+  hd.addEventListener('pointermove',e=>{if(y0==null)return;dy=Math.max(0,e.clientY-y0);pn.style.transform=dy?`translateY(${dy}px)`:''});
+  const end=()=>{if(y0==null)return;y0=null;pn.style.transition='transform var(--d-2,200ms) var(--e-out,ease-out)';pn.style.transform='';if(dy>80){pn.style.transition='';close()}dy=0};
+  hd.addEventListener('pointerup',end);hd.addEventListener('pointercancel',end);hd.style.touchAction='none'}
+sheetDrag('settings',closeSettings);sheetDrag('howto',closeHowto);
 $('howClose').onclick=$('howDone').onclick=closeHowto;$('howto').addEventListener('mousedown',e=>{if(e.target.id==='howto')closeHowto()});$('howBtn').onclick=openHowto;
 const segSync=(seg,v)=>{for(const b of $(seg).children)b.setAttribute('aria-pressed',b.dataset.v===String(v))};
 const volFill=()=>$('sVol').style.setProperty('--v',$('sVol').value+'%');
