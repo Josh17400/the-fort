@@ -2370,6 +2370,16 @@ function exTongue(){let c=_hqc.ext;if(c)return c;c=_hqc.ext=hqCv(64,24);const x=
   const g=x.createRadialGradient(0,0,0,0,0,12);g.addColorStop(0,'rgba(255,255,245,1)');g.addColorStop(.18,'rgba(255,236,170,.95)');g.addColorStop(.5,'rgba(255,150,50,.5)');g.addColorStop(1,'rgba(255,80,20,0)');
   x.fillStyle=g;x.beginPath();x.arc(0,0,12,0,7);x.fill();return c}
 // drawn above the fog: incoming ordnance, impact warning rings, and red brackets on a crew that just gave itself away
+// enemy projectiles, baked once per zoom bucket and drawn rotated along the flight path (x = forward)
+function rpgSpr(px){return hqBake('rpgR',px,10.4,4.4,5.5,2.2,()=>{
+  hqPoly([-3.4,-.3,-4.7,-1.75,-5.2,-1.75,-4.5,-.25],'#4a4f38');hqPoly([-3.4,.3,-4.7,1.75,-5.2,1.75,-4.5,.25],'#383c2b');box(-5.1,-.22,2,.44,'#2a2d22');
+  hqCyl(-3.4,-.52,2.6,1.04,'#66704a');box(-.95,-.66,.42,1.32,'#2f3326');hqDome(1.15,0,1.75,1.28,'#78825a',.4,-.55);
+  hqPoly([2.25,-1.02,4.3,-.16,4.3,.16,2.25,1.02],'#5b6240');box(2.25,-1.02,2,.35,'rgba(255,250,225,.18)');box(4.2,-.2,.55,.4,'#c9b271');
+  box(-3.2,-.5,2.1,.2,'rgba(255,250,225,.32)');ell(.8,-.62,1.05,.3,'rgba(255,250,225,.38)')},.26)}
+function mortSpr(px){return hqBake('mshl',px,7,3.8,3.6,1.9,()=>{
+  hqPoly([-2,-.28,-3.2,-1.45,-3.45,-1.45,-2.9,-.2],'#3c3f33');hqPoly([-2,.28,-3.2,1.45,-3.45,1.45,-2.9,.2],'#2c2e25');box(-3.4,-.2,1.8,.4,'#23251d');
+  hqDome(.25,0,1.95,1.1,'#50553f',.38,-.55);hqPoly([1.3,-.86,3,-.2,3,.2,1.3,.86],'#474b37');box(-.55,-1.02,.32,2.04,'#c8a24a');box(2.85,-.24,.5,.48,'#b89a58');
+  ell(-.1,-.5,1.2,.26,'rgba(255,250,225,.35)')},.26)}
 // combat mechanic badge, baked once per state: dark disc, light rim, wrench glyph (same family as the crate icon badges)
 const _mechB=[];function mechBadge(b){let c=_mechB[b];if(c)return c;c=_mechB[b]=hqCv(64,64);const x=c.getContext('2d'),m=ctx;
   x.fillStyle='rgba(0,0,0,.35)';x.beginPath();x.arc(34,35,27,0,TAU);x.fill();const g=x.createRadialGradient(24,22,2,32,32,27);g.addColorStop(0,b?'#3f6444':'#34452f');g.addColorStop(1,'#12170f');
@@ -2389,10 +2399,12 @@ function drawEShots(){const px=1/sc,t=G.time,lw=Math.max(1,1.4*px);let bp=0;
     if(s.t<0)continue;const k=Math.min(1,s.t/s.dur),x=s.x+(s.tx-s.x)*k,y=s.y+(s.ty-s.y)*k;
     if(s.k==='sam'){bp=bp||hqPx();ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(s.ty-y,s.tx-x)||0);ctx.globalCompositeOperation='lighter';ctx.drawImage(exTongue(),-13,-1.3,10,2.6);
       ctx.globalCompositeOperation='source-over';hqDraw(hqBake('esam',bp,9,5,5,2.5,samArt,.2));ctx.restore();continue}
-    if(s.k==='rpg'){ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(s.ty-s.y,s.tx-s.x));box(-3.5,-.6,4.2,1.2,'#5d6446');hqPoly([.7,-1.1,3.2,0,.7,1.1],'#4a5034');
-      ctx.globalCompositeOperation='lighter';ell(-4.4,0,2.2,1.1,'#ffb13b');ctx.restore();continue}
+    if(s.k==='rpg'){const a=Math.atan2(s.ty-s.y,s.tx-s.x),sp=rpgSpr(hqPx()),f=.85+.2*Math.sin(t*53+s.x);ctx.save();ctx.translate(x,y);ctx.rotate(a);const l=hqLoc(1.3,1.7,a,1);hqShadow(sp,l[0],l[1],.32);
+      ctx.globalCompositeOperation='lighter';ctx.drawImage(hqGlow('ab',[[0,'rgba(255,245,220,1)'],[.3,'rgba(255,170,80,.75)'],[1,'rgba(255,80,20,0)']]),-6.4-6*f,-1.5*f,7.5*f,3*f);hqGlint(-5.4,0,1.5,.9);
+      ctx.globalCompositeOperation='source-over';hqDraw(sp);ctx.restore();continue}
     const h=Math.sin(k*Math.PI)*s.h,h2=Math.sin(Math.min(1,k+0.02)*Math.PI)*s.h,k2=Math.min(1,k+0.02);
-    if(s.k==='mortar'){ell(x,y,1.8,1,'rgba(0,0,0,.3)');ell(x,y-h,1.7,1.7,'#2c2e26');ell(x-.5,y-h-.5,.6,.6,'rgba(255,255,255,.3)')}
+    if(s.k==='mortar'){ell(x,y,1.8,1,'rgba(0,0,0,.3)');const a=Math.atan2(s.y+(s.ty-s.y)*k2-h2-(y-h),s.x+(s.tx-s.x)*k2-x)||0;ctx.save();ctx.translate(x,y-h);ctx.rotate(a);ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.55;
+      ctx.drawImage(hqGlow('mst',[[0,'rgba(255,236,200,.85)'],[.5,'rgba(255,220,170,.3)'],[1,'rgba(255,210,160,0)']]),-12,-1.1,10,2.2);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';hqDraw(mortSpr(hqPx()));ctx.restore()}
     else{const hk=h/(s.h||1);ctx.globalAlpha=.42-.24*hk;ell(x,y,2.6-1.2*hk,1.3-.5*hk,'#000');ctx.globalAlpha=1;bp=bp||hqPx();   // shadow shrinks + fades as the rocket climbs
       ctx.save();ctx.translate(x,y-h);ctx.rotate(Math.atan2(s.y+(s.ty-s.y)*k2-h2-(y-h),s.x+(s.tx-s.x)*k2-x));ctx.globalCompositeOperation='lighter';ctx.drawImage(exTongue(),-14.2,-1.4,10.6,2.8);
       ctx.globalCompositeOperation='source-over';hqDraw(hqBake('egrd',bp,10,5,5.5,2.5,grdArt,.2));ctx.restore()}}
