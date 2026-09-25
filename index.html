@@ -2113,7 +2113,7 @@ function spawn(type,at){if(SKY[type])return spawnSky(type);const d=ET[type],w=G.
     // every enemy keeps one hidden class and the hot per-tick loops over G.enemies stay monomorphic instead of seeing hundreds of shapes
     moving:undefined,dead:undefined,rev:undefined,dep:undefined,face:undefined,fwd:undefined,bu:undefined,fl:undefined,lunge:undefined,burn:undefined,
     stun:undefined,stunCD:undefined,slF:undefined,slT:undefined,mkB:undefined,mkT:undefined,_df:undefined,chute:undefined,chuteMax:undefined,landT:undefined,
-    _sx:undefined,_sy:undefined,_top:undefined,_cull:undefined,vtT:undefined,vt:undefined,vp:undefined,fsite:undefined,vbied:undefined});
+    _sx:undefined,_sy:undefined,_top:undefined,_cull:undefined,vtT:undefined,vt:undefined,vp:undefined,fsite:undefined,vbied:undefined,vsn:undefined});
   const e=G.enemies[G.enemies.length-1];if(d.boss)trackBoss(e);
   if(type==='technical'&&!at&&w>=VBIED_W&&R()<(G.ev==='convoy'?0.5:VBIED_P))makeVbied(e);
   return e}
@@ -2408,7 +2408,7 @@ function update(dt){
   for(const e of G.enemies){
     if(e.dead)continue;e.flash-=dt;e.wob+=dt*8;if(e.rev>0)e.rev-=dt;
     if(!seen()[e.type]&&visible(e))spotted(e.type);
-    if(e.vbied&&!seen().ev_vbied&&visible(e))spotted('ev_vbied');
+    if(e.vbied&&!e.vsn&&visible(e)){e.vsn=1;if(!seen().ev_vbied)spotted('ev_vbied');if(G.time-(G.vbHorn??-9)>1.2){G.vbHorn=G.time;tone(415,0.16,'square',0,0.05);setTimeout(()=>tone(330,0.22,'square',0,0.05),170)}}   // car bomb in sight: horn
     if(e.chute>0){e.chute-=dt;if(e.chute<=0)chuteLand(e);continue}   // paratroopers are helpless until they touch down
     if(sigStatus(e,dt))continue;   // burning / stunned (research signatures)
     const d=hyp(e.x,e.y)||1,cheb=Math.max(Math.abs(e.x),Math.abs(e.y)),stop=half+e.range+e.r;
