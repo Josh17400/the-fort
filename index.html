@@ -7341,7 +7341,11 @@ function drawFloats(){if(!G.floats.length)return;const k=Math.max(1,0.85/sc),o=H
 // over black. Emissive FX are re-added afterwards so fire and tracers stay hot. The HUD is drawn after and stays crisp.
 // Presets: High = light map + sun shadows + mist/stars/fireflies; Medium = flat tint with beams, halos and lamps drawn straight
 // over it (no full-screen composites beyond the tint); Low = tint + dots.
-const DAY_WAVES=9;
+const DAY_WAVES=9;   // base cycle (day and night 4.5 waves each), stretched per half below
+// Owner request: day lasts 2x longer, night 1.25x. The clock runs at two rates: 06:00-18:00 at DAY_RATE hours per wave, the rest at NIGHT_RATE.
+const DAY_LEN=2,NIGHT_LEN=1.25,DAY_RATE=24/DAY_WAVES/DAY_LEN,NIGHT_RATE=24/DAY_WAVES/NIGHT_LEN;
+function todAdvance(h0,w){let h=h0,left=Math.max(0,w);for(let i=0;i<64&&left>1e-9;i++){const hh=((h%24)+24)%24,day=hh>=6&&hh<18,rate=day?DAY_RATE:NIGHT_RATE,
+    edge=day?18:hh>=18?30:6,toEdge=(edge-hh)/rate;if(left<=toEdge){h+=left*rate;left=0}else{h+=edge-hh;left-=toEdge}}return h}
 const TOD=[[0,[70,82,132]],[4.3,[74,86,136]],[5.2,[124,104,146]],[6.0,[226,168,146]],[6.9,[255,210,178]],[8.2,[255,240,226]],[9.5,[255,255,255]],
   [15,[255,255,255]],[16.2,[255,238,214]],[17.3,[255,208,160]],[18.2,[236,156,122]],[19,[140,104,138]],[20,[74,86,136]],[24,[70,82,132]]];
 const nightOf=h=>1-sstep(4.4,6.6,h)+sstep(18.2,20.2,h);
@@ -7353,7 +7357,7 @@ function dayTick(dt){if(!S.set.dayNight){G.nightK=0;return}
   if(G.todT==null){G.todH0=5.8+Math.random()*9.4;G.todT=G.todH0}
   const left=G.spawnLeft+G.enemies.length+G.sky.length+G.drops.length+(G.uavT>0?1:0),cl=v=>Math.max(0,Math.min(1,v)),
     pr=left>0?0.8*cl(1-left/(G.waveTotal||1)):0.8+0.2*cl(1-G.breakT/(G.breakMax||3)),
-    d=G.todH0+24/DAY_WAVES*(G.wave-(G.startWave||1)+pr)-G.todT;
+    d=todAdvance(G.todH0,G.wave-(G.startWave||1)+pr)-G.todT;
   if(d>0&&Number.isFinite(d))G.todT+=Math.min(d,(0.015+d*0.7)*dt);
   G.nightK=sstep(.3,.9,nightOf(hourOf()));
   if(G.nightK>0.3&&(G._slT=(G._slT||0)-dt)<=0){G._slT=0.1;const bm=dnBeams(DN.beams);
