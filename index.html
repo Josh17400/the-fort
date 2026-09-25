@@ -6853,8 +6853,23 @@ function drawAAGun(u){drawAAGunT(u,tierOf('aagun'))}
 // SAM site: tiered pad + carrier and rotating launcher (caps show loaded rounds, dark tubes while reloading)
 function drawSAM(u){drawSAMT(u,tierOf('sam'))}
 // Air-search radar: lattice base, rotating planar array, faint sweep on the ground
+// High: baked static base (concrete pad, sandbag ring, lattice tower legs + bracing, equipment hut) and a baked rotating
+// array (curved reflector with a shaded face, dipole rows, feed boom + horn); per frame only the rotation and the lamp
+function hqRadarBase(){hqBagRing(7.9,20,2,k=>k===5||k===6);hqRR(-6.2,-6.2,12.4,12.4,.8,'#5f5e55');hqRR(-5.6,-5.6,11.2,11.2,.6,'#8a887c');ctx.beginPath();ctx.roundRect(-5.6,-5.6,11.2,11.2,.6);adLit(-5.6,-5.6,11.2,11.2);
+  hqSpeckle(-5.6,-5.6,11.2,11.2,50,'rgba(40,40,36,.3)',.35);ctx.lineWidth=.14;ctx.strokeStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.moveTo(0,-5.6);ctx.lineTo(0,5.6);ctx.moveTo(-5.6,0);ctx.lineTo(5.6,0);ctx.stroke();
+  hqRR(1.6,2.2,3.6,2.8,.3,'#4f5a3a');box(1.6,2.2,3.6,.6,'#6c7a50');box(1.9,3.2,1.2,.9,'#1d2226');ell(4.6,4.6,.35,.35,'#c33');   // equipment hut
+  ctx.strokeStyle='#2a2d27';ctx.lineWidth=.45;ctx.beginPath();ctx.moveTo(-3.4,-3.4);ctx.lineTo(3.4,3.4);ctx.moveTo(3.4,-3.4);ctx.lineTo(-3.4,3.4);ctx.rect(-3.4,-3.4,6.8,6.8);ctx.stroke();   // lattice bracing
+  ctx.strokeStyle='rgba(255,250,220,.25)';ctx.lineWidth=.16;ctx.beginPath();ctx.moveTo(-3.4,-3.25);ctx.lineTo(3.4,-3.25);ctx.moveTo(-3.25,-3.4);ctx.lineTo(-3.25,3.4);ctx.stroke();
+  for(const[x,y]of[[-3.4,-3.4],[3.4,-3.4],[-3.4,3.4],[3.4,3.4]]){box(x-.8,y-.8,1.6,1.6,'#262923');box(x-.8,y-.8,1.6,.5,'#5b6056')}
+  hqDome(0,0,2.3,2.3,'#6b6f66',.3,-.5);ell(0,0,1,1,'#2d302a')}
+function hqRadarArray(){ctx.beginPath();ctx.moveTo(-1.6,-7.6);ctx.quadraticCurveTo(.2,0,-1.6,7.6);ctx.lineTo(.9,7.6);ctx.quadraticCurveTo(2.6,0,.9,-7.6);ctx.closePath();
+  const g=ctx.createLinearGradient(-1.6,0,2,0);g.addColorStop(0,'#f2f3ee');g.addColorStop(.55,'#c9cdc4');g.addColorStop(1,'#80867c');ctx.fillStyle=g;ctx.fill();
+  ctx.strokeStyle='rgba(60,66,58,.55)';ctx.lineWidth=.2;ctx.beginPath();for(let y=-6.4;y<7;y+=1.6){const x=-1.6+1.8*(1-(y/7.6)**2);ctx.moveTo(x-.1,y);ctx.lineTo(x+2.3,y)}ctx.stroke();
+  box(1.2,-.35,3,.7,'#4c5049');hqRR(3.8,-1,1.4,2,.3,'#3b3f38');box(3.9,-.9,.4,1.8,'#6c7068');ell(0,0,1.3,1.3,'#3a3d36')}
 function drawRadar(u){const s=US.radar*bS(),a=G.time*1.6;ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);
   ctx.save();ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgba(110,230,150,.07)';ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,20,a-0.5,a);ctx.closePath();ctx.fill();ctx.restore();
+  if(HQ){const px=hqPx(),b=hqBake('rdB',px,20,20,10,10,hqRadarBase),ar=hqBake('rdA',px,9,17,2.2,8.5,hqRadarArray);hqShadow(b,.8,1,.45);hqDraw(b);ctx.rotate(a);const l=hqLoc(1.4,1.8,a,1);hqShadow(ar,l[0],l[1],.5);hqDraw(ar);
+    if(Math.floor(G.time*2)%2){ell(0,0,.7,.7,'#ff3b30');ctx.globalCompositeOperation='lighter';ell(0,0,1.6,1.6,'rgba(255,60,50,.35)');ctx.globalCompositeOperation='source-over'}ctx.restore();return}
   ell(1,1.2,6.4,6.4,'rgba(0,0,0,.3)');box(-5,-5,10,10,'#4d524a');ctx.strokeStyle='#2c302a';ctx.lineWidth=.4;ctx.beginPath();ctx.moveTo(-5,-5);ctx.lineTo(5,5);ctx.moveTo(5,-5);ctx.lineTo(-5,5);ctx.stroke();ctx.strokeRect(-5,-5,10,10);
   ell(0,0,2.2,2.2,'#6b6f66');ctx.rotate(a);box(-1,-7.5,2.4,15,'#cfd3cb');box(-1,-7.5,.6,15,'#f0f2ec');for(let y=-6.5;y<7;y+=2)box(-.4,y,1.6,.3,'#9aa096');box(1.4,-.8,2.2,1.6,'#5b5f58');
   if(Math.floor(G.time*2)%2)ell(0,0,.7,.7,'#ff3b30');ctx.restore()}
