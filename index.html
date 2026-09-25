@@ -6338,6 +6338,7 @@ const EVENTS={
  para:{name:'AIRBORNE ASSAULT',tag:'AIRBORNE',from:8,bonus:0.5,col:'150,200,255',sub:'Paratroopers dropping at the walls · shoot the canopies'},
  blitz:{name:'BLITZ',tag:'BLITZ',from:5,bonus:0.5,col:'255,150,95',sub:'Light infantry rush · more hostiles, arriving faster'},
  armor:{name:'ARMORED COLUMN',tag:'ARMOR',from:13,bonus:0.6,col:'205,215,140',sub:'An enemy tank leads a heavy trooper column'},
+ ambush:{name:'AMBUSH',tag:'AMBUSH',from:7,bonus:0.5,col:'255,170,90',sub:'Infantry already inside your sight line on one flank'},
  convoy:{name:'SUICIDE CONVOY',tag:'CONVOY',from:18,bonus:0.6,col:'255,110,80',sub:'Car bombs racing for the walls · kill them early'},
  swarm:{name:'DRONE SWARM',tag:'SWARM',from:12,bonus:0.5,col:'255,210,110',sub:'Kamikaze drone flights inbound · AA, MG nests and auto-fire'},
  barrage:{name:'ARTILLERY BARRAGE',tag:'BARRAGE',from:15,bonus:0.6,col:'255,128,96',sub:'Mortar teams dig in past your sight line · watch the red rings'}};
@@ -6348,6 +6349,7 @@ Object.assign(INTEL,{
  ev_armor:['Armored Column',4,'An enemy tank leads a column of heavy troopers. Artillery, armor and airstrikes crack it open. Clearing the wave pays +60%.'],
  ev_vbied:['Car Bomb',4,'A technical packed with explosives, marked by a blinking red light. It races straight for your walls and blows a huge hole in them. Kill it early: it detonates where it dies and hurts hostiles around it.'],
  ev_wallhold:['Walls Under Fire',0,'Engineers cannot patch walls that are taking hits. Repairs restart 3s after the last hit, so clear the attackers to let the walls recover.'],
+ ev_ambush:['Ambush',3,'Part of the wave has crept in unseen and opens up from one flank, already inside your sight line. Swing your fire to that side fast: auto-fire, frag rounds and MG nests help. Clearing the wave pays +50%.'],
  ev_convoy:['Suicide Convoy',4,'Three car bombs lead the wave and half the technicals behind them are rigged too. Each one that reaches the walls tears a hole in them: mines, artillery and focused fire stop them early. Clearing the wave pays +60%.'],
  ev_swarm:['Drone Swarm',3,'Flights of kamikaze drones fly over your wire and mines and dive into the walls. AA guns, MG nests, Tesla coils and auto-fire thin them out. Clearing the wave pays +50%.'],
  ev_barrage:['Artillery Barrage',3,'Mortar teams set up in the fog and keep shelling the fort, with marksmen covering them. Each launch gives a team away for a moment: lock on, or let artillery and TARGET: THREATS hunt them. Clearing the wave pays +60%.']});
@@ -6360,6 +6362,9 @@ function evStart(){const w=G.wave,k=rollEvent(w);G.ev=k;if(!k)return;const E=EVE
   else if(k==='armor'){const t=spawn('boss');t.hp=t.max*=Math.min(0.55,0.4+0.015*(w-13));G.waveTotal++}
   else if(k==='para')airborne(w);
   else if(k==='swarm'){for(let i=0;i<2;i++){spawnSky('drone',Math.random()*TAU);G.waveTotal++}}
+  else if(k==='ambush'){const n=Math.min(24,Math.round(G.spawnLeft*0.3)),a=Math.random()*TAU,r=Math.max(blockHalf()+90,sight()*0.85);G.spawnLeft=Math.max(0,G.spawnLeft-n);
+    for(let i=0;i<n;i++){const b=a+(Math.random()-.5)*0.7,d=r+Math.random()*30;spawn(i%3===2?'shooter':i%2?'runner':'grunt',{x:Math.cos(b)*d,y:Math.sin(b)*d})}
+    const dir=['EAST','SOUTH-EAST','SOUTH','SOUTH-WEST','WEST','NORTH-WEST','NORTH','NORTH-EAST'][Math.round(((a%TAU)+TAU)%TAU/(TAU/8))%8];setTimeout(()=>{if(running)feed('CONTACT '+dir,'255,170,90','threat')},900)}
   else if(k==='convoy'){for(let i=0;i<3;i++){makeVbied(spawn('technical'));G.waveTotal++}}
   else if(k==='barrage'){const n=w>=25?3:2;for(let i=0;i<n;i++){const t=spawn('mortar');t.atk=2.5+i*1.2}G.waveTotal+=n}
   banner('WAVE '+w+' — '+E.name,E.sub,E.col);if(!seen()['ev_'+k])spotted('ev_'+k);evSting(k)}
@@ -6372,6 +6377,7 @@ function evClear(b){const E=EVENTS[G.ev],x=Math.round(b*E.bonus);medalBump(G.ev)
 function evSting(k){
   if(k==='storm'){const v=voice(3.2,1,null,null,true);if(v){lNoise(v,'bandpass',260,700,0.7,0.26,1.1,2);lNoise(v,'highpass',2600,4200,0.5,0.07,1.4,1.6,0.4)}}
   else if(k==='blitz')for(let i=0;i<3;i++)setTimeout(()=>tone(760-i*60,0.09,'square',-90,0.05),i*150)
+  else if(k==='ambush'){sfx('mg');setTimeout(()=>sfx('mg'),120);setTimeout(()=>sfx('mg'),240)}
   else if(k==='convoy')for(let i=0;i<4;i++)setTimeout(()=>tone(520,0.14,'sawtooth',-160,0.04),i*260)   // horn blasts
   else if(k==='swarm'){const v=voice(2.2,1,null,null,true);if(v){lOsc(v,'sawtooth',180,230,0.025,0.4,1.6);lOsc(v,'sawtooth',186,240,0.025,0.5,1.5,0.1);lNoise(v,'bandpass',1400,1800,2,0.05,0.5,1.4)}}   // rising rotor whine
   else if(k==='barrage'){sfx('whistle');setTimeout(()=>sfx('whistle'),450)}}
@@ -6447,7 +6453,7 @@ function drawUavMarks(){const px=1/sc,t=G.time;
     for(let i=0;i<4;i++){const cx=e.x+(i&1?r:-r),cy=e.y+(i&2?r:-r),sx=i&1?-1:1,sy=i&2?-1:1;ctx.moveTo(cx+sx*tk,cy);ctx.lineTo(cx,cy);ctx.lineTo(cx,cy+sy*tk)}ctx.stroke();
     ctx.font=`800 ${(11*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle=`rgb(${UAV_COL})`;ctx.fillText('RECON UAV',e.x,e.y-r-4*px)}}
 // FIELD REPORT card art for a first-time event
-function evPreview(k){if(k==='armor')return drawPreview('boss');if(k==='barrage')return drawPreview('mortar');if(k==='swarm')return drawPreview('drone');if(k==='wallhold')return cratePreview('fix');if(k==='vbied'||k==='convoy')return drawPreview('technical');const c=$('intelCv'),W=c.width,main=ctx,grunt=t=>({type:t,r:ET[t].r,col:ET[t].col,moving:false,wob:0,flash:0});
+function evPreview(k){if(k==='armor')return drawPreview('boss');if(k==='barrage')return drawPreview('mortar');if(k==='swarm')return drawPreview('drone');if(k==='wallhold')return cratePreview('fix');if(k==='vbied'||k==='convoy')return drawPreview('technical');if(k==='ambush')return drawPreview('shooter');const c=$('intelCv'),W=c.width,main=ctx,grunt=t=>({type:t,r:ET[t].r,col:ET[t].col,moving:false,wob:0,flash:0});
   ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,W);
     if(k==='storm'){let f=W/24;ctx.setTransform(f,0,0,f,W/2+100*f,W/2);drawEnemy(grunt('grunt'),-100,0);ctx.setTransform(1,0,0,1,0,0);
       const g=ctx.createRadialGradient(W/2,W/2,W*0.1,W/2,W/2,W*0.6);g.addColorStop(0,'rgba(200,160,100,.25)');g.addColorStop(1,'rgba(160,126,80,.95)');ctx.fillStyle=g;ctx.fillRect(0,0,W,W);
