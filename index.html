@@ -2237,6 +2237,8 @@ const threatK=e=>e.air||e.bomb||e.stand||(e.range&&e.moving===false)?0.25:e.veh?
 // distance already puts it past the HB band of the current best (or of the n-th best) can't win, so it is skipped before the
 // dead/hi/visibility checks; every other candidate is scored exactly as before, and ties still go to the first in list order.
 const tMode=heavy=>{const p=S.set.prio;return p==='threat'?1:p==='tough'&&heavy?2:0};
+// the plain doctrine score (lower is better), for scans outside the fast paths (vehicle guns, free-roam picks)
+const tScore=(e,d,heavy)=>{const p=S.set.prio;return p==='threat'?d*threatK(e):p==='tough'&&heavy?-e.hp:d};
 // e.hi (recon UAV at altitude) is out of small-arms reach: auto-fire, squad and MG nests skip it; only an aimed rifle shot or dedicated air defence (hi=true) engages it.
 let _bE=null,_bS=Infinity,_bD=Infinity;
 function btScan(list,fx,fy,m,hi){for(let i=0;i<list.length;i++){const e=list[i];
