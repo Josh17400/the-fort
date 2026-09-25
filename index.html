@@ -1770,7 +1770,7 @@ $('rd').addEventListener('click',e=>{const q=s=>e.target.closest(s);let b;
 // ---------------- MEDALS ----------------
 function medalCard(m,got){const on=got[m.id]!=null,v=Math.min(m.goal,medalVal(m)),c=medalCash(m);
   return`<div class="mcard${on?' on':''}"><span class="mi">${ic(m.ic,on?22:20)}</span><div class="mb"><div class="mn">${m.name}</div><div class="md">${m.desc}</div>`
-    +(on&&medalMore(m)?(()=>{const r=medalRank(m),g=medalGoal(m),v2=Math.min(g,medalVal(m));return`<div class="mr"><span>${'★'.repeat(r)} EARNED</span><span>next ${'★'.repeat(r+1)}</span></div><div class="meter"><i style="width:${(100*v2/g).toFixed(1)}%"></i></div><div class="mr"><span>${fmtN(v2)} / ${fmtN(g)}</span><span class="rw">$${fmtN(Math.round(c*TIER_CASH[r]))}</span></div>`})()
+    +(on&&medalMore(m)?(()=>{const r=medalRank(m),g=medalGoal(m),v2=Math.min(g,medalVal(m));return`<div class="mr"><span>${'★'.repeat(r)} EARNED</span></div><div class="meter"><i style="width:${(100*v2/g).toFixed(1)}%"></i></div><div class="mr"><span>${fmtN(v2)} / ${fmtN(g)}</span><span class="rw">${'★'.repeat(r+1)} $${fmtN(Math.round(c*TIER_CASH[r]))}</span></div>`})()
       :on?`<div class="mr"><span>${m.tiers?'★'.repeat(medalRank(m)):ic('star',11)} EARNED</span><span>+$${fmtN(got[m.id])}</span></div>`
         :`<div class="meter"><i style="width:${(100*v/m.goal).toFixed(1)}%"></i></div><div class="mr"><span>${fmtN(v)} / ${fmtN(m.goal)}</span><span class="rw">$${fmtN(c)} · +3 RP</span></div><span class="rwv">${fmtN(v)}/${fmtN(m.goal)}</span>`)
     +'</div></div>'}
