@@ -1930,7 +1930,7 @@ function audioFrame(){const c=AU.ctx;if(!c||c.state!=='running')return;const t=c
     AU.night=[cricket(4700,31,0.9),cricket(5600,38,1.37)]}
   AU.amb.gain.setTargetAtTime(live?0.1:0.04,t,0.8);
   const nk=live&&Number.isFinite(DN.nk)?Math.max(0,Math.min(1,DN.nk)):0;   // day/night crossfade: wind by day, crickets by night
-  AU.night[0].g.gain.setTargetAtTime(nk*2.4,t,1.5);AU.night[1].g.gain.setTargetAtTime(nk*1.7,t,1.9);AU.bed.g.gain.setTargetAtTime(1-0.35*nk,t,1.5);
+  AU.night[0].g.gain.setTargetAtTime(nk*0.6,t,1.5);AU.night[1].g.gain.setTargetAtTime(nk*0.42,t,1.9);AU.bed.g.gain.setTargetAtTime(1-0.35*nk,t,1.5);
   const helis=live&&G.units?G.units.reduce((n,u)=>n+(u.k==='heli'&&(u.spin??1)>0.2),0):0;
   AU.rotor.g.gain.setTargetAtTime(helis?0.5+0.25*helis:0,t,0.4);AU.rotor.lfo.frequency.setTargetAtTime(10.5+helis*0.6,t,0.5);
   const R2=live?Math.pow(vision()+80,2):0,armor=live?G.enemies.reduce((n,e)=>n+(e.veh&&e.moving&&e.x*e.x+e.y*e.y<R2?1:0),0):0;
