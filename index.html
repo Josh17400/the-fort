@@ -3934,11 +3934,25 @@ function fxUpdate(dt){
   for(const d of G.decals)d.life-=dt;keepLive(G.decals);
   for(const p of G.parts)if(p.spin)p.rot+=p.spin*dt;
 }
-function drawDecals(){if(HQ){hqDecals();return}
+// Medium/Low blood splats: each decal's 6 seeded ellipses are rasterised once into a 96px slot of one shared atlas canvas the first
+// time it is drawn, then drawn as a single drawImage from that one texture (was 6 path fills per decal per frame, ~600 on a busy
+// medium screen). Slots whose decal is gone are recycled each frame. Same shapes and colour; the only difference is where splats
+// overlap while fading out (the last 6s), which now fades as one layer. Under a ChaosGL layer (atlas must be immutable) it falls back.
+const DA={c:null,x:null,own:[],free:[],g:0,N:16,S:96};
+function decalSlot(d){if(d._s!==undefined&&DA.own[d._s]===d)return d._s;
+  if(!DA.c){DA.c=document.createElement('canvas');DA.c.width=DA.c.height=DA.N*DA.S;DA.x=DA.c.getContext('2d');for(let i=DA.N*DA.N-1;i>=0;i--)DA.free.push(i)}
+  if(!DA.free.length)return -1;const s=DA.free.pop(),x=DA.x,S=DA.S,E=d.r*1.45,k=(S/2-2)/E,cx=(s%DA.N)*S,cy=((s/DA.N)|0)*S;DA.own[s]=d;d._s=s;
+  x.setTransform(1,0,0,1,0,0);x.clearRect(cx,cy,S,S);x.setTransform(k,0,0,k,cx+S/2,cy+S/2);x.fillStyle='rgba(90,10,10,0.55)';
+  for(let i=0;i<6;i++){const an=d.seed*i*1.7,rr=d.r*(0.25+((d.seed*(i+3))%1)*0.6),o=i?d.r*0.55:0;x.beginPath();x.ellipse(Math.cos(an)*o,Math.sin(an)*o,rr,rr*0.7,an,0,7);x.fill()}
+  return s}
+function drawDecals(){if(HQ){hqDecals();return}const at=!CGL.active(),g=++DA.g;
   for(const d of G.decals){const a=Math.min(1,d.life/6);
-    if(d.kind==='scorch'){blit(scorchSprite(),d.x,d.y,d.r,a);ctx.globalAlpha=1}
-    else{ctx.fillStyle=`rgba(90,10,10,${0.55*a})`;for(let i=0;i<6;i++){const an=d.seed*i*1.7,rr=d.r*(0.25+((d.seed*(i+3))%1)*0.6),o=i?d.r*0.55:0;
-      ctx.beginPath();ctx.ellipse(d.x+Math.cos(an)*o,d.y+Math.sin(an)*o,rr,rr*0.7,an,0,7);ctx.fill()}}}}
+    if(d.kind==='scorch'){blit(scorchSprite(),d.x,d.y,d.r,a);ctx.globalAlpha=1;continue}
+    const s=at?decalSlot(d):-1;
+    if(s>=0){d._g=g;const S=DA.S,E=d.r*1.45;ctx.globalAlpha=a;ctx.drawImage(DA.c,(s%DA.N)*S,((s/DA.N)|0)*S,S,S,d.x-E,d.y-E,E*2,E*2);ctx.globalAlpha=1;continue}
+    ctx.fillStyle=`rgba(90,10,10,${0.55*a})`;for(let i=0;i<6;i++){const an=d.seed*i*1.7,rr=d.r*(0.25+((d.seed*(i+3))%1)*0.6),o=i?d.r*0.55:0;
+      ctx.beginPath();ctx.ellipse(d.x+Math.cos(an)*o,d.y+Math.sin(an)*o,rr,rr*0.7,an,0,7);ctx.fill()}}
+  if(at)for(let i=0;i<DA.own.length;i++){const o=DA.own[i];if(o&&o._g!==g){DA.own[i]=null;DA.free.push(i)}}}
 function drawSmoke(){if(HQ){hqSmoke();return}for(const s of G.smoke){const k=s.life/s.max;ctx.fillStyle=`rgba(${s.col},${s.a*k*Math.min(1,(1-k)*6)})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fill()}}
 function drawParts(){if(HQ){hqParts();return}const m=ctx.getTransform();let rx=false;   // rotated bits: one setTransform each instead of save/translate/rotate/restore
   for(const p of G.parts){if(p.glow)continue;ctx.globalAlpha=Math.min(1,p.life/((p.max||1)*0.4));ctx.fillStyle=p.c;
