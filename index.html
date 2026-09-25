@@ -1516,7 +1516,7 @@ function renderAAR(){const el=$('lastRun'),a=lastAAR;
   const n=rsAffordN(),m=Math.floor(a.time/60),s=Math.floor(a.time%60),nm=a.medals.length;
   el.innerHTML=`<div class="panel aar ticks"><div class="sec-h"><div class="eyebrow">AFTER-ACTION · WAVE ${a.wave}</div>${a.rec?'<span class="badge b-new">NEW BEST</span>':''}</div>`
     +`<div class="tiles t4">${[['WAVE',a.wave],['KILLS',fmtN(a.kills)],['EARNED','$'+fmtN(a.earned)],['TIME',m+'<small>m</small> '+s+'<small>s</small>']].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join('')}</div>`
-    +`<button class="rprow" data-rsgo="">${ic('research',16)}<span><b>+${fmtN(a.rp)} RP</b> · ${fmtN(S.rp)} banked${n?'<span class="hph"> · enough for '+n+' '+pl(n,'tier')+'</span>':''}</span><span class="chev">→</span></button>`
+    +`<button class="rprow" data-rsgo="">${ic('research',16)}<span>${a.rp||S.best>=10?`<b>+${fmtN(a.rp)} RP</b> · ${fmtN(S.rp)} banked`:'<b>RP starts at wave 10</b> · hold that far to fund R&amp;D'}${n?'<span class="hph"> · enough for '+n+' '+pl(n,'tier')+'</span>':''}</span><span class="chev">→</span></button>`
     +afterAction()
     +(a.perks||nm?`<details class="rund"${narrow()?'':' open'}><summary>${ic('chevR',14)}Run details${a.nPerk?' · '+a.nPerk+' '+pl(a.nPerk,'directive'):''}${nm?' · '+nm+' '+pl(nm,'medal'):''}</summary><div class="rdx">`
       +(a.perks?`<div><div class="eyebrow">DIRECTIVES</div><div class="pperks">${a.perks}</div></div>`:'')
@@ -7559,7 +7559,7 @@ function drawHud(){let o=HL;const lefty=document.body.classList.contains('lefty'
   const desk=o.mode==='desk',walls=G.wallMax>0,bh=desk?(walls?68:40):(walls?76:42),bw=o.bw;let laneY,feedX,feedB,feedW,feedN,feedR=false,barsX,barsY;
   if(desk){const st=o.st;hudStatusDesk(st.x,st.y,st.w,st.h);let colB=st.y+st.h;
     if(G.depot){hudDepotCard(st.x,colB+10,st.w,56);colB+=66}
-    hudDomVar('--intel-y',colB+10,document.documentElement);
+    hudDomVar('--intel-y',Math.max(colB+10,fcHudBottom()+4),document.documentElement);   // clear the motor pool / hangar chip too
     hudMoney(VW/2,o.Ty);
     const room=VW-2*(248+20+24);let bx2,bw2,by2;if(room>=320){bw2=Math.min(460,room);bx2=VW/2-bw2/2;by2=o.Ty+76;
       const rl=VW-HS.r-20-(MOBILE?52:0)-_dirW-8;if(_dirW&&bx2+bw2>rl){const nw=2*(rl-VW/2);if(nw>=320){bw2=nw;bx2=VW/2-nw/2}else by2=o.Ty+(MOBILE?104:96)}}   // clear the directives pill
