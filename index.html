@@ -2388,10 +2388,10 @@ const _mechB=[];function mechBadge(b){let c=_mechB[b];if(c)return c;c=_mechB[b]=
 function drawEShots(){const px=1/sc,t=G.time,lw=Math.max(1,1.4*px);let bp=0;
   for(const e of G.enemies){if(!e.mech||e.dead||!visible(e))continue;const on=G.time-(e.mechT??-9)<0.4,d=12*px+6,bx=e.x+e.r+d*.3,by=e.y-e.r-d*.5;   // mechanic: wrench badge up-right, clear of the health bar (bright while repairing)
     if(on){ctx.globalCompositeOperation='lighter';blit(glowSprite('120,255,140'),bx,by,d*.95,.55);ctx.globalCompositeOperation='source-over'}ctx.globalAlpha=1;ctx.drawImage(mechBadge(on?1:0),bx-d/2,by-d/2,d,d)}
-  for(const e of G.enemies){if(!e.vbied||e.dead||!visible(e))continue;const on=Math.sin(t*14+e.wob)>0,ha=e.face??Math.atan2(-e.y,-e.x),hx=Math.cos(ha),hy=Math.sin(ha);
-    for(let i=0;i<3;i++){const bx=e.x-hx*(3+i*2.6)+(i===1?hy*1.6:-hy*1.6)*(i%2?1:0.3),by=e.y-hy*(3+i*2.6)-(i===1?hx*1.6:-hx*1.6)*(i%2?1:0.3);ell(bx,by,1.7,1.7,'#8a2a1c');ell(bx-.4,by-.4,.7,.7,'#d8553a')}   // car bomb: blinking red beacon + tag
+  for(const e of G.enemies){if(!e.vbied||e.dead||!visible(e))continue;const on=Math.sin(t*14+e.wob)>0;
+    // car bomb: the drums are baked into its sprite (vbied in VEH_ART / vehLo); only the blinking red beacon + tag are live
     if(on){ell(e.x,e.y,2.2*px+1,2.2*px+1,'#ff3b30');ell(e.x,e.y,6*px+3,6*px+3,'rgba(255,60,50,.3)')}
-    ctx.font=`700 ${(9*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle='#ff8a70';ctx.fillText('VBIED',e.x,e.y-e.r-6*px)}
+    ctx.font=`700 ${(7*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle='#ff8a70';ctx.fillText('VBIED',e.x,e.y-e.r*1.5-5*px)}
   for(const s of G.eshots){
     if(s.warn){const rem=s.dur-s.t,p=Math.min(1,rem/1.6),r=(s.k==='mlrs'?9:11)+10*p;
       ctx.strokeStyle=`rgba(255,80,60,${(0.5+0.4*Math.sin(t*18+s.tx)).toFixed(2)})`;ctx.lineWidth=lw;ctx.beginPath();ctx.arc(s.tx,s.ty,r,0,TAU);
@@ -4971,6 +4971,20 @@ function hqTechGun(){limb(0,0,-1.6,-1.8,.35,'#222');limb(0,0,-1.6,1.8,.35,'#222'
   hqBar(-.9,-1.1,2.6,2.2,'#2a2a2a');hqBar(1.6,-.45,8,.9,'#141414');for(let x=2.4;x<5;x+=.55)box(x,-.6,.28,1.2,'#2f2f2f');hqCyl(9.3,-.65,1.3,1.3,'#0a0a0a');hqCyl(-.4,1.1,1.8,1.3,'#4a5530');
   hqArm(-3.3,-1.8,-1,-1,'#7d6a48',1.4);hqArm(-3.3,1.8,-1,1,'#7d6a48',1.4);hqHand(-.9,-1,SKIN);hqHand(-.9,1,SKIN);
   hqRR(-4.2,-2.1,2.2,4.2,.8,'#7d6a48');hqDome(-2.9,0,1.5,1.45,'#9c8058',.3,-.5);ell(-3.4,-1.95,.6,.4,'#c62828')}
+// car bomb (VBIED): the technical with no gun, steel plate welded over the windshield and grille, a bed full of wired oil drums
+function hqDrum(x,y,r,c){ell(x+.3,y+.35,r,r,'rgba(0,0,0,.45)');hqDome(x,y,r,r,c,.3,-.5);ctx.lineWidth=.28;ctx.strokeStyle='#17140e';ctx.beginPath();ctx.arc(x,y,r-.12,0,7);ctx.stroke();
+  ctx.strokeStyle=hqSh(c,-.55);ctx.lineWidth=.26;ctx.beginPath();ctx.arc(x,y,r*.74,0,7);ctx.stroke();ctx.strokeStyle='rgba(255,245,215,.4)';ctx.lineWidth=.24;ctx.beginPath();ctx.arc(x,y,r-.35,Math.PI*.9,Math.PI*1.62);ctx.stroke();
+  ell(x+r*.36,y-r*.3,.32,.32,'#15130e');ell(x-r*.34,y+r*.36,.22,.22,'#15130e')}
+function hqVbiedHull(){hqTechHull();const st='#63635a';
+  hqRR(-8,-3.9,8.6,7.8,.5,'#5a4b2e');box(-8,-3.9,8.6,.5,'#7a6842');box(-8,3.4,8.6,.5,'#3c3220');hqRR(-8.2,-3.7,1.5,7.4,.4,'#646a40');for(let y=-3.2;y<3.4;y+=1.1)box(-8.1,y,1.3,.18,'rgba(0,0,0,.35)');   // bed, rolled tarp at the tailgate
+  hqDrum(-4.9,-1.95,1.75,'#8a4a26');hqDrum(-4.9,1.95,1.75,'#626a3e');hqDrum(-1.35,-1.95,1.75,'#5d6440');hqDrum(-1.35,1.95,1.75,'#7d3f22');
+  ctx.lineWidth=.22;for(const[c,pts]of[['#c62828',[-4.9,-1.95,-3.1,-.2,-1.35,-1.95]],['#e0b030',[-4.9,1.95,-3,.3,-1.35,1.95]],['#c62828',[-1.35,-1.95,-.2,-.4,.5,0]],['#e0b030',[-1.35,1.95,-.2,.5,.5,0]]]){
+    ctx.strokeStyle=c;ctx.beginPath();ctx.moveTo(pts[0],pts[1]);ctx.quadraticCurveTo(pts[2],pts[3],pts[4],pts[5]);ctx.stroke()}   // det cord between the drums
+  hqRR(2.6,-4.35,2.5,8.7,.3,st);box(2.6,-4.35,2.5,.45,'rgba(255,250,225,.25)');box(2.6,3.9,2.5,.45,'rgba(0,0,0,.4)');box(2.6,-4.35,.35,8.7,'rgba(255,250,225,.16)');   // welded plate over the windshield
+  box(3.55,-2.9,.3,1.9,'#08090a');box(3.55,1,.3,1.9,'#08090a');hqRR(7.7,-4.5,1.6,9,.3,'#56564e');box(7.7,-4.5,.4,9,'rgba(255,250,225,.2)');   // vision slits, ram plate
+  ctx.strokeStyle='rgba(20,18,12,.55)';ctx.lineWidth=.18;ctx.beginPath();ctx.moveTo(2.6,-1.4);ctx.lineTo(5.1,-1.2);ctx.moveTo(2.6,1.5);ctx.lineTo(5.1,1.3);ctx.moveTo(7.7,0);ctx.lineTo(9.3,0);ctx.stroke();
+  hqBolts([2.9,-4,4.8,-4,2.9,4,4.8,4,8,-4.1,8,4.1,9,-4.1,9,4.1]);ctx.globalAlpha=.3;hqSpeckle(2.6,-4.3,2.5,8.6,14,'#7a3a1c',.4);hqSpeckle(7.7,-4.4,1.6,8.8,8,'#7a3a1c',.4);ctx.globalAlpha=1}
+function hqVbiedTop(){hqRR(-.6,-.8,1.3,1.6,.25,'#2a2b26');box(-.6,-.8,1.3,.35,'rgba(255,250,225,.22)');ell(.25,-.35,.22,.22,'#ff3b30');limb(-.6,.5,-1.5,.9,.16,'#c62828')}   // detonator box on the cab's back wall
 // APC: 8x8 carrier, boat nose, roof troop hatches, small cone turret
 function hqApcHull(){const c=VC,P=[-11,-5.5,7.4,-5.5,12,-2.4,12,2.4,7.4,5.5,-11,5.5];
   box(-11.2,-6,22.6,12,hqSh(c,-.45));hqPoly(P,c);hqClosed(P);hqCamo('sand',18,.8);hqClosed(P);hqShadeV(-5.5,5.5);
@@ -5012,6 +5026,7 @@ function hqMlrsPod(){const c=hexOf(hqSh(VC,-.1));ctx.beginPath();ctx.roundRect(-
   hqRedStripe(-5.4,-3.9,1.1,7.8);hqBolts([-8.6,-3.6,-8.6,3.6,2.4,-3.6,2.4,3.6])}
 // layer table: [bake w, h, origin x, origin y, painter]; mount = turret pivot in hull space; muz = muzzle flash [x, y, size] in turret space
 const VEH_ART={technical:{hull:[18,11,9,5.5,hqTechHull],top:[15.4,7,4.4,3.5,hqTechGun],mount:[-3.6,0],muz:[10.4,0,.9],kick:.3,wheels:'truck'},
+  vbied:{hull:[18.6,11,9,5.5,hqVbiedHull],top:[4,3,2.2,1.5,hqVbiedTop],mount:[1.5,0],wheels:'truck'},
   apc:{hull:[25,13,12.5,6.5,hqApcHull],top:[15.2,8,4.6,4,hqApcTop],mount:[3,0],muz:[10.3,0,1.1],kick:.5,wheels:'apc'},
   ifv:{hull:[22,12,11,6,hqIfvHull],top:[20,10,4.6,5,hqIfvTop],mount:[.6,0],muz:[14.9,0,1.2],kick:.7,tracks:1},
   mlrs:{hull:[22,11,11,5.5,hqMlrsHull],top:[14,10,10,5,hqMlrsPod],mount:[0,0],wheels:'mlrs'}};
@@ -5027,7 +5042,7 @@ function hqGear(id,pk,tr){const g=GEAR[id],q=Math.round((((tr%g.p)+g.p)%g.p)/g.p
     const o=q*g.p/g.n;s=hqBake('gear'+id+q,pk,g.bx[0],g.bx[1],g.bx[2],g.bx[3],()=>{for(const[x,y]of g.pos){ctx.save();ctx.beginPath();ctx.rect(x,y,g.len,g.wd);ctx.clip();ctx.translate(x-o,y);hqTread(g.len+g.p*2,g.wd,g.p,g.w);ctx.restore()}},0);s._bi=bi;T[q]=s}
   hqDraw(s)}
 function vehRunning(V,pk,tr){hqGear(V.tracks?'trk':V.wheels,pk,tr)}
-function drawVehHQ(e,x,y,a,k,px){const t=e.type,since=G.time-(e.fl??-9),fl=e.flash>0?Math.min(1,e.flash/.08)*.3:0,tr=(e.odo||0)/k;
+function drawVehHQ(e,x,y,a,k,px){const t=e.vbied?'vbied':e.type,since=G.time-(e.fl??-9),fl=e.flash>0?Math.min(1,e.flash/.08)*.3:0,tr=(e.odo||0)/k;
   if(t==='mbt'){drawTankHQ(x,y,a,a,tr*1.15,since,k/1.15,px,{key:'mbtR',col:'#8a7a52',camo:'sand',enemy:true,len:16,moving:e.moving,flash:fl});return}
   const V=VEH_ART[t],pk=px*k,hull=vehSpr(t,'hull',pk),top=vehSpr(t,'top',pk);
   ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.scale(k,k);let l=hqLoc(1.1,1.5,a,1);hqShadow(hull,l[0],l[1],.55);vehRunning(V,pk,tr);
@@ -6278,7 +6293,7 @@ function drawEnemy(e,x,y){
   if(_hqBase){drawEnemyLoSpr(e,x,y);return}   // battlefield: baked sprite (below); intel previews keep this vector path
   const k=e.r/6,a=Math.atan2(-y,-x);
   ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.scale(k,k);
-  if(e.veh&&e.type!=='mbt'){vehLo(e.type,e);if(e.flash>0){ctx.globalAlpha=.55;ell(0,0,10,6,'#fff');ctx.globalAlpha=1}ctx.restore();return}
+  if(e.veh&&e.type!=='mbt'){vehLo(e.vbied?'vbied':e.type,e);if(e.flash>0){ctx.globalAlpha=.55;ell(0,0,10,6,'#fff');ctx.globalAlpha=1}ctx.restore();return}
   const tk=e.boss||e.type==='mbt';
   enemyLoArt(e.type,e.col,tk,e.moving?Math.sin(e.wob):0,e.type==='bomber'?Math.floor(G.time*6)%2:0,tk?(e.wob*3)%2.5:0);
   if(e.flash>0){ctx.globalAlpha=.7;ell(0,0,tk?9:5.5,tk?8:6,'#fff');ctx.globalAlpha=1}
@@ -6289,8 +6304,8 @@ function drawEnemy(e,x,y){
 // same shapes rasterised at the same on-screen scale, then placed with one setTransform + drawImage. Poses are quantised finely
 // enough to be invisible: walk cycle 16 phases (9 distinct boot poses), MBT treads 10 scroll phases, IFV tracks 12, bomber lamp
 // on/off. Hit flash, muzzle flash and MLRS back-blast stay live overlays on top, exactly as the vector path draws them.
-const LO_BOX={inf:[25,18,9,10],tk:[25,18,10,8],technical:[19,13,9.5,6.5],apc:[26,17,12,8.5],ifv:[27,18,11,9],mlrs:[22,13,11,6.5],mbt:[28,18,11.5,9]},_loM={},_loW={};
-function drawEnemyLoSpr(e,x,y){const B=_hqBase,t=e.type,veh=e.veh&&t!=='mbt',tk=!veh&&(e.boss||t==='mbt'),k=e.r/6,pk=Math.hypot(B.a,B.b)*k;let i;
+const LO_BOX={inf:[25,18,9,10],tk:[25,18,10,8],technical:[19,13,9.5,6.5],vbied:[20,13,9.5,6.5],apc:[26,17,12,8.5],ifv:[27,18,11,9],mlrs:[22,13,11,6.5],mbt:[28,18,11.5,9]},_loM={},_loW={};
+function drawEnemyLoSpr(e,x,y){const B=_hqBase,t=e.vbied?'vbied':e.type,veh=e.veh&&t!=='mbt',tk=!veh&&(e.boss||t==='mbt'),k=e.r/6,pk=Math.hypot(B.a,B.b)*k;let i;
   if(veh)i=t==='ifv'?Math.round((((e.odo||0)%3+3)%3)*4)%12:0;
   else if(tk)i=Math.round((((e.wob*3)%2.5+2.5)%2.5)*4)%10;
   else{const f=e.moving?(Math.round(e.wob*16/TAU)%16+16)%16:0;i=(f<=4?f:f<=12?8-f:f-16)+4+(t==='bomber'&&Math.floor(G.time*6)%2?9:0)}
@@ -6376,6 +6391,9 @@ function vehLo(t,e){const c=VC,tr=e?(e.odo||0)%3:0,since=e?G.time-(e.fl??-9):9,f
       box(-8.4,-4.3,16.8,8.6,'#6e5f40');box(.8,-4.1,7.6,8.2,'#ab9464');box(3,-3.6,1.5,7.2,'#28404f');box(3.3,-3,.4,2.4,'rgba(170,220,255,.5)');box(5.5,-4.1,1.1,8.2,'#b3261e');
       box(-8,-3.9,8.6,7.8,'#6a5a38');box(-7.7,-3.3,3,1.2,'#3d4a24');box(-7.7,2.1,3,1.2,'#3d4a24');
       if(e){ctx.save();ctx.translate(-3.6,0);box(1.4,-2.3,.8,4.6,'#5d5440');box(-.9,-1.1,2.6,2.2,'#2a2a2a');box(1.6,-.45,8.6,.9,'#111');ell(-2.9,0,1.5,1.5,'#9c8058');if(fire)ell(11.5,0,2.4,1.3,'#ffcf5a');ctx.restore()}break;
+    case'vbied':for(const[wx,wy]of VEH_WHEELS.truck)box(wx,wy,3.8,1.7,'#141414');   // car bomb: plated cab, wired drums, no gun
+      box(-8.4,-4.3,16.8,8.6,'#6e5f40');box(.8,-4.1,7.6,8.2,'#ab9464');box(5.5,-4.1,1.1,8.2,'#b3261e');box(-8,-3.9,8.6,7.8,'#5a4b2e');box(2.6,-4.3,2.5,8.6,'#63635a');box(3.55,-2.9,.3,1.9,'#08090a');box(3.55,1,.3,1.9,'#08090a');box(7.7,-4.5,1.6,9,'#56564e');
+      for(const[dx,dy,dc]of[[-4.9,-1.95,'#8a4a26'],[-4.9,1.95,'#626a3e'],[-1.35,-1.95,'#5d6440'],[-1.35,1.95,'#7d3f22']]){ell(dx,dy,1.75,1.75,'#17140e');ell(dx,dy,1.45,1.45,dc);ell(dx-.4,dy-.4,.6,.6,'rgba(255,245,215,.3)')}break;
     case'apc':for(const[wx,wy]of VEH_WHEELS.apc)box(wx,wy,3.6,1.9,'#151515');
       ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(-11,-5.5);ctx.lineTo(7.4,-5.5);ctx.lineTo(12,-2.4);ctx.lineTo(12,2.4);ctx.lineTo(7.4,5.5);ctx.lineTo(-11,5.5);ctx.closePath();ctx.fill();
       ctx.strokeStyle='#4a4232';ctx.lineWidth=.6;ctx.stroke();box(-7.8,-5.5,1.2,11,'#b3261e');box(-6.2,-4.5,3.2,2.6,'#7a6c4a');box(-6.2,1.9,3.2,2.6,'#7a6c4a');ell(8.8,-2.2,1,1,'#6a5e42');ell(8.8,2.2,1,1,'#6a5e42');
