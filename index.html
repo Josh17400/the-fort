@@ -2156,7 +2156,7 @@ function startWave(){
 }
 // Supply crates: mostly cash, but from wave 3 some are MUNITIONS (grenade ready + rapid fire) and, while the fort is hurt, ENGINEER kits
 // (walls +25% even when breached, plus a field dressing). Specials pay 40% of a cash crate on top so grabbing one never feels like a loss.
-const CRATE={cash:{c:'255,210,70',ic:'coin',t:'$'},ammo:{c:'255,110,70',ic:'nade',t:'!'},fix:{c:'120,220,120',ic:'repair',t:'+'},intel:{c:'130,190,255',ic:'radar',t:'?'},strike:{c:'255,160,60',ic:'air',t:'!'}},RAPID_T=8,INTEL_T=6;
+const CRATE={cash:{c:'255,210,70',ic:'coin',t:'$'},ammo:{c:'255,110,70',ic:'nade',t:'!'},fix:{c:'120,220,120',ic:'repair',t:'+'},intel:{c:'130,190,255',ic:'radar',t:'?'},strike:{c:'255,160,60',ic:'air',t:'A'}},RAPID_T=8,INTEL_T=6;
 function crateKind(){if(G.wave<3)return'cash';const r=Math.random(),hurt=G.hp<G.maxHp*0.8||G.wallMax&&G.wallHp<G.wallMax*0.7;
   return r<0.2?'ammo':hurt&&r<0.5?'fix':G.wave>=10&&r>0.9?'intel':G.wave>=8&&r>0.82?'strike':'cash'}   // orange STRIKE (wave 8+): a free bombing run on the thickest cluster   // blue INTEL (wave 10+): every ground hostile, fog crews included, marked for INTEL_T
 function dropCrate(kind){const a=Math.random()*7,r=fortHalf()+wallThick()+wireOut()+18+Math.random()*Math.max(20,sight()-fortHalf()-wireOut()-40),k=kind||crateKind();
