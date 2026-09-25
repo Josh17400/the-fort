@@ -697,6 +697,7 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
   background:linear-gradient(var(--c-bg) 70%,rgba(11,13,9,0))}
 .cats{position:relative;flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;padding:10px 2px 14px}
 .cats::-webkit-scrollbar{display:none}
+@media (min-width:900px) and (min-height:501px){.cats{flex-wrap:wrap;overflow:visible;row-gap:8px}}   /* desktop: every category visible; a mouse cannot swipe a hidden overflow */
 .cats.fl{-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px);mask-image:linear-gradient(90deg,transparent,#000 40px)}
 .cats.fr{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
 .cats.fl.fr{-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent)}
@@ -763,6 +764,7 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
 .rsb{display:grid;grid-template-columns:272px minmax(0,1fr);gap:14px;align-items:start}
 .rsl{position:sticky;top:calc(var(--hdr-h) + var(--safe-t) + 16px);max-height:calc(100vh - var(--hdr-h) - var(--safe-t) - 32px);overflow:auto;padding:6px 8px 10px;border-radius:var(--rad-lg);
   background:var(--c-s1);border:1px solid var(--c-line);scrollbar-width:thin;scrollbar-color:rgba(190,210,150,.25) transparent}
+.rsl-empty{display:grid;justify-items:center;gap:6px;padding:22px 12px 16px;text-align:center;color:var(--c-dim);font-size:13px;line-height:1.45}.rsl-empty b{font:700 13px var(--f-display);letter-spacing:.08em;color:var(--c-text)}.rsl-empty .ic{opacity:.7}
 .rsl h4{margin:14px 8px 6px;font:600 11px var(--f-display);letter-spacing:.2em;color:var(--c-dim)}
 .rsr{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:7px 8px;border-radius:10px;border:1px solid transparent;background:none;color:var(--c-text);text-align:left;cursor:pointer;font:inherit;
   transition:background var(--d-1),border-color var(--d-1)}
@@ -1710,10 +1712,10 @@ function renderResearch(){const nar=rsNarrow(),vis=RLINES.lines.filter(rsVis),r0
         +(on?`<div class="rtx">${t.w?`<div class="rtw">${t.w}</div>`:''}${rsStats(r,k)}${rsSigHtml(t)}${st==='lk'?rsGate(t)+rsWhyHtml(r,k):''}</div>`:'')+'</div>'}).join('')
       +(rsDone(r.id)?`<div class="rtr" data-k="rf" style="${rsEraVars(r.t[r.t.length-1])}"><button disabled><span class="mth">${ic('repair',22)}</span><span class="rb"><span class="rtn">Refit Mk ${rank(rsRefit(r).n+1)}</span><span class="rtl2">ENDLESS · +8% ${r.id==='walls'?'WALL HP':'DMG'} EACH</span></span><span class="rc">${rsRefit(r).c} RP</span></button></div>`:'')+'</div>';
     h+=rsCta(r)}
-  else{h+='<div class="rsb"><nav class="rsl" aria-label="Research lines">'+CATS.slice(1).filter(c=>vis.some(q=>UB[q.u].cat===c)).map(c=>`<h4>${c}</h4>`+vis.filter(q=>UB[q.u].cat===c).map(q=>{const lk=rsNF(q);
+  else{h+='<div class="rsb"><nav class="rsl" aria-label="Research lines">'+(vis.length?'':`<div class="rsl-empty">${ic('lock',18)}<b>No lines open yet</b><span>Hold deeper waves and field new units in the Armory to open research lines.</span></div>`)+CATS.slice(1).filter(c=>vis.some(q=>UB[q.u].cat===c)).map(c=>`<h4>${c}</h4>`+vis.filter(q=>UB[q.u].cat===c).map(q=>{const lk=rsNF(q);
       return`<button class="rsr${q===r?' on':''}${lk?' off':''}" data-rsl="${q.id}"${q===r?' aria-current="true"':''}><span class="ico">${ic(lk?'lock':q.u,18)}</span><span class="rb"><span class="rn">${q.label}</span><span class="rt">${lk?'<span class="badge b-nf">NOT FIELDED</span>':q.t[rsOwned(q.id)].n}</span>${lk?'':rsPips(q)}</span>${rsReadyLine(q)?'<span class="rdot" title="Next tier affordable"></span>':''}</button>`}).join('')).join('')+'</nav>';
     h+=`<section class="rsd">${rsHead(r,false)}<div class="trk"><button class="trk-prev" aria-label="Earlier tiers">${ic('chevL',20)}</button><div class="rtk" data-line="${r.id}">${r.t.map((_,k)=>k>rsOwned(r.id)+1?'':rsCard(r,k)).join('')}${rsDone(r.id)?rsRefitCard(r):''}</div><button class="trk-next" aria-label="Later tiers">${ic('chevR',20)}</button></div>${rsCompare(r)}</section></div>`}
-  if(!vis.length)h+=`<div class="callout c-info" style="margin:16px 0">${ic('research',16)}<span>Nothing to research yet. Hold deeper waves and field new units to open the next tiers.</span></div>`;
+  if(!vis.length&&nar)h+=`<div class="callout c-info" style="margin:16px 0">${ic('research',16)}<span>Nothing to research yet. Hold deeper waves and field new units to open the next tiers.</span></div>`;
   el.innerHTML=h+'</div>';
   for(const c of el.querySelectorAll('canvas[data-th]'))paintThumb(c);
   const nr=el.querySelector('.rsl');if(nr)nr.scrollTop=railY;
