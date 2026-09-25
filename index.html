@@ -1579,7 +1579,7 @@ function cardHtml(u,rec){const l=L(u.id),c=costOf(u,l),mx=l>=u.max,ok=affordable
     :`<button class="buy no" data-id="${u.id}" aria-disabled="true"><b>$${fmtN(c)}</b>${S.bank>0?' · need $'+fmtN(c-S.bank)+' more':''}</button>`;
   return`<div class="card${isRec?' rec':''}${ok?' can':''}${mx?' mx':''}${_open.has(u.id)?' open':''}" data-card="${u.id}">${isRec?`<span class="rib">${ic('star',11)}RECOMMENDED</span>`:''}`
     +`<div class="h"><div class="ico">${ic(u.id,24)}</div><div class="hb"><div class="nm">${u.name}</div><div class="lv">LV ${l}${fin?' / '+u.max:''}</div></div></div>`
-    +(isRec?`<div class="why">${ok?'':'Save for: '}${why||'Core upgrade'}</div>`:'')+rdLink(u.id)+prog
+    +(isRec?`<div class="why">${ok?'':'Save up for this · '}${why||'Core upgrade'}</div>`:'')+rdLink(u.id)+prog
     +`<div class="d" data-tog="${u.id}">${u.desc}</div>`
     +(mx?`<div class="v">${u.val(l)}</div>`:`<div class="v"><span>${u.val(l)}</span><span class="ar">→</span><i>${u.val(l+1)}</i></div>`)+unl+btn+'</div>'}
 function lrowHtml(u){const reqs=[],o=_open.has('L'+u.id);
@@ -7782,7 +7782,7 @@ function coachPlace(b){const r=b.getBoundingClientRect(),c=$('coach');c.classLis
 function renderPause(){const t=G.time;$('pauseCtx').textContent='WAVE '+G.wave+' · '+Math.floor(t/60)+'m '+Math.floor(t%60)+'s';
   $('pauseStats').innerHTML=[['KILLS',hN(G.kills),''],['EARNED','$'+f1(G.earned),'cash'],['RP','+'+hN(G.rp||0),'rp'],['BEST',hN(S.best),'']].map(([k,v,c])=>`<div class="tile ${c}"><span>${k}</span><b>${v}</b></div>`).join('');
   const pc=perkChips();$('pausePerks').innerHTML=pc;$('pausePerksH').classList.toggle('none',!pc);
-  $('pauseHelp').innerHTML=MOBILE?'Doctrine: <b style="color:var(--c-text,#e6ead9)">'+PRIO_NAME[prio()]+'</b> · Pinch or '+ic('zoom',13)+' to zoom':'<kbd>Esc</kbd> resume · <kbd>G</kbd> frag · <kbd>Q</kbd> air · <kbd>T</kbd> target · <kbd>F</kbd> speed';
+  $('pauseHelp').innerHTML=MOBILE?'Doctrine: <b style="color:var(--c-text,#e6ead9)">'+PRIO_NAME[prio()]+'</b> · Pinch or '+ic('zoom',13)+' to zoom':'<kbd>Esc</kbd> resume · <kbd>G</kbd> frag'+(L('air')>0?' · <kbd>Q</kbd> air':'')+' · <kbd>T</kbd> target'+(L('speed')?' · <kbd>F</kbd> speed':'');   // only keys that do something this run
   const hw=$('pauseHow');hw.classList.remove('on');$('pauseHowBtn').setAttribute('aria-expanded','false')}
 $('pauseHowBtn').onclick=()=>{if(typeof openHowto==='function'){openHowto();return}const hw=$('pauseHow'),on=!hw.classList.contains('on');
   if(on&&!hw.innerHTML){const h=$('helpTxt');hw.innerHTML=h?h.innerHTML:''}hw.classList.toggle('on',on);$('pauseHowBtn').setAttribute('aria-expanded',on?'true':'false');if(on)hw.scrollIntoView({block:'nearest'})};
