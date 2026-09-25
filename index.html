@@ -8212,7 +8212,12 @@ $('pauseHowBtn').onclick=()=>{if(typeof openHowto==='function'){openHowto();retu
 $('armX').onclick=e=>{e.stopPropagation();if(!G)return;G.airArmed=false;G.airAim=null;G.nadeArmed=false;syncNadeBtn();syncAirBtn()};
 $('intel').addEventListener('pointerdown',e=>{if(HL.mode==='desk'||!intelCur)return;e.preventDefault();e.stopPropagation();intelCur=null;$('intel').classList.remove('on');intelEnd=performance.now()+450});
 function rrect(x,y,w,h,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(x,y,Math.max(0,w),h,r);ctx.fill()}
-function drawPlane(){if(S.set.gfx==='high'){drawPlaneHQ();return}ctx.scale(2.2,2.2);const at=tierOf('air');if(at>=2){ctx.scale(1.15,1.15);const jt=at<=3?1:at===4?2:4,sh=String(ctx.fillStyle).indexOf('rgba(0, 0, 0')===0;if(!sh)ctx.fillStyle=JET_LO[jt];ctx.fill(jetPath(jt));if(!sh){jetLoDetail(jt);if(at===3)for(const y of[-6.4,6.4]){box(-4,y-1.15,9.4,2.3,'#3c4130');box(1.6,y-1.15,.7,2.3,'#e07a20')}}return}ctx.beginPath();ctx.moveTo(18,0);ctx.lineTo(-12,-3);ctx.lineTo(-14,0);ctx.lineTo(-12,3);ctx.fill();ctx.fillRect(-2,-16,7,32);ctx.fillRect(-14,-6,4,12)}
+function drawPlane(){if(S.set.gfx==='high'){drawPlaneHQ();return}ctx.scale(2.2,2.2);const at=tierOf('air');if(at>=2){ctx.scale(1.15,1.15);const jt=at<=3?1:at===4?2:4,sh=String(ctx.fillStyle).indexOf('rgba(0, 0, 0')===0;if(!sh)ctx.fillStyle=JET_LO[jt];ctx.fill(jetPath(jt));if(!sh){jetLoDetail(jt);if(at===3)for(const y of[-6.4,6.4]){box(-4,y-1.15,9.4,2.3,'#3c4130');box(1.6,y-1.15,.7,2.3,'#e07a20')}}return}
+  const P=_planeLo||(_planeLo=[[-2,-16,7,32,.6],[-14,-6,4,12,.5],[-13,-1.9,31,3.8,1.8]].map(([x,y,w,h,r])=>{const q=new Path2D();q.roundRect(x,y,w,h,r);return q}));
+  if(String(ctx.fillStyle).indexOf('rgba(0, 0, 0')===0){for(const q of P)ctx.fill(q);return}   // Medium/Low A-10: outlined, two-tone, engines + canopy (a handful of fills; planes are few)
+  ctx.strokeStyle='#1a1f16';ctx.lineWidth=1;ctx.lineJoin='round';for(const q of P)ctx.stroke(q);ctx.fillStyle='#8a9a7a';for(const q of P)ctx.fill(q);box(-2,.5,7,15.5,'rgba(0,0,0,.18)');box(-14,.5,4,5.5,'rgba(0,0,0,.18)');box(-2,-16,1.2,32,'rgba(255,255,240,.14)');
+  for(const y of[-3.6,3.6]){ell(-7.6,y,3.1,1.5,'#1a1f16');ell(-7.6,y,2.7,1.15,'#5b6655')}ell(11.5,0,2.4,1.05,'#1d2e3a');ell(11,-.4,.9,.35,'rgba(220,240,255,.45)')}
+let _planeLo=null;
 
 // ================= MEDALS =================
 // Career decorations. S.ms keeps lifetime tallies, S.mg the medals won (id -> cash paid). Each medal pays a one-off award scaled to
