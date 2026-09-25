@@ -6882,9 +6882,12 @@ function drawCraft(e,x,y,k){const t=G.time,hot=t-(e.fl??-9)<0.06,ty=e.type,B=_sk
 function craftArt(type,col,th,blink,hot,bay,ab){
   switch(type){
   case'drone':
-    for(const[a,b]of DRONE_ARMS)limb(0,0,a,b,1.3,'#26282a');
-    box(-2.6,-1.8,5.2,3.6,col);box(-2.6,-1.8,5.2,.7,'#6c7066');box(2.2,-.75,3.2,1.5,'#6b5a3a');ell(5.5,0,.95,.8,'#8f7c4c');ell(-1.2,0,.8,.8,'#111');   // airframe + strapped-on warhead
-    for(const[a,b]of DRONE_ARMS){const r=th+a*1.3;ell(a,b,3,3,'rgba(200,205,210,.16)');limb(a-Math.cos(r)*2.8,b-Math.sin(r)*2.8,a+Math.cos(r)*2.8,b+Math.sin(r)*2.8,.5,'rgba(20,20,20,.6)');ell(a,b,.75,.75,'#111')}
+    for(const[a,b]of DRONE_ARMS){limb(0,0,a,b,2,'#0e100c');ell(a,b,1.25,1.25,'#0e100c')}for(const[a,b]of DRONE_ARMS){limb(0,0,a,b,1.2,'#3a3d40');limb(a*.2,b*.2-.2,a*.8,b*.8-.2,.3,'rgba(255,255,255,.2)')}   // outlined carbon arms
+    hqRR(-3.1,-2.3,6.2,4.6,1,'#0e100c');hqRR(-2.6,-1.8,5.2,3.6,.7,col);box(-2.3,-1.8,4.6,1.1,hqSh(col,.28));box(-2.3,.9,4.6,.9,hqSh(col,-.4));box(-2,-.3,3.8,.25,'rgba(0,0,0,.35)');   // two-tone airframe, top-left lit
+    hqRR(1.6,-1.25,5.2,2.5,1.2,'#0e100c');hqRR(2,-.85,4.4,1.7,.85,'#5a6332');box(2.2,-.85,4,.55,'#7a8448');box(2.2,.45,4,.4,'#3d4422');box(5.2,-.85,.6,1.7,'#1c1c18');ell(6.55,0,.5,.5,'#c9a24a');   // olive munition: nose band + fuze
+    limb(2.8,-1.1,2.8,1.1,.35,'#1c1c18');ell(-1.3,0,.85,.85,'#111');ell(-1.5,-.25,.3,.25,'rgba(255,255,255,.35)');   // strap + camera
+    for(const[a,b]of DRONE_ARMS){const r=th+a*1.3;ell(a,b,3,3,'rgba(200,205,210,.1)');ctx.strokeStyle='rgba(16,18,20,.55)';ctx.lineWidth=.28;ctx.beginPath();ctx.arc(a,b,2.95,0,TAU);ctx.stroke();
+      limb(a-Math.cos(r)*2.8,b-Math.sin(r)*2.8,a+Math.cos(r)*2.8,b+Math.sin(r)*2.8,.55,'rgba(20,20,20,.65)');ell(a,b,.8,.8,'#111');ell(a-.2,b-.2,.3,.3,'#6a6e72')}
     if(blink){ell(-2.3,0,.55,.55,'#ff3b30');ell(-2.3,0,1.4,1.4,'rgba(255,60,50,.3)')}
     break;
   case'gunheli':
@@ -6920,8 +6923,11 @@ function craftArt(type,col,th,blink,hot,bay,ab){
     box(-36,-2.4,2.6,4.8,'#b3261e');
     break;
   case'uav':
-    fpoly(UAV_WING,'#9aa0a5');box(0.7,-21,3.6,.7,'rgba(255,255,255,.2)');for(const s of[1,-1])fpoly(s>0?UAV_TAIL:flipY(UAV_TAIL),'#80868b');
-    ell(0,0,10,2,col);ell(-1,-.7,8,.6,'rgba(255,255,255,.18)');ell(6.8,0,3.4,2.4,'#a9aeb2');ell(8.4,0,1.3,1.3,'#1a1d20');ell(8.1,-.4,.45,.45,'rgba(140,210,255,.8)');   // pod, sensor dome, EO/IR ball
+    {const W=polyTo(new Path2D(),UAV_WING),T=[polyTo(new Path2D(),UAV_TAIL),polyTo(new Path2D(),flipY(UAV_TAIL))];ctx.strokeStyle='#0e100c';ctx.lineWidth=.9;ctx.lineJoin='round';ctx.stroke(W);for(const q of T)ctx.stroke(q);
+      ctx.fillStyle='#9aa0a5';ctx.fill(W);ctx.save();ctx.clip(W);box(-1,-22,7,22,'rgba(255,252,235,.12)');box(-1,0,7,22,'rgba(0,0,0,.16)');box(3.7,-22,1.2,44,'rgba(255,255,255,.2)');   // lit port / shaded starboard, leading edge
+        for(const y of[-19,11.5])box(.4,y,1.3,7.5,'#5f656a');ctx.strokeStyle='rgba(0,0,0,.28)';ctx.lineWidth=.14;ctx.beginPath();for(const y of[-12,-6,6,12])ctx.moveTo(.6,y),ctx.lineTo(4.4,y);ctx.stroke();ctx.restore();   // ailerons + rib seams
+      for(const q of T){ctx.fillStyle='#80868b';ctx.fill(q)}for(const s of[1,-1])fpoly([[-10.6,-4.6*s],[-11.4,-6.4*s],[-12.6,-6.2*s],[-11.6,-4.4*s]],'#4f5458');}   // tail + ruddervators
+    ell(0,0,10.5,2.5,'#0e100c');ell(0,0,10,2,col);ell(0,.9,9.4,1.05,'rgba(0,0,0,.24)');ell(-1,-.7,8,.6,'rgba(255,255,255,.2)');ell(6.8,0,3.4,2.4,'#a9aeb2');ell(8.4,0,1.3,1.3,'#1a1d20');ell(8.1,-.4,.45,.45,'rgba(140,210,255,.8)');   // pod, sensor dome, EO/IR ball
     {const r=th;ell(-10.4,0,1,3.2,'rgba(210,214,218,.18)');limb(-10.4,-Math.cos(r)*3,-10.4,Math.cos(r)*3,.6,'rgba(25,25,25,.7)')}   // pusher prop
     if(blink){ell(-2,0,.6,.6,'#ff3b30');ell(-2,0,1.8,1.8,'rgba(255,60,50,.28)')}
     break;
