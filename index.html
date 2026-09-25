@@ -2176,7 +2176,7 @@ function streakKill(){G.stk=(G.stk||0)+1;G.stkT=STREAK_T;G.stkPop=1;medalMax('st
 const ARMOR_KILL={boss:1,mbt:1,ifv:1,apc:1,mlrs:1};
 function kill(e){e.dead=true;if(_mainHit&&_aimed)streakKill();
   const bonus=e.load>0?money(e.rew*0.15*e.load):0,r=Math.round(money(e.rew)*streakMul())+bonus;S.bank+=r;G.earned+=r;G.kills++;S.tkills++;(e.air?airDown:fxKill)(e);
-  if(e.chute>0)medalBump('chute');if(_nadeK)medalBump('nade');if(ARMOR_KILL[e.type]&&!e.air)medalBump('tank');if(S.tkills%25===0)medalCheck('kills');
+  if(e.chute>0)medalBump('chute');if(_nadeK)medalBump('nade');if(ARMOR_KILL[e.type]&&!e.air)medalBump('tank');if(e.type==='manpads')medalBump('manpads');if(S.tkills%25===0)medalCheck('kills');
   if(S.set.gfx==='high'&&!e.air)corpse(e);else if(e.veh)G.vwrecks.push({type:e.type,x:e.x,y:e.y,r:e.r,a:Math.atan2(-e.y,-e.x),t0:G.time});
   float(e.x,e.y-e.r-8,'+$'+r,'#7ddc5a',e.veh?13:11);sfx('kill',e.x,e.y);
   if(bonus)float(e.x,e.y-e.r-24,'CARRIER KILLED LOADED','#ffcf5a',12);
@@ -7899,6 +7899,7 @@ const MEDALS=[
  {id:'canopy',ic:'chute',name:'Canopy Buster',desc:'Shoot 100 paratroopers before they land.',st:'chute',goal:100,cash:700},
  {id:'stonewall',ic:'threat',name:'Stonewall',desc:'Repel 5 blitz waves.',st:'blitz',goal:5,cash:700},
  {id:'tank',ic:'tank',name:'Tank Hunter',desc:'Destroy 25 enemy armored vehicles (tanks, carriers, rocket launchers).',st:'tank',goal:25,cash:900},
+ {id:'stinger',ic:'sniper',name:'Clear Skies',desc:'Take out 50 MANPADS teams before they bring your aircraft down.',st:'manpads',goal:50,cash:900},
  {id:'sky',ic:'aagun',name:'Sky Shield',desc:'Down 250 enemy aircraft.',st:'air',goal:250,cash:900},
  {id:'giant',ic:'gunship',name:'Giant Killer',desc:'Bring down a heavy gunship.',st:'gunship',goal:1,cash:2000},
  {id:'demo',ic:'nade',name:'Demolitions',desc:'Score 100 kills with hand grenades.',st:'nade',goal:100,cash:600},
