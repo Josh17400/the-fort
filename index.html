@@ -1145,7 +1145,7 @@ const U=[
  {id:'heli',late:1,wave:22,need:[["walls", 7], ["tank", 1], ["vision", 8]],cat:'HEAVY ARMOR',name:'Attack Helicopters',max:Infinity,cost:4000,g:1.95,desc:'Gunships circle the fort with chainguns and rockets.',val:l=>l?Math.min(2,Math.ceil(l/3))+' '+pl(Math.min(2,Math.ceil(l/3)),'heli')+' · '+f1(heliDmg(l))+' gun / '+f1(rocketDmg(l))+' rocket':'none'},
  {id:'tesla',late:1,wave:30,need:[["walls", 9], ["flame", 1]],cat:'HEAVY ARMOR',name:'Point Defense',max:Infinity,cost:8000,g:1.9,desc:'Radar-guided rotary autocannon. Rips bursts through packed enemies, hopping target to target. Engages aircraft first (+75% vs air).',val:l=>l?f1(teslaDmg(l))+' dmg · '+Math.min(12,3+l)+' targets':'none'},
  {id:'aagun',late:1,wave:7,need:[["walls", 3], ["squad", 1]],cat:'AIR DEFENSE',name:'AA Gun',max:Infinity,cost:450,g:1.6,desc:'Twin 35mm flak cannon. Radar-laid bursts shred drones and aircraft (air targets only). A second gun joins at Lv 4.',val:l=>l?aaGuns(l)+(aaGuns(l)>1?' guns':' gun')+' · '+f1(aaDmg(l))+' flak dmg':'none'},
- {id:'radar',wave:12,need:[["aagun", 2], ["vision", 5]],cat:'AIR DEFENSE',name:'Air-Search Radar',max:10,cost:900,g:1.7,desc:'Tracks aircraft beyond your sight line so every gun can engage them early, and cues air-defence fire for extra damage.',val:l=>l?'+'+radarR(l)+'m air picture · +'+pct(0.06*l)+' AA dmg':'none'},
+ {id:'radar',wave:12,need:[["aagun", 2], ["vision", 5]],cat:'AIR DEFENSE',name:'Air-Search Radar',max:10,cost:900,g:1.7,desc:'Tracks aircraft beyond your sight line so every gun can engage them early, and cues air-defence fire for extra damage. Counter-battery mode holds mortar and rocket launch positions longer.',val:l=>l?'+'+radarR(l)+'m air · +'+pct(0.06*l)+' AA · +'+f1(0.5*Math.min(6,l))+'s track':'none'},
  {id:'sam',late:1,wave:20,need:[["aagun", 4], ["walls", 6], ["mlaunch", 1]],cat:'AIR DEFENSE',name:'SAM Site',max:Infinity,cost:5000,g:1.8,desc:'Long-range surface-to-air missiles that hunt the toughest aircraft in the sky. Air targets only.',val:l=>l?samN(l)+(samN(l)>1?' missiles · ':' missile · ')+f1(samDmg(l))+' dmg / '+samCd(l).toFixed(1)+'s':'none'},
 
  {id:'mlaunch',late:1,wave:20,need:[["walls", 6], ["arty", 3]],cat:'AIR & MISSILES',name:'Missile Launcher',max:Infinity,cost:3500,g:1.9,desc:'Fires salvos of homing missiles at the toughest targets, aircraft first (+50% vs air).',val:l=>l?Math.min(8,1+Math.floor(l/2))+' '+pl(Math.min(8,1+Math.floor(l/2)),'missile')+' · '+f1(mslDmg(l))+' dmg':'none'},
@@ -2246,10 +2246,11 @@ function standOff(e,spd,dt){const d=Math.hypot(e.x,e.y)||1,want=e.fwd?Math.max(b
   if(e.moving){e.moving=false;e.atk=Math.max(e.atk,e.type==='mlrs'?2.2:1.4)}   // set up: tube bipod / launcher jacks down
   e.atk-=dt;if(e.atk>0)return;e.atk=e.rate*(0.85+Math.random()*0.3);e.shots++;e.fl=G.time;
   if(e.type==='mortar')fireMortar(e);else fireMLRS(e)}
-function fireMortar(e){const h=blockHalf()*0.85,v=R()<0.3?fcNear(e,520):null,tx=v?v.x+(R()-.5)*18:(R()*2-1)*h,ty=v?v.y+(R()-.5)*18:(R()*2-1)*h;e.rev=1.8;if(e.shots>=4)e.fwd=1;
+const cbTrack=()=>0.5*Math.min(6,L('radar'));   // counter-battery: radar holds a launch position this much longer (s)
+function fireMortar(e){const h=blockHalf()*0.85,v=R()<0.3?fcNear(e,520):null,tx=v?v.x+(R()-.5)*18:(R()*2-1)*h,ty=v?v.y+(R()-.5)*18:(R()*2-1)*h;e.rev=1.8+cbTrack();if(e.shots>=4)e.fwd=1;
   G.eshots.push({k:'mortar',x:e.x,y:e.y,tx,ty,t:0,dur:1.35,dmg:e.dmg,src:e.type,h:70,warn:1});
   light(e.x,e.y,46,'255,190,110',0.18);puff(e.x,e.y,4,5,1.2,'170,165,150',16,0.5);sfx('mortar',e.x,e.y);sfx('whistle')}
-function fireMLRS(e){const n=Math.min(10,6+Math.floor(Math.max(0,G.wave-22)/5)),v=R()<0.3?fcNear(e,560):null,h=v?40:blockHalf()*0.95,cx=v?v.x:0,cy=v?v.y:0;e.rev=4;if(e.shots>=2)e.fwd=1;
+function fireMLRS(e){const n=Math.min(10,6+Math.floor(Math.max(0,G.wave-22)/5)),v=R()<0.3?fcNear(e,560):null,h=v?40:blockHalf()*0.95,cx=v?v.x:0,cy=v?v.y:0;e.rev=4+cbTrack();if(e.shots>=2)e.fwd=1;
   for(let i=0;i<n;i++)G.eshots.push({k:'mlrs',x:e.x,y:e.y,tx:cx+(R()*2-1)*h,ty:cy+(R()*2-1)*h,t:-1.1-i*0.16,dur:1.1,dmg:e.dmg,src:e.type,h:95,warn:1});   // rings first, then the ripple
   sfx('alarm');float(e.x,e.y-e.r-10,'ROCKET SALVO','#ff8a70',12)}
 // APC: once at the wall it drops the ramp and a rifle squad pours out on both flanks, then its turret opens up
