@@ -6385,6 +6385,7 @@ Object.assign(INTEL,{
  ev_armor:['Armored Column',4,'An enemy tank leads a column of heavy troopers. Artillery, armor and airstrikes crack it open. Clearing the wave pays +60%.'],
  ev_mech:['Combat Mechanic',3,'A rifleman with a tool kit, marked by a green cross. He follows the armor and patches up one damaged vehicle nearby. Kill him first or your shells are wasted. TARGET: THREATS ranks him high.'],
  ev_vbied:['Car Bomb',4,'A technical packed with explosives, marked by a blinking red light. It races straight for your walls and blows a huge hole in them. Kill it early: it detonates where it dies and hurts hostiles around it.'],
+ ev_night:['Nightfall',0,'After dark your sight line shrinks by 15% and hostiles are harder to spot. Tower searchlights reveal whatever they sweep across. The Illumination Rounds directive cancels the night penalty.'],
  ev_wallhold:['Walls Under Fire',0,'Engineers cannot patch walls that are taking hits. Repairs restart 3s after the last hit, so clear the attackers to let the walls recover.'],
  ev_resupply:['Resupply Drop',0,'Command pushes a supply run through: three special crates land around the fort at the start of the wave. Tap them before they fade.'],
  ev_ambush:['Ambush',3,'Part of the wave has crept in unseen and opens up from one flank, already inside your sight line. Swing your fire to that side fast: auto-fire, frag rounds and MG nests help. Clearing the wave pays +50%.'],
@@ -6492,7 +6493,7 @@ function drawUavMarks(){const px=1/sc,t=G.time;
     for(let i=0;i<4;i++){const cx=e.x+(i&1?r:-r),cy=e.y+(i&2?r:-r),sx=i&1?-1:1,sy=i&2?-1:1;ctx.moveTo(cx+sx*tk,cy);ctx.lineTo(cx,cy);ctx.lineTo(cx,cy+sy*tk)}ctx.stroke();
     ctx.font=`800 ${(11*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle=`rgb(${UAV_COL})`;ctx.fillText('RECON UAV',e.x,e.y-r-4*px)}}
 // FIELD REPORT card art for a first-time event
-function evPreview(k){if(k==='armor')return drawPreview('boss');if(k==='barrage')return drawPreview('mortar');if(k==='swarm')return drawPreview('drone');if(k==='wallhold')return cratePreview('fix');if(k==='vbied'||k==='convoy')return drawPreview('technical');if(k==='mech')return drawPreview('grunt');if(k==='ambush')return drawPreview('shooter');if(k==='resupply')return cratePreview('ammo');const c=$('intelCv'),W=c.width,main=ctx,grunt=t=>({type:t,r:ET[t].r,col:ET[t].col,moving:false,wob:0,flash:0});
+function evPreview(k){if(k==='armor')return drawPreview('boss');if(k==='barrage')return drawPreview('mortar');if(k==='swarm')return drawPreview('drone');if(k==='wallhold')return cratePreview('fix');if(k==='night')return drawPreview('grunt');if(k==='vbied'||k==='convoy')return drawPreview('technical');if(k==='mech')return drawPreview('grunt');if(k==='ambush')return drawPreview('shooter');if(k==='resupply')return cratePreview('ammo');const c=$('intelCv'),W=c.width,main=ctx,grunt=t=>({type:t,r:ET[t].r,col:ET[t].col,moving:false,wob:0,flash:0});
   ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,W);
     if(k==='storm'){let f=W/24;ctx.setTransform(f,0,0,f,W/2+100*f,W/2);drawEnemy(grunt('grunt'),-100,0);ctx.setTransform(1,0,0,1,0,0);
       const g=ctx.createRadialGradient(W/2,W/2,W*0.1,W/2,W/2,W*0.6);g.addColorStop(0,'rgba(200,160,100,.25)');g.addColorStop(1,'rgba(160,126,80,.95)');ctx.fillStyle=g;ctx.fillRect(0,0,W,W);
@@ -7364,7 +7365,7 @@ function dayTick(dt){if(!S.set.dayNight){G.nightK=0;return}
     pr=left>0?0.8*cl(1-left/(G.waveTotal||1)):0.8+0.2*cl(1-G.breakT/(G.breakMax||3)),
     d=todAdvance(G.todH0,G.wave-(G.startWave||1)+pr)-G.todT;
   if(d>0&&Number.isFinite(d))G.todT+=Math.min(d,(0.015+d*0.7)*dt);
-  G.nightK=sstep(.3,.9,nightOf(hourOf()));
+  G.nightK=sstep(.3,.9,nightOf(hourOf()));if(G.nightK>0.6&&!seen().ev_night)spotted('ev_night');
   if(G.nightK>0.3&&(G._slT=(G._slT||0)-dt)<=0){G._slT=0.1;const bm=dnBeams(DN.beams);
     for(const e of G.enemies){if(e.dead)continue;for(const[ox,oy,a,len]of bm){const dx=e.x-ox,dy=e.y-oy,lim=len*1.04;if(dx>lim||dx<-lim||dy>lim||dy<-lim)continue;const dd=hyp(dx,dy);if(dd>lim||dd<1)continue;
       let da=Math.atan2(dy,dx)-a;da=Math.atan2(Math.sin(da),Math.cos(da));if(Math.abs(da)<0.15+e.r/dd){e.rev=Math.max(e.rev||0,0.15);break}}}}}
