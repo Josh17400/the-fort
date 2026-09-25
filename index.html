@@ -1172,7 +1172,7 @@ const costOf=(u,l)=>{if(!u.late)return Math.round(u.cost*Math.pow(u.g,l));const 
 // After-action report: what broke the fort last run, and the upgrade that best answers it (affordable first, else the next one to save for)
 const COUNTER={grunt:['dmg','rate','nade','squad','turret','auto'],runner:['auto','rate','wire','nade','turret','squad'],brute:['dmg','crit','frag','sniper','tank'],
   shooter:['sniper','dmg','crit','arty','vision'],bomber:['mines','wire','flame','arty','dmg'],boss:['arty','tank','air','sniper','mlaunch','silo'],
-  rpg:['dmg','auto','sniper','nade','frag','turret'],manpads:['sniper','dmg','auto','turret','arty'],mortar:['arty','sniper','nade','mlaunch','dmg'],technical:['mines','nade','dmg','sniper','truck','arty'],
+  rpg:['dmg','auto','sniper','nade','frag','turret'],manpads:['sniper','dmg','auto','turret','arty'],vbied:['mines','wire','arty','frag','nade'],mortar:['arty','sniper','nade','mlaunch','dmg'],technical:['mines','nade','dmg','sniper','truck','arty'],
   apc:['mines','arty','nade','tank','sniper','air'],ifv:['arty','tank','mlaunch','mines','air','sniper'],mbt:['tank','mlaunch','arty','air','mines','silo'],
   mlrs:['arty','mlaunch','sniper','air','fighter'],
   drone:['aagun','turret','tesla','radar','rate'],gunheli:['aagun','radar','mlaunch','sam','dmg'],strikejet:['aagun','sam','tesla','radar'],
@@ -1194,11 +1194,12 @@ function nextUnlockHtml(){const rows=nextUnlocks(narrow()?2:3);if(!rows.length)r
 const STANDOFF=new Set(['shooter','bomber','boss','rpg','mortar','technical','ifv','mbt','mlrs','drone','gunheli','strikejet','heavybomber','airboss']);
 function doctrineTip(d){return d==='threat'?`<div class="callout c-tip">${ic('threat',16)}<span>Your guns were on <b>${PRIO_NAME[prio()]}</b>. ${MOBILE?'Tap <b>TARGET</b>':'Press <b>T</b>'} until it reads <b>THREATS</b> so every gun hits marksmen, sappers and aircraft first.</span></div>`
   :d==='lock'?`<div class="callout c-tip">${ic('dmg',16)}<span>${MOBILE?'Tap':'Click'} marksmen and aircraft to lock on: your commander only fires at what you pick.</span></div>`:''}
+const threatName=t=>t==='vbied'?'Car Bomb':INTEL[t]?INTEL[t][0]:t||'last threat';
 function counterPick(){if(!lastCause)return null;const ids=[...(lastCause.breachW?COUNTER.walls:[]),...lastCause.top.flatMap(t=>COUNTER[t]||[])];
   const ok=[...new Set(ids)].map(id=>U.find(u=>u.id===id)).filter(u=>u&&L(u.id)<u.max&&!lockWhy(u));
   return ok.find(u=>S.bank>=costOf(u,L(u.id)))||ok[0]||null}
 function afterAction(){if(!lastCause)return'';const u=counterPick(),c=u&&costOf(u,L(u.id)),can=u&&S.bank>=c;
-  return`<div class="ovr"><div class="eyebrow">OVERRUN BY</div><div class="en">${lastCause.top.map(t=>INTEL[t]?INTEL[t][0]:t).join(' · ')}</div>`
+  return`<div class="ovr"><div class="eyebrow">OVERRUN BY</div><div class="en">${lastCause.top.map(threatName).join(' · ')}</div>`
     +(lastCause.breachW?`<div class="brk">Walls breached on wave ${lastCause.breachW}</div>`:'')+doctrineTip(lastCause.doc)+'</div>'
     +(u?`<button class="aarfix${can?' can':''}" data-goto="${u.id}"><span class="ico">${ic(u.id,18)}</span><span class="ft">Counter: <b>${u.name}</b> Lv ${L(u.id)+1}</span><i>${can?'$'+fmtN(c)+' · affordable →':'save $'+fmtN(c-S.bank)+' more'}</i></button>`:'')+rsCounter()}
 // armor broke the fort and the rifle still can't pierce it: point at the next commander tier with armor-piercing rounds
@@ -1567,7 +1568,7 @@ function loopSteps(){const st=[['dmg','HOLD',MOBILE?'Tap enemies to fire. Surviv
 const firstDeployHtml=()=>`<div class="panel first ticks"><div class="sec-h"><div class="eyebrow">FIRST DEPLOYMENT</div></div>${loopSteps()}</div>`;
 // Quartermaster's picks: counter to the last run, prerequisites of the next unlocks, then affordable core upgrades (cheapest core as a fallback)
 function recommend(n=3){const out=[],seen=new Set(),add=(u,why)=>{if(u&&!seen.has(u.id)&&L(u.id)<u.max&&!lockWhy(u)){seen.add(u.id);out.push({u,why})}};
-  const cp=counterPick();if(cp)add(cp,lastCause?'Counters '+(INTEL[lastCause.top[0]]?INTEL[lastCause.top[0]][0]:'last threat'):'');
+  const cp=counterPick();if(cp)add(cp,lastCause?'Counters '+threatName(lastCause.top[0]):'');
   for(const r of nextUnlocks(3))for(const p of r.pre)if(p.ok)add(p.q,'Unlocks '+r.u.name);
   ['dmg','walls','hp','rate'].map(id=>UB[id]).filter(u=>S.bank>=costOf(u,L(u.id))).sort((a,b)=>costOf(a,L(a.id))-costOf(b,L(b.id))).forEach(u=>add(u,'Core upgrade'));
   if(out.length<n)['dmg','walls','hp','rate'].map(id=>UB[id]).sort((a,b)=>costOf(a,L(a.id))-costOf(b,L(b.id))).forEach(u=>add(u,'Core upgrade'));
@@ -2417,7 +2418,7 @@ function update(dt){
     if(e.stand)standOff(e,spd,dt);
     else if(cheb>half+e.r&&(cheb>stop||(e.range&&d>sgt-e.r*1.5))){e.x-=e.x/d*spd*dt;e.y-=e.y/d*spd*dt;e.moving=true;e.odo+=spd*dt}
     else{e.moving=false;if(e.load)apcUnload(e);e.atk-=dt;if(e.atk<=0){e.atk=e.rate;
-      if(e.bomb){e.dead=true;explode(e.x,e.y,30,0);damageFort(e.dmg*(e.vbied?Math.pow(0.5,pk('barriers')):1),e.type)}
+      if(e.bomb){e.dead=true;explode(e.x,e.y,30,0);damageFort(e.dmg*(e.vbied?Math.pow(0.5,pk('barriers')):1),e.vbied?'vbied':e.type)}
       else if(EFIRE[e.type]){const tx=Math.max(-half,Math.min(half,e.x)),ty=Math.max(-half,Math.min(half,e.y));EFIRE[e.type](e,tx,ty,false)}
       else if(e.range){const tx=Math.max(-half,Math.min(half,e.x)),ty=Math.max(-half,Math.min(half,e.y));G.fx.push({k:'tracer',x:e.x,y:e.y,x2:tx,y2:ty,life:0.08,max:0.08,c:e.boss?'#ffd08a':'#ff6a5a',w:e.boss?2.4:1.2});if(e.boss)explode(tx,ty,16,0);damageFort(e.dmg,e.type)}
       else{damageFort(e.dmg,e.type);e.lunge=0.15;sigThorns(e)}}}
