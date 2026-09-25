@@ -2132,6 +2132,7 @@ function spawn(type,at){if(SKY[type])return spawnSky(type);const d=ET[type],w=G.
   return e}
 // VBIED: from VBIED_W some technicals come rigged as car bombs; shot before contact they still go up and hurt nearby hostiles
 const VBIED_W=16,VBIED_P=0.2;
+function vbiedBlast(e){explode(e.x,e.y,56,0);fireball(e.x,e.y,70,0.9);ring(e.x,e.y,120,0.6,'255,200,140',4);light(e.x,e.y,160,'255,150,60',0.6);puff(e.x,e.y,8,14,3,'40,36,32',30,0.7);sfx('boom',e.x,e.y,3);shake(12)}   // wall hit: a truck-sized blast
 function makeVbied(e){e.vbied=1;e.bomb=true;e.range=0;e.vp=true;e.dmg=ET.bomber.dmg*3*waveDmg(G.wave);e.spd*=1.35;e.hp*=0.8;e.max*=0.8;e.rew*=1.5}   // no gun: rams the walls
 // ---- enemy armor: from wave 6 each wave draws a vehicle roster that takes a share of the wave's slots (a vehicle is worth a
 // few riflemen) and is shuffled into the spawn stream, so late waves roll in as combined-arms assaults rather than rifle mobs.
@@ -2437,7 +2438,7 @@ function update(dt){
     if(e.stand)standOff(e,spd,dt);
     else if(cheb>half+e.r&&(cheb>stop||(e.range&&d>sgt-e.r*1.5))){e.x-=e.x/d*spd*dt;e.y-=e.y/d*spd*dt;e.moving=true;e.odo+=spd*dt}
     else{e.moving=false;if(e.load)apcUnload(e);e.atk-=dt;if(e.atk<=0){e.atk=e.rate;
-      if(e.bomb){e.dead=true;explode(e.x,e.y,30,0);damageFort(e.dmg*(e.vbied?Math.pow(0.5,pk('barriers')):1),e.vbied?'vbied':e.type)}
+      if(e.bomb){e.dead=true;if(e.vbied)vbiedBlast(e);else explode(e.x,e.y,30,0);damageFort(e.dmg*(e.vbied?Math.pow(0.5,pk('barriers')):1),e.vbied?'vbied':e.type)}
       else if(EFIRE[e.type]){const tx=Math.max(-half,Math.min(half,e.x)),ty=Math.max(-half,Math.min(half,e.y));EFIRE[e.type](e,tx,ty,false)}
       else if(e.range){const tx=Math.max(-half,Math.min(half,e.x)),ty=Math.max(-half,Math.min(half,e.y));G.fx.push({k:'tracer',x:e.x,y:e.y,x2:tx,y2:ty,life:0.08,max:0.08,c:e.boss?'#ffd08a':'#ff6a5a',w:e.boss?2.4:1.2});if(e.boss)explode(tx,ty,16,0);damageFort(e.dmg,e.type)}
       else{damageFort(e.dmg,e.type);e.lunge=0.15;sigThorns(e)}}}
