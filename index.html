@@ -1898,7 +1898,7 @@ function lNoise(v,ftype,f0,f1,q,peak,att,dec,delay=0){const[c,t0,out]=v,t=t0+del
 // Single-layer helper for UI chimes: centred, bus-routed, never dropped.
 function tone(f,d,type='square',slide=0,gain=0.08){const v=voice(d,1,null,null,true);if(v)lOsc(v,type,f,f+slide,gain,0.004,d)}
 // Minimum spacing (s) per sound so an 8-gun volley in one frame reads as one sharp report, not a smear.
-const SFX_GAP={armor:0.07,mortar:0.08,hatch:0.2,shot2:0.03,mg:0.035,cannon:0.05,boom:0.03,kill:0.02,wall:0.06,hurt:0.08,nade:0.05,rocket:0.06,launch:0.1,laser:0.06,zap:0.07,intercept:0.08,emp:0.3};
+const SFX_GAP={flare:0.25,armor:0.07,mortar:0.08,hatch:0.2,shot2:0.03,mg:0.035,cannon:0.05,boom:0.03,kill:0.02,wall:0.06,hurt:0.08,nade:0.05,rocket:0.06,launch:0.1,laser:0.06,zap:0.07,intercept:0.08,emp:0.3};
 // sfx(name, worldX?, worldY?, size?) - size scales explosions/howitzers (1 = frag grenade, 3 = heavy bomb); for 'ciws' it is burst length (s).
 function sfx(n,x,y,k=1){
   const c=AU.ctx,gap=SFX_GAP[n];if(gap&&c){const now=c.currentTime;if(now-(AU.last[n]??-1)<gap)return;AU.last[n]=now}
@@ -1927,6 +1927,8 @@ function sfx(n,x,y,k=1){
     lNoise(v,'lowpass',1600,60,0.9,0.7,0.01,3.2);lNoise(v,'lowpass',180,50,0.5,0.45,0.6,4,0.15)}break;
   case'launch':if(v=voice(1.1,jit(0.1),x,y)){const p=jit(0.08);           // missile ignition pop + rising whoosh
     lNoise(v,'lowpass',300,300,0.7,0.2,0.002,0.12);lNoise(v,'bandpass',500*p,2600*p,1.4,0.3,0.08,0.85);lNoise(v,'highpass',3000,6000,0.7,0.06,0.25,0.6)}break;
+  case'flare':if(v=voice(1.1,jit(0.1),x,y)){for(let i=0;i<3;i++)lNoise(v,'highpass',1800*jit(0.1),900,0.8,0.16,0.002,0.05,i*0.09);   // dispenser pops, then the burning hiss
+    lNoise(v,'bandpass',3200,1800,1.2,0.05,0.12,0.8,0.2)}break;
   case'rocket':if(v=voice(0.6,jit(0.1),x,y)){const p=jit(0.1);lNoise(v,'bandpass',700*p,2400*p,1.5,0.22,0.02,0.45)}break;
   case'silo':if(v=voice(3.2,1,x,y,true)){                                  // heavy lift-off: rumble builds, roar climbs away
     lNoise(v,'lowpass',120,700,0.8,0.55,0.35,2.6);lOsc(v,'sawtooth',48,120,0.06,0.3,2.6);lNoise(v,'bandpass',600,2200,1,0.18,1.2,1.8)}break;
@@ -2225,7 +2227,7 @@ const EFIRE={
     G.eshots.push(s);puff(e.x,e.y,3,4,0.9,'200,196,186',18,0.45);light(e.x,e.y,30,'255,200,140',0.12);sfx('launch',e.x,e.y)}};
 const FLARE_CD=5;
 function flares(u){if(!u||u.dead)return;const a=u.ang||0,bx=u.x-Math.cos(a)*10,by=u.y-Math.sin(a)*10;
-  spark(bx,by,16,95,['#fffbe0','#ffe38a','#ffb13b'],0.9,2.2);light(bx,by,60,'255,220,150',0.5);puff(bx,by,3,5,1.4,'230,228,220',12,0.4);
+  spark(bx,by,16,95,['#fffbe0','#ffe38a','#ffb13b'],0.9,2.2);sfx('flare',bx,by);light(bx,by,60,'255,220,150',0.5);puff(bx,by,3,5,1.4,'230,228,220',12,0.4);
   if(G.time-(G.flrMsg||-9)>6){G.flrMsg=G.time;float(u.x,u.y-30,'FLARES','#ffe38a',11)}}
 // heat-seeker in flight: flares go out at s.flT; a spoofed missile breaks for the flare cloud and self-destructs
 function samTick(s,dt){const k=Math.min(1,s.t/s.dur),x=s.x+(s.tx-s.x)*k,y=s.y+(s.ty-s.y)*k;if(R()<.9)puff(x,y,1,2,0.9,'225,222,214',4,0.4);
