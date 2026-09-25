@@ -1166,7 +1166,7 @@ const costOf=(u,l)=>{if(!u.late)return Math.round(u.cost*Math.pow(u.g,l));const 
 // After-action report: what broke the fort last run, and the upgrade that best answers it (affordable first, else the next one to save for)
 const COUNTER={grunt:['dmg','rate','nade','squad','turret','auto'],runner:['auto','rate','wire','nade','turret','squad'],brute:['dmg','crit','frag','sniper','tank'],
   shooter:['sniper','dmg','crit','arty','vision'],bomber:['mines','wire','flame','arty','dmg'],boss:['arty','tank','air','sniper','mlaunch','silo'],
-  rpg:['dmg','auto','sniper','nade','frag','turret'],mortar:['arty','sniper','nade','mlaunch','dmg'],technical:['mines','nade','dmg','sniper','truck','arty'],
+  rpg:['dmg','auto','sniper','nade','frag','turret'],manpads:['sniper','dmg','auto','turret','arty'],mortar:['arty','sniper','nade','mlaunch','dmg'],technical:['mines','nade','dmg','sniper','truck','arty'],
   apc:['mines','arty','nade','tank','sniper','air'],ifv:['arty','tank','mlaunch','mines','air','sniper'],mbt:['tank','mlaunch','arty','air','mines','silo'],
   mlrs:['arty','mlaunch','sniper','air','fighter'],
   drone:['aagun','turret','tesla','radar','rate'],gunheli:['aagun','radar','mlaunch','sam','dmg'],strikejet:['aagun','sam','tesla','radar'],
@@ -2024,6 +2024,8 @@ const ET={
  boss:{hp:900,spd:10,dmg:40,rate:2.2,rew:250,r:20,range:55,col:'#6d6450',boss:true},
  // support infantry: RPG gunners knock out your vehicles and MG nests; mortar teams shell the fort from the fog
  rpg:{hp:18,spd:22,dmg:11,rate:3.6,rew:12,r:7,col:'#7d6a48',range:125,span:23,cx:3.5},
+ // MANPADS team: only fields once you fly aircraft; aa = missile reach vs aircraft, walls just get the carbine
+ manpads:{hp:16,spd:21,dmg:3,rate:1.6,rew:14,r:7,col:'#6b6446',range:110,span:23,cx:3.5,aa:250},
  mortar:{hp:30,spd:17,dmg:7,rate:6,rew:16,r:8,col:'#6f6444',range:1,stand:22,nodep:true,span:22,cx:2.5},
  // armor (veh): arm = share of small-arms damage the plating stops; stand = parks this far past the sight line and fires from the fog
  technical:{hp:60,spd:40,dmg:1.3,rate:0.24,rew:24,r:14,col:'#ab9464',range:120,veh:1,arm:0.25,span:22,cx:0},
@@ -2086,8 +2088,9 @@ const HPC=[Math.log(1.14),Math.log(1.003),26,30,Math.log(1.11)],DMC=[Math.log(1.
 const LATE_G=Math.exp(2.5*RWC[4]),LATE_M=Math.exp(2.5*HPC[4]);   // 1.1982 / 1.2981
 const waveHp=w=>Math.min(1e200,Math.exp(curve(w,...HPC))*EARLY(w)),waveDmg=w=>Math.min(1e200,Math.exp(curve(w,...DMC))*EARLY(w)),waveRew=w=>Math.min(1e200,Math.exp(curve(w,...RWC)));
 const waveCount=w=>Math.round((6+2.6*w)*(1+0.04*L('vision'))), waveWindow=w=>Math.max(6,Math.min(12,6+0.3*w)-Math.max(0,w-24)*0.3);
+const flyingCraft=()=>!!(G.fleet&&G.fleet.length||G.air&&G.air.some(u=>u.k==='gunship')||G.units&&G.units.some(u=>u.ck==='heli'));
 function pickType(w){const p=[['grunt',10]];if(w>=3)p.push(['runner',4+w*.3]);if(w>=4)p.push(['shooter',2+w*.2]);if(w>=6)p.push(['brute',1+w*.15]);if(w>=8)p.push(['bomber',2+w*.15]);
-  if(w>=9)p.push(['rpg',Math.min(4,0.8+0.1*(w-9))]);if(w>=11)p.push(['mortar',Math.min(1.6,0.4+0.05*(w-11))]);skyWeights(w,p);evWeights(p);
+  if(w>=9)p.push(['rpg',Math.min(4,0.8+0.1*(w-9))]);if(w>=11)p.push(['mortar',Math.min(1.6,0.4+0.05*(w-11))]);if(w>=14&&flyingCraft())p.push(['manpads',Math.min(2.2,0.6+0.06*(w-14))]);skyWeights(w,p);evWeights(p);
   let t=p.reduce((a,b)=>a+b[1],0)*Math.random();for(const[k,v]of p){if((t-=v)<=0)return k}return'grunt'}
 function spawn(type,at){if(SKY[type])return spawnSky(type);const d=ET[type],w=G.wave,a=Math.random()*Math.PI*2,hs=waveHp(w);
   G.enemies.push({type,x:at?at.x:Math.cos(a)*(vision()+80),y:at?at.y:Math.sin(a)*(vision()+80),hp:d.hp*hs*hazardHp(),max:d.hp*hs*hazardHp(),spd:d.spd*(1+Math.min(.7,w*.014))*(0.9+Math.random()*.2),
@@ -2211,7 +2214,23 @@ const EFIRE={
   mbt(e,tx,ty,dep){eTracer(e,tx,ty,'#ffd08a',2.4);skyBlast(tx,ty,0.6);sfx('tank',e.x,e.y);eHit(e,e.dmg,dep)},
   rpg(e,tx,ty,dep){const site=dep&&dep.bays?dep:null,u=dep&&dep!==true&&!site?dep:Math.random()<0.65?rpgTarget(e):null,ax=u?u.x:tx,ay=u?u.y:ty;e.fl=G.time;
     G.eshots.push({k:'rpg',x:e.x,y:e.y,tx:ax,ty:ay,u,t:0,dur:Math.max(0.2,Math.hypot(ax-e.x,ay-e.y)/150),dmg:e.dmg,src:e.type,dep:dep===true,site});
-    puff(e.x,e.y,3,4,0.9,'190,184,170',18,0.45);sfx('rocket',e.x,e.y)}};   // back-blast
+    puff(e.x,e.y,3,4,0.9,'190,184,170',18,0.45);sfx('rocket',e.x,e.y)},   // back-blast
+  // MANPADS: a heat-seeker at an aircraft (reload 6.5s, launch gives the team away); anything else just gets the carbine.
+  // The target's crew punches flares on a launch if its dispensers have recycled (FLARE_CD): most shots then lose lock.
+  manpads(e,tx,ty,dep){const u=dep&&dep!==true&&!dep.bays&&FC[dep.ck]&&FC[dep.ck].air?dep:null;
+    if(!u){eTracer(e,tx,ty,'#ff6a5a',1.1);sfx('shot2',e.x,e.y);eHit(e,e.dmg,dep);return}
+    e.atk=6.5;e.fl=G.time;e.rev=1.5;const s={k:'sam',x:e.x,y:e.y,tx:u.x,ty:u.y,u,t:0,dur:Math.max(0.5,Math.hypot(u.x-e.x,u.y-e.y)/240),dmg:e.dmg*8,src:e.type};
+    if(G.time>=(u.flR||0)){u.flR=G.time+FLARE_CD;s.flT=Math.min(0.35,s.dur*0.3);s.fl=R()<(u.ck==='heli'?0.65:0.8)}
+    G.eshots.push(s);puff(e.x,e.y,3,4,0.9,'200,196,186',18,0.45);light(e.x,e.y,30,'255,200,140',0.12);sfx('launch',e.x,e.y)}};
+const FLARE_CD=5;
+function flares(u){if(!u||u.dead)return;const a=u.ang||0,bx=u.x-Math.cos(a)*10,by=u.y-Math.sin(a)*10;
+  spark(bx,by,16,95,['#fffbe0','#ffe38a','#ffb13b'],0.9,2.2);light(bx,by,60,'255,220,150',0.5);puff(bx,by,3,5,1.4,'230,228,220',12,0.4);
+  if(G.time-(G.flrMsg||-9)>6){G.flrMsg=G.time;float(u.x,u.y-30,'FLARES','#ffe38a',11)}}
+// heat-seeker in flight: flares go out at s.flT; a spoofed missile breaks for the flare cloud and self-destructs
+function samTick(s,dt){const k=Math.min(1,s.t/s.dur),x=s.x+(s.tx-s.x)*k,y=s.y+(s.ty-s.y)*k;if(R()<.9)puff(x,y,1,2,0.9,'225,222,214',4,0.4);
+  if(s.flT!=null&&!s.flP&&s.t>=s.flT){s.flP=1;flares(s.u)}
+  if(s.fl&&s.flP&&!s.lost&&s.u&&s.t>=s.flT+0.12){const a=s.u.ang||0;s.lost=1;s.x=x;s.y=y;s.t=0;s.dur=0.35;s.tx=s.u.x-Math.cos(a)*24+(R()-.5)*16;s.ty=s.u.y-Math.sin(a)*24+(R()-.5)*16;s.u=null}}
+function samHit(s){s.done=true;if(s.lost||!s.u||s.u.dead){skyBlast(s.tx,s.ty,0.35);return}fcHit(s.u,s.dmg,s.src);skyBlast(s.tx,s.ty,0.7);sfx('boom',s.tx,s.ty)}
 // RPG gunners pick a lane vehicle or MG nest in reach two times in three; a hit knocks it out (guns silent, engine dead) for a while
 const RPG_KO={truck:6,apc:5,tank:4,turret:4};
 function rpgTarget(e){let b=null,bd=e.range+70;for(const u of G.units){if(!RPG_KO[u.k]||u.stun>0)continue;const d=Math.hypot(u.x-e.x,u.y-e.y);if(d<bd){bd=d;b=u}}return b}
@@ -2238,10 +2257,11 @@ function updateEShots(dt){
   for(const s of G.eshots){s.t+=dt;if(s.t<0)continue;
     if(!s.go){s.go=1;if(s.k==='mlrs'){sfx('rocket',s.x,s.y);light(s.x,s.y,40,'255,170,80',0.12);puff(s.x,s.y,2,6,1.4,'150,145,135',20,0.5)}}
     if(s.u&&!s.u.stun){s.tx=s.u.x;s.ty=s.u.y}   // RPG leads a moving truck
+    if(s.k==='sam')samTick(s,dt);
     const k=Math.min(1,s.t/s.dur),x=s.x+(s.tx-s.x)*k,y=s.y+(s.ty-s.y)*k;
     if(s.k==='rpg'&&R()<.85)puff(x,y,1,2.2,0.8,'190,186,176',4,0.42);
     else if(s.k==='mlrs'&&R()<.75)puff(x,y-Math.sin(k*Math.PI)*s.h,1,2.6,0.9,'180,176,168',4,0.4);
-    if(k<1)continue;s.done=true;fcSplash(s.tx,s.ty,s.k==='rpg'?10:s.k==='mortar'?22:18,s.dmg,s.src,0,s.u);
+    if(k<1)continue;if(s.k==='sam'){samHit(s);continue}s.done=true;fcSplash(s.tx,s.ty,s.k==='rpg'?10:s.k==='mortar'?22:18,s.dmg,s.src,0,s.u);
     if(s.u){if(!(s.u.ck==='heli'&&R()<0.45)){if(RPG_KO[s.u.k])stunUnit(s.u,RPG_KO[s.u.k]);fcHit(s.u,s.dmg,s.src)}skyBlast(s.tx,s.ty,0.7);continue}   // a helicopter jinks out of it about half the time
     skyBlast(s.tx,s.ty,s.k==='rpg'?0.6:s.k==='mortar'?0.9:0.75);
     if(s.site)hitSite(s.site,s.dmg);else if(s.dep)hitDepot(s.dmg);else if(boxD(s.tx,s.ty)<=blockHalf()+4){damageFort(s.dmg,s.src);if(!running)return}}
@@ -2255,6 +2275,8 @@ function drawEShots(){const px=1/sc,t=G.time,lw=Math.max(1,1.4*px);
       ctx.strokeStyle=`rgba(255,80,60,${(0.5+0.4*Math.sin(t*18+s.tx)).toFixed(2)})`;ctx.lineWidth=lw;ctx.beginPath();ctx.arc(s.tx,s.ty,r,0,TAU);
       ctx.moveTo(s.tx-r*0.5,s.ty);ctx.lineTo(s.tx+r*0.5,s.ty);ctx.moveTo(s.tx,s.ty-r*0.5);ctx.lineTo(s.tx,s.ty+r*0.5);ctx.stroke()}
     if(s.t<0)continue;const k=Math.min(1,s.t/s.dur),x=s.x+(s.tx-s.x)*k,y=s.y+(s.ty-s.y)*k;
+    if(s.k==='sam'){ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(s.ty-y,s.tx-x)||0);box(-3,-.5,4.6,1,'#d8d6cc');box(1.3,-.5,.5,1,'#3b3f36');
+      ctx.globalCompositeOperation='lighter';ell(-3.8,0,2.4,1.2,'#ffcf6a');ctx.restore();continue}
     if(s.k==='rpg'){ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(s.ty-s.y,s.tx-s.x));box(-3.5,-.6,4.2,1.2,'#5d6446');hqPoly([.7,-1.1,3.2,0,.7,1.1],'#4a5034');
       ctx.globalCompositeOperation='lighter';ell(-4.4,0,2.2,1.1,'#ffb13b');ctx.restore();continue}
     const h=Math.sin(k*Math.PI)*s.h,h2=Math.sin(Math.min(1,k+0.02)*Math.PI)*s.h,k2=Math.min(1,k+0.02);ell(x,y,1.8,1,'rgba(0,0,0,.3)');
@@ -2969,10 +2991,10 @@ const FC={
  jet:    {hp:400, g:1.24,arm:0.2, n:'FIGHTER JET',r:14,span:74, fix:28,line:'fighter',cls:2,adv:3,air:1},
  gunship:{hp:1500,g:1.25,arm:0.35,n:'GUNSHIP',    r:26,span:156,fix:44,line:'gunship',cls:3,adv:3,air:1}};
 // enemy source -> [damage x vs craft, armour penetration 0..1]. e.dmg is tuned against the walls; anti-armour weapons hit vehicles harder
-const EVH={grunt:[0.5,0],runner:[0.5,0],brute:[0.7,0],shooter:[0.8,0.05],bomber:[1.2,0.7],boss:[2,0.9],rpg:[2.6,0.8],mortar:[1.4,0.4],
+const EVH={grunt:[0.5,0],runner:[0.5,0],brute:[0.7,0],shooter:[0.8,0.05],bomber:[1.2,0.7],boss:[2,0.9],rpg:[2.6,0.8],manpads:[3,0.9],mortar:[1.4,0.4],
   technical:[1,0.15],apc:[1,0.25],ifv:[1.4,0.45],mbt:[2,0.85],mlrs:[1.2,0.5],
   drone:[1.2,0.6],gunheli:[1,0.3],strikejet:[1,0.5],heavybomber:[1,0.6],airboss:[1,0.6]},EVH0=[1,0.3];
-const AIRHIT={technical:1,apc:1,ifv:1,rpg:1};   // ground weapons that can reach a low helicopter or a strafing jet
+const AIRHIT={technical:1,apc:1,ifv:1,rpg:1,manpads:1};   // ground weapons that can reach a low helicopter or a strafing jet
 const FALLBACK=0.35,ABORT=0.3,WAVE_PATCH=0.2,FC_DMG=1;
 // HP rides on the line's level and research tier. Tier multipliers are sized against enemy HP, which outgrows enemy firepower, so they count at x^0.3
 const fcHpAt=k=>{const c=FC[k],l=Math.max(1,L(c.line));return Math.round(c.hp*Math.pow(c.g,l-1)*late(c.line,l,c.g)*Math.pow(rMult(c.line),0.3))};
@@ -3203,7 +3225,7 @@ function fcSep(u,dt){for(const o of G._cg){if(o===u||o.dead)continue;const dx=u.
 function vehEnemy(e,dt){if(e.stand||!G.fw)return false;
   if((e.vtT=(e.vtT||0)-dt)<=0){e.vtT=0.3+R()*0.25;e.vt=pickCraft(e)}
   const u=e.vt;if(!u||u.dead){e.vt=null;return false}
-  const reach=(e.range?e.range+10:e.r+8)+FC[u.ck].r;if(Math.hypot(u.x-e.x,u.y-e.y)>reach+8)return false;
+  const reach=(e.type==='manpads'?ET.manpads.aa:e.range?e.range+10:e.r+8)+FC[u.ck].r;if(Math.hypot(u.x-e.x,u.y-e.y)>reach+8)return false;
   e.moving=false;if(e.lunge>0)e.lunge-=dt;
   if(e.bomb){e.dead=true;explode(e.x,e.y,30,0);fcSplash(e.x,e.y,34,e.dmg,e.type,0);return true}
   e.atk-=dt;if(e.atk>0)return true;e.atk=e.rate;const tx=u.x+(R()-.5)*6,ty=u.y+(R()-.5)*6;
@@ -3212,6 +3234,7 @@ function vehEnemy(e,dt){if(e.stand||!G.fw)return false;
   else{fcHit(u,e.dmg,e.type);e.lunge=0.15}
   return true}
 function pickCraft(e){const cg=G._cg,ca=G._ca;if(!cg.length&&!ca.length)return null;
+  if(e.type==='manpads'){if(!visible(e))return null;let b=null,bd=ET.manpads.aa;for(const u of ca){if(u.dead)continue;const d=Math.hypot(u.x-e.x,u.y-e.y);if(d<bd){bd=d;b=u}}return b}   // aircraft only, and only from inside your sight line
   if(e.vp===undefined)e.vp=R()<(e.type==='rpg'?0.9:e.bomb?0.75:0.5);
   const h=blockHalf(),atWall=Math.max(Math.abs(e.x),Math.abs(e.y))<=h+e.range+e.r+2;if(atWall&&!e.vp)return null;
   const base=e.range?e.range+10:e.r+8;let b=null,bd=1e9;
@@ -4565,6 +4588,13 @@ function hqEnemyArt(type,col,st){const skin=SKIN,boot='#221d17';
       hqRR(5,-2.7,3.7,5.4,.6,'#6e6a52');box(5,-2.7,3.7,.9,'#8a8668');box(5.6,-.6,2.4,1.2,'#222');ctx.strokeStyle='#2a2a1e';ctx.lineWidth=.2;for(let x=5.6;x<8.5;x+=.9){ctx.beginPath();ctx.moveTo(x,-2.7);ctx.lineTo(x,2.7);ctx.stroke()}
       hqHand(5.4,-1.8,skin);hqHand(5.4,1.8,skin);
       ell(.4,.2,3.1,3.1,'rgba(0,0,0,.28)');hqDome(0,0,2.8,2.8,'#4f5a36',.35,-.5);box(1.5,-2,1.3,4,'#1c1c1c');ell(2.3,-1,.45,.55,'#6d8fa8');ell(2.3,1,.45,.55,'#6d8fa8');break;
+    case'manpads':   // MANPADS gunner: missile tube on the right shoulder, gripstock + IFF antenna, spare round slung on the back
+      hqCyl(-8.2,-.6,5.6,1.2,'#556048');box(-8.2,-.6,.5,1.2,'#2a2a22');
+      hqBody(3.3,5.1,col,'desert',7);hqRR(-.7,-3.5,2.8,7,.8,'#4f4a30');hqPouch(.6,-3,1.5,1.5,'#6c6440');
+      hqCyl(-6.4,1.2,15.4,1.6,'#5a6a3e');box(-6.4,1.2,.7,1.6,'#2a2a22');box(8.3,1.2,.7,1.6,'#2a2a22');box(1.2,2.8,2.2,1.4,'#262820');
+      ctx.strokeStyle='#1c1c18';ctx.lineWidth=.3;ctx.beginPath();ctx.moveTo(2.3,4.2);ctx.lineTo(3.6,6.2);ctx.stroke();
+      hqArm(.5,4.1,3.8,2.4,col,1.9);hqArm(.5,-4.1,2.6,1.4,col,1.9);hqHand(4,2.2,skin);hqHand(2.6,1.6,skin);
+      ell(.4,.2,2.9,2.9,'rgba(0,0,0,.28)');hqDome(.2,0,2.6,2.6,'#4f5a36',.35,-.5);break;
     case'rpg':   // RPG gunner: launcher on the left shoulder, two spare rockets in the back rack
       hqRR(-5.8,-2.8,2.6,5.6,.8,'#5a4a2c');for(const y of[-2.2,.8]){hqCyl(-8.4,y,4.6,1.3,'#5d6446');hqPoly([-8.4,y,-10,y+.65,-8.4,y+1.3],'#4a5034')}
       hqBody(3.3,5.1,col,'desert',7);hqRR(-.7,-3.5,2.8,7,.8,'#584a2c');for(const y of[-2.6,-.8])hqPouch(.6,y+3.4,1.5,1.5,'#76643e');
@@ -6115,6 +6145,10 @@ function enemyLoArt(type,c,tk,ph,blink,tr){
       box(5,-2.6,3.6,5.2,'#6e6a52');box(5,-2.6,3.6,.9,'#8a8668');box(5.6,-0.6,2.4,1.2,'#222');
       if(blink){ell(6.8,0,.7,.7,'#ff3b30');ell(6.8,0,1.6,1.6,'rgba(255,60,50,.35)')}
       ell(0,0,2.8,2.8,'#4f5a36');box(1.6,-1.9,1.2,3.8,'#1c1c1c');break;                      // helmet + goggles
+    case'manpads':  // MANPADS gunner: missile tube on the right shoulder, spare round on the back
+      box(-8,-.6,5,1.1,'#556048');ell(0,0,3.3,5.1,c);box(-6.2,1.2,15,1.6,'#5a6a3e');box(1.2,2.8,2.2,1.3,'#262820');
+      limb(0.5,4.1,3.8,2.4,1.9,c);limb(0.5,-4.1,2.6,1.4,1.9,c);ell(4,2.2,1,1,skin);ell(2.6,1.6,1,1,skin);
+      ell(0.2,0,2.6,2.6,'#4f5a36');ell(-.3,-.5,.9,.9,'#66724a');break;
     case'rpg':      // RPG gunner: launcher over the left shoulder, spare rockets on the back
       box(-5.6,-2.6,2.6,5.2,'#5a4a2c');box(-8.2,-2,3,1.1,'#5d6446');box(-8.2,.9,3,1.1,'#5d6446');
       ell(0,0,3.3,5.1,c);box(-5.6,-3,12.4,1.5,'#4a5230');ctx.fillStyle='#5d6446';ctx.beginPath();ctx.moveTo(6.8,-3.1);ctx.lineTo(11.4,-2.25);ctx.lineTo(6.8,-1.4);ctx.fill();   // tube + warhead
@@ -6225,6 +6259,7 @@ const INTEL={
  bomber:['Sapper',3,'Carries a breaching charge that blasts your walls on contact. Kill them before they arrive.'],
  boss:['Enemy MBT',5,'Main battle tank, every 10th wave. Shrugs off small arms: bring artillery, armor and airstrikes.'],
  rpg:['RPG Gunner',3,'Shoulder-fired rockets. Knocks out your gun trucks, APCs, tanks and MG nests for several seconds, or blasts the walls. Fragile: pick them off before they get in range.'],
+ manpads:['MANPADS Team',3,'Shoulder-launched heat-seeking missiles. They only show up once you fly aircraft, and they hunt your helicopters, jets and gunship. Crews pop flares that spoof most shots, but several teams at once can overwhelm them. Each launch gives the team away: shoot them first.'],
  mortar:['Mortar Team',3,'Sets up in the fog past your sight line and lobs shells into the fort; red rings mark each impact. Every launch gives their position away for a moment: lock on, or let artillery and TARGET: THREATS hunt them.'],
  technical:['Technical',2,'Pickup with a heavy machine gun. Fast and lightly armored (small arms do 75%). Mines, grenades and heavy guns wreck it.'],
  apc:['Armored Carrier',3,'Drives to your walls and unloads a rifle squad, then covers them with its turret. Kill it before it unloads for a bonus. Small arms do 55%: use mines, grenades, artillery and tanks.'],
