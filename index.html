@@ -2109,8 +2109,13 @@ function spawn(type,at){if(SKY[type])return spawnSky(type);const d=ET[type],w=G.
     // every enemy keeps one hidden class and the hot per-tick loops over G.enemies stay monomorphic instead of seeing hundreds of shapes
     moving:undefined,dead:undefined,rev:undefined,dep:undefined,face:undefined,fwd:undefined,bu:undefined,fl:undefined,lunge:undefined,burn:undefined,
     stun:undefined,stunCD:undefined,slF:undefined,slT:undefined,mkB:undefined,mkT:undefined,_df:undefined,chute:undefined,chuteMax:undefined,landT:undefined,
-    _sx:undefined,_sy:undefined,_top:undefined,_cull:undefined,vtT:undefined,vt:undefined,vp:undefined,fsite:undefined});
-  const e=G.enemies[G.enemies.length-1];if(d.boss)trackBoss(e);return e}
+    _sx:undefined,_sy:undefined,_top:undefined,_cull:undefined,vtT:undefined,vt:undefined,vp:undefined,fsite:undefined,vbied:undefined});
+  const e=G.enemies[G.enemies.length-1];if(d.boss)trackBoss(e);
+  if(type==='technical'&&!at&&w>=VBIED_W&&R()<VBIED_P)makeVbied(e);
+  return e}
+// VBIED: from VBIED_W some technicals come rigged as car bombs; shot before contact they still go up and hurt nearby hostiles
+const VBIED_W=16,VBIED_P=0.2;
+function makeVbied(e){e.vbied=1;e.bomb=true;e.range=0;e.vp=true;e.dmg=ET.bomber.dmg*3*waveDmg(G.wave);e.spd*=1.35;e.hp*=0.8;e.max*=0.8;e.rew*=1.5}   // no gun: rams the walls
 // ---- enemy armor: from wave 6 each wave draws a vehicle roster that takes a share of the wave's slots (a vehicle is worth a
 // few riflemen) and is shuffled into the spawn stream, so late waves roll in as combined-arms assaults rather than rifle mobs.
 const VEH_WAVE={technical:6,apc:12,ifv:18,mlrs:22,mbt:25},VEH_COST={technical:2,apc:5,ifv:4,mlrs:4,mbt:6};
@@ -2190,7 +2195,7 @@ const STRAG_T=15;
 function stragglers(){if(G.spawnLeft>0||G.vq&&G.vq.length||G.time-(G.lkT??G.time)<STRAG_T)return;let n=0;for(const e of G.enemies)if(!e.dead&&++n>3)return;if(!n)return;
   for(const e of G.enemies)if(!e.dead){e.rev=Math.max(e.rev||0,1);if(e.stand)e.fwd=1}
   if(G.stragW!==G.wave){G.stragW=G.wave;feed('STRAGGLERS MARKED','255,207,90','threat')}}
-function kill(e){e.dead=true;G.lkT=G.time;if(_mainHit&&_aimed)streakKill();
+function kill(e){e.dead=true;G.lkT=G.time;if(e.vbied){e.vbied=0;explode(e.x,e.y,44,e.dmg*0.4);light(e.x,e.y,90,'255,150,60',0.4)}if(_mainHit&&_aimed)streakKill();
   const bonus=e.load>0?money(e.rew*0.15*e.load):0,r=Math.round(money(e.rew)*streakMul())+bonus;S.bank+=r;G.earned+=r;G.kills++;S.tkills++;(e.air?airDown:fxKill)(e);
   if(e.chute>0)medalBump('chute');if(_nadeK)medalBump('nade');if(ARMOR_KILL[e.type]&&!e.air)medalBump('tank');if(e.type==='manpads')medalBump('manpads');if(S.tkills%25===0)medalCheck('kills');
   if(S.set.gfx==='high'&&!e.air)corpse(e);else if(e.veh)G.vwrecks.push({type:e.type,x:e.x,y:e.y,r:e.r,a:Math.atan2(-e.y,-e.x),t0:G.time});
@@ -2287,6 +2292,9 @@ function updateEShots(dt){
   if(G.vwrecks.length&&G.time-G.vwrecks[0].t0>VWRECK_T)G.vwrecks.shift()}
 // drawn above the fog: incoming ordnance, impact warning rings, and red brackets on a crew that just gave itself away
 function drawEShots(){const px=1/sc,t=G.time,lw=Math.max(1,1.4*px);
+  for(const e of G.enemies){if(!e.vbied||e.dead||!visible(e))continue;const on=Math.sin(t*14+e.wob)>0;   // car bomb: blinking red beacon + tag
+    if(on){ell(e.x,e.y,2.2*px+1,2.2*px+1,'#ff3b30');ell(e.x,e.y,6*px+3,6*px+3,'rgba(255,60,50,.3)')}
+    ctx.font=`700 ${(9*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle='#ff8a70';ctx.fillText('VBIED',e.x,e.y-e.r-6*px)}
   for(const s of G.eshots){
     if(s.warn){const rem=s.dur-s.t,p=Math.min(1,rem/1.6),r=(s.k==='mlrs'?9:11)+10*p;
       ctx.strokeStyle=`rgba(255,80,60,${(0.5+0.4*Math.sin(t*18+s.tx)).toFixed(2)})`;ctx.lineWidth=lw;ctx.beginPath();ctx.arc(s.tx,s.ty,r,0,TAU);
@@ -2393,6 +2401,7 @@ function update(dt){
   for(const e of G.enemies){
     if(e.dead)continue;e.flash-=dt;e.wob+=dt*8;if(e.rev>0)e.rev-=dt;
     if(!seen()[e.type]&&visible(e))spotted(e.type);
+    if(e.vbied&&!seen().ev_vbied&&visible(e))spotted('ev_vbied');
     if(e.chute>0){e.chute-=dt;if(e.chute<=0)chuteLand(e);continue}   // paratroopers are helpless until they touch down
     if(sigStatus(e,dt))continue;   // burning / stunned (research signatures)
     const d=hyp(e.x,e.y)||1,cheb=Math.max(Math.abs(e.x),Math.abs(e.y)),stop=half+e.range+e.r;
@@ -6326,6 +6335,7 @@ Object.assign(INTEL,{
  ev_para:['Airborne Assault',3,'Transports drop paratroopers just outside your wire. They can\'t fight under the canopy: shoot them before they land. Clearing the wave pays +50%.'],
  ev_blitz:['Blitz',2,'A mass rush of light infantry: 20% more hostiles, arriving faster. Auto-fire, wire and frag rounds shine. Clearing the wave pays +50%.'],
  ev_armor:['Armored Column',4,'An enemy tank leads a column of heavy troopers. Artillery, armor and airstrikes crack it open. Clearing the wave pays +60%.'],
+ ev_vbied:['Car Bomb',4,'A technical packed with explosives, marked by a blinking red light. It races straight for your walls and blows a huge hole in them. Kill it early: it detonates where it dies and hurts hostiles around it.'],
  ev_wallhold:['Walls Under Fire',0,'Engineers cannot patch walls that are taking hits. Repairs restart 3s after the last hit, so clear the attackers to let the walls recover.'],
  ev_swarm:['Drone Swarm',3,'Flights of kamikaze drones fly over your wire and mines and dive into the walls. AA guns, MG nests, Tesla coils and auto-fire thin them out. Clearing the wave pays +50%.'],
  ev_barrage:['Artillery Barrage',3,'Mortar teams set up in the fog and keep shelling the fort, with marksmen covering them. Each launch gives a team away for a moment: lock on, or let artillery and TARGET: THREATS hunt them. Clearing the wave pays +60%.']});
@@ -6423,7 +6433,7 @@ function drawUavMarks(){const px=1/sc,t=G.time;
     for(let i=0;i<4;i++){const cx=e.x+(i&1?r:-r),cy=e.y+(i&2?r:-r),sx=i&1?-1:1,sy=i&2?-1:1;ctx.moveTo(cx+sx*tk,cy);ctx.lineTo(cx,cy);ctx.lineTo(cx,cy+sy*tk)}ctx.stroke();
     ctx.font=`800 ${(11*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle=`rgb(${UAV_COL})`;ctx.fillText('RECON UAV',e.x,e.y-r-4*px)}}
 // FIELD REPORT card art for a first-time event
-function evPreview(k){if(k==='armor')return drawPreview('boss');if(k==='barrage')return drawPreview('mortar');if(k==='swarm')return drawPreview('drone');if(k==='wallhold')return cratePreview('fix');const c=$('intelCv'),W=c.width,main=ctx,grunt=t=>({type:t,r:ET[t].r,col:ET[t].col,moving:false,wob:0,flash:0});
+function evPreview(k){if(k==='armor')return drawPreview('boss');if(k==='barrage')return drawPreview('mortar');if(k==='swarm')return drawPreview('drone');if(k==='wallhold')return cratePreview('fix');if(k==='vbied')return drawPreview('technical');const c=$('intelCv'),W=c.width,main=ctx,grunt=t=>({type:t,r:ET[t].r,col:ET[t].col,moving:false,wob:0,flash:0});
   ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,W);
     if(k==='storm'){let f=W/24;ctx.setTransform(f,0,0,f,W/2+100*f,W/2);drawEnemy(grunt('grunt'),-100,0);ctx.setTransform(1,0,0,1,0,0);
       const g=ctx.createRadialGradient(W/2,W/2,W*0.1,W/2,W/2,W*0.6);g.addColorStop(0,'rgba(200,160,100,.25)');g.addColorStop(1,'rgba(160,126,80,.95)');ctx.fillStyle=g;ctx.fillRect(0,0,W,W);
