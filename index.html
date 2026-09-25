@@ -1416,7 +1416,7 @@ function buyResearch(id){const r=RLINES[id];if(!r)return false;
 // no RP before wave 10; +1 per wave from 10, +2 from 20, ... ; armor (every 10th) waves pay +2 more rising with depth
 const rpWave=w=>w<10?0:Math.floor(w/10)+(w%10===0?2+Math.floor(w/20):0);
 function rpGain(n){S.rp+=n;if(G&&!G.over)G.rp=(G.rp||0)+n}   // G.over: the run's tally is closed (set in endRun)
-function rpClear(w){G.cleared=(G.cleared||0)+1;if(L('walls')&&G.wallHp<=0){G.brHeld=(G.brHeld||0)+1;medalMax('holdout',G.brHeld)}   // waves cleared behind breached walls this run
+function rpClear(w){G.cleared=(G.cleared||0)+1;if((G.nightK||0)>0.5)medalBump('night');if(L('walls')&&G.wallHp<=0){G.brHeld=(G.brHeld||0)+1;medalMax('holdout',G.brHeld)}   // waves cleared behind breached walls this run
   const n=rpWave(w)+(w>G.startBest&&w>=10?1:0);rpGain(n);return n}
 function rpCheckpoint(){const w0=G.startWave||1;if(w0<=1||(G.cleared||0)<5)return 0;let n=0;for(let w=1;w<w0;w++)n+=rpWave(w);n=Math.floor(n*0.5);rpGain(n);return n}
 // Plain-language signature lines for the research cards
@@ -8009,6 +8009,7 @@ const MEDALS=[
  {id:'stonewall',ic:'threat',name:'Stonewall',desc:'Repel 5 blitz waves.',st:'blitz',goal:5,cash:700,tiers:[20,60]},
  {id:'wrench',ic:'repair',name:'Wrench Breaker',desc:'Take out 50 enemy combat mechanics.',st:'mech',goal:50,cash:900,tiers:[250,1000]},
  {id:'bombsquad',ic:'truck',name:'Bomb Squad',desc:'Stop 25 car bombs before they reach the walls.',st:'vbied',goal:25,cash:900,tiers:[150,750]},
+ {id:'nightowl',ic:'vision',name:'Night Owl',desc:'Clear 25 waves in the dark.',st:'night',goal:25,cash:800,tiers:[100,400]},
  {id:'holdout',ic:'hp',name:'Holdout',desc:'Clear 3 waves in one run with the walls breached.',st:'holdout',goal:3,cash:1000,tiers:[6,12]},
  {id:'flankguard',ic:'threat',name:'Flank Guard',desc:'Repel 5 ambushes.',st:'ambush',goal:5,cash:800,tiers:[20,60]},
  {id:'scrounger',ic:'scav',name:'Scrounger',desc:'Grab 50 special supply crates (munitions, engineer, intel, air support).',st:'crates',goal:50,cash:800,tiers:[250,1000]},
