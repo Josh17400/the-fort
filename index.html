@@ -2223,7 +2223,7 @@ const EFIRE={
   manpads(e,tx,ty,dep){const u=dep&&dep!==true&&!dep.bays&&FC[dep.ck]&&FC[dep.ck].air?dep:null;
     if(!u){eTracer(e,tx,ty,'#ff6a5a',1.1);sfx('shot2',e.x,e.y);eHit(e,e.dmg,dep);return}
     e.atk=6.5;e.fl=G.time;e.rev=1.5;const s={k:'sam',x:e.x,y:e.y,tx:u.x,ty:u.y,u,t:0,dur:Math.max(0.5,Math.hypot(u.x-e.x,u.y-e.y)/240),dmg:e.dmg*5,src:e.type};
-    if(G.time>=(u.flR||0)){u.flR=G.time+FLARE_CD;s.flT=Math.min(0.35,s.dur*0.3);s.fl=R()<(u.ck==='heli'?0.65:0.8)}
+    if(G.time>=(u.flR||0)){u.flR=G.time+FLARE_CD/(1+pk('aircrew'));s.flT=Math.min(0.35,s.dur*0.3);s.fl=R()<Math.min(0.95,(u.ck==='heli'?0.65:0.8)+0.1*pk('aircrew'))}
     G.eshots.push(s);puff(e.x,e.y,3,4,0.9,'200,196,186',18,0.45);light(e.x,e.y,30,'255,200,140',0.12);sfx('launch',e.x,e.y)}};
 const FLARE_CD=4;
 function flares(u){if(!u||u.dead)return;const a=u.ang||0,bx=u.x-Math.cos(a)*10,by=u.y-Math.sin(a)*10;
@@ -6220,6 +6220,8 @@ const PERKS=[
  {id:'cas',ic:'air',name:'Close Air Support',desc:'Airstrike cooldown -35%, and a strike is ready now.',ok:()=>L('air')>0,go:()=>{G.airT=0}},
  {id:'minelayer',ic:'mines',name:'Minelayers',desc:'Twice the mines every wave, and a fresh field is laid now.',ok:()=>L('mines')>0,go:()=>layMines()},
  {id:'flak',ic:'aagun',name:'Flak Barrage',desc:'Air-defence fire +40% damage against aircraft.',ok:()=>L('aagun')>0&&G.wave>=SKY_WAVE.drone},
+ {id:'aircrew',ic:'heli',name:'Aircrew Countermeasures',desc:'Aircraft flares recycle twice as fast and spoof 10% more missiles. Every aircraft is patched up 25% now.',ok:()=>G.wave>=14&&flyingCraft(),
+  go:()=>{for(const u of[...G.units,...G.fleet,...G.air])if(u.hp!=null&&!u.dead&&FC[u.ck]&&FC[u.ck].air)u.hp=Math.min(u.max,u.hp+u.max*0.25)}},
  {id:'fuel',ic:'dcap',name:'Fuel Convoy',desc:'Every vehicle and aircraft is topped off now. Fuel burn -30%.',ok:hasFuel,
   go:()=>{for(const u of G.units)if(u.fuel!=null){u.fuel=1;if(u.fs==='dry')u.fs='patrol'}for(const j of G.fleet)j.fuel=1}}];
 const ROMAN=['','I','II','III','IV','V','VI','VII','VIII','IX','X'],rank=n=>ROMAN[n]||String(n);
