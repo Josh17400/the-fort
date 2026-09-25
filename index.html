@@ -3985,30 +3985,38 @@ function pixSprite(key,n,fn){let c=_spr[key];if(c)return c;c=_spr[key]=document.
   const x=c.getContext('2d'),im=x.createImageData(n,n);fn(im.data,n);x.putImageData(im,0,0);return c}
 function canvasSprite(key,w,h,fn){let c=_spr[key];if(c)return c;c=_spr[key]=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);return c}
 // Smoke puff: noisy soft silhouette, shaded as a volume lit from the top-left (matches the scene's bottom-right shadows).
-function smokeSpr(col,v){return pixSprite('sm'+col+'|'+v,96,(d,n)=>{const nz=vfxFbm(n,31+v*977),[r0,g0,b0]=col.split(',').map(Number);
+// Hot sprite getters (called ~600x per busy frame) go through small array/Map caches first: no key string or builder closure per call.
+const _smM=new Map(),_fbA=[],_scA=[],_stA=[],_trM=new Map();
+function smokeSpr(col,v){let a=_smM.get(col);if(!a)_smM.set(col,a=[]);return a[v]||(a[v]=smokeSpr0(col,v))}
+function fireSpr(hot,v){const i=hot*8+v;return _fbA[i]||(_fbA[i]=fireSpr0(hot,v))}
+function scorchSpr(v){return _scA[v]||(_scA[v]=scorchSpr0(v))}
+function stainSpr(v){return _stA[v]||(_stA[v]=stainSpr0(v))}
+function tracerSpr(c){let t=_trM.get(c);if(!t)_trM.set(c,t=tracerSpr0(c));return t}
+function smokeSpr0(col,v){return pixSprite('sm'+col+'|'+v,96,(d,n)=>{const nz=vfxFbm(n,31+v*977),[r0,g0,b0]=col.split(',').map(Number);
   for(let y=0;y<n;y++)for(let x=0;x<n;x++){const i=y*n+x,u=(x+.5)/n*2-1,w=(y+.5)/n*2-1,q=nz[i],e=Math.hypot(u,w)*(1+(q-.5)*.9),a=sstep(1,.25,e)*(.5+.7*q);if(a<=0)continue;
     const l=Math.max(.55,Math.min(1.4,1-(u+w)*.32+(q-.5)*.4)),add=(l-1)*60;
     d[i*4]=r0*l+add;d[i*4+1]=g0*l+add;d[i*4+2]=b0*l+add;d[i*4+3]=Math.min(1,a)*255}})}
 // Fireball: colour ramp over a noise-warped radius gives ragged, turbulent edges; 'hot' is additive, 'cool' is the sooty outer shell.
 const FIRE_HOT=[[0,255,250,225,1],[.16,255,226,140,1],[.4,255,158,52,.95],[.68,222,78,20,.7],[1,110,26,6,0]];
 const FIRE_COOL=[[0,255,196,110,.85],[.3,226,112,42,.8],[.58,110,52,26,.72],[.84,46,36,30,.48],[1,30,26,24,0]];
-function fireSpr(hot,v){return pixSprite('fb'+hot+v,128,(d,n)=>{const nz=vfxFbm(n,7+v*131+hot*50),st=hot?FIRE_HOT:FIRE_COOL;
+function fireSpr0(hot,v){return pixSprite('fb'+hot+v,128,(d,n)=>{const nz=vfxFbm(n,7+v*131+hot*50),st=hot?FIRE_HOT:FIRE_COOL;
   for(let y=0;y<n;y++)for(let x=0;x<n;x++){const i=y*n+x,u=(x+.5)/n*2-1,w=(y+.5)/n*2-1,q=nz[i],e=Math.hypot(u,w)*(1+(q-.5)*1.15)+(q-.5)*.06;if(e>=1)continue;
     let j=1;while(j<st.length-1&&e>st[j][0])j++;const A=st[j-1],B=st[j],k=Math.max(0,Math.min(1,(e-A[0])/(B[0]-A[0])));
     for(let c=0;c<3;c++)d[i*4+c]=A[c+1]+(B[c+1]-A[c+1])*k;d[i*4+3]=(A[4]+(B[4]-A[4])*k)*(hot?1:Math.min(1,.55+.7*q))*255}})}
 // Scorch: charred core, radial soot spray, mottled by noise so no two blasts read the same.
-function scorchSpr(v){return canvasSprite('sc'+v,256,256,(x,n)=>{const rnd=_rng(v*7919+5);x.translate(n/2,n/2);
+function scorchSpr0(v){return canvasSprite('sc'+v,256,256,(x,n)=>{const rnd=_rng(v*7919+5);x.translate(n/2,n/2);
   for(let i=0;i<54;i++){const a=rnd()*TAU,L=n*(.26+rnd()*.23),w=.03+rnd()*.09,g=x.createLinearGradient(0,0,Math.cos(a)*L,Math.sin(a)*L);
     g.addColorStop(0,'rgba(14,11,8,.55)');g.addColorStop(1,'rgba(14,11,8,0)');x.fillStyle=g;x.beginPath();x.moveTo(0,0);x.lineTo(Math.cos(a-w)*L,Math.sin(a-w)*L);x.lineTo(Math.cos(a+w)*L,Math.sin(a+w)*L);x.fill()}
   const g=x.createRadialGradient(0,0,0,0,0,n*.34);g.addColorStop(0,'rgba(4,3,2,.95)');g.addColorStop(.4,'rgba(10,8,6,.82)');g.addColorStop(.75,'rgba(22,17,12,.4)');g.addColorStop(1,'rgba(24,19,14,0)');
   x.fillStyle=g;x.beginPath();x.arc(0,0,n*.34,0,TAU);x.fill();
   const im=x.getImageData(0,0,n,n),d=im.data,nz=vfxFbm(n,v*53+11);for(let i=0;i<n*n;i++)d[i*4+3]*=.35+.95*nz[i];x.putImageData(im,0,0)})}
 // Kill stain: small, dark and desaturated — reads as "someone fell here", not gore.
-function stainSpr(v){return pixSprite('st'+v,64,(d,n)=>{const nz=vfxFbm(n,v*211+3);
+function stainSpr0(v){return pixSprite('st'+v,64,(d,n)=>{const nz=vfxFbm(n,v*211+3);
   for(let y=0;y<n;y++)for(let x=0;x<n;x++){const i=y*n+x,u=(x+.5)/n*2-1,w=(y+.5)/n*2-1,q=nz[i],e=Math.hypot(u,w)*(1+(q-.5)*1.3),a=sstep(1,.5,e)*(.6+.4*q);if(a<=0)continue;
     const l=.75+.5*q;d[i*4]=52*l;d[i*4+1]=16*l;d[i*4+2]=12*l;d[i*4+3]=a*190}})}
 // Muzzle star: long forward tongue, two raked side petals and a hot core. Origin is (14,24); the barrel points along +x.
-function flashSpr(v){return canvasSprite('mf'+v,96,48,x=>{const rnd=_rng(v*97+13);x.translate(14,24);x.globalCompositeOperation='lighter';
+const _mfA=[];function flashSpr(v){return _mfA[v]||(_mfA[v]=flashSpr0(v))}
+function flashSpr0(v){return canvasSprite('mf'+v,96,48,x=>{const rnd=_rng(v*97+13);x.translate(14,24);x.globalCompositeOperation='lighter';
   const spike=(a,len,wd,col)=>{x.save();x.rotate(a);const g=x.createLinearGradient(0,0,len,0);g.addColorStop(0,col);g.addColorStop(1,'rgba(255,130,40,0)');x.fillStyle=g;
     x.beginPath();x.moveTo(0,-wd);x.quadraticCurveTo(len*.35,-wd*.7,len,0);x.quadraticCurveTo(len*.35,wd*.7,0,wd);x.closePath();x.fill();x.restore()};
   spike(0,64+rnd()*14,7,'rgba(255,236,180,1)');spike(0,44+rnd()*8,3,'rgba(255,255,255,1)');
@@ -4017,7 +4025,7 @@ function flashSpr(v){return canvasSprite('mf'+v,96,48,x=>{const rnd=_rng(v*97+13
   x.fillStyle=g;x.beginPath();x.arc(0,0,13,0,TAU);x.fill()})}
 const hexRGB=h=>{if(h.length===4)h='#'+h[1]+h[1]+h[2]+h[2]+h[3]+h[3];return parseInt(h.slice(1,3),16)+','+parseInt(h.slice(3,5),16)+','+parseInt(h.slice(5,7),16)};
 // Tracer: tapered capsule whose tail fades to nothing and whose head burns white-hot. The head sits at the right edge.
-function tracerSpr(c){return canvasSprite('tr'+c,128,16,(x,W)=>{const rgb=hexRGB(c),g=x.createLinearGradient(0,0,W,0);
+function tracerSpr0(c){return canvasSprite('tr'+c,128,16,(x,W)=>{const rgb=hexRGB(c),g=x.createLinearGradient(0,0,W,0);
   g.addColorStop(0,`rgba(${rgb},0)`);g.addColorStop(.65,`rgba(${rgb},.55)`);g.addColorStop(1,`rgba(${rgb},1)`);x.shadowColor=`rgba(${rgb},.9)`;x.shadowBlur=5;
   x.fillStyle=g;x.beginPath();x.moveTo(0,8);x.lineTo(W-12,5);x.quadraticCurveTo(W-2,5.5,W-2,8);x.quadraticCurveTo(W-2,10.5,W-12,11);x.closePath();x.fill();x.shadowBlur=0;
   const h=x.createLinearGradient(W*.5,0,W,0);h.addColorStop(0,'rgba(255,255,255,0)');h.addColorStop(1,'rgba(255,255,255,1)');x.strokeStyle=h;x.lineWidth=1.6;x.lineCap='round';
