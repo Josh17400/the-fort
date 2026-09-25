@@ -2143,6 +2143,10 @@ function vehWave(){const w=G.wave,q=[],f=w%10===0?0.5:1;   // MBT (boss) waves b
   for(let i=q.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[q[i],q[j]]=[q[j],q[i]]}
   const inf=G.spawnLeft,cost=q.reduce((s,t)=>s+VEH_COST[t]-1,0);
   G.spawnLeft=Math.max(q.length+Math.ceil(inf*0.5),inf-cost);G.waveTotal+=G.spawnLeft-inf;G.vq=q}
+// wave-start armor callout: what the vehicle roster holds, so the player can plan (feed line, after the wave banner)
+const VEH_CALL={technical:['TECHNICAL','TECHNICALS'],apc:['APC','APCS'],ifv:['LIGHT TANK','LIGHT TANKS'],mlrs:['ROCKET LAUNCHER','ROCKET LAUNCHERS'],mbt:['TANK','TANKS']};
+function armorCallout(){const q=G.vq;if(!q||!q.length||q.length<3&&q.every(t=>t==='technical'))return;const n={};for(const t of q)n[t]=(n[t]||0)+1;
+  const txt='INCOMING: '+Object.keys(VEH_CALL).filter(t=>n[t]).map(t=>n[t]+' '+VEH_CALL[t][n[t]>1?1:0]).join(' · ');setTimeout(()=>{if(running&&!G.over)feed(txt,'205,215,140','tank')},1400)}
 function nextType(){const q=G.vq;return q&&q.length&&Math.random()<q.length/G.spawnLeft?q.pop():pickType(G.wave)}
 function startWave(){
   G.breakT=0;G.wave++;if(G.startBest>0&&G.wave===G.startBest+1){feed('NEW RECORD · WAVE '+G.wave,'120,230,140','trophy');[660,880,1175].forEach((f,i)=>setTimeout(()=>tone(f,i<2?0.09:0.22,'square',0,0.045),i*120))}   // first wave past your best: a moment, not just an AAR tag
@@ -2151,7 +2155,7 @@ function startWave(){
   layMines();
   if(G.wallMax){G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.25)}
   banner(G.wave%10===0?'WAVE '+G.wave+' — ENEMY ARMOR INCOMING':'WAVE '+G.wave,G.rsNew?'NEW KIT: '+G.rsNew:'',G.rsNew?'110,195,255':'');G.rsNew='';if(G.wave===G.startWave)rsBriefs();sfx('wave');
-  skyWaveStart();evStart();vehWave();
+  skyWaveStart();evStart();vehWave();armorCallout();
   G.uavT=!G.ev&&G.wave>=6&&G.wave%10!==0&&Math.random()<0.3?4+Math.random()*7:0;   // recon UAV pass partway into the wave
 }
 // Supply crates: mostly cash, but from wave 3 some are MUNITIONS (grenade ready + rapid fire) and, while the fort is hurt, ENGINEER kits
