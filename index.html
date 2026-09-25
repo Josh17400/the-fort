@@ -1494,7 +1494,7 @@ const narrow=()=>innerWidth<900||(innerHeight<=500&&innerWidth>innerHeight);
 function showScreen(id){const h=id==='home'||id==='settings';$('home').classList.toggle('on',h);document.body.classList.toggle('at-home',h);
   $('settings').classList.toggle('on',id==='settings');$('hud').classList.toggle('on',id==='game');if(h)renderHome()}
 // the run that just ended, for the After-Action card (read-only snapshot taken in endRun)
-function snapAAR(){lastAAR={wave:G.wave,rec:G.wave>G.startBest&&G.startBest>0,kills:G.kills,earned:G.earned,time:G.time,rp:S.rpLast||0,
+function snapAAR(){lastAAR={evs:(G.evDone||[]).slice(),wave:G.wave,rec:G.wave>G.startBest&&G.startBest>0,kills:G.kills,earned:G.earned,time:G.time,rp:S.rpLast||0,
   perks:perkList().length?perkChips():'',nPerk:Object.values(G.pk||{}).reduce((a,b)=>a+b,0),medals:(G.medals||[]).slice()}}
 // UI-only prefs: reduced motion, left-handed battle controls, medal "seen" count, Armory sort
 if(S.set.reduceMotion==null){const rm=matchMedia('(prefers-reduced-motion: reduce)').matches;S.set.reduceMotion=rm;if(rm&&S.best===0&&!Object.keys(S.lv).length)S.set.shake=false}
@@ -1555,12 +1555,13 @@ function renderMission(){const r=RLINES.dmg,k=rTier('dmg'),t=r.t[k];
     .map(([k,i,v])=>`<div class="tile"><span>${ic(i,13)}${k}</span><b>${v}</b></div>`).join('')}
 function renderAAR(){const el=$('lastRun'),a=lastAAR;
   if(!a||!lastRunMsg){el.innerHTML=S.best<=1?firstDeployHtml():'';return}
-  const n=rsAffordN(),m=Math.floor(a.time/60),s=Math.floor(a.time%60),nm=a.medals.length;
+  const n=rsAffordN(),m=Math.floor(a.time/60),s=Math.floor(a.time%60),nm=a.medals.length,ne=(a.evs||[]).length;
   el.innerHTML=`<div class="panel aar ticks"><div class="sec-h"><div class="eyebrow">AFTER-ACTION · WAVE ${a.wave}</div>${a.rec?'<span class="badge b-new">NEW BEST</span>':''}</div>`
     +`<div class="tiles t4">${[['WAVE',a.wave],['KILLS',fmtN(a.kills)],['EARNED','$'+fmtN(a.earned)],['TIME',m+'<small>m</small> '+s+'<small>s</small>']].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join('')}</div>`
     +`<button class="rprow" data-rsgo="">${ic('research',16)}<span>${a.rp||S.best>=10?`<b>+${fmtN(a.rp)} RP</b> · ${fmtN(S.rp)} banked`:'<b>RP starts at wave 10</b> · hold that far to fund R&amp;D'}${n?'<span class="hph"> · enough for '+n+' '+pl(n,'tier')+'</span>':''}</span><span class="chev">→</span></button>`
     +afterAction()
-    +(a.perks||nm?`<details class="rund"${narrow()?'':' open'}><summary>${ic('chevR',14)}Run details${a.nPerk?' · '+a.nPerk+' '+pl(a.nPerk,'directive'):''}${nm?' · '+nm+' '+pl(nm,'medal'):''}</summary><div class="rdx">`
+    +(a.perks||nm||ne?`<details class="rund"${narrow()?'':' open'}><summary>${ic('chevR',14)}Run details${a.nPerk?' · '+a.nPerk+' '+pl(a.nPerk,'directive'):''}${nm?' · '+nm+' '+pl(nm,'medal'):''}${ne?' · '+ne+' '+pl(ne,'event'):''}</summary><div class="rdx">`
+      +(ne?`<div><div class="eyebrow">EVENTS REPELLED</div><div class="pperks">${a.evs.map(k=>EVENTS[k]?`<span>${ic('threat',14)}${EVENTS[k].name}</span>`:'').join('')}</div></div>`:'')
       +(a.perks?`<div><div class="eyebrow">DIRECTIVES</div><div class="pperks">${a.perks}</div></div>`:'')
       +(nm?`<div><div class="eyebrow">MEDALS EARNED</div><div class="pperks medal">${a.medals.map(id=>{const q=MEDALS.find(x=>x.id===id);return q?`<span>${ic(q.ic,14)}${q.name}</span>`:''}).join('')}</div></div>`:'')+'</div></details>':'')
     +'</div>'}
@@ -6395,7 +6396,7 @@ function evWeights(p){const k=G&&G.ev;if(k!=='blitz'&&k!=='armor'&&k!=='barrage'
   if(k==='swarm'){for(const q of p)q[1]*=q[0]==='drone'?4:q[0]==='runner'?0.6:1;return}
   if(k==='barrage'){for(const q of p)q[1]*=q[0]==='mortar'?4:q[0]==='shooter'?1.6:q[0]==='runner'?0.6:1;return}
   for(const q of p)q[1]*=k==='blitz'?(q[0]==='runner'?3:q[0]==='grunt'?0.7:q[0]==='brute'?0.3:1):(q[0]==='brute'?3:q[0]==='runner'?0.5:1)}
-function evClear(b){const E=EVENTS[G.ev],x=Math.round(b*E.bonus);medalBump(G.ev);G.ev=null;feed(E.name+' REPELLED · +$'+f1(x),E.col,'star');
+function evClear(b){const E=EVENTS[G.ev],x=Math.round(b*E.bonus);medalBump(G.ev);(G.evDone||(G.evDone=[])).push(G.ev);G.ev=null;feed(E.name+' REPELLED · +$'+f1(x),E.col,'star');
   setTimeout(()=>tone(660,0.08,'square',0,0.04),120);setTimeout(()=>tone(990,0.14,'square',0,0.04),230);return x}
 function evSting(k){
   if(k==='storm'){const v=voice(3.2,1,null,null,true);if(v){lNoise(v,'bandpass',260,700,0.7,0.26,1.1,2);lNoise(v,'highpass',2600,4200,0.5,0.07,1.4,1.6,0.4)}}
