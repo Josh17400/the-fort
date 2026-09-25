@@ -2226,7 +2226,7 @@ const STRAG_T=15;
 function stragglers(){if(G.spawnLeft>0||G.vq&&G.vq.length||G.time-(G.lkT??G.time)<STRAG_T)return;let n=0;for(const e of G.enemies)if(!e.dead&&++n>3)return;for(const e of G.sky)if(!e.dead&&++n>3)return;if(!n)return;
   for(const e of G.enemies)if(!e.dead){e.rev=Math.max(e.rev||0,1);if(e.stand)e.fwd=1}for(const e of G.sky)if(!e.dead)e.rev=Math.max(e.rev||0,1)
   if(G.stragW!==G.wave){G.stragW=G.wave;feed('STRAGGLERS MARKED','255,207,90','threat')}}
-function kill(e){e.dead=true;G.lkT=G.time;if(e.vbied){e.vbied=0;medalBump('vbied');explode(e.x,e.y,44,e.dmg*0.4);light(e.x,e.y,90,'255,150,60',0.4)}if(_mainHit&&_aimed)streakKill();
+function kill(e){e.dead=true;G.lkT=G.time;if(e.mech)medalBump('mech');if(e.vbied){e.vbied=0;medalBump('vbied');explode(e.x,e.y,44,e.dmg*0.4);light(e.x,e.y,90,'255,150,60',0.4)}if(_mainHit&&_aimed)streakKill();
   const bonus=e.load>0?money(e.rew*0.15*e.load):0,r=Math.round(money(e.rew)*streakMul())+bonus;S.bank+=r;G.earned+=r;G.kills++;S.tkills++;(e.air?airDown:fxKill)(e);
   if(e.chute>0)medalBump('chute');if(_nadeK)medalBump('nade');if(ARMOR_KILL[e.type]&&!e.air)medalBump('tank');if(e.type==='manpads')medalBump('manpads');if(S.tkills%25===0)medalCheck('kills');
   if(S.set.gfx==='high'&&!e.air)corpse(e);else if(e.veh)G.vwrecks.push({type:e.type,x:e.x,y:e.y,r:e.r,a:Math.atan2(-e.y,-e.x),t0:G.time});
@@ -8001,6 +8001,7 @@ const MEDALS=[
  {id:'storm',ic:'storm',name:'Storm Rider',desc:'Repel 5 sandstorms.',st:'storm',goal:5,cash:700,tiers:[20,60]},
  {id:'canopy',ic:'chute',name:'Canopy Buster',desc:'Shoot 100 paratroopers before they land.',st:'chute',goal:100,cash:700,tiers:[500,2000]},
  {id:'stonewall',ic:'threat',name:'Stonewall',desc:'Repel 5 blitz waves.',st:'blitz',goal:5,cash:700,tiers:[20,60]},
+ {id:'wrench',ic:'repair',name:'Wrench Breaker',desc:'Take out 50 enemy combat mechanics.',st:'mech',goal:50,cash:900,tiers:[250,1000]},
  {id:'bombsquad',ic:'truck',name:'Bomb Squad',desc:'Stop 25 car bombs before they reach the walls.',st:'vbied',goal:25,cash:900,tiers:[150,750]},
  {id:'holdout',ic:'hp',name:'Holdout',desc:'Clear 3 waves in one run with the walls breached.',st:'holdout',goal:3,cash:1000,tiers:[6,12]},
  {id:'flankguard',ic:'threat',name:'Flank Guard',desc:'Repel 5 ambushes.',st:'ambush',goal:5,cash:800,tiers:[20,60]},
