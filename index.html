@@ -6296,18 +6296,21 @@ function drawPreview(type){if(SKY[type])return skyPreview(type);if(type.startsWi
 //  para   transports cross the fort and drop part of the wave just outside the wire; troopers can't act under the canopy
 //  blitz  +20% hostiles, runner-heavy, delivered in 80% of the usual window
 //  armor  an MBT at 40% HP (rising to 55% by wave 23) leads a brute-heavy column
+//  swarm  two drone flights launch at the start and the stream turns drone-heavy (from wave 12)
 //  barrage mortar teams (2, 3 from wave 25) set up at the start, and the stream is mortar- and marksman-heavy
 const EVENTS={
  storm:{name:'SANDSTORM',tag:'STORM',from:6,bonus:0.5,col:'226,186,118',sub:'Sight line cut by a quarter · radar still tracks aircraft'},
  para:{name:'AIRBORNE ASSAULT',tag:'AIRBORNE',from:8,bonus:0.5,col:'150,200,255',sub:'Paratroopers dropping at the walls · shoot the canopies'},
  blitz:{name:'BLITZ',tag:'BLITZ',from:5,bonus:0.5,col:'255,150,95',sub:'Light infantry rush · more hostiles, arriving faster'},
  armor:{name:'ARMORED COLUMN',tag:'ARMOR',from:13,bonus:0.6,col:'205,215,140',sub:'An enemy tank leads a heavy trooper column'},
+ swarm:{name:'DRONE SWARM',tag:'SWARM',from:12,bonus:0.5,col:'255,210,110',sub:'Kamikaze drone flights inbound · AA, MG nests and auto-fire'},
  barrage:{name:'ARTILLERY BARRAGE',tag:'BARRAGE',from:15,bonus:0.6,col:'255,128,96',sub:'Mortar teams dig in past your sight line · watch the red rings'}};
 Object.assign(INTEL,{
  ev_storm:['Sandstorm',2,'Dust rolls over the base and cuts your sight line by a quarter, so your guns engage late. Radar still tracks aircraft. Clearing the wave pays +50%.'],
  ev_para:['Airborne Assault',3,'Transports drop paratroopers just outside your wire. They can\'t fight under the canopy: shoot them before they land. Clearing the wave pays +50%.'],
  ev_blitz:['Blitz',2,'A mass rush of light infantry: 20% more hostiles, arriving faster. Auto-fire, wire and frag rounds shine. Clearing the wave pays +50%.'],
  ev_armor:['Armored Column',4,'An enemy tank leads a column of heavy troopers. Artillery, armor and airstrikes crack it open. Clearing the wave pays +60%.'],
+ ev_swarm:['Drone Swarm',3,'Flights of kamikaze drones fly over your wire and mines and dive into the walls. AA guns, MG nests, Tesla coils and auto-fire thin them out. Clearing the wave pays +50%.'],
  ev_barrage:['Artillery Barrage',3,'Mortar teams set up in the fog and keep shelling the fort, with marksmen covering them. Each launch gives a team away for a moment: lock on, or let artillery and TARGET: THREATS hunt them. Clearing the wave pays +60%.']});
 const CHUTE_T=2.1,LAND_T=0.7,TRANS_V=150,TRANS_ALT=90;
 function rollEvent(w){if(w<5||w%10===0||(w>=SKY_WAVE.airboss&&w%10===5)||w-G.evLast<2)return null;
@@ -6317,9 +6320,11 @@ function evStart(){const w=G.wave,k=rollEvent(w);G.ev=k;if(!k)return;const E=EVE
   if(k==='blitz'){const n=Math.round(G.spawnLeft*0.2);G.spawnLeft+=n;G.waveTotal+=n;G.spawnInt=Math.max(0.05,waveWindow(w)*0.8/G.spawnLeft)}
   else if(k==='armor'){const t=spawn('boss');t.hp=t.max*=Math.min(0.55,0.4+0.015*(w-13));G.waveTotal++}
   else if(k==='para')airborne(w);
+  else if(k==='swarm'){for(let i=0;i<2;i++){spawnSky('drone',Math.random()*TAU);G.waveTotal++}}
   else if(k==='barrage'){const n=w>=25?3:2;for(let i=0;i<n;i++){const t=spawn('mortar');t.atk=2.5+i*1.2}G.waveTotal+=n}
   banner('WAVE '+w+' — '+E.name,E.sub,E.col);if(!seen()['ev_'+k])spotted('ev_'+k);evSting(k)}
-function evWeights(p){const k=G&&G.ev;if(k!=='blitz'&&k!=='armor'&&k!=='barrage')return;
+function evWeights(p){const k=G&&G.ev;if(k!=='blitz'&&k!=='armor'&&k!=='barrage'&&k!=='swarm')return;
+  if(k==='swarm'){for(const q of p)q[1]*=q[0]==='drone'?4:q[0]==='runner'?0.6:1;return}
   if(k==='barrage'){for(const q of p)q[1]*=q[0]==='mortar'?4:q[0]==='shooter'?1.6:q[0]==='runner'?0.6:1;return}
   for(const q of p)q[1]*=k==='blitz'?(q[0]==='runner'?3:q[0]==='grunt'?0.7:q[0]==='brute'?0.3:1):(q[0]==='brute'?3:q[0]==='runner'?0.5:1)}
 function evClear(b){const E=EVENTS[G.ev],x=Math.round(b*E.bonus);medalBump(G.ev);G.ev=null;feed(E.name+' REPELLED · +$'+f1(x),E.col,'star');
@@ -6327,6 +6332,7 @@ function evClear(b){const E=EVENTS[G.ev],x=Math.round(b*E.bonus);medalBump(G.ev)
 function evSting(k){
   if(k==='storm'){const v=voice(3.2,1,null,null,true);if(v){lNoise(v,'bandpass',260,700,0.7,0.26,1.1,2);lNoise(v,'highpass',2600,4200,0.5,0.07,1.4,1.6,0.4)}}
   else if(k==='blitz')for(let i=0;i<3;i++)setTimeout(()=>tone(760-i*60,0.09,'square',-90,0.05),i*150)
+  else if(k==='swarm'){const v=voice(2.2,1,null,null,true);if(v){lOsc(v,'sawtooth',180,230,0.025,0.4,1.6);lOsc(v,'sawtooth',186,240,0.025,0.5,1.5,0.1);lNoise(v,'bandpass',1400,1800,2,0.05,0.5,1.4)}}   // rising rotor whine
   else if(k==='barrage'){sfx('whistle');setTimeout(()=>sfx('whistle'),450)}}
 function paraType(w){const r=Math.random();return w>=15&&r<0.12?'brute':w>=8&&r<0.3?'bomber':r<0.58?'runner':'grunt'}
 // Each transport flies a straight line across the fort (offset o from centre) and spaces its stick over the two stretches of the
@@ -7910,6 +7916,7 @@ const MEDALS=[
  {id:'storm',ic:'storm',name:'Storm Rider',desc:'Repel 5 sandstorms.',st:'storm',goal:5,cash:700,tiers:[20,60]},
  {id:'canopy',ic:'chute',name:'Canopy Buster',desc:'Shoot 100 paratroopers before they land.',st:'chute',goal:100,cash:700,tiers:[500,2000]},
  {id:'stonewall',ic:'threat',name:'Stonewall',desc:'Repel 5 blitz waves.',st:'blitz',goal:5,cash:700,tiers:[20,60]},
+ {id:'swatter',ic:'aagun',name:'Swatter',desc:'Repel 5 drone swarms.',st:'swarm',goal:5,cash:800,tiers:[20,60]},
  {id:'counterbat',ic:'arty',name:'Counter-Battery',desc:'Repel 5 artillery barrages.',st:'barrage',goal:5,cash:800,tiers:[20,60]},
  {id:'tank',ic:'tank',name:'Tank Hunter',desc:'Destroy 25 enemy armored vehicles (tanks, carriers, rocket launchers).',st:'tank',goal:25,cash:900,tiers:[150,750]},
  {id:'stinger',ic:'sniper',name:'Clear Skies',desc:'Take out 50 MANPADS teams before they bring your aircraft down.',st:'manpads',goal:50,cash:900,tiers:[300,1500]},
