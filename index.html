@@ -2248,10 +2248,10 @@ function standOff(e,spd,dt){const d=Math.hypot(e.x,e.y)||1,want=e.fwd?Math.max(b
   e.atk-=dt;if(e.atk>0)return;e.atk=e.rate*(0.85+Math.random()*0.3);e.shots++;e.fl=G.time;
   if(e.type==='mortar')fireMortar(e);else fireMLRS(e)}
 const cbTrack=()=>0.5*Math.min(6,L('radar'));   // counter-battery: radar holds a launch position this much longer (s)
-function fireMortar(e){const h=blockHalf()*0.85,v=R()<0.3?fcNear(e,520):null,tx=v?v.x+(R()-.5)*18:(R()*2-1)*h,ty=v?v.y+(R()-.5)*18:(R()*2-1)*h;e.rev=1.8+cbTrack();if(e.shots>=4)e.fwd=1;
+function fireMortar(e){const h=blockHalf()*0.85,v=R()<0.3?fcNear(e,520):null,tx=v?v.x+(R()-.5)*18:(R()*2-1)*h,ty=v?v.y+(R()-.5)*18:(R()*2-1)*h;e.rev=1.8+cbTrack();if(pk('cbfire'))G.artyT=Math.min(G.artyT,0.6);if(e.shots>=4)e.fwd=1;
   G.eshots.push({k:'mortar',x:e.x,y:e.y,tx,ty,t:0,dur:1.35,dmg:e.dmg,src:e.type,h:70,warn:1});
   light(e.x,e.y,46,'255,190,110',0.18);puff(e.x,e.y,4,5,1.2,'170,165,150',16,0.5);sfx('mortar',e.x,e.y);sfx('whistle')}
-function fireMLRS(e){const n=Math.min(10,6+Math.floor(Math.max(0,G.wave-22)/5)),v=R()<0.3?fcNear(e,560):null,h=v?40:blockHalf()*0.95,cx=v?v.x:0,cy=v?v.y:0;e.rev=4+cbTrack();if(e.shots>=2)e.fwd=1;
+function fireMLRS(e){const n=Math.min(10,6+Math.floor(Math.max(0,G.wave-22)/5)),v=R()<0.3?fcNear(e,560):null,h=v?40:blockHalf()*0.95,cx=v?v.x:0,cy=v?v.y:0;e.rev=4+cbTrack();if(pk('cbfire'))G.artyT=Math.min(G.artyT,0.6);if(e.shots>=2)e.fwd=1;
   for(let i=0;i<n;i++)G.eshots.push({k:'mlrs',x:e.x,y:e.y,tx:cx+(R()*2-1)*h,ty:cy+(R()*2-1)*h,t:-1.1-i*0.16,dur:1.1,dmg:e.dmg,src:e.type,h:95,warn:1});   // rings first, then the ripple
   sfx('alarm');float(e.x,e.y-e.r-10,'ROCKET SALVO','#ff8a70',12)}
 // APC: once at the wall it drops the ramp and a rifle squad pours out on both flanks, then its turret opens up
@@ -2405,7 +2405,8 @@ function update(dt){
   updateEShots(dt);if(!running)return;
   updateSky(dt,half);if(!running)return;
   // artillery
-  const al=L('arty');if(al){G.artyT-=dt;if(G.artyT<=0){const vis=G.enemies.filter(visible);if(vis.length){let best=vis[0],bc=-1,R=artyR(al);
+  const al=L('arty');if(al){G.artyT-=dt;if(G.artyT<=0){const vis=G.enemies.filter(visible),cb=pk('cbfire')&&vis.find(e=>e.stand&&e.rev>0&&!e.dead);   // counter-battery: a crew that just fired is shelled first
+    if(cb){fireArty(cb,artyR(al),artyDmg(al)*1.5);G.artyT=artyCdNow()}else if(vis.length){let best=vis[0],bc=-1,R=artyR(al);
     const sk=sg('arty','seek');   // precision tiers weigh armor far heavier, then guide onto the armor inside the chosen cluster
     for(let i=0,nc=Math.min(25,vis.length);i<nc;i++){const c=vis[i];let k=0;for(const o of vis)if(within(o,c.x,c.y,R))k+=sk&&(o.veh||o.boss)?8:o.veh||o.stand?3:1;if(k>bc){bc=k;best=c}}
     fireArty(sk&&sgSeek(vis,best,R)||best,R,artyDmg(al));G.artyT=artyCdNow()}else G.artyT=0.5}}
@@ -6222,6 +6223,7 @@ const PERKS=[
  {id:'cas',ic:'air',name:'Close Air Support',desc:'Airstrike cooldown -35%, and a strike is ready now.',ok:()=>L('air')>0,go:()=>{G.airT=0}},
  {id:'minelayer',ic:'mines',name:'Minelayers',desc:'Twice the mines every wave, and a fresh field is laid now.',ok:()=>L('mines')>0,go:()=>layMines()},
  {id:'flak',ic:'aagun',name:'Flak Barrage',desc:'Air-defence fire +40% damage against aircraft.',ok:()=>L('aagun')>0&&G.wave>=SKY_WAVE.drone},
+ {id:'cbfire',ic:'arty',name:'Counter-Battery Fire',desc:'Artillery answers every mortar and rocket launch: that crew is shelled first, for +50% damage.',ok:()=>L('arty')>0&&G.wave>=11},
  {id:'aircrew',ic:'heli',name:'Aircrew Countermeasures',desc:'2x faster flares that fool 10% more missiles. Aircraft healed 25%.',ok:()=>G.wave>=14&&flyingCraft(),
   go:()=>{for(const u of[...G.units,...G.fleet,...G.air])if(u.hp!=null&&!u.dead&&FC[u.ck]&&FC[u.ck].air)u.hp=Math.min(u.max,u.hp+u.max*0.25)}},
  {id:'fuel',ic:'dcap',name:'Fuel Convoy',desc:'Every vehicle and aircraft is topped off now. Fuel burn -30%.',ok:hasFuel,
