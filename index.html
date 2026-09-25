@@ -2355,7 +2355,7 @@ const PRIO_TIP={near:'every gun engages the closest enemy',threat:'guns hit what
 const prio=()=>S.set.prio;
 // THREATS weights: standoff shooters in position, aircraft, sappers and mortar/rocket crews x0.25; armor on the move x0.45;
 // melee halted at the walls x0.5; infantry still approaching x1
-const threatK=e=>e.air||e.bomb||e.stand||(e.range&&e.moving===false)?0.25:e.veh?0.45:e.moving===false?0.5:1;
+const threatK=e=>e.vbied?0.12:e.air||e.bomb||e.stand||(e.range&&e.moving===false)?0.25:e.veh?0.45:e.moving===false?0.5:1;
 // lower score = engaged first: THREATS d*threatK(e); TOUGHEST on heavy guns -e.hp; otherwise d (distance, hyp). tMode: 1 / 2 / 0.
 // Scans take an optional second list (G.enemies then G.sky, the old concat order) instead of copying them. A candidate whose squared
 // distance already puts it past the HB band of the current best (or of the n-th best) can't win, so it is skipped before the
