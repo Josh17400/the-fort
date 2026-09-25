@@ -3448,34 +3448,47 @@ function airWreckArt(k,seed){_sd=seed+29;const ch='#1b1916',ch2='#2b2722',ch3='#
     ctx.restore();ctx.save();ctx.translate(26,5);ctx.rotate(.5);hqRR(-5,-4,9,8,3,ch);ctx.restore();debris(22,26)}}
 function drawFcWreck(w){const px=hqPx(),s=fcBake(w,px,false);ctx.save();ctx.translate(w.x,w.y);ctx.rotate(w.a);hqLoc(1.2,1.6,w.a,1);if(GFX.fx>0.5)hqShadow(s,_lv[0],_lv[1],.45);hqDraw(s);
   if(w.st==='bay'&&w.prog>0){ctx.globalAlpha=Math.min(1,w.prog*1.15);hqDraw(fcBake(w,px,true));ctx.globalAlpha=1}ctx.restore()}
+// motor pool wrecker (baked once per zoom): 6x6 chassis, armoured cab, ribbed bed, hazard-striped boom and rear spade
+function hqWrecker(){const c='#56633a';for(const wx of[-6.2,-3.2,5.2])for(const q of[-1,1]){hqRR(wx-1.6,q>0?3.3:-5.1,3.2,1.8,.4,'#151515');box(wx-1.2,q>0?3.5:-4.9,.4,1.4,'#2e2e2c');box(wx+.4,q>0?3.5:-4.9,.4,1.4,'#2e2e2c')}
+  hqRR(-9.6,-3.7,19.2,7.4,.6,'#2c3220');hqRR(-9.4,-3.5,13.2,7,.4,'#454c30');for(let x=-8.4;x<3.4;x+=2.2)box(x,-3.5,.35,7,'rgba(0,0,0,.28)');box(-9.4,-3.5,13.2,.5,'rgba(255,250,225,.16)');box(-9.4,3,13.2,.5,'rgba(0,0,0,.3)');
+  ctx.beginPath();ctx.roundRect(3.8,-3.9,5.8,7.8,1);ctx.fillStyle=c;ctx.fill();hqShadeV(-3.9,3.9);box(3.9,-3.8,2,7.6,hqSh(c,.12));hqBevel(3.8,-3.9,5.8,7.8,0,.4,.3);
+  ctx.save();ctx.beginPath();ctx.roundRect(7.3,-3.3,1.2,6.6,.35);ctx.clip();const g=ctx.createLinearGradient(7.3,-3.3,8.5,3.3);g.addColorStop(0,'#8fb3c8');g.addColorStop(.5,'#22384a');g.addColorStop(1,'#0e1822');ctx.fillStyle=g;ctx.fill();ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(7.45,-2.8,.3,2.2);ctx.restore();
+  for(let y=-3;y<3.2;y+=.7)box(9.3,y,.35,.35,'#1e2016');box(9.2,-3.6,.5,.8,'#f0e9b8');box(9.2,2.8,.5,.8,'#f0e9b8');box(6.9,-4.6,.6,.7,'#222');box(6.9,3.9,.6,.7,'#222');
+  hqRR(-11.4,-2.6,2,5.2,.3,'#2a2c24');box(-11.4,-2.6,2,.5,'rgba(255,250,225,.18)');   // rear spade
+  hqRR(-10.8,-.95,11.6,1.9,.3,'#d8a72a');for(let x=-9.8;x<.4;x+=2.4)hqPoly([x,-.95,x+1.1,-.95,x+.5,.95,x-.6,.95],'#2a2a22');box(-10.8,-.95,11.6,.35,'rgba(255,250,225,.3)');   // recovery boom
+  hqRR(-12.3,-1.2,1.8,2.4,.4,'#1c1c18');limb(-12.3,0,-12.9,0,.5,'#8a8a80');hqCyl(-2.4,2.3,2.6,1,'#6a5a38');hqCyl(-2.4,-3.3,2.6,1,'#3d4a24');   // hook block, stowed cable drum, jerrycans
+  hqBolts([-9,-3.1,-9,3.1,3.2,-3.1,3.2,3.1])}
 // recovery truck (ground) / aircraft tug (hangar), nose along +x; amber beacons turn while it works
 function drawFcCrew(c,air){const on=c.st!=='home',bl=Math.floor(G.time*3+c.i)%2;ctx.save();ctx.translate(c.x,c.y);ctx.rotate(c.ang);
-  if(!air){ctx.scale(2.3,2.3);ell(.8,1.2,10,4.8,'rgba(0,0,0,.32)');
-    for(const wx of[-6.2,-3.2,5.2])for(const q of[-1,1])box(wx-1.5,q>0?3.4:-5,3,1.6,'#151515');
-    box(-9.5,-3.6,19,7.2,'#3b4228');box(-9.5,-3.6,19,.8,'#4f5838');hqRR(3.8,-3.9,5.8,7.8,1,'#56633a');box(7.4,-3.3,1.1,6.6,'#20303c');box(7.6,-3,.3,2.2,'rgba(190,225,255,.5)');   // chassis, cab, windscreen
-    box(-8.6,-3.2,11.4,6.4,'#454c30');for(let x=-7.6;x<2;x+=2.2)box(x,-3.2,.35,6.4,'rgba(0,0,0,.25)');box(-11.2,-2.4,1.8,4.8,'#2a2c24');   // bed, rear spade
-    box(-10.6,-.8,11,1.6,'#d8a72a');for(let x=-9.6;x<0;x+=2.4)box(x,-.8,1.1,1.6,'#2a2a22');box(-11.8,-1.1,1.6,2.2,'#1c1c18');   // recovery boom, hazard-striped
+  if(!air){ctx.scale(2.3,2.3);const s=hqBake('mpWrk',hqPx(),25,11.6,12.6,5.8,hqWrecker);hqLoc(1,1.3,c.ang,2.3);hqShadow(s,_lv[0],_lv[1],.5);hqDraw(s);
     box(3.9,-4.3,1.2,.9,on&&bl?'#ffb13b':'#6a4a1a');box(3.9,3.4,1.2,.9,on&&!bl?'#ffb13b':'#6a4a1a')}
   else{ctx.scale(2,2);ell(.6,.9,6,3.6,'rgba(0,0,0,.3)');for(const wx of[-3,3])for(const q of[-1,1])box(wx-1.3,q>0?2.4:-3.8,2.6,1.4,'#151515');
     hqRR(-4.6,-2.8,9.2,5.6,1.4,'#c9a227');box(-4.6,-2.8,9.2,.7,'#e2c150');box(-1.8,-2,3,4,'#2a2c26');box(-7.8,-.4,3.2,.8,'#3a3a34');box(-.4,-3.3,.9,.8,on&&bl?'#ffb13b':'#6a4a1a')}   // yellow tug, cab, tow bar
   ctx.restore()}
 // static yard art, baked per (bays, destroyed, defenses): origin at the site centre, the fort off to +x
 function paintMP(s){const hw=s.hw,t=s.top,b=s.bot,dead=s.dead;_sd=77;
-  hqRR(-hw-6,t-6,2*hw+12,b-t+12,8,dead?'#211f1b':'#3a372e');hqRR(-hw,t,2*hw,b-t,6,dead?'#2a2824':'#5a574c');   // berm edge, gravel yard
+  for(let i=3;i>0;i--)hqRR(-hw-6+i*1.3,t-6+i*1.7,2*hw+12,b-t+12,8,'rgba(0,0,0,.12)');   // soft drop shadow (bottom-right, away from the light)
+  hqRR(-hw-6,t-6,2*hw+12,b-t+12,8,dead?'#211f1b':'#3a372e');box(-hw-2,t-6,2*hw+4,1.4,'rgba(255,245,220,.1)');box(-hw-2,b+4.6,2*hw+4,1.4,'rgba(0,0,0,.35)');   // bermed edge, bevelled
+  hqRR(-hw,t,2*hw,b-t,6,dead?'#2a2824':'#5a574c');box(-hw+4,t,2*hw-8,1,'rgba(0,0,0,.25)');box(-hw+4,b-1,2*hw-8,1,'rgba(255,245,220,.07)');   // gravel yard, sunk below the berm
   hqSpeckle(-hw,t,2*hw,b-t,(b-t)*5,'rgba(0,0,0,.2)',.7);hqSpeckle(-hw,t,2*hw,b-t,(b-t)*3,'rgba(255,245,220,.06)',.7);
   ctx.strokeStyle='rgba(30,26,20,.35)';ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(hw+6,t+24);ctx.quadraticCurveTo(12,t+28,-8,t+44);ctx.moveTo(hw+6,b-18);ctx.quadraticCurveTo(22,b-22,2,b-34);ctx.stroke();   // tyre ruts in from the lanes
-  for(const bay of s.bays){const x=bay.x-s.x,y=bay.y-s.y;hqRR(x-24,y-30,48,60,1.5,dead?'#2f2c28':'#76756c');hqSpeckle(x-24,y-30,48,60,90,'rgba(0,0,0,.14)',.55);
+  for(const bay of s.bays){const x=bay.x-s.x,y=bay.y-s.y;hqRR(x-23.2,y-29,48,60,1.5,'rgba(0,0,0,.3)');hqRR(x-24,y-30,48,60,1.5,dead?'#2f2c28':'#7a7970');hqSpeckle(x-24,y-30,48,60,90,'rgba(0,0,0,.14)',.55);hqSpeckle(x-24,y-30,48,60,40,'rgba(255,250,235,.1)',.5);
+    ctx.strokeStyle='rgba(0,0,0,.2)';ctx.lineWidth=.35;ctx.beginPath();for(let yy=y-30+15;yy<y+30;yy+=15){ctx.moveTo(x-24,yy);ctx.lineTo(x+24,yy)}ctx.moveTo(x,y-30);ctx.lineTo(x,y+30);ctx.stroke();   // slab joints
+    box(x-24,y-30,48,.8,'rgba(255,250,230,.2)');box(x-24,y-30,.8,60,'rgba(255,250,230,.14)');box(x+23.2,y-30,.8,60,'rgba(0,0,0,.22)');
     ell(x+(sr()-.5)*14,y+(sr()-.5)*20,5+sr()*4,3+sr()*2,'rgba(20,18,14,.3)');ell(x+(sr()-.5)*14,y+(sr()-.5)*20,3,2,'rgba(20,18,14,.35)');   // oil stains
-    box(x-24,y-30,48,1,'#c9a227');box(x-24,y+29,48,1,'#c9a227');
+    if(!dead)for(const yy of[y-30,y+28.4])for(let i=0;i<12;i++)hqPoly([x-24+i*4,yy,x-22+i*4,yy,x-23+i*4,yy+1.6,x-25+i*4,yy+1.6],i%2?'#1c1c18':'#c9a227');   // hazard-striped bay ends
     for(const q of[-1,1]){box(x+q*25-1,y-31,2,62,'#2b2d29');for(let yy=y-30;yy<y+30;yy+=3)box(x+q*25-1.4,yy,2.8,.5,'#44463f')}   // gantry rails, sleepers
     for(const[cx,cy]of[[-25,-31],[25,-31],[-25,31],[25,31]])box(x+cx-1.6,y+cy-1.6,3.2,3.2,'#1d1f1b')}   // portal legs
   ctx.strokeStyle='rgba(227,181,60,.45)';ctx.lineWidth=.8;ctx.setLineDash([3,2]);for(const q of s.q)ctx.strokeRect(q.x-s.x-23,q.y-s.y-29,46,58);ctx.setLineDash([]);   // hardstand
   for(const c of s.crews){const x=c.hx-s.x,y=c.hy-s.y;box(x-12,y-20,.8,34,'rgba(230,226,200,.45)');box(x+12,y-20,.8,34,'rgba(230,226,200,.45)')}   // wrecker lot
-  for(let y=t;y<b-4;y+=6){hqRR(-hw-5,y,5.6,5.6,.6,dead?'#3a3326':'#8a7a55');box(-hw-5,y,5.6,1,'rgba(255,240,200,.15)')}   // HESCO berm on the far side
-  for(const[y0,c]of[[t+8,'#6b5a3a'],[t+28,'#4e5a3a'],[b-28,'#6d4a2c']]){hqRR(-hw+2,y0,10,18,.6,dead?'#26231e':c);for(let yy=y0+1.5;yy<y0+17;yy+=1.6)box(-hw+2,yy,10,.35,'rgba(0,0,0,.2)')}   // ISO containers
-  if(!dead){hqRR(hw-15,b-19,11,8,.8,'#566043');box(hw-14,b-18,3.2,6,'#2a2c26');for(let i=0;i<3;i++){ell(hw-27+i*4.4,t+9,2,2,'#1a1a18');ell(hw-27+i*4.4,t+9,.8,.8,'#3a3a36')}   // generator, spare wheels, drums
-    for(let i=0;i<4;i++)ell(-hw+20+i*3.2,b-9,1.3,1.3,i%2?'#4f5a36':'#8a3a22');
-    ctx.font='700 6px Oxanium,sans-serif';ctx.textAlign='center';ctx.fillStyle='rgba(235,230,205,.42)';ctx.fillText('MOTOR POOL',0,b-4)}
+  for(let y=t;y<b-4;y+=6){hqRR(-hw-5.5,y-.5,6.6,6.6,.8,'#17140e');hqRR(-hw-5,y,5.6,5.6,.6,dead?'#3a3326':'#8a7a55');box(-hw-5,y,5.6,1.1,'rgba(255,240,200,.2)');box(-hw-5,y+4.6,5.6,1,'rgba(0,0,0,.25)');
+    ctx.strokeStyle='rgba(40,34,22,.45)';ctx.lineWidth=.2;ctx.beginPath();for(let q=1;q<4;q++){ctx.moveTo(-hw-5+q*1.4,y);ctx.lineTo(-hw-5+q*1.4,y+5.6);ctx.moveTo(-hw-5,y+q*1.4);ctx.lineTo(-hw+.6,y+q*1.4)}ctx.stroke()}   // HESCO berm on the far side: wire-mesh baskets
+  for(const[y0,c]of[[t+8,'#6b5a3a'],[t+28,'#4e5a3a'],[b-28,'#6d4a2c']]){hqRR(-hw+1.5,y0-.5,11,19,.8,'#17140e');hqRR(-hw+2,y0,10,18,.6,dead?'#26231e':c);for(let yy=y0+1.5;yy<y0+17;yy+=1.6)box(-hw+2,yy,10,.35,'rgba(0,0,0,.2)');box(-hw+2,y0,1,18,'rgba(255,245,220,.16)');box(-hw+11,y0,1,18,'rgba(0,0,0,.28)')}   // ISO containers
+  if(!dead){hqRR(hw-15.5,b-19.5,12,9,1,'#17140e');hqRR(hw-15,b-19,11,8,.8,'#566043');box(hw-15,b-19,11,1,'rgba(255,245,220,.2)');box(hw-14,b-18,3.2,6,'#2a2c26');for(let yy=b-17.5;yy<b-12;yy+=1)box(hw-10,yy,5,.35,'rgba(0,0,0,.3)');   // generator
+    for(let i=0;i<3;i++){ell(hw-27+i*4.4,t+9,2.2,2.2,'#0c0c0b');ell(hw-27+i*4.4,t+9,1.9,1.9,'#1f1f1c');ell(hw-27+i*4.4,t+9,.8,.8,'#4a4a44');ell(hw-27.5+i*4.4,t+8.4,.9,.5,'rgba(255,255,255,.12)')}   // spare wheels
+    for(let i=0;i<4;i++)hqDrum(-hw+20+i*3.6,b-9,1.5,i%2?'#4f5a36':'#8a3a22');
+    for(const[cx,cy,cw,ch,cc]of[[-hw+16,t+6,7,4.5,'#6b5a3a'],[-hw+16,t+11.5,7,4.5,'#5d6440'],[hw-22,b-19,5,5,'#6b5a3a']]){hqRR(cx-.4,cy-.4,cw+.8,ch+.8,.4,'#17140e');hqRR(cx,cy,cw,ch,.3,cc);box(cx,cy,cw,.7,'rgba(255,245,220,.22)');box(cx,cy+ch-.6,cw,.6,'rgba(0,0,0,.3)');box(cx+cw/2-.2,cy,.4,ch,'rgba(0,0,0,.3)');box(cx+.8,cy+ch/2-.3,1.4,.6,'#c9b271')}   // tool crates
+    ctx.save();ctx.translate(-hw+28,b-22);ctx.rotate(-.75);ctx.scale(1.5,1.5);ctx.globalAlpha=.34;ctx.fillStyle='#e8e0c0';ctx.fillRect(-5,-.9,8,1.8);ctx.beginPath();ctx.arc(4.2,0,2.6,0,TAU);ctx.fill();ctx.globalAlpha=1;hqRR(4.2,-1,3,2,.2,'#5a574c');ell(-5,0,1.3,1.3,'#5a574c');ctx.restore()}   // stencilled wrench (the motor pool mark)
   else{_sd=5;for(let i=0;i<9;i++){ctx.save();ctx.translate((sr()-.5)*hw*1.6,t+sr()*(b-t));ctx.rotate(sr()*TAU);box(-14,-1.2,28,2.4,'#15130f');ctx.restore()}}}   // collapsed gantries
 function paintHG(s){const hw=s.hw,t=s.top,b=s.bot,dead=s.dead;_sd=91;
   hqRR(-hw-4,t-4,2*hw+8,b-t+8,8,dead?'#211f1b':'#3b3e38');hqRR(-hw,t,2*hw,b-t,6,dead?'#2a2824':'#6d706a');hqSpeckle(-hw,t,2*hw,b-t,(b-t)*4,'rgba(0,0,0,.15)',.6);   // concrete apron
@@ -3489,13 +3502,17 @@ function paintHG(s){const hw=s.hw,t=s.top,b=s.bot,dead=s.dead;_sd=91;
   if(!dead){ctx.font='700 6px Oxanium,sans-serif';ctx.textAlign='center';ctx.fillStyle='rgba(235,230,205,.42)';ctx.fillText('HANGAR',8,b-4)}
   else{_sd=9;for(let i=0;i<8;i++){ctx.save();ctx.translate((sr()-.5)*hw*1.6,t+sr()*(b-t));ctx.rotate(sr()*TAU);box(-16,-1,32,2,'#15130f');ctx.restore()}}}
 function drawSiteBase(s){const px=Math.min(4,hqPx()),key=s.id+s.bays.length+'_'+s.crews.length+(s.dead?'x':'');
-  hqDraw(hqBake(key,px,s.hw*2+16,s.bot-s.top+16,s.hw+8,-s.top+8,()=>(s.air?paintHG:paintMP)(s),0),s.x,s.y)}
+  hqDraw(hqBake(key,px,s.hw*2+20,s.bot-s.top+20,s.hw+8,-s.top+8,()=>(s.air?paintHG:paintMP)(s),0),s.x,s.y)}
+// motor pool gantry: hazard-yellow box-girder beam with X bracing on end trucks; the trolley (hoist) rides it
+function hqGantry(){box(-28.2,-2.9,4,5.8,'#2e302b');box(24.2,-2.9,4,5.8,'#2e302b');for(const x of[-27.6,25.6])for(const q of[-1,1])ell(x+1.3,q*2.1,.9,.6,'#141414');box(-28.2,-2.9,4,.8,'rgba(255,250,225,.18)');box(24.2,-2.9,4,.8,'rgba(255,250,225,.18)');
+  box(-26,-1.7,52,3.4,'#c9a227');ctx.strokeStyle='rgba(60,45,10,.7)';ctx.lineWidth=.35;ctx.beginPath();for(let x=-26;x<26;x+=4){ctx.moveTo(x,-1.7);ctx.lineTo(x+4,1.7);ctx.moveTo(x+4,-1.7);ctx.lineTo(x,1.7)}ctx.stroke();
+  box(-26,-1.7,52,.7,'#ecd060');box(-26,1,52,.7,'#8a6e18');for(const x of[-26,26])for(let i=0;i<3;i++)hqPoly([x-(x>0?1:-1)*i*1.2,-1.7,x-(x>0?1:-1)*(i*1.2+.6),-1.7,x-(x>0?1:-1)*(i*1.2+.6),1.7,x-(x>0?1:-1)*i*1.2,1.7],i%2?'#c9a227':'#1c1c18')}
+function hqTrolley(){hqRR(-3,-3,6,6,.5,'#2d2f2a');box(-3,-3,6,1,'#4a4d45');box(-3,2.2,6,.8,'rgba(0,0,0,.35)');hqCyl(-2.2,-1.1,4.4,2.2,'#55584f');box(1.6,-2.4,.9,.9,'#d8a72a')}
 // moving parts over the work: gantry cranes (motor pool) / truss ribs and a cherry picker (hangar), the site's MG nests
 function drawSiteTop(s){if(s.dead)return;const t=G.time;
   for(const b of s.bays){const busy=!!b.w&&!b.w.svc;
-    if(!s.air){const y=b.y+(busy?Math.sin(t*0.5+b.x)*12:-26),x0=b.x-26,hx=b.x+(busy?Math.sin(t*0.9+b.y)*8:0);
-      box(x0,y-1.6,52,3.2,'#c9a227');box(x0,y-1.6,52,.8,'#e8c94e');for(let x=x0+2;x<x0+50;x+=4)box(x,y-1.6,.5,3.2,'rgba(0,0,0,.25)');box(x0-2,y-2.6,3,5.2,'#3a3a34');box(x0+51,y-2.6,3,5.2,'#3a3a34');
-      box(hx-3,y-3,6,6,'#2d2f2a');box(hx-3,y-3,6,1,'#4a4d45');if(busy){ctx.strokeStyle='rgba(20,20,18,.85)';ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(hx,y+3);ctx.lineTo(hx,y+10);ctx.stroke()}}
+    if(!s.air){const y=b.y+(busy?Math.sin(t*0.5+b.x)*12:-26),hx=b.x+(busy?Math.sin(t*0.9+b.y)*8:0),px=hqPx(),gb=hqBake('mpGan',px,60,8,30,4,hqGantry),tb=hqBake('mpTrl',px,8,8,4,4,hqTrolley);
+      hqShadow(gb,2.5,3.2,.4,b.x,y);hqDraw(gb,b.x,y);if(busy){ctx.strokeStyle='rgba(20,20,18,.85)';ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(hx,y+3);ctx.lineTo(hx+1.5,y+9);ctx.stroke();box(hx+.6,y+9,1.8,1.4,'#d8a72a')}hqDraw(tb,hx,y)}
     else{ctx.strokeStyle='rgba(38,40,36,.55)';ctx.lineWidth=1.3;ctx.beginPath();for(let i=-2;i<=2;i++){ctx.moveTo(b.x-31,b.y+i*13);ctx.lineTo(b.x+31,b.y+i*13)}ctx.moveTo(b.x-31,b.y-30);ctx.lineTo(b.x-31,b.y+30);ctx.moveTo(b.x+31,b.y-30);ctx.lineTo(b.x+31,b.y+30);ctx.stroke();
       if(busy){const a=Math.sin(t*0.6+b.y)*0.6,ex=b.x-20+Math.cos(a)*18,ey=b.y+Math.sin(a)*18;ell(b.x-20,b.y+18,3,3,'#c9a227');limb(b.x-20,b.y+18,ex,ey,1.4,'#d8b43a');box(ex-2,ey-2,4,4,'#3a3a34')}}}
   for(const gn of s.guns){ctx.save();ctx.translate(gn.x,gn.y);sandbags(6.5,9);ell(0,0,4.6,4.6,'#4a4331');ctx.rotate(gn.ang);box(0,-1.2,4,2.4,'#2a2a2a');box(4,-0.5,8,1,'#111');ell(-1.5,0,2.3,2.3,'#56692e');
