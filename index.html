@@ -2379,7 +2379,9 @@ function endRun(retreat){if(G.over)return;   // several hits in one frame can ea
   const tot=Object.values(G.threat).reduce((a,b)=>a+b,0),top=Object.entries(G.threat).filter(([,v])=>v>=tot*0.2).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>k);
   lastCause=retreat||!top.length?null:{top,breachW:G.breachW&&!wallsUp()?G.breachW:0,doc:top.some(t=>STANDOFF.has(t))&&prio()!=='threat'?prioShown()?'threat':'lock':''};
   rpCheckpoint();S.rpLast=G.rp||0;G.over=true;
-  const rec=G.wave>G.startBest&&G.startBest>0;if(G.wave>S.best)S.best=G.wave;save();
+  const rec=G.wave>G.startBest&&G.startBest>0;if(G.wave>S.best)S.best=G.wave;
+  if(S.best>=15&&!S.set.bakTip){S.set.bakTip=1;setTimeout(()=>toast('Tip: back up your progress in Settings → Data','star'),2500)}   // once: point at the save-code backup
+  save();
   lastRunMsg=[['Wave reached',G.wave+(rec?' <small style="font-size:11px;color:var(--good);letter-spacing:1px">NEW BEST</small>':'')],['Kills',G.kills],['Earned','$'+f1(G.earned)],['Survived',Math.floor(G.time/60)+'m '+Math.floor(G.time%60)+'s']].map(([k,v])=>`<div class="stat"><span>${k}</span><b>${v}</b></div>`).join('')
     +`<button class="stat rpst" data-rsgo style="grid-column:1/-1"><span>${ic('research',14)}RESEARCH POINTS</span><b>+${f1(S.rpLast)} RP</b><i>${f1(S.rp)} RP banked${rsReady().length?' · '+rsReady().length+' tier'+(rsReady().length>1?'s':'')+' ready':''}</i></button>`
     +(perkList().length?`<div class="stat" style="grid-column:1/-1"><span>DIRECTIVES</span><div class="pperks" style="justify-content:flex-start;margin-top:6px">${perkChips()}</div></div>`:'')
