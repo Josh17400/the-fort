@@ -1602,7 +1602,8 @@ function manualHtml(full){const ctl=MOBILE?[['Tap','an enemy to lock on and fire
     +`<button class="btn sm" data-howto>OPEN FULL GUIDE<span class="chev">→</span></button>`;
   return`<div class="hsec eyebrow">CONTROLS</div>${c}`+(MOBILE?'':`<div class="krow" style="margin:-4px 0 6px"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd><span>switch Base, Armory, R&amp;D and Medals · <kbd>Enter</kbd> deploys</span></div>`)
     +`<div class="hsec eyebrow">THE LOOP</div><div class="first inhow">${loopSteps()}</div>`
-    +`<div class="hsec eyebrow">BATTLE TIPS</div><ul class="mtips">${tips.map(t=>`<li>${t}</li>`).join('')}</ul>`}
+    +`<div class="hsec eyebrow">BATTLE TIPS</div><ul class="mtips">${tips.map(t=>`<li>${t}</li>`).join('')}</ul>`
+    +`<div class="hsec eyebrow">BATTLE EVENTS</div><ul class="mtips">${Object.values(EVENTS).sort((a,b)=>a.from-b.from).map(E=>`<li><b>${E.name}</b> · wave ${E.from}+ · ${E.sub}</li>`).join('')}</ul>`}
 let _manSet=false;
 function renderManual(){const m=$('manual');if(!_manSet){_manSet=true;m.open=S.best<5}const mb=$('manualBody'),mh=manualHtml(false);if(mb._h!==mh){mb.innerHTML=mh;mb._h=mh}}   // rebuild when tips unlock
 // ---------------- ARMORY ----------------
