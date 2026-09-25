@@ -335,11 +335,11 @@ body.mobile #hud[data-mode=desk] #prioBtn{--x:108px;--y:108px}
   right:calc(12px + var(--bsR));bottom:calc(180px + var(--bsB));opacity:0;visibility:hidden;transform:translateY(8px);
   transition:opacity var(--d-2,200ms),transform var(--d-3,320ms) var(--e-spring,ease-out),visibility var(--d-3,320ms)}
 #hud #armChip.on{opacity:1;visibility:visible;transform:none;pointer-events:auto}
-#hud[data-mode=land] #armChip{right:calc(10px + var(--bsR));bottom:calc(160px + var(--bsB))}
+#hud[data-mode=land] #armChip{right:calc(10px + var(--bsR));bottom:calc(160px + var(--bsB));max-width:var(--gw,176px);height:auto;min-height:44px;white-space:normal;text-wrap:balance;line-height:1.25;padding:5px 0 5px 14px;border-radius:22px}
 #hud[data-mode=desk] #armChip{right:0;left:0;margin:0 auto;width:max-content;bottom:calc(20px + var(--bsB) + var(--bars-h) + 12px)}
 body.lefty #hud[data-mode=port] #armChip{right:auto;left:calc(12px + var(--bsL))}
 body.lefty #hud[data-mode=land] #armChip{right:auto;left:calc(10px + var(--bsL))}
-#hud #armX{width:44px;height:42px;padding:0;display:grid;place-items:center;border:0;border-radius:999px;background:none;color:#ffd0c4;pointer-events:auto;margin-left:6px}
+#hud #armX{width:44px;height:44px;flex:none;padding:0;display:grid;place-items:center;border:0;border-radius:999px;background:none;color:#ffd0c4;pointer-events:auto;margin-left:6px}
 #hud #armX:before{content:"";position:absolute;margin-left:-8px;width:1px;height:22px;background:rgba(255,208,196,.3)}
 @media (hover:hover){#hud #armX:hover{background:rgba(255,255,255,.08)}}
 /* one-time coach marks */
@@ -385,7 +385,23 @@ body[data-gfx=high] #intel{background:rgba(22,27,18,.78);-webkit-backdrop-filter
 #hud[data-mode=port] #intel .it,#hud[data-mode=land] #intel .it{grid-template-areas:"tag thr" "name name" "tip tip";row-gap:2px}
 #hud[data-mode=port] #intel .thrw small,#hud[data-mode=land] #intel .thrw small{display:none}
 #hud[data-mode=port] #intel .nm2,#hud[data-mode=land] #intel .nm2{font-size:16px;line-height:1.1}
-#hud[data-mode=port] #intel .tip,#hud[data-mode=land] #intel .tip{font-size:12px;line-height:1.3;-webkit-line-clamp:2}
+#hud[data-mode=port] #intel .tip,#hud[data-mode=land] #intel .tip{font-size:12px;line-height:1.3;-webkit-line-clamp:3}
+#hud[data-mode=port] #intel{max-height:96px;pointer-events:none}
+/* phones: the card lets taps through to the battlefield; only its corner close target catches them */
+#hud[data-mode=port] #intel:after,#hud[data-mode=land] #intel:after{content:"×";position:absolute;top:0;right:0;width:44px;height:44px;display:grid;place-items:center;
+  font:600 16px/1 var(--fb);color:var(--dm);pointer-events:auto;cursor:pointer}
+#hud[data-mode=port] #intel .thrw{margin-right:24px}
+/* short portrait (SE-class): one compact row so the card stays off the fort */
+@media (max-height:699px){#hud[data-mode=port] #intel{max-height:54px;padding:6px 12px 7px 8px}#hud[data-mode=port] #intel canvas{width:36px;height:36px}
+  #hud[data-mode=port] #intel .tag2{display:none}#hud[data-mode=port] #intel .it{grid-template-areas:"name thr" "tip tip"}#hud[data-mode=port] #intel .tip{-webkit-line-clamp:1}}
+/* landscape: the card lives in the left column under the status card, never over the playfield */
+#hud[data-mode=land] #intel{display:grid;grid-template-columns:36px minmax(0,1fr);grid-template-areas:"cv tag" "cv name" "thr thr" "tip tip";column-gap:8px;row-gap:3px;align-items:center;
+  left:calc(10px + var(--bsL));right:auto;margin:0;width:var(--gw,176px);top:var(--intel-yl,74px);max-height:var(--intel-hl,160px);padding:8px 10px 10px 9px;pointer-events:none}
+#hud[data-mode=land] #intel .it{display:contents}
+#hud[data-mode=land] #intel canvas{grid-area:cv;width:36px;height:36px}
+#hud[data-mode=land] #intel .tag2{padding-right:22px}
+#hud[data-mode=land] #intel .nm2{font-size:15px;white-space:normal;padding-right:18px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+#hud[data-mode=land] #intel .tip{-webkit-line-clamp:var(--intel-tl,6)}
 /* pause: the shared sheet shell, scoped here so it stands alone */
 #overlay{z-index:var(--z-modal,20);padding:calc(16px + var(--bsT)) calc(16px + var(--bsR)) calc(16px + var(--bsB)) calc(16px + var(--bsL))}
 body:not([data-gfx=high]) #overlay{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(5,6,4,.72)}
@@ -3320,11 +3336,22 @@ function drawCraftAir(){if(!G.crash||!G.crash.length)return;
 // HUD chip under the depot panel: bays busy / total, queued and in-tow wrecks per site
 const fcHudY=()=>VW<640?(G.depot?244:180):(G.depot?180:114),fcSites=()=>G&&G.fw?[G.mp,G.hg].filter(Boolean):[];
 const fcHudBottom=()=>{const n=fcSites().length;return n?fcHudY()+14+20*n:0};
-function drawRepairHud(){const ss=fcSites();if(!ss.length)return;const x=20,w=230,rh=20,y=fcHudY();panel(x,y,w,8+rh*ss.length);
+function drawRepairHud(){const ss=fcSites();if(!ss.length||HL.mode==='port')return;if(HL.mode==='land'){if(HL.fcY!=null)hudFcPill(HL.lefty?HL.Rx-hudFcPill(0,0,1):HL.Lx,HL.fcY);return}   // phones: compact pill (portrait rides in the pills row)
+  const x=20,w=230,rh=20,y=fcHudY();panel(x,y,w,8+rh*ss.length);
   ss.forEach((s,i)=>{const cy=y+4+i*rh+rh/2,busy=s.bays.filter(b=>b.w).length,q=G.fw.filter(q=>q.site===s&&q.st==='queue').length,tw=G.fw.filter(q=>q.site===s&&(q.st==='tow'||q.claim)).length,hit=s.hitT>0&&!s.dead;
     cIcon(s.air?'hangar':'rfac',x+12,cy-7,14,s.dead?'#ef5a4f':hit?(Math.floor(G.time*8)%2?'#ff8a70':'#e6ead9'):'#9fd0ee');ctx.textAlign='left';ctx.font='700 11px Oxanium,sans-serif';ctx.fillStyle=hit?'#ffb0a0':'#e6ead9';
     ctx.fillText(hit?(s.air?'HANGAR HIT':'MOTOR POOL HIT'):s.air?'HANGAR':'MOTOR POOL',x+32,cy+4);ctx.textAlign='right';ctx.font='600 11px Oxanium,sans-serif';ctx.fillStyle=s.dead?'#ef5a4f':busy?'#bfe3ff':'#8f9882';
     ctx.fillText(s.dead?'DESTROYED':busy+'/'+s.bays.length+(s.bays.length>1?' BAYS':' BAY')+(q?' · '+q+' QUEUED':'')+(tw?' · '+tw+' TOW':''),x+w-12,cy+4)})}
+// phones: one 24px pill, icon + busy/total bays per site; turns red while a site is under fire or lost
+function hudFcPill(x,y,measure,mini){const ss=fcSites();if(!ss.length)return 0;const f='800 11px Oxanium,sans-serif';
+  let sg=ss.map(s=>{const busy=s.bays.filter(b=>b.w).length,hit=s.hitT>0&&!s.dead;return{s,busy,hit,t:s.dead?'LOST':hit?'HIT':busy+'/'+s.bays.length}});
+  if(mini){const wst=sg.find(g=>g.s.dead)||sg.find(g=>g.hit)||sg.find(g=>g.busy)||sg[0];sg=[Object.assign({},wst,{t:''})]}   // tight row: one icon in the worst site's colour
+  const w=mini?24:Math.round(sg.reduce((a,g)=>a+16+hMeasure(g.t,f)+g.t.length,10)+(sg.length-1)*10+10);if(measure)return w;
+  const bad=sg.some(g=>g.hit||g.s.dead),rgb=bad?'239,90,79':sg.some(g=>g.busy)?'110,195,255':'159,208,238';hRec(x,y,w,24,'pill:fc');
+  ctx.fillStyle=`rgba(${rgb},${bad?.22:.12})`;ctx.beginPath();ctx.roundRect(x,y,w,24,12);ctx.fill();ctx.strokeStyle=`rgba(${rgb},.55)`;ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(x+.5,y+.5,w-1,23,11.5);ctx.stroke();
+  let cx=x+10;ctx.font=f;ctx.letterSpacing='1px';ctx.textAlign='left';
+  for(const g of sg){const c=g.s.dead?'#ef5a4f':g.hit?(Math.floor(G.time*8)%2?'#ff8a70':'#ffd0c4'):g.busy?'#bfe3ff':'#9fd0ee';cIcon(g.s.air?'hangar':'rfac',mini?x+6:cx,y+6,12,c,2.2);if(mini)break;ctx.font=f;ctx.letterSpacing='1px';ctx.textAlign='left';ctx.fillStyle=c;ctx.fillText(g.t,cx+16,y+16);cx+=16+hMeasure(g.t,f)+g.t.length+10}
+  ctx.letterSpacing='0px';return w}
 // field-report preview: the wreck that triggered the card
 function frPreview(cat){const c=$('intelCv'),W=c.width,x=c.getContext('2d'),o=G&&G.cst&&G.cst.frO[cat];x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,W,W);if(!o)return;
   const k=o.ck,f=W*0.92/FC[k].span,s=fcBake({o,k,air:!!FC[k].air,a:0,tr0:0.7,seed:7,spr:{}},f,false);x.drawImage(s.c,W/2-s.ox*f,W/2-s.oy*f,s.w*f,s.h*f);
@@ -6181,7 +6208,7 @@ const INTEL={
  ifv:['Light Tank',4,'Tracked fighting vehicle whose 30mm cannon shells your walls from range. Heavy armor (small arms do 45%): bring artillery, tanks, missiles and mines.'],
  mbt:['Main Battle Tank',5,'Line tanks now roll in with regular waves. Small arms do only 35%: artillery, tanks, missiles, airstrikes and mines.'],
  mlrs:['Rocket Artillery',5,'Launcher truck that parks in the fog and ripples a salvo of rockets onto the fort; red rings mark the impacts. The launch gives it away: kill it before the next salvo.']};
-const INTEL_MS=4000,seen=()=>S.seen||(S.seen={});
+const INTEL_MS=4000,INTEL_MS_PH=5500,intelMs=()=>HL.mode&&HL.mode!=='desk'?INTEL_MS_PH:INTEL_MS,seen=()=>S.seen||(S.seen={});
 let intelG=null,intelQ=[],intelCur=null,intelEnd=0,intelLast=0;
 function spotted(type){if(INTEL[type]&&type!==intelCur&&!intelQ.includes(type))intelQ.push(type)}
 // driven from update(); real-time so battle speed doesn't shorten it, and paused time is added back
@@ -6189,10 +6216,10 @@ function intelTick(){const now=performance.now(),gap=now-intelLast,el=$('intel')
   if(intelG!==G){intelG=G;intelQ=[];intelCur=null;el.classList.remove('on');return}
   if(intelCur){if(gap>250)intelEnd+=gap;if(now>=intelEnd){intelCur=null;el.classList.remove('on');intelEnd=now+450}}
   else if(intelQ.length&&now>=intelEnd&&laneFreeFor(400)&&!(HL.mode!=='desk'&&_mtCur))showIntel(intelQ.shift(),now)}
-function showIntel(type,now){const [name,thr,tip]=INTEL[type],el=$('intel');seen()[type]=1;save();intelCur=type;intelEnd=now+INTEL_MS;
+function showIntel(type,now){const [name,thr,tip]=INTEL[type],el=$('intel');seen()[type]=1;save();intelCur=type;const ms=intelMs();intelEnd=now+ms;
   el.classList.toggle('kit',type.startsWith('rs_'));el.classList.toggle('sup',type.startsWith('crate_'));const tg=/^(ev|fr)_/.test(type)?'FIELD REPORT':type.startsWith('rs_')?'NEW KIT FIELDED':type.startsWith('crate_')?'SUPPLY DROP':'NEW CONTACT';el.querySelector('.tag2').textContent=tg;
   $('intelName').textContent=name;$('intelTip').textContent=tip;$('intelThr').innerHTML=thr?'<i class="f"></i>'.repeat(thr)+'<i></i>'.repeat(5-thr):'';el.classList.toggle('nothr',!thr);el.setAttribute('aria-label',tg.toLowerCase()+': '+name+'. '+tip);
-  drawPreview(type);el.style.setProperty('--dur',INTEL_MS+'ms');el.classList.remove('on');void el.offsetWidth;el.classList.add('on');intelH=el.offsetHeight;
+  drawPreview(type);el.style.setProperty('--dur',ms+'ms');el.classList.remove('on');void el.offsetWidth;el.classList.add('on');intelH=el.offsetHeight;
   tone(880,0.07,'square',0,0.035);setTimeout(()=>tone(1175,0.1,'square',0,0.035),90)}
 // renders the real in-game sprite, facing right, fitted to the card's preview canvas
 function drawPreview(type){if(SKY[type])return skyPreview(type);if(type.startsWith('crate_'))return cratePreview(type.slice(6));if(type.startsWith('fr_'))return frPreview(type.slice(3));if(type.startsWith('rs_')){const c=$('intelCv');c.dataset.th=type.slice(3).replace(/_(\d+)$/,':$1');return paintThumb(c)}if(type.startsWith('ev_'))return evPreview(type.slice(3));const c=$('intelCv'),d=ET[type],k=d.r/6,span=d.span||(d.boss?25:21),cxo=d.cx??(d.boss?2.5:4.5),fit=c.width*0.94/(span*k),main=ctx;
@@ -7454,7 +7481,7 @@ function hudLayout(){readHudSafe();const mode=hudMode(),desk=mode==='desk',port=
     fit:new Map(),busyT:HL.busyT||0,t0:HL.t0,dom:{}};
   if(desk){o.st={x:o.Lx,y:o.Ty,w:248,h:84};o.bw=Math.min(440,VW-2*(236+16));o.raise=o.bw<320;if(o.raise)o.bw=Math.min(440,VW-40)}
   else if(port){o.st={x:o.Lx,y:o.Ty,w:VW-24-HS.l-HS.r-104,h:44};o.bw=VW-24-HS.l-HS.r-156-12}
-  else{const GW=Math.max(176,Math.min(232,(VW-VH)/2-16-Math.max(HS.l,HS.r)));o.GW=GW;o.st={x:o.Lx,y:o.Ty,w:GW,h:56};o.bw=GW;
+  else{const GW=Math.max(176,Math.min(232,(VW-VH)/2-16-Math.max(HS.l,HS.r)));o.GW=GW;document.documentElement.style.setProperty('--gw',GW+'px');o.st={x:o.Lx,y:o.Ty,w:GW,h:56};o.bw=GW;
     o.laneW=Math.max(260,Math.min(420,VW-2*(GW+Math.max(HS.l,HS.r)+20)))}
   const hud=$('hud');if(hud.dataset.mode!==mode)hud.dataset.mode=mode;document.body.dataset.hud=mode;hud.classList.toggle('raise',!!o.raise);
   if(o.laneW)document.documentElement.style.setProperty('--lane-w',o.laneW+'px');
@@ -7466,7 +7493,7 @@ function hRec(x,y,w,h,t){if(HUDGRID)_hr.push([x,y,w,h,t])}
 function hudGrid(){const r=_hr.splice(0);
   for(const el of document.querySelectorAll('#hud .sbtn:not(.off),#hud .rbtn:not(.off),#hud .dpill:not(.off),#armChip.on,#intel.on,#coach.on,#dirPop.on,#medalToast.on')){
     if(getComputedStyle(el).display==='none')continue;const b=el.getBoundingClientRect();r.push([b.x,b.y,b.width,b.height,'#'+el.id])}
-  const inside=(a,b)=>a!==b&&a[0]>=b[0]-.5&&a[1]>=b[1]-.5&&a[0]+a[2]<=b[0]+b[2]+.5&&a[1]+a[3]<=b[1]+b[3]+.5,top=r.filter(a=>!r.some(b=>inside(a,b))),bad=[];
+  const inside=(a,b)=>a!==b&&a[0]>=b[0]-.5&&a[1]>=b[1]-.5&&a[0]+a[2]<=b[0]+b[2]+.5&&a[1]+a[3]<=b[1]+b[3]+.5,top=r.filter(a=>!r.some(b=>b[4][0]!=='#'&&inside(a,b))),bad=[];
   for(let i=0;i<top.length;i++)for(let j=i+1;j<top.length;j++){const a=top[i],b=top[j],ox=Math.min(a[0]+a[2],b[0]+b[2])-Math.max(a[0],b[0]),oy=Math.min(a[1]+a[3],b[1]+b[3])-Math.max(a[1],b[1]);
     if(ox>1&&oy>1)bad.push(a[4]+' x '+b[4]+' ('+Math.round(ox)+'x'+Math.round(oy)+')')}
   const cx0=VW*.3,cy0=VH*.3,cw=VW*.4,ch=VH*.4,cen=top.filter(a=>a[0]<cx0+cw&&a[0]+a[2]>cx0&&a[1]<cy0+ch&&a[1]+a[3]>cy0).map(a=>a[4]);
@@ -7574,13 +7601,16 @@ function drawHud(){let o=HL;const lefty=document.body.classList.contains('lefty'
     hudDomVar('--toast-b',HS.b+20+bh+16,document.documentElement)}
   else{const st=o.st,land=o.mode==='land';if(land)hudStatusLand(st.x,st.y,st.w,st.h);else hudStatusPort(st.x,st.y,st.w,st.h);
     const py=st.y+st.h+8,pb=hudPills(o,st.x,py,st.w)?py+24:st.y+st.h;
-    const bb=hudBosses(o,o.Lx,land?pb+8:HS.t+112,land?o.GW:o.Rx-o.Lx);
+    const bb=hudBosses(o,o.Lx,land?pb+8:HS.t+112,land?o.GW:o.Rx-o.Lx);o.fcY=null;let stackB=bb||pb;
+    if(land&&fcSites().length){o.fcY=stackB+8;stackB+=32}   // motor pool / hangar pill (drawn by drawRepairHud) under the boss stack
     laneY=land?HS.t+8:(bb||HS.t+104)+10;
     barsX=o.lefty?o.Rx-bw:o.Lx;barsY=o.By-bh;hudBars(o,barsX,barsY,bw,bh);let ay=barsY;
     if(L('arty')){ay-=8+32;hudArty(o,o.lefty?o.Rx-132:o.Lx,ay,132,32)}
     feedR=o.lefty;feedX=o.lefty?o.Rx:o.Lx;feedB=ay-8;feedW=land?Math.max(bw,VW*0.3-o.Lx-8):bw;
     if(!land&&VH>=700){const ct=VH-HS.b-12-156-8;if(feedB>ct){feedB=ct;feedW=o.Rx-o.Lx}}   // tall phones: the ticker rides above the thumb cluster at full width (short phones keep it in the left column, clear of the fort)
-    feedN=land?Math.max(0,Math.min(3,Math.floor((feedB-(bb||pb)-8)/28))):G.nadeArmed||G.airArmed?0:2}
+    feedN=land?Math.max(0,Math.min(3,Math.floor((feedB-stackB-8)/28))):G.nadeArmed||G.airArmed?0:2;
+    if(land){const iy=st.y+st.h+8,ib=(o.lefty?Math.min(ay,VH-HS.b-10-150):ay)-8,ih=Math.max(96,ib-iy),rt=document.documentElement;hudDomVar('--intel-yl',iy,rt);hudDomVar('--intel-hl',ih,rt);
+      const tl=Math.max(2,Math.floor((ih-80)/15.6));if(o.dom.tl!==tl){o.dom.tl=tl;rt.style.setProperty('--intel-tl',tl)}}}   // intel card: left column between the status card and the artillery chip / thumb cluster
   if(!desk)o.avoid=null;
   hudDomVar('--bars-h',bh,$('hud'));hudDomVar('--lane-y',laneY,document.documentElement);o.laneY=laneY;
   drawFeed(o,feedX,feedB,feedW,feedR,feedN);
@@ -7619,12 +7649,13 @@ function hudPills(o,x,y,maxW){const items=[];
   if(G.ev){const E=EVENTS[G.ev];items.push({t:E.tag,rgb:E.col,ic:null,opt:{a:o.rm?.7:(.45+.3*Math.sin(G.time*4))},ev:1})}
   if(G.stk>1){const m=streakMul(),hot=m>=1+STREAK_MAX-1e-9;items.push({t:'STREAK '+G.stk+' ×'+m.toFixed(2),rgb:hot?'255,179,71':'227,181,60',opt:{tc:'#ffe3a6',drain:Math.max(0,G.stkT/STREAK_T),bg:hot?.3:.2}})}
   else if(G.rapidT>0)items.push({t:'RAPID FIRE '+Math.ceil(G.rapidT)+'s',rgb:'255,157,122',opt:{a:G.rapidT<2&&Math.floor(G.rapidT*6)%2?.3:.7}});
-  const dep=G.depot?1:0;if(!items.length&&!dep)return false;
+  const dep=G.depot?1:0;let fcW=o.mode==='port'?hudFcPill(0,0,1):0,fcMini=false;if(!items.length&&!dep&&!fcW)return false;
   const depW=G.depot?(G.depot.dead?hPill(0,0,'DEPOT LOST','239,90,79',{ic:'depot',measure:1}):80):0;
-  let total=items.reduce((a,it)=>a+hPill(0,0,it.t,it.rgb,Object.assign({measure:1},it.opt))+6,0)+depW;
+  let total=items.reduce((a,it)=>a+hPill(0,0,it.t,it.rgb,Object.assign({measure:1},it.opt))+6,0)+depW+(fcW?fcW+6:0);
   if(total>maxW&&items[0]&&items[0].ev){const E=EVENTS[G.ev];total-=hPill(0,0,items[0].t,items[0].rgb,{measure:1})-24;items[0].t='';items[0].ic=EV_IC[G.ev]||'threat'}
+  if(fcW&&total>maxW){total-=fcW-24;fcW=24;fcMini=true;if(total>maxW){total-=30;fcW=0}}   // motor pool / hangar pill folds to an icon, then yields
   let cx=x;for(const it of items){if(it.t==='')cx+=hPill(cx,y,'',it.rgb,Object.assign({ic:it.ic,w:24},it.opt))+6;else cx+=hPill(cx,y,it.t,it.rgb,it.opt)+6}
-  if(G.depot)hudDepotPill(cx,y);return true}
+  if(G.depot){hudDepotPill(cx,y);cx+=depW+6}if(fcW)hudFcPill(cx,y,0,fcMini);return true}
 const EV_IC={storm:'storm',para:'chute',blitz:'rate',armor:'tank'};
 // ---- money chip (desk): cash at the top centre, with the run's earnings (or the live streak / rapid fire) under it
 function hudMoney(cx,y){const mt='$'+f1(S.bank),f='800 18px Oxanium,sans-serif',tw=hMeasure(mt,f),w=Math.round(tw+60);
@@ -7776,7 +7807,9 @@ function coachTick(o,now){if(coachCur){const c=coachCur;
 function coachShow(id,now){const[bid,touch,desk]=COACH[id],b=$(bid);if(!b||b.classList.contains('off')||getComputedStyle(b).display==='none')return;
   $('coachTxt').textContent=MOBILE?touch:desk;coachPlace(b);$('coach').classList.add('on');coachCur=id;coachAt=now;coachLast=now}
 function coachPlace(b){const r=b.getBoundingClientRect(),c=$('coach');c.classList.remove('dn');
-  const w=c.offsetWidth,h=c.offsetHeight,below=r.top<VH/2,left=Math.max(12,Math.min(VW-12-w,r.left+r.width/2-w/2)),top=below?r.bottom+12:r.top-h-12;
+  const w=c.offsetWidth,h=c.offsetHeight,below=r.top<VH/2,left=Math.max(12+HS.l,Math.min(VW-12-HS.r-w,r.left+r.width/2-w/2));let top=below?r.bottom+12:r.top-h-12;
+  if(!below){const bs=[...document.querySelectorAll('#hud .rbtn:not(.off)')].map(o=>o.getBoundingClientRect()).filter(q=>q.width&&q.left<left+w&&q.right>left);
+    for(let moved=true,n=0;moved&&n<6;n++){moved=false;for(const q of bs)if(q.top<top+h+8&&q.bottom>top){top=q.top-h-12;moved=true}}}   // never sit on a neighbouring action button
   c.style.left=Math.round(left)+'px';c.style.top=Math.round(top)+'px';c.style.setProperty('--ax',Math.round(Math.max(14,Math.min(w-14,r.left+r.width/2-left)))+'px');c.classList.toggle('dn',below)}
 // ---- pause sheet contents (read-only run stats)
 function renderPause(){const t=G.time;$('pauseCtx').textContent='WAVE '+G.wave+' · '+Math.floor(t/60)+'m '+Math.floor(t%60)+'s';
