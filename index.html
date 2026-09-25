@@ -2045,8 +2045,9 @@ function drawEShots(){const px=1/sc,t=G.time,lw=Math.max(1,1.4*px);
     ctx.font=`800 ${(10*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle='#ff8a70';ctx.fillText(e.type==='mortar'?'MORTAR':'ROCKET ARTY',e.x,e.y-r-4*px)}}
 // burning hulks on Medium/Low (High keeps its baked wrecks in drawCorpses plus a smoke-and-fire emitter)
 const VWRECK_T=7,VEH_LEN={technical:[17,9],apc:[23,12],ifv:[20.4,11],mbt:[20.4,11.2],mlrs:[20,8.4]};
-function drawVWrecks(){for(const w of G.vwrecks){const t=G.time-w.t0;if(t>VWRECK_T)continue;const k=w.r/6*(w.type==='mbt'?1/1.15:1),[l,b]=VEH_LEN[w.type],fade=Math.min(1,(VWRECK_T-t)/1.2);
-  ctx.save();ctx.translate(w.x,w.y);ctx.rotate(w.a);ctx.scale(k,k);ctx.globalAlpha=fade;vehLo(w.type,null);ctx.globalAlpha=0.78*fade;box(-l/2-.3,-b/2-.3,l+.6,b+.6,'#1b1814');ctx.restore();
+function drawVWrecks(){const m=_hqBase||ctx.getTransform(),px=Math.hypot(m.a,m.b);   // hull + char overlay baked into one sprite (loWreckSpr)
+  for(const w of G.vwrecks){const t=G.time-w.t0;if(t>VWRECK_T)continue;const k=w.r/6*(w.type==='mbt'?1/1.15:1),fade=Math.min(1,(VWRECK_T-t)/1.2),s=loWreckSpr(w.type,px*k);
+  xf(m,w.x,w.y,w.a,k);ctx.globalAlpha=fade;hqDraw(s);xr(m);
   ctx.globalCompositeOperation='lighter';const f=Math.max(0,1-t/VWRECK_T);blit(fireSprite(),w.x+Math.sin(t*9)*1.5,w.y+Math.cos(t*7),w.r*(0.75+0.2*Math.sin(t*13))*f,0.8*f);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}}
 function enemyAt(x,y,slack){let best=null,bd=1e9;for(const list of[G.enemies,G.sky])for(const e of list){if(e.dead||!visible(e))continue;const d=hyp(e.x-x,e.y-y)-e.r;if(d<slack&&d<bd){bd=d;best=e}}return best}
 // Target doctrine: one player-set priority that every auto-aiming gun respects (rifle auto-fire, squad, MG nests, vehicle guns,
@@ -2645,7 +2646,17 @@ function drawJetsLow(top){if(!G.fleet)return;const ft=tierOf('fighter'),px=HQ?hq
   else{ctx.save();ctx.translate(j.x+3+37*a,j.y+4+41*a);ctx.rotate(j.ang);ctx.fillStyle=`rgba(0,0,0,${0.35-0.05*a})`;drawJet(k);ctx.restore()}
   ctx.save();ctx.translate(j.x,j.y);ctx.rotate(j.ang);ctx.scale(k,k);if(!HQ){ctx.fillStyle=ft?JET_LO[ft]:a>0.5?'#8a969e':'#7d8a93';drawJet();jetLoDetail(ft)}
   if(j.thr)jetThrust(ft,HQ?.45+.55*j.thr:j.thr+Math.random()*.35,HQ);ctx.restore()}}
-function drawApron(){const g=rwyGeo(),x0=g.x0+4,w=g.w-8,y=g.ay,h=APRON_H;
+// ---- static scenery sprites: world-space art baked at the current zoom bucket (hqBake's quarter-octave, rounded up, no outline),
+// drawn with one drawImage. One cached sprite per slot, replaced when its key (layout/state) or the zoom bucket changes. Above
+// 4 device px per world unit (close zoom: few objects on screen, large bakes) the caller keeps its vector path (null return).
+const _stc={};
+function stSpr(slot,key,px,x0,y0,w,h,paint){if(px>4)return null;const bi=hqBi(px);let s=_stc[slot];if(s&&s.bi===bi&&s.key===key)return s;
+  const b=Math.pow(2,bi/4),c=hqCv(w*b+4,h*b+4),x=c.getContext('2d');x.setTransform(b,0,0,b,-x0*b+2,-y0*b+2);x.lineCap=x.lineJoin='round';   // the main context's steady state
+  const m=ctx;ctx=x;try{paint()}finally{ctx=m}return _stc[slot]={c,x:x0-2/b,y:y0-2/b,w:c.width/b,h:c.height/b,bi,key}}
+const stDraw=s=>ctx.drawImage(s.c,s.x,s.y,s.w,s.h);
+function drawApron(){const g=rwyGeo(),x0=g.x0+4,w=g.w-8,y=g.ay,h=APRON_H,m=ctx.getTransform();let key='ap'+g.x0+'|'+g.y+'|'+g.w;for(const j of G.fleet)key+='|'+j.spot.x;
+  const st=stSpr('apron',key,Math.hypot(m.a,m.b),x0-3,g.y+RWY_H,w+6,y+h+3-g.y-RWY_H,apronArt);if(st){stDraw(st);return}apronArt()}
+function apronArt(){const g=rwyGeo(),x0=g.x0+4,w=g.w-8,y=g.ay,h=APRON_H;
   for(const j of G.fleet)box(j.spot.x-9,g.y+RWY_H,18,4,'#474a44');                                               // taxi connectors
   box(x0-3,y-1,w+6,h+4,'#33362f');box(x0,y,w,h,'#474a44');box(x0,y,w,1,'rgba(255,255,255,.06)');
   ctx.strokeStyle='rgba(0,0,0,.25)';ctx.lineWidth=.5;ctx.beginPath();for(let x=x0+18;x<x0+w;x+=18){ctx.moveTo(x,y);ctx.lineTo(x,y+h)}ctx.moveTo(x0,y+h/2);ctx.lineTo(x0+w,y+h/2);ctx.stroke();
@@ -2653,28 +2664,44 @@ function drawApron(){const g=rwyGeo(),x0=g.x0+4,w=g.w-8,y=g.ay,h=APRON_H;
   ctx.strokeStyle='rgba(227,181,60,.8)';ctx.lineWidth=0.9;
   for(const j of G.fleet){const s=j.spot;ctx.beginPath();ctx.moveTo(s.x,g.y+RWY_H);ctx.lineTo(s.x,y+h-5);ctx.moveTo(s.x-10,y+h-5);ctx.lineTo(s.x+10,y+h-5);ctx.stroke();
     box(s.x-1.5,y+h-3.5,3,2,'#d8d4b0')}}
-function drawHelipads(){for(const p of G.pads){ctx.save();ctx.translate(p.x,p.y);
-  ell(1.2,1.6,17,17,'rgba(0,0,0,.3)');ell(0,0,17,17,'#3c413e');ell(0,0,15.4,15.4,'#555b57');
+function drawHelipads(){if(!G.pads.length)return;const m=ctx.getTransform(),px=Math.hypot(m.a,m.b),v=(8-Math.floor(G.time*3)%8)%8,st=stSpr('pad'+v,'',px,-18,-18,37,37,()=>padArt(v));   // v = the lit edge lamp
+  for(const p of G.pads){if(st){ctx.translate(p.x,p.y);stDraw(st);ctx.translate(-p.x,-p.y);continue}ctx.save();ctx.translate(p.x,p.y);padArt(v);ctx.restore()}}
+function padArt(v){ell(1.2,1.6,17,17,'rgba(0,0,0,.3)');ell(0,0,17,17,'#3c413e');ell(0,0,15.4,15.4,'#555b57');
   ctx.strokeStyle='#d9b43a';ctx.lineWidth=1.3;ctx.beginPath();ctx.arc(0,0,12.6,0,TAU);ctx.stroke();
   box(-5.2,-6.5,2.3,13,'#e8e6de');box(2.9,-6.5,2.3,13,'#e8e6de');box(-5.2,-1.15,10.4,2.3,'#e8e6de');
-  for(let k=0;k<8;k++){const a=k/8*TAU,on=(Math.floor(G.time*3)+k)%8===0;ell(Math.cos(a)*15.4,Math.sin(a)*15.4,on?1.1:0.75,on?1.1:0.75,on?'#e8ffb0':'#8fae52')}
-  ctx.restore()}}
-function drawFieldDump(){const F=G.field;ctx.save();ctx.translate(F.x,F.y);
+  for(let k=0;k<8;k++){const a=k/8*TAU,on=k===v;ell(Math.cos(a)*15.4,Math.sin(a)*15.4,on?1.1:0.75,on?1.1:0.75,on?'#e8ffb0':'#8fae52')}}
+function drawFieldDump(){const F=G.field,m=ctx.getTransform(),st=stSpr('fdump','',Math.hypot(m.a,m.b),-17,-16,35,34,fieldDumpArt);
+  if(st){ctx.translate(F.x,F.y);stDraw(st);ctx.translate(-F.x,-F.y);return}ctx.save();ctx.translate(F.x,F.y);fieldDumpArt();ctx.restore()}
+function fieldDumpArt(){
   ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.moveTo(-12,-15);ctx.lineTo(16,-13);ctx.lineTo(17,16);ctx.lineTo(-11,17);ctx.fill();
   for(let r=0;r<3;r++)for(let c=0;c<3;c++){const x=-7+c*6,y=-8+r*6;ell(x,y,2.8,2.8,'#3f4a2a');ell(x,y,1.9,1.9,'#56633a');ell(x+0.7,y-0.6,0.6,0.6,'#1b1f14')}
   for(let i=0;i<4;i++){box(-9+i*4,11,3,4.2,'#4b5a2c');box(-9+i*4,11,3,0.8,'#6a7b40')}
   ctx.fillStyle='rgba(74,92,48,.55)';ctx.beginPath();ctx.moveTo(-13,-14);ctx.lineTo(13,-12);ctx.lineTo(12,9);ctx.lineTo(-12,8);ctx.fill();   // camo net
   ctx.strokeStyle='rgba(30,38,20,.6)';ctx.lineWidth=.4;ctx.beginPath();for(let k=-12;k<13;k+=4){ctx.moveTo(k,-13);ctx.lineTo(k+1,8)}ctx.stroke();
-  box(-16,-2,4,4,'#8a2a1c');box(-16,-2,4,1,'#b5452f');ctx.restore()}                                              // hand pump
-function drawDepot(){const D=G.depot,dl=L('ddef'),dead=D.dead,t=G.time;ctx.save();ctx.translate(D.x,D.y);
+  box(-16,-2,4,4,'#8a2a1c');box(-16,-2,4,1,'#b5452f')}                                              // hand pump
+function drawDepot(){const D=G.depot,dl=L('ddef'),dead=D.dead,t=G.time,m=ctx.getTransform(),
+    st=stSpr('depot',(dead?'x':'o')+dl+'|'+D.slots.length+'|'+D.guns.length,Math.hypot(m.a,m.b),-60,-76,130,152,()=>{depotArt(D,dl,dead);if(!dead)for(const gn of D.guns)depotGunBase(gn,gn.x-D.x,gn.y-D.y)});
+  ctx.save();ctx.translate(D.x,D.y);if(st)stDraw(st);else depotArt(D,dl,dead);
+  for(const s of D.slots){const y=s.y-D.y;if(s.u&&s.u.fs==='fuel'){ctx.strokeStyle='#161616';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(12.5,y+1);ctx.quadraticCurveTo(8,y+9,s.u.x-D.x+4,s.u.y-D.y+5);ctx.stroke();   // busy hose + pump lamp (live)
+      ell(15,y+2.5,1.1,1.1,Math.floor(t*4)%2?'#7fd35a':'#3a6a2a')}}
+  if(dead){ctx.globalCompositeOperation='lighter';for(const[x,y]of DEPOT_FIRE)blit(fireSprite(),x+Math.sin(t*9+y)*1.5,y+Math.cos(t*7+y),15*(0.85+0.2*Math.sin(t*13+y)),0.8);
+    ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
+  ctx.restore();
+  if(!dead)for(const gn of D.guns){const aa=gn.k==='aa';ctx.save();ctx.translate(gn.x,gn.y);if(!st)depotGunBase(gn,0,0);ctx.rotate(gn.ang);   // sandbag ring + base baked with the depot
+    if(aa){box(-4,-4,8,8,'#4e5a3a');box(3,-2.6,14,1.4,'#1d2118');box(3,1.2,14,1.4,'#1d2118');ell(-1,0,2.4,2.4,'#56692e')}
+    else{box(0,-1.2,4,2.4,'#2a2a2a');box(4,-0.5,8,1,'#111');ell(-1.5,0,2.3,2.3,'#56692e')}
+    if(G.time-(gn.fl||-9)<0.05)ell(aa?19:13,0,2.6,1.5,'#ffcf5a');ctx.restore()}
+  if(!dead&&D.hp<D.max){const px=1/sc,w=Math.max(70,60*px),h=Math.max(3,3*px),y=D.y-68-h;box(D.x-w/2,y,w,h,'rgba(0,0,0,.7)');
+    box(D.x-w/2,y,w*D.hp/D.max,h,D.hp/D.max>0.5?'#7fd35a':D.hp/D.max>0.25?'#e3b53c':'#ef5a4f')}}
+function depotGunBase(gn,x,y){const aa=gn.k==='aa';ctx.save();ctx.translate(x,y);sandbags(aa?9:6.5,aa?12:9);ell(0,0,aa?7:4.6,aa?7:4.6,'#4a4331');ctx.restore()}
+// the depot's static art in its own frame (berm, apron, pumps, tanks, tanker, sandbags); hoses, lamps, fire and guns are live
+function depotArt(D,dl,dead){
   box(-40,-54,86,114,'rgba(0,0,0,.28)');box(-44,-60,88,120,dead?'#2b2823':'#4f4b3a');box(-40,-56,80,112,dead?'#26241f':'#67645a');   // berm + gravel pad
   box(-40,-54,52,108,dead?'#23221f':'#78766d');ctx.strokeStyle='rgba(0,0,0,.2)';ctx.lineWidth=.5;ctx.beginPath();for(let y=-54;y<54;y+=18){ctx.moveTo(-40,y);ctx.lineTo(12,y)}ctx.stroke();   // fueling apron
   if(!dead)for(const s of D.slots){ctx.strokeStyle='rgba(227,181,60,.55)';ctx.lineWidth=.8;ctx.strokeRect(s.x-D.x-26,s.y-D.y-11,50,22)}
   ctx.strokeStyle=dead?'#1a1916':'#7d8279';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(19,-48);ctx.lineTo(19,40);for(const[x,y]of DEPOT_TANKS){ctx.moveTo(19,y);ctx.lineTo(x-8,y)}ctx.stroke();   // manifold
   box(12,-50,6,100,dead?'#2e2c28':'#8c8a80');box(12,-50,6,1,'#a5a399');                                              // pump island
-  for(const s of D.slots){const y=s.y-D.y,busy=s.u&&s.u.fs==='fuel';box(12.5,y-5,5,10,dead?'#221f1b':'#b8352a');box(12.5,y-5,5,1.6,dead?'#2e2a25':'#e8e6de');
-    if(busy){ctx.strokeStyle='#161616';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(12.5,y+1);ctx.quadraticCurveTo(8,y+9,s.u.x-D.x+4,s.u.y-D.y+5);ctx.stroke();
-      ell(15,y+2.5,1.1,1.1,Math.floor(t*4)%2?'#7fd35a':'#3a6a2a')}}
+  for(const s of D.slots){const y=s.y-D.y;box(12.5,y-5,5,10,dead?'#221f1b':'#b8352a');box(12.5,y-5,5,1.6,dead?'#2e2a25':'#e8e6de')}
   for(const[x,y,r]of DEPOT_TANKS){ell(x+3,y+3,r,r,'rgba(0,0,0,.35)');
     if(dead){ell(x,y,r,r,'#1b1917');ell(x,y,r*0.8,r*0.8,'#0c0b0a');ctx.strokeStyle='#3a332b';ctx.lineWidth=1.2;ctx.beginPath();for(let k=0;k<6;k++){const a=k*1.1+y;ctx.moveTo(x+Math.cos(a)*r*0.9,y+Math.sin(a)*r*0.9);ctx.lineTo(x+Math.cos(a+0.4)*r*0.4,y+Math.sin(a+0.4)*r*0.4)}ctx.stroke();continue}
     ell(x,y,r,r,'#9ea08f');ell(x-r*0.12,y-r*0.12,r*0.86,r*0.86,'#c3c5b6');ell(x-r*0.3,y-r*0.3,r*0.35,r*0.35,'rgba(255,255,255,.25)');
@@ -2685,16 +2712,7 @@ function drawDepot(){const D=G.depot,dl=L('ddef'),dead=D.dead,t=G.time;ctx.save(
     box(21,9,1.8,6,'#141414');box(35.2,9,1.8,6,'#141414');box(21,28,1.8,6,'#141414');box(35.2,28,1.8,6,'#141414');box(21,39,1.8,5,'#141414');box(35.2,39,1.8,5,'#141414');box(27,16,4,10,'#b8352a')}
   if(dl){for(let x=-44;x<44;x+=6){box(x,-60,5.4,3.2,(x/6|0)%2?'#8a7650':'#7d6a46');box(x,57,5.4,3.2,(x/6|0)%2?'#7d6a46':'#8a7650')}   // sandbag walls, open to the lanes on the west
     for(let y=-56;y<57;y+=6)box(41,y,3.2,5.4,(y/6|0)%2?'#8a7650':'#7d6a46');for(const y0 of[-56,38])for(let y=y0;y<y0+18;y+=6)box(-44,y,3.2,5.4,'#7d6a46')}
-  else{ctx.strokeStyle='rgba(170,175,160,.55)';ctx.lineWidth=.5;ctx.setLineDash([2,1.5]);ctx.strokeRect(-42,-58,84,116);ctx.setLineDash([])}
-  if(dead){ctx.globalCompositeOperation='lighter';for(const[x,y]of DEPOT_FIRE)blit(fireSprite(),x+Math.sin(t*9+y)*1.5,y+Math.cos(t*7+y),15*(0.85+0.2*Math.sin(t*13+y)),0.8);
-    ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
-  ctx.restore();
-  if(!dead)for(const gn of D.guns){const aa=gn.k==='aa';ctx.save();ctx.translate(gn.x,gn.y);sandbags(aa?9:6.5,aa?12:9);ell(0,0,aa?7:4.6,aa?7:4.6,'#4a4331');ctx.rotate(gn.ang);
-    if(aa){box(-4,-4,8,8,'#4e5a3a');box(3,-2.6,14,1.4,'#1d2118');box(3,1.2,14,1.4,'#1d2118');ell(-1,0,2.4,2.4,'#56692e')}
-    else{box(0,-1.2,4,2.4,'#2a2a2a');box(4,-0.5,8,1,'#111');ell(-1.5,0,2.3,2.3,'#56692e')}
-    if(G.time-(gn.fl||-9)<0.05)ell(aa?19:13,0,2.6,1.5,'#ffcf5a');ctx.restore()}
-  if(!dead&&D.hp<D.max){const px=1/sc,w=Math.max(70,60*px),h=Math.max(3,3*px),y=D.y-68-h;box(D.x-w/2,y,w,h,'rgba(0,0,0,.7)');
-    box(D.x-w/2,y,w*D.hp/D.max,h,D.hp/D.max>0.5?'#7fd35a':D.hp/D.max>0.25?'#e3b53c':'#ef5a4f')}}
+  else{ctx.strokeStyle='rgba(170,175,160,.55)';ctx.lineWidth=.5;ctx.setLineDash([2,1.5]);ctx.strokeRect(-42,-58,84,116);ctx.setLineDash([])}}
 function drawLogiGround(){if(!G.fleet)return;
   if(G.fleet.length)drawApron();drawHelipads();
   if(G.depot)drawDepot();else if(G.units.some(u=>u.fuel!=null&&u.k!=='heli'))drawFieldDump();
@@ -3096,12 +3114,14 @@ function drawSigFx(){if(!G.sgfx)return;const px=1/sc,lo=GFX.fx<0.5,t=G.time,mk=n
 // escort quadcopter: graphite body, rotor discs, a blinking cyan status light; the shadow sits offset below it
 function drawSigDrones(){if(!G.drones.length)return;const t=G.time,lo=GFX.fx<0.5,sz=d=>d.id==='fighter'?1.9:1.3;
   if(!lo){ctx.globalCompositeOperation='lighter';for(const d of G.drones)blit(glowSprite('95,212,255'),d.x,d.y,7*sz(d),0.22);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
-  for(const d of G.drones){const s=sz(d);ctx.fillStyle='rgba(0,0,0,.28)';ctx.fillRect(d.x+4-3*s,d.y+6-3*s,6*s,6*s);
-    ctx.save();ctx.translate(d.x,d.y);ctx.rotate(d.ang);ctx.scale(s,s);ctx.strokeStyle='#23272b';ctx.lineWidth=1.1;ctx.beginPath();
-    for(const[ax,ay]of DRONE_ARMS){ctx.moveTo(0,0);ctx.lineTo(ax*0.8,ay*0.8)}ctx.stroke();
+  const B=ctx.getTransform(),bp=Math.hypot(B.a,B.b);
+  for(const d of G.drones){const s=sz(d),spr=sigDroneSpr(lo,bp*s);xr(B);ctx.fillStyle='rgba(0,0,0,.28)';ctx.fillRect(d.x+4-3*s,d.y+6-3*s,6*s,6*s);
+    xf(B,d.x,d.y,d.ang,s);hqDraw(spr);   // arms, rotor discs and airframe baked; status lamp + muzzle flash live
+    if(Math.sin(t*6+d.ph)>0)ell(-1.2,0,0.7,0.7,'#5fd4ff');if(t-d.fl<0.05)ell(3.4,0,1.2,0.8,'#bff0ff')}xr(B)}
+const _sdM=[];function sigDroneSpr(lo,pk){const i=lo?1:0,bi=hqBi(pk);let s=_sdM[i];if(s&&s._bi===bi)return s;
+  s=hqBake('sgdrn'+i,pk,12,12,6,6,()=>{ctx.lineCap='round';ctx.strokeStyle='#23272b';ctx.lineWidth=1.1;ctx.beginPath();for(const[ax,ay]of DRONE_ARMS){ctx.moveTo(0,0);ctx.lineTo(ax*0.8,ay*0.8)}ctx.stroke();
     if(!lo)for(const[ax,ay]of DRONE_ARMS)ell(ax*0.8,ay*0.8,2.4,2.4,'rgba(190,210,220,.28)');
-    box(-2.2,-1.6,4.4,3.2,'#3b3f44');box(-2.2,-1.6,4.4,0.8,'#5a6068');box(1.6,-0.7,1.4,1.4,'#1a1d20');
-    if(Math.sin(t*6+d.ph)>0)ell(-1.2,0,0.7,0.7,'#5fd4ff');if(t-d.fl<0.05)ell(3.4,0,1.2,0.8,'#bff0ff');ctx.restore()}}
+    box(-2.2,-1.6,4.4,3.2,'#3b3f44');box(-2.2,-1.6,4.4,0.8,'#5a6068');box(1.6,-0.7,1.4,1.4,'#1a1d20')},0,0);s._bi=bi;return _sdM[i]=s}
 // ================= VFX =================
 const FXCAP={parts:700,smoke:260,decals:160,lights:70,sig:180};
 const FXBASE=Object.assign({},FXCAP);
@@ -3162,13 +3182,21 @@ function drawDecals(){if(HQ){hqDecals();return}
     else{ctx.fillStyle=`rgba(90,10,10,${0.55*a})`;for(let i=0;i<6;i++){const an=d.seed*i*1.7,rr=d.r*(0.25+((d.seed*(i+3))%1)*0.6),o=i?d.r*0.55:0;
       ctx.beginPath();ctx.ellipse(d.x+Math.cos(an)*o,d.y+Math.sin(an)*o,rr,rr*0.7,an,0,7);ctx.fill()}}}}
 function drawSmoke(){if(HQ){hqSmoke();return}for(const s of G.smoke){const k=s.life/s.max;ctx.fillStyle=`rgba(${s.col},${s.a*k*Math.min(1,(1-k)*6)})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fill()}}
-function drawParts(){if(HQ){hqParts();return}
+function drawParts(){if(HQ){hqParts();return}const m=ctx.getTransform();let rx=false;   // rotated bits: one setTransform each instead of save/translate/rotate/restore
   for(const p of G.parts){if(p.glow)continue;ctx.globalAlpha=Math.min(1,p.life/((p.max||1)*0.4));ctx.fillStyle=p.c;
-    if(p.rot!==undefined){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillRect(-p.sz,-p.sz/2,p.sz*2,p.sz);ctx.restore()}else ctx.fillRect(p.x,p.y,p.sz,p.sz)}
-  ctx.globalAlpha=1;ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
-  for(const p of G.parts){if(!p.glow)continue;const k=Math.max(0,p.life/(p.max||0.5));ctx.strokeStyle=p.c;ctx.globalAlpha=Math.min(1,k*1.4);ctx.lineWidth=p.sz;
-    ctx.beginPath();ctx.moveTo(p.x-p.vx*0.035,p.y-p.vy*0.035);ctx.lineTo(p.x,p.y);ctx.stroke()}
+    if(p.rot!==undefined){xf(m,p.x,p.y,p.rot);rx=true;ctx.fillRect(-p.sz,-p.sz/2,p.sz*2,p.sz)}else{if(rx){xr(m);rx=false}ctx.fillRect(p.x,p.y,p.sz,p.sz)}}
+  if(rx)xr(m);
+  ctx.globalAlpha=1;ctx.globalCompositeOperation='lighter';ctx.lineCap='round';glowSparks(1);
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
+// Glow sparks (additive, so draw order is free): grouped by colour x width x alpha (1/16 steps) into one Path2D per group, so
+// ~500 sparks cost a few dozen strokes instead of one beginPath/stroke and three state changes each.
+const _gsC=new Map(),_gsW=new Map(),_gsG=new Map();
+function glowSparks(wm){for(const g of _gsG.values())g.n=0;
+  for(const p of G.parts){if(!p.glow)continue;const k=Math.max(0,p.life/(p.max||0.5)),a=Math.round(Math.min(1,k*1.4)*16);if(!a)continue;
+    let ci=_gsC.get(p.c);if(ci===undefined)_gsC.set(p.c,ci=_gsC.size);let wi=_gsW.get(p.sz);if(wi===undefined)_gsW.set(p.sz,wi=_gsW.size);
+    const key=(ci*1024+wi)*17+a;let g=_gsG.get(key);if(!g)_gsG.set(key,g={c:p.c,w:p.sz,a:a/16,n:0,p:null});if(!g.n++)g.p=new Path2D();
+    g.p.moveTo(p.x-p.vx*0.035,p.y-p.vy*0.035);g.p.lineTo(p.x,p.y)}
+  for(const g of _gsG.values())if(g.n){ctx.strokeStyle=g.c;ctx.globalAlpha=g.a;ctx.lineWidth=g.w*wm;ctx.stroke(g.p)}}
 function drawFx(){const m=HQ&&ctx.getTransform();
   for(const f of G.fx){const k=Math.max(0,f.life/f.max),t=1-k;
     if(HQ&&hqFx(f,k,t,m))continue;
@@ -3315,13 +3343,21 @@ function hqUpdate(dt){const h=hx(),dr=Math.pow(.97,dt*60);
   if(h.flash>0)h.flash=Math.max(0,h.flash-dt*1.4)}
 
 // ---- world-pass drawing ----
-function hqDecals(){const m=ctx.getTransform();
-  for(const d of G.decals){const a=Math.min(1,d.life/6);if(a<=0)continue;const sc=d.kind==='scorch',r=d.r*(sc?1.3:1.1);
+function hqDecals(){const m=ctx.getTransform(),vw=VW/2/sc+40,vh=VH/2/sc+40;
+  for(const d of G.decals){const a=Math.min(1,d.life/6);if(a<=0||Math.abs(d.x)-d.r*1.9>vw||Math.abs(d.y)-d.r*1.9>vh)continue;const sc=d.kind==='scorch',r=d.r*(sc?1.3:1.1);
     xf(m,d.x,d.y,d.rot);ctx.globalAlpha=sc?a*.92:a*(.45+.55*d.life/45);ctx.drawImage(sc?scorchSpr((d.seed|0)%3):stainSpr((d.seed|0)%3),-r,-r,r*2,r*2)}
   xr(m);ctx.globalAlpha=1}
-function hqSmoke(){const m=ctx.getTransform();
-  for(const s of G.smoke){if(s.d>0)continue;const k=s.life/s.max,al=s.a*1.3*k*Math.min(1,(1-k)*8);if(al<.01)continue;
-    xf(m,s.x,s.y,s.rot||0);ctx.globalAlpha=Math.min(1,al);const r=s.r*1.4;ctx.drawImage(smokeSpr(s.col,s.v||0),-r,-r,r*2,r*2)}
+// Smoke is soft (96px noise sprites stretched over tens to hundreds of pixels), so when its overdraw is heavy on a dense screen
+// (estimated fill > 1.5 screens at DPR >= 2) the puffs are drawn into a half-res buffer and composited in one pass at the same
+// point in the frame (source-over is associative, so the layering is unchanged): a quarter of the smoke fill.
+function hqSmoke(){const m=ctx.getTransform(),vw=VW/2/sc+40,vh=VH/2/sc+40;   // view half-extents in world units (+ shake margin)
+  let M=m,main=null,c=null,half=false;
+  if(dpr>=2){const p2=(m.a*m.a+m.b*m.b)*7.84;let f=0;for(const s of G.smoke)if(!(s.d>0))f+=s.r*s.r*p2;half=f>1.5*cv.width*cv.height}
+  if(half){c=pfCanvas('smk',Math.ceil(cv.width/2),Math.ceil(cv.height/2));const x=c._x;x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.clearRect(0,0,c.width,c.height);
+    M={a:m.a/2,b:m.b/2,c:m.c/2,d:m.d/2,e:m.e/2,f:m.f/2};main=ctx;ctx=x}
+  try{for(const s of G.smoke){if(s.d>0)continue;const k=s.life/s.max,al=s.a*1.3*k*Math.min(1,(1-k)*8);if(al<.01)continue;const rc=s.r*2;if(Math.abs(s.x)-rc>vw||Math.abs(s.y)-rc>vh)continue;
+    xf(M,s.x,s.y,s.rot||0);ctx.globalAlpha=Math.min(1,al);const r=s.r*1.4;ctx.drawImage(smokeSpr(s.col,s.v||0),-r,-r,r*2,r*2)}}
+  finally{if(main){ctx=main;ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.drawImage(c,0,0,cv.width,cv.height)}}
   xr(m);ctx.globalAlpha=1}
 function hqParts(){const m=ctx.getTransform(),h=hx();
   if(!BP){
@@ -3334,9 +3370,7 @@ function hqParts(){const m=ctx.getTransform(),h=hx();
       ctx.fillStyle='rgba(255,240,210,.14)';ctx.fillRect(-p.sz,-p.sz*.6,p.sz*2,p.sz*.4)}
     for(const p of h.cas){ctx.globalAlpha=Math.min(1,p.life/.6);xf(m,p.x,p.y,p.rot,1+p.z/40);ctx.fillStyle='#b8862e';ctx.fillRect(-1.1,-.5,2.2,1);ctx.fillStyle='#f4d58a';ctx.fillRect(-1.1,-.5,2.2,.38)}
     xr(m)}
-  ctx.globalCompositeOperation='lighter';ctx.lineCap='round';const wm=BP?2.2:1;
-  for(const p of G.parts){if(!p.glow)continue;const k=Math.max(0,p.life/(p.max||0.5));ctx.strokeStyle=p.c;ctx.globalAlpha=Math.min(1,k*1.4);ctx.lineWidth=p.sz*wm;
-    ctx.beginPath();ctx.moveTo(p.x-p.vx*0.035,p.y-p.vy*0.035);ctx.lineTo(p.x,p.y);ctx.stroke()}
+  ctx.globalCompositeOperation='lighter';ctx.lineCap='round';const wm=BP?2.2:1;glowSparks(wm);
   for(const p of h.emb){const a=Math.min(1,p.life*2.5/p.max)*(.65+.35*Math.sin(p.life*47+p.x));ctx.globalAlpha=a;ctx.strokeStyle=p.c;ctx.lineWidth=p.sz*wm;
     ctx.beginPath();ctx.moveTo(p.x-p.vx*.045,p.y-p.vy*.045);ctx.lineTo(p.x,p.y);ctx.stroke()}
   const gs=glowSprite('255,150,60');
@@ -3448,6 +3482,7 @@ function hqBake(key,px,w,h,ox,oy,paint,line=0.36,ao=0){
     x.globalCompositeOperation='destination-over';x.globalAlpha=ao;x.drawImage(q,-.3*b,-.3*b,c.width+.9*b,c.height+.9*b);x.globalAlpha=1;x.globalCompositeOperation='source-over'}
   s={c,w:c.width/b,h:c.height/b,ox:ox+P/b,oy:oy+P/b,b};_hq.set(id,s);if(_hq.size>1400)_hq.delete(_hq.keys().next().value);return s}
 const hqDraw=(s,x=0,y=0)=>ctx.drawImage(s.c,x-s.ox,y-s.oy,s.w,s.h);
+const hqBi=px=>Math.ceil(Math.log2(Math.min(24,Math.max(0.35,px)))*4);   // hqBake's zoom bucket index (memo key)
 function hqWhite(s,a,x=0,y=0){const w=s.wh||(s.wh=hqTint(s.c,'#fff'));ctx.globalAlpha=a;ctx.drawImage(w,x-s.ox,y-s.oy,s.w,s.h);ctx.globalAlpha=1}
 // soft drop shadow: the silhouette shrunk 4x then stretched back (bilinear upscaling is a free blur on every browser)
 function hqShadow(s,dx,dy,a,x=0,y=0){let d=s.sd;if(!d){const f=4,p=3;d=s.sd=hqCv(s.c.width/f+2*p,s.c.height/f+2*p);d.getContext('2d').drawImage(hqTint(s.c,'#000'),p,p,s.c.width/f,s.c.height/f);d.u=p*f/s.b;d.k=f/s.b}
@@ -3462,11 +3497,13 @@ function hqShadow(s,dx,dy,a,x=0,y=0){let d=s.sd;if(!d){const f=4,p=3;d=s.sd=hqCv
 function hqLoc(wx,wy,a,k){const c=Math.cos(a),s=Math.sin(a);_lv[0]=(wx*c+wy*s)/k;_lv[1]=(-wx*s+wy*c)/k;return _lv}const _lv=[0,0];
 const _hqc={};
 function hqGlow(key,stops){let c=_hqc[key];if(c)return c;c=_hqc[key]=hqCv(64,64);const x=c.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);for(const[o,s]of stops)g.addColorStop(o,s);x.fillStyle=g;x.fillRect(0,0,64,64);return c}
-const hqGlint=(x,y,r,a)=>{ctx.globalAlpha=a;ctx.drawImage(hqGlow('gl',[[0,'rgba(255,255,238,.95)'],[.35,'rgba(255,255,230,.32)'],[1,'rgba(255,255,230,0)']]),x-r,y-r,2*r,2*r);ctx.globalAlpha=1};
-// world-lit bevel on a local box: edges facing the top-left light brighten, the far ones darken
+let _glC=null;const hqGlint=(x,y,r,a)=>{ctx.globalAlpha=a;ctx.drawImage(_glC||(_glC=hqGlow('gl',[[0,'rgba(255,255,238,.95)'],[.35,'rgba(255,255,230,.32)'],[1,'rgba(255,255,230,0)']])),x-r,y-r,2*r,2*r);ctx.globalAlpha=1};
+// world-lit bevel on a local box: edges facing the top-left light brighten, the far ones darken. The rgba strings come from a
+// table (same 2-decimal alpha steps the template produced); a 0.00 edge is fully transparent, so it is skipped.
+const _bvL=[],_bvD=[];for(let i=0;i<=120;i++){_bvL[i]=`rgba(255,248,220,${(i/100).toFixed(2)})`;_bvD[i]=`rgba(0,0,0,${(i/100).toFixed(2)})`}
+function hqBvE(d,s,X,Y,W,H){const i=Math.min(120,d>0?Math.round(d*s*100):Math.round(-d*s*120));if(i<=0)return;ctx.fillStyle=d>0?_bvL[i]:_bvD[i];ctx.fillRect(X,Y,W,H)}
 function hqBevel(x,y,w,h,a,t=0.8,s=0.34){const c=Math.cos(a),n=Math.sin(a),lx=-.7071*(c+n),ly=-.7071*(c-n);
-  const e=(d,X,Y,W,H)=>{ctx.fillStyle=d>0?`rgba(255,248,220,${(d*s).toFixed(2)})`:`rgba(0,0,0,${(-d*s*1.2).toFixed(2)})`;ctx.fillRect(X,Y,W,H)};
-  e(-ly,x,y,w,t);e(ly,x,y+h-t,w,t);e(lx,x+w-t,y+t,t,h-2*t);e(-lx,x,y+t,t,h-2*t)}
+  hqBvE(-ly,s,x,y,w,t);hqBvE(ly,s,x,y+h-t,w,t);hqBvE(lx,s,x+w-t,y+t,t,h-2*t);hqBvE(-lx,s,x,y+t,t,h-2*t)}
 // muzzle flash: baked star, scaled per shot
 function hqMuzzle(x,y,s){let c=_hqc.mf;if(!c){c=_hqc.mf=hqCv(96,48);const g=c.getContext('2d');g.translate(12,24);g.scale(6,6);
     let r=g.createRadialGradient(0,0,0,0,0,4);r.addColorStop(0,'rgba(255,230,150,.9)');r.addColorStop(1,'rgba(255,150,40,0)');g.fillStyle=r;g.beginPath();g.ellipse(3,0,6,3.4,0,0,7);g.fill();
@@ -3584,7 +3621,9 @@ function hqCorpseArt(type,col){const tr=type==='brute'?'#43474d':'#7a6242',skin=
   const hc=type==='brute'?'#2f3236':type==='shooter'?'#4f4a32':type==='runner'?'#9c8058':'#6e5e3e';hqDome(-6.8,.5,2.7,2.6,hc,.3,-.5);
   ctx.save();ctx.translate(3,-6.6);ctx.rotate(.35);hqBar(-4,-.6,type==='shooter'?11:8,1.2,'#1c1d20');hqBar(-4,-.6,2.8,1.2,type==='grunt'?'#7b4a26':'#26272a');ctx.restore();
   ell(-2,-4.2,1.3,.95,'#c62828')}
-function hqEnemySpr(type,col,f,px){return hqBake('e'+type+f,px,30,21,11.5,10.5,()=>{if(f===9)hqCorpseArt(type,col);else hqEnemyArt(type,col,f===8?0:Math.sin(f/8*TAU))},.36,.45)}
+const _hqEM={};   // per-type [frame] memo in front of hqBake: the hot lookup builds no key string and closure
+function hqEnemySpr(type,col,f,px){const T=_hqEM[type]||(_hqEM[type]=[]),bi=hqBi(px);let s=T[f];if(s&&s._bi===bi)return s;
+  s=hqBake('e'+type+f,px,30,21,11.5,10.5,()=>{if(f===9)hqCorpseArt(type,col);else hqEnemyArt(type,col,f===8?0:Math.sin(f/8*TAU))},.36,.45);s._bi=bi;return T[f]=s}
 function hqPaintSoldier(main){const uni=main?'#5b7132':'#4c5f2b',rig=main?'#5f6641':'#566039',glove='#7a6a4c';
   hqLegs(0,hexOf(hqSh(uni,-.15)),'#1d1b16');
   hqRR(-6.8,-3.5,3.8,7,1.1,'#3b4722');box(-6.8,-3.5,3.8,1.1,'#4f5d2d');box(-6.5,-.25,3.2,.5,'rgba(0,0,0,.3)');hqCyl(-7.5,-3.1,1.3,6.2,'#55603a');   // ruck + sleeping mat
@@ -3602,9 +3641,9 @@ function hqPaintSoldier(main){const uni=main?'#5b7132':'#4c5f2b',rig=main?'#5f66
   box(3,-.75,.9,1.5,'#1c1c1c');box(-2.7,-.45,.75,.9,'#2a2a2a');ell(-2.3,0,.18,.18,'#9be86a')}   // NVG mount, IR strobe
 
 // ---- armor ----
-function hqTrack(key,px,len,wd,pitch,wheel){return hqBake(key,px,len+pitch*2,wd,0,0,()=>{const L=len+pitch*2;
-  box(0,0,L,wd,'#141412');for(let x=0;x<L;x+=pitch){box(x+.1,.15,pitch*.62,wd-.3,wheel?'#26262a':'#3c3c36');box(x+.1,.15,pitch*.62,.3,'rgba(255,255,255,.2)');box(x+.1,wd-.45,pitch*.62,.3,'rgba(0,0,0,.4)')}
-  if(!wheel){box(0,wd*.44,L,wd*.12,'#101010');for(let x=pitch*.3;x<L;x+=pitch)box(x,wd*.4,.5,wd*.2,'#5a5a52')}},0)}
+function hqTread(L,wd,pitch,wheel){box(0,0,L,wd,'#141412');for(let x=0;x<L;x+=pitch){box(x+.1,.15,pitch*.62,wd-.3,wheel?'#26262a':'#3c3c36');box(x+.1,.15,pitch*.62,.3,'rgba(255,255,255,.2)');box(x+.1,wd-.45,pitch*.62,.3,'rgba(0,0,0,.4)')}
+  if(!wheel){box(0,wd*.44,L,wd*.12,'#101010');for(let x=pitch*.3;x<L;x+=pitch)box(x,wd*.4,.5,wd*.2,'#5a5a52')}}
+function hqTrack(key,px,len,wd,pitch,wheel){return hqBake(key,px,len+pitch*2,wd,0,0,()=>hqTread(len+pitch*2,wd,pitch,wheel),0)}
 function hqTrackDraw(t,x,y,len,wd,off,pitch){const o=((off%pitch)+pitch)%pitch;ctx.drawImage(t.c,(o+t.ox)*t.b,t.oy*t.b,len*t.b,wd*t.b,x,y,len,wd)}
 function hqHatch(x,y,r,c){hqDome(x,y,r,r,c,.25,-.5);ctx.strokeStyle='rgba(0,0,0,.45)';ctx.lineWidth=.22;ctx.beginPath();ctx.arc(x,y,r*.72,0,7);ctx.stroke();box(x-r*.1,y-r*.7,r*.2,r*1.4,'rgba(0,0,0,.25)')}
 function hqBolts(pts,c='rgba(0,0,0,.5)'){ctx.fillStyle=c;for(let i=0;i<pts.length;i+=2){ctx.beginPath();ctx.arc(pts[i],pts[i+1],.18,0,7);ctx.fill()}}
@@ -3641,12 +3680,33 @@ function hqTankTurret(col,camo,enemy,cmd){
 function hqBarrel(len,col){hqCyl(4.8,-1.25,2.6,2.5,hexOf(hqSh(col,-.2)));   // mantlet
   hqCyl(6,-.75,len-6,1.5,'#3a3f2a');hqCyl(len*.55,-.95,2.2,1.9,'#353a26');for(const x of[8.5,11.5])box(x,-.75,.25,1.5,'rgba(0,0,0,.45)');hqCyl(len-.6,-1,1.6,2,'#23261a');box(len+.9,-.35,.2,.7,'#050505')}
 const hexOf=c=>c[0]==='#'?c:'#'+c.match(/\d+/g).slice(0,3).map(v=>(+v).toString(16).padStart(2,'0')).join('');
-function drawTankHQ(x,y,ang,tur,tr,since,k,px,o){const T=hqTrack('trkT',px*k,20,3.6,1.6),hull=hqBake(o.key+'H',px*k,22,13,11,6.5,()=>{hqTankHull(o.col,o.camo,o.enemy);if(o.tier)hqTankHullDeco(o)}),
-    top=hqBake(o.key+'T',px*k,19,12,11.5,6,()=>o.tier?hqTankTurretT(o):hqTankTurret(o.col,o.camo,o.enemy,!o.enemy)),bar=hqBake(o.key+'B',px*k,o.len+3,3.2,0,1.6,()=>o.tier?hqRailBarrel(o.len,o):hqBarrel(o.len,o.col));
-  const rc=since<.45?Math.pow(1-since/.45,2):0,jig=o.moving?Math.sin(G.time*37+x)*.12:0;
+// ---- vehicle composites (High, enemy armour): hull + bevel + turret shadow + turret (+ barrel) + glint pre-drawn into one sprite
+// per 1/32-turn heading bucket, sun state (SH) and zoom bucket. Used only while nothing moves on the hull (no hit flash, recoil,
+// sway or turret slew), so the one difference from the layered draw is that bevel, glint and turret shadow are lit for the
+// bucket's centre heading (<= 5.6 deg off). The hull lands on whole pixels of the composite (no extra resample). At most 12
+// composites are baked per frame; past that budget a vehicle simply takes the layered path.
+const _vcM={};let _vcSH='',_vcN=0;
+function vcFrame(){_vcN=0;_vcSH=SH.on?Math.round(SH.c*24)+','+Math.round(SH.s*24)+','+Math.round(SH.len*24)+','+Math.round(SH.st*24)+','+Math.round(SH.a*32):'-'}
+const vcBucket=a=>((Math.round(a/TAU*32)%32)+32)%32;
+function vcBake(slot,A,pk,x0,y0,x1,y1,hull,paint){const T=_vcM[slot]||(_vcM[slot]=[]),bi=hqBi(pk),key=_vcSH+'|'+bi;let s=T[A];if(s&&s._k===key)return s;
+  if(_vcN>=12)return null;_vcN++;const b=Math.pow(2,bi/4),M=SH.on?3+(SH.len+(SH.st-1)*16)*1.2:3,hx=hull.ox-3/hull.b,hy=hull.oy-3/hull.b,
+    ox=hx+Math.ceil((M-x0-hx)*b)/b,oy=hy+Math.ceil((M-y0-hy)*b)/b;
+  const c=hqCv((ox+x1+M)*b+6,(oy+y1+M)*b+6),x=c.getContext('2d');x.setTransform(b,0,0,b,ox*b+3,oy*b+3);x.lineJoin=x.lineCap='round';const m=ctx;ctx=x;try{paint()}finally{ctx=m}
+  return T[A]={c,w:c.width/b,h:c.height/b,ox:ox+3/b,oy:oy+3/b,b,_k:key}}   // own cache (not _hq): at most 32 live composites per look
+const _tkM={};
+function drawTankHQ(x,y,ang,tur,tr,since,k,px,o){const pk=px*k,bi=hqBi(pk);let S3=_tkM[o.key];
+  if(!S3||S3.bi!==bi){const hull=hqBake(o.key+'H',pk,22,13,11,6.5,()=>{hqTankHull(o.col,o.camo,o.enemy);if(o.tier)hqTankHullDeco(o)}),
+    top=hqBake(o.key+'T',pk,19,12,11.5,6,()=>o.tier?hqTankTurretT(o):hqTankTurret(o.col,o.camo,o.enemy,!o.enemy)),bar=hqBake(o.key+'B',pk,o.len+3,3.2,0,1.6,()=>o.tier?hqRailBarrel(o.len,o):hqBarrel(o.len,o.col));
+    S3=_tkM[o.key]={bi,hull,top,bar}}   // o.key names the look (colour, camo, tier, barrel length) exactly as the hqBake keys do
+  const{hull,top,bar}=S3,rc=since<.45?Math.pow(1-since/.45,2):0,jig=o.moving?Math.sin(G.time*37+x)*.12:0;
   ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.scale(k,k);let l=hqLoc(1.1,1.5,ang,1);hqShadow(hull,l[0],l[1],.55);
-  hqTrackDraw(T,-10.4,-8.3,20.8,3.6,tr,1.6);hqTrackDraw(T,-10.4,4.7,20.8,3.6,tr,1.6);
-  ctx.translate(-rc*.7,jig);hqDraw(hull);hqBevel(-10.2,-5.6,20.4,11.2,ang,.6,.3);
+  hqGear('trk',pk,tr);
+  ctx.translate(-rc*.7,jig);
+  if(o.enemy&&!o.tier&&!o.flash&&!rc&&tur===ang){const A=vcBucket(ang),c=vcBake(o.key,A,pk,-11.5,-6.5,Math.max(11,o.len+3),6.5,hull,()=>{const q=A*TAU/32;
+      hqDraw(hull);hqBevel(-10.2,-5.6,20.4,11.2,q,.6,.3);let l=hqLoc(.6,.85,q,1);hqShadow(top,l[0],l[1],.5);hqShadow(bar,l[0],l[1],.45);hqDraw(bar);hqDraw(top);hqBevel(-6,-4.4,12.2,8.8,q,.5,.22);
+      l=hqLoc(-1.4,-1.4,q,1);hqGlint(-1+l[0],l[1],3.2,.28)});
+    if(c){hqDraw(c);if(since<.08)hqMuzzle(o.len+1.4,0,2.2);ctx.restore();return}}
+  hqDraw(hull);hqBevel(-10.2,-5.6,20.4,11.2,ang,.6,.3);
   if(o.flash)hqWhite(hull,o.flash);
   ctx.rotate(tur-ang);l=hqLoc(.6,.85,tur,1);hqShadow(top,l[0],l[1],.5);ctx.save();ctx.translate(-rc*2.4,0);hqShadow(bar,l[0],l[1],.45);hqDraw(bar);ctx.restore();hqDraw(top);hqBevel(-6,-4.4,12.2,8.8,tur,.5,.22);
   l=hqLoc(-1.4,-1.4,tur,1);hqGlint(-1+l[0],l[1],3.2,.28);if(o.flash)hqWhite(top,o.flash);
@@ -3756,19 +3816,34 @@ const VEH_ART={technical:{hull:[18,11,9,5.5,hqTechHull],top:[15.4,7,4.4,3.5,hqTe
   ifv:{hull:[22,12,11,6,hqIfvHull],top:[20,10,4.6,5,hqIfvTop],mount:[.6,0],muz:[14.9,0,1.2],kick:.7,tracks:1},
   mlrs:{hull:[22,11,11,5.5,hqMlrsHull],top:[14,10,10,5,hqMlrsPod],mount:[0,0],wheels:'mlrs'}};
 const VEH_WHEELS={truck:[[-6.8,-5.3],[3.6,-5.3],[-6.8,3.6],[3.6,3.6]],apc:[0,1,2,3].flatMap(i=>[[-8.6+i*5.2,-7.6],[-8.6+i*5.2,5.7]]),mlrs:[[-8.2,-5.3],[-4.6,-5.3],[5.4,-5.3],[-8.2,3.6],[-4.6,3.6],[5.4,3.6]]};
-const vehSpr=(t,l,px)=>{const V=VEH_ART[t],[w,h,ox,oy,fn]=V[l];return hqBake('v'+l[0]+t,px,w,h,ox,oy,fn)};
-function vehRunning(V,pk,tr){if(V.tracks){const T=hqTrack('trkT',pk,20,3.6,1.6);hqTrackDraw(T,-10.4,-8.3,20.8,3.6,tr,1.6);hqTrackDraw(T,-10.4,4.7,20.8,3.6,tr,1.6);return}
-  const a=V.wheels==='apc',W=a?hqTrack('whA',pk,3.6,1.9,.7,1):hqTrack('whT',pk,3.8,1.7,.6,1);for(const[wx,wy]of VEH_WHEELS[V.wheels])hqTrackDraw(W,wx,wy,a?3.6:3.8,a?1.9:1.7,tr,a?.7:.6)}
+const _vsM={};const vehSpr=(t,l,px)=>{const K=_vsM[t]||(_vsM[t]={}),bi=hqBi(px);let s=K[l];if(s&&s._bi===bi)return s;const V=VEH_ART[t],[w,h,ox,oy,fn]=V[l];s=hqBake('v'+l[0]+t,px,w,h,ox,oy,fn);s._bi=bi;return K[l]=s};
+// Running gear pre-composited per scroll phase: every wheel of a vehicle (or both track runs) in one sprite, painted with the
+// tread pattern hqTrack() bakes, clipped to each wheel window and offset by the phase: one drawImage instead of 2-8.
+// The scroll is quantised to 1/6 (wheels) or 1/8 (tracks) of a tread pitch.
+const GEAR={apc:{len:3.6,wd:1.9,p:.7,w:1,n:6,pos:VEH_WHEELS.apc},truck:{len:3.8,wd:1.7,p:.6,w:1,n:6,pos:VEH_WHEELS.truck},mlrs:{len:3.8,wd:1.7,p:.6,w:1,n:6,pos:VEH_WHEELS.mlrs},
+  trk:{len:20.8,wd:3.6,p:1.6,w:0,n:8,pos:[[-10.4,-8.3],[-10.4,4.7]]}},_gearM={};
+function hqGear(id,pk,tr){const g=GEAR[id],q=Math.round((((tr%g.p)+g.p)%g.p)/g.p*g.n)%g.n,T=_gearM[id]||(_gearM[id]=[]),bi=hqBi(pk);let s=T[q];
+  if(!s||s._bi!==bi){if(!g.bx){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const[x,y]of g.pos){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x+g.len);y1=Math.max(y1,y+g.wd)}g.bx=[x1-x0,y1-y0,-x0,-y0]}
+    const o=q*g.p/g.n;s=hqBake('gear'+id+q,pk,g.bx[0],g.bx[1],g.bx[2],g.bx[3],()=>{for(const[x,y]of g.pos){ctx.save();ctx.beginPath();ctx.rect(x,y,g.len,g.wd);ctx.clip();ctx.translate(x-o,y);hqTread(g.len+g.p*2,g.wd,g.p,g.w);ctx.restore()}},0);s._bi=bi;T[q]=s}
+  hqDraw(s)}
+function vehRunning(V,pk,tr){hqGear(V.tracks?'trk':V.wheels,pk,tr)}
 function drawVehHQ(e,x,y,a,k,px){const t=e.type,since=G.time-(e.fl??-9),fl=e.flash>0?Math.min(1,e.flash/.08)*.3:0,tr=(e.odo||0)/k;
   if(t==='mbt'){drawTankHQ(x,y,a,a,tr*1.15,since,k/1.15,px,{key:'mbtR',col:'#8a7a52',camo:'sand',enemy:true,len:16,moving:e.moving,flash:fl});return}
   const V=VEH_ART[t],pk=px*k,hull=vehSpr(t,'hull',pk),top=vehSpr(t,'top',pk);
   ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.scale(k,k);let l=hqLoc(1.1,1.5,a,1);hqShadow(hull,l[0],l[1],.55);vehRunning(V,pk,tr);
-  ctx.translate(0,e.moving?Math.sin(G.time*27+e.wob)*.1:0);hqDraw(hull);const[hw,hh,hx,hy]=V.hull;hqBevel(1-hx,1-hy,hw-2,hh-2,a,.5,.26);if(fl)hqWhite(hull,fl);
-  const sw=t==='technical'?Math.sin(G.time*1.7+e.wob)*.14:0,rc=since<.3&&V.kick?(1-since/.3)*V.kick:0;ctx.translate(V.mount[0]-rc,V.mount[1]);ctx.rotate(sw);
+  ctx.translate(0,e.moving?Math.sin(G.time*27+e.wob)*.1:0);const[hw,hh,hx,hy]=V.hull;
+  const sw=t==='technical'?Math.sin(G.time*1.7+e.wob)*.14:0,rc=since<.3&&V.kick?(1-since/.3)*V.kick:0;
+  if(!fl&&!sw&&!rc){const A=vcBucket(a),B=V._vb||(V._vb=(([tw,th,tx,ty],[mx,my])=>[Math.min(-hx,mx-tx),Math.min(-hy,my-ty),Math.max(hw-hx,mx+tw-tx),Math.max(hh-hy,my+th-ty)])(V.top,V.mount)),
+      c=vcBake(t,A,pk,B[0],B[1],B[2],B[3],hull,()=>{const q=A*TAU/32;hqDraw(hull);hqBevel(1-hx,1-hy,hw-2,hh-2,q,.5,.26);ctx.translate(V.mount[0],V.mount[1]);
+        let l=hqLoc(.6,.85,q,1);hqShadow(top,l[0],l[1],.45);hqDraw(top);l=hqLoc(-1,-1,q,1);hqGlint(l[0],l[1],2,.25)});
+    if(c){hqDraw(c);ctx.translate(V.mount[0],V.mount[1]);if(V.muz&&since<.06)hqMuzzle(V.muz[0],V.muz[1],V.muz[2]);if(t==='mlrs'&&since<.9)mlrsBlast(since);ctx.restore();return}}
+  hqDraw(hull);hqBevel(1-hx,1-hy,hw-2,hh-2,a,.5,.26);if(fl)hqWhite(hull,fl);
+  ctx.translate(V.mount[0]-rc,V.mount[1]);ctx.rotate(sw);
   l=hqLoc(.6,.85,a+sw,1);hqShadow(top,l[0],l[1],.45);hqDraw(top);if(fl)hqWhite(top,fl);l=hqLoc(-1,-1,a+sw,1);hqGlint(l[0],l[1],2,.25);
   if(V.muz&&since<.06)hqMuzzle(V.muz[0],V.muz[1],V.muz[2]);
-  if(t==='mlrs'&&since<.9){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=1-since/.9;ctx.drawImage(hqGlow('ex',[[0,'rgba(255,230,160,1)'],[.4,'rgba(255,150,50,.6)'],[1,'rgba(255,90,20,0)']]),-13,-5,8,10);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
+  if(t==='mlrs'&&since<.9)mlrsBlast(since);
   ctx.restore()}
+let _exC=null;function mlrsBlast(since){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=1-since/.9;ctx.drawImage(_exC||(_exC=hqGlow('ex',[[0,'rgba(255,230,160,1)'],[.4,'rgba(255,150,50,.6)'],[1,'rgba(255,90,20,0)']])),-13,-5,8,10);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
 // knocked-out hull for drawCorpses: same layers, charred, turret or gun mount slewed off its ring
 function vehWreckSpr(t,px){const V=VEH_ART[t],[w,h,ox,oy,fn]=V.hull;return hqBake('vx'+t,px,w+6,h+6,ox+3,oy+3,()=>{fn();ctx.save();ctx.translate(V.mount[0]-.6,V.mount[1]+.5);ctx.rotate(.5);V.top[4]();ctx.restore();
   ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(15,12,10,.66)';ctx.fillRect(-ox-3,-oy-3,w+6,h+6);hqSpeckle(-ox,-oy,w,h,50,'rgba(0,0,0,.45)',.6)})}
@@ -3958,18 +4033,19 @@ function drawSoldierHQ(s){const px=hqPx(),k=solKit(s),main=k.main,base=!k.w,spr=
 // drawEnemies() hands over its world transform once per frame (_hqBase), so each of ~200 enemies is placed with a single
 // setTransform instead of save/getTransform/restore
 let _hqBase=null;
+let _hqDirty=false;   // drawEnemies' sprites leave the matrix set per enemy; layered vehicles (relative transforms) restore it first
 function drawEnemyHQ(e,x,y){const B=_hqBase||ctx.getTransform(),a=Math.atan2(-y,-x),k=e.r/6,px=Math.hypot(B.a,B.b);
-  if(e.boss){drawMBTHQ(e,x,y,a,k,px);return}
-  if(e.veh){drawVehHQ(e,x,y,a,k,px);return}
+  if(e.boss||e.veh){if(_hqDirty){ctx.setTransform(B.a,B.b,B.c,B.d,B.e,B.f);_hqDirty=false}if(e.boss)drawMBTHQ(e,x,y,a,k,px);else drawVehHQ(e,x,y,a,k,px);return}
   const f=e.moving?(((e.wob/TAU*8)|0)%8+8)%8:8,spr=hqEnemySpr(e.type,e.col,f,px*k),fl=e.flash>0?Math.min(1,e.flash/.08):0,c=Math.cos(a)*k,n=Math.sin(a)*k;
-  ctx.setTransform(B.a*c+B.c*n,B.b*c+B.d*n,B.c*c-B.a*n,B.d*c-B.b*n,B.a*x+B.c*y+B.e,B.b*x+B.d*y+B.f);
-  let l=hqLoc(1.2,1.6,a,1);if(px*k>2.6)hqShadow(spr,l[0],l[1],.32);
-  if(fl){ctx.translate(-fl*1.1,0);ctx.rotate(((e.wob*7)%2-1)*fl*.16)}
-  if(f===8){const br=Math.sin(G.time*2.4+e.wob);ctx.scale(1+br*.012,1+br*.022)}else ctx.scale(1+Math.abs(Math.sin(e.wob))*.02,1);
+  let sx=1,sy=1;if(f===8){const br=Math.sin(G.time*2.4+e.wob);sx=1+br*.012;sy=1+br*.022}else sx=1+Math.abs(Math.sin(e.wob))*.02;
+  if(fl||px*k>2.6){ctx.setTransform(B.a*c+B.c*n,B.b*c+B.d*n,B.c*c-B.a*n,B.d*c-B.b*n,B.a*x+B.c*y+B.e,B.b*x+B.d*y+B.f);
+    let l=hqLoc(1.2,1.6,a,1);if(px*k>2.6)hqShadow(spr,l[0],l[1],.32);
+    if(fl){ctx.translate(-fl*1.1,0);ctx.rotate(((e.wob*7)%2-1)*fl*.16)}ctx.scale(sx,sy)}
+  else ctx.setTransform((B.a*c+B.c*n)*sx,(B.b*c+B.d*n)*sx,(B.c*c-B.a*n)*sy,(B.d*c-B.b*n)*sy,B.a*x+B.c*y+B.e,B.b*x+B.d*y+B.f);   // = translate . rotate . scale(k) . scale(sx,sy)
   hqDraw(spr);if(fl)hqWhite(spr,.72*fl);
   if(px*k>2.2){l=hqLoc(-1.1,-1.1,a,1);hqGlint(.2+l[0],l[1],1.7,e.type==='brute'?.5:.3)}
   if(e.type==='bomber'&&Math.floor(G.time*6)%2){ell(6.8,0,.7,.7,'#ff3b30');ell(-3.6,0,.5,.5,'#ff3b30');ctx.globalCompositeOperation='lighter';ctx.drawImage(hqGlow('rd',[[0,'rgba(255,80,60,.9)'],[1,'rgba(255,40,30,0)']]),4.8,-2,4,4);ctx.globalCompositeOperation='source-over'}
-  ctx.setTransform(B)}
+  if(_hqBase)_hqDirty=true;else ctx.setTransform(B)}
 function corpse(e){(G.corpses||(G.corpses=[])).push({type:e.type,r:e.r,col:e.col,boss:e.boss||e.type==='mbt',veh:e.veh,x:e.x,y:e.y,a:Math.atan2(-e.y,-e.x),t0:G.time,sp:(e.wob*97%2)-1});if(G.corpses.length>80)G.corpses.shift()}
 // the killing shot knocks the body back and down (0.25s), it lies briefly, then fades; wrecked tanks smoulder dark a while longer
 function drawCorpses(){const cs=G.corpses;if(!cs||!cs.length)return;const px=hqPx();let n=0;
@@ -4961,11 +5037,25 @@ function drawTierThumb(line,tier,c,size){const th=THUMB[line];if(!c||!th||!TIER_
   try{const k=size/(th[0]*(th[3]?bS():1));c.translate(size/2,size/2);c.scale(k,k);c.translate(th[1],0);th[2](t)}
   finally{c.restore();ctx=m;G=g0;HQ=hq;_tierOv=ov;_thumbG.units=[];_thumbG.air=[];_thumbG.aa=[];_thumbG.gun=null}}
 // ================= /HIGH-DETAIL SPRITES =================
+// Medium/Low: the soldier art (soldierLo / soldierBaseLo) is baked per kit and zoom bucket and placed with one drawImage; the
+// muzzle flash stays a live overlay, drawn last exactly as the vector path does.
+const _solM={};
 function drawSoldier(s){
   if(S.set.gfx==='high'){drawSoldierHQ(s);return}
-  const k=solKit(s);if(k.w){ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.ang);soldierLo(s,k);ctx.restore();if(k.K[3].includes('d'))drawDrones(s.x,s.y,k.main?2:1,k.e,k.main?11:8,s.x*.3);return}
-  ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.ang);
-  const main=s.main,uni=main?'#5b7132':'#4c5f2b',dark='#232b12';
+  const k=solKit(s),m=ctx.getTransform(),pk=Math.hypot(m.a,m.b);
+  if(pk<=24){const key=k.w?(k.main?'m':'s')+k.t+(k.alt?'a':''):s.main?'M':'S',bi=hqBi(pk);let spr=_solM[key];
+    if(!spr||spr._bi!==bi){const main=!!s.main;spr=hqBake('slo'+key,pk,28,17,8.5,8,()=>{if(k.w)soldierLo({fl:-Infinity},k);else soldierBaseLo(main)},0,0);spr._bi=bi;_solM[key]=spr}
+    xf(m,s.x,s.y,s.ang);hqDraw(spr);
+    if(G.time-(s.fl||-9)<0.05){if(k.w){const f=tierFx(k.main?'dmg':'squad',k.t),mx=k.mz[0];ell(mx+1.6,k.mz[1],3.2,1.6,f.flash?'#ffcf5a':f.tr);ell(mx+1,k.mz[1],1.6,0.8,'#fff')}
+      else{ell(17,0.8,3.2,1.6,'#ffcf5a');ell(16.4,0.8,1.6,0.8,'#fff')}}
+    xr(m);if(k.w&&k.K[3].includes('d'))drawDrones(s.x,s.y,k.main?2:1,k.e,k.main?11:8,s.x*.3);return}
+  if(k.w){ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.ang);soldierLo(s,k);ctx.restore();if(k.K[3].includes('d'))drawDrones(s.x,s.y,k.main?2:1,k.e,k.main?11:8,s.x*.3);return}
+  ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.ang);soldierBaseLo(s.main);
+  if(G.time-(s.fl||-9)<0.05){ell(17,0.8,3.2,1.6,'#ffcf5a');ell(16.4,0.8,1.6,0.8,'#fff')}
+  ctx.restore();
+}
+function soldierBaseLo(main){
+  const uni=main?'#5b7132':'#4c5f2b',dark='#232b12';
   ell(1,1.4,5.6,6.8,'rgba(0,0,0,.35)');
   box(-6.2,-3.4,3.4,6.8,'#3b4722');box(-6.2,-3.4,3.4,1,'#4d5c2c');            // backpack
   ell(0,0,3.8,5.8,uni);ctx.strokeStyle=dark;ctx.lineWidth=.5;ctx.stroke();      // torso
@@ -4982,19 +5072,48 @@ function drawSoldier(s){
   const hg=ctx.createRadialGradient(-.6,-.8,.3,0,0,3.6);hg.addColorStop(0,main?'#8fa85c':'#7c9150');hg.addColorStop(1,main?'#4d6127':'#3f5020');
   ctx.fillStyle=hg;ctx.beginPath();ctx.arc(0.3,0,3.4,0,7);ctx.fill();ctx.strokeStyle=dark;ctx.lineWidth=.6;ctx.stroke();
   limb(-1.5,-2.2,-1.5,2.2,.4,'rgba(20,25,10,.6)');                              // helmet net band
-  if(G.time-(s.fl||-9)<0.05){ell(17,0.8,3.2,1.6,'#ffcf5a');ell(16.4,0.8,1.6,0.8,'#fff')}
-  ctx.restore();
 }
 function drawEnemy(e,x,y){
   if(S.set.gfx==='high'){drawEnemyHQ(e,x,y);return}
+  if(_hqBase){drawEnemyLoSpr(e,x,y);return}   // battlefield: baked sprite (below); intel previews keep this vector path
   const k=e.r/6,a=Math.atan2(-y,-x);
   ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.scale(k,k);
   if(e.veh&&e.type!=='mbt'){vehLo(e.type,e);if(e.flash>0){ctx.globalAlpha=.55;ell(0,0,10,6,'#fff');ctx.globalAlpha=1}ctx.restore();return}
+  const tk=e.boss||e.type==='mbt';
+  enemyLoArt(e.type,e.col,tk,e.moving?Math.sin(e.wob):0,e.type==='bomber'?Math.floor(G.time*6)%2:0,tk?(e.wob*3)%2.5:0);
+  if(e.flash>0){ctx.globalAlpha=.7;ell(0,0,tk?9:5.5,tk?8:6,'#fff');ctx.globalAlpha=1}
+  if(tk&&G.time-(e.fl??-9)<.06){ell(15.5,0,3,1.6,'#ffcf5a');ell(14.8,0,1.5,.8,'#fff')}
+  ctx.restore();
+}
+// Medium/Low battlefield enemies: the vector art (enemyLoArt / vehLo) baked through hqBake with no outline and no AO, i.e. the
+// same shapes rasterised at the same on-screen scale, then placed with one setTransform + drawImage. Poses are quantised finely
+// enough to be invisible: walk cycle 16 phases (9 distinct boot poses), MBT treads 10 scroll phases, IFV tracks 12, bomber lamp
+// on/off. Hit flash, muzzle flash and MLRS back-blast stay live overlays on top, exactly as the vector path draws them.
+const LO_BOX={inf:[25,18,9,10],tk:[25,18,10,8],technical:[19,13,9.5,6.5],apc:[26,17,12,8.5],ifv:[27,18,11,9],mlrs:[22,13,11,6.5],mbt:[28,18,11.5,9]},_loM={},_loW={};
+function drawEnemyLoSpr(e,x,y){const B=_hqBase,t=e.type,veh=e.veh&&t!=='mbt',tk=!veh&&(e.boss||t==='mbt'),k=e.r/6,pk=Math.hypot(B.a,B.b)*k;let i;
+  if(veh)i=t==='ifv'?Math.round((((e.odo||0)%3+3)%3)*4)%12:0;
+  else if(tk)i=Math.round((((e.wob*3)%2.5+2.5)%2.5)*4)%10;
+  else{const f=e.moving?(Math.round(e.wob*16/TAU)%16+16)%16:0;i=(f<=4?f:f<=12?8-f:f-16)+4+(t==='bomber'&&Math.floor(G.time*6)%2?9:0)}
+  const T=_loM[t]||(_loM[t]=[]),bi=hqBi(pk);let s=T[i];
+  if(!s||s._bi!==bi){const col=e.col,bx=veh?LO_BOX[t]:tk?LO_BOX.tk:LO_BOX.inf,
+      paint=veh?()=>vehLo(t,{odo:i*.25,fl:-Infinity}):tk?()=>enemyLoArt(t,col,true,0,0,i*.25):()=>enemyLoArt(t,col,false,Math.sin((i%9-4)*TAU/16),i>=9?1:0,0);
+    s=hqBake('lo'+t+'|'+i,pk,bx[0],bx[1],bx[2],bx[3],paint,0,0);s._bi=bi;T[i]=s}
+  const a=Math.atan2(-y,-x),c=Math.cos(a)*k,n=Math.sin(a)*k;
+  ctx.setTransform(B.a*c+B.c*n,B.b*c+B.d*n,B.c*c-B.a*n,B.d*c-B.b*n,B.a*x+B.c*y+B.e,B.b*x+B.d*y+B.f);hqDraw(s);
+  if(veh){const since=G.time-(e.fl??-9);if(since<.9)vehLoFx(t,since);if(e.flash>0){ctx.globalAlpha=.55;ell(0,0,10,6,'#fff');ctx.globalAlpha=1}}
+  else{if(e.flash>0){ctx.globalAlpha=.7;ell(0,0,tk?9:5.5,tk?8:6,'#fff');ctx.globalAlpha=1}
+    if(tk&&G.time-(e.fl??-9)<.06){ell(15.5,0,3,1.6,'#ffcf5a');ell(14.8,0,1.5,.8,'#fff')}}}   // matrix left set: drawEnemies resets it once
+// the live parts of vehLo(): muzzle flash (turret space folded into hull space) and the MLRS back-blast
+function vehLoFx(t,since){if(t==='mlrs'){ctx.globalAlpha=1-since/.9;ell(-11,0,3,4,'#ffb13b');ctx.globalAlpha=1;return}
+  if(since<.06)ell(t==='technical'?7.9:t==='apc'?14.3:16.6,0,t==='ifv'?2.8:2.4,t==='ifv'?1.5:1.3,'#ffcf5a')}
+function loWreckSpr(t,pk){const bi=hqBi(pk);let s=_loW[t];if(s&&s._bi===bi)return s;const[l,b]=VEH_LEN[t],bx=LO_BOX[t];
+  s=hqBake('low'+t,pk,bx[0],bx[1],bx[2],bx[3],()=>{vehLo(t,null);ctx.globalAlpha=0.78;box(-l/2-.3,-b/2-.3,l+.6,b+.6,'#1b1814');ctx.globalAlpha=1},0,0);s._bi=bi;return _loW[t]=s}
+// Medium/Low soldier + tank art at the origin (+x toward the fort): ph = walk phase, blink = bomber lamp, tr = MBT tread scroll
+function enemyLoArt(type,c,tk,ph,blink,tr){
   ell(0.8,1.2,5.4,6.4,'rgba(0,0,0,.35)');
-  const ph=e.moving?Math.sin(e.wob):0;
   ell(ph*2.2,-2.3,1.9,1.2,'#161616');ell(-ph*2.2,2.3,1.9,1.2,'#161616');       // boots
-  const c=e.col,skin='#b98a64';
-  switch(e.type){
+  const skin='#b98a64';
+  switch(type){
     case'grunt':
       ell(0,0,3.4,5.2,c);box(2.4,0.2,5,1.4,'#6a4a2a');box(7.4,0.4,3,1,'#222');
       ctx.fillStyle='#d8d8d8';ctx.beginPath();ctx.moveTo(10.4,0.4);ctx.lineTo(14,0.9);ctx.lineTo(10.4,1.4);ctx.fill();   // bayonet
@@ -5022,7 +5141,7 @@ function drawEnemy(e,x,y){
       ell(0,0,3.4,5.2,c);box(-5,-3,3.2,6,'#4d4a2c');box(-5,-3,3.2,.9,'#6b6740');ell(-3.4,0,.7,.7,'#c0392b');
       limb(0.5,-4,5.4,-1.8,1.9,c);limb(0.5,4,5.4,1.8,1.9,c);
       box(5,-2.6,3.6,5.2,'#6e6a52');box(5,-2.6,3.6,.9,'#8a8668');box(5.6,-0.6,2.4,1.2,'#222');
-      if(Math.floor(G.time*6)%2){ell(6.8,0,.7,.7,'#ff3b30');ell(6.8,0,1.6,1.6,'rgba(255,60,50,.35)')}
+      if(blink){ell(6.8,0,.7,.7,'#ff3b30');ell(6.8,0,1.6,1.6,'rgba(255,60,50,.35)')}
       ell(0,0,2.8,2.8,'#4f5a36');box(1.6,-1.9,1.2,3.8,'#1c1c1c');break;                      // helmet + goggles
     case'rpg':      // RPG gunner: launcher over the left shoulder, spare rockets on the back
       box(-5.6,-2.6,2.6,5.2,'#5a4a2c');box(-8.2,-2,3,1.1,'#5d6446');box(-8.2,.9,3,1.1,'#5d6446');
@@ -5035,7 +5154,7 @@ function drawEnemy(e,x,y){
       ell(0,0,3.2,4.9,c);limb(0.5,-3.9,5.8,-1,1.9,c);limb(0.5,3.9,5.8,1,1.9,c);ell(6,-1,1,1,skin);ell(6,1,1,1,skin);ell(0.2,0,2.9,2.9,'#5f5638');break;
     case'mbt':
     case'boss':{   // enemy main battle tank
-      const tr=(e.wob*3)%2.5;ell(1,1.5,10,8,'rgba(0,0,0,.35)');
+      ell(1,1.5,10,8,'rgba(0,0,0,.35)');
       box(-8.5,-7,17,3.2,'#191919');box(-8.5,3.8,17,3.2,'#191919');for(let i=-8.5+tr;i<8.5;i+=2.5){box(i,-7,.8,3.2,'#3a3a34');box(i,3.8,.8,3.2,'#3a3a34')}
       box(-8,-4.2,16,8.4,c);box(-8,-4.2,16,1,'#8a8068');box(-8,3.2,16,1,'#4a4436');box(6,-3,2,6,'#4a4436');
       box(-7.5,-2.5,3,5,'#3a3a30');for(const[x,y]of[[-3,-3.4],[2,2.4],[-1,2.6]])ell(x,y,1.2,.7,'#5a5242');
@@ -5044,10 +5163,7 @@ function drawEnemy(e,x,y){
       ell(0,0,4.2,3.8,'#5d5544');ctx.strokeStyle='#2a261e';ctx.lineWidth=.4;ctx.stroke();ell(-1.4,-1.4,1.2,1.2,'#3a3528');ell(1.6,1.6,.8,.8,'#2a261e');
       break}
   }
-  const tk=e.boss||e.type==='mbt';if(!tk){ell(-0.6,-4.3,1.3,0.9,'#c62828')}
-  if(e.flash>0){ctx.globalAlpha=.7;ell(0,0,tk?9:5.5,tk?8:6,'#fff');ctx.globalAlpha=1}
-  if(tk&&G.time-(e.fl??-9)<.06){ell(15.5,0,3,1.6,'#ffcf5a');ell(14.8,0,1.5,.8,'#fff')}
-  ctx.restore();
+  if(!tk){ell(-0.6,-4.3,1.3,0.9,'#c62828')}
 }
 // Medium/Low enemy vehicles (sprite units, +x toward the fort). e = null draws the bare hull for a wreck.
 function vehLo(t,e){const c=VC,tr=e?(e.odo||0)%3:0,since=e?G.time-(e.fl??-9):9,fire=since<.06;
@@ -5527,57 +5643,84 @@ function skySil(type){let p=_skySil[type];if(p)return p;p=_skySil[type]=new Path
 // never let an aircraft shrink below ~4.5px radius when the camera is far out; SKY_EXT = drawn half-span, for brackets and bars
 const SKY_EXT={drone:7.5,gunheli:20,strikejet:22,heavybomber:46,airboss:56,uav:21};
 const craftK=e=>Math.max(1,4.5/(sc*e.r));
-function drawCraft(e,x,y,k){const t=G.time,hot=t-(e.fl??-9)<0.06;ctx.save();ctx.translate(x,y);ctx.rotate(e.ang);ctx.scale(k,k);
-  switch(e.type){
+// Aircraft art (top-down, nose along +x). th = rotor phase, blink = nav lamp, hot = gun flash, bay = bomb bay open, ab = afterburner.
+// Live aircraft and wrecks are drawn from sprites of this art (drawCraft): baked per zoom bucket with the rotors at quantised
+// phases (8 per half turn; the gunship's 5-blade rotor 12 per blade gap) and the lamp on/off, i.e. one drawImage instead of ~20
+// vector ops. The strike jet's afterburner, the gunship's battery flash and the hit flash stay live overlays.
+const CRAFT_BOX={drone:[16,16,8,8],gunheli:[46,41,25,20.5],strikejet:[46,32,23.5,16],heavybomber:[92,93,45.5,46.5],uav:[24,43,13,21.5],airboss:[83,113,41.5,56.5]},_crM={};
+let _skyB=null;   // world matrix while drawSky draws live aircraft and wrecks (sprite path); null for the intel previews (vector path)
+const craftTh=(ty,e,t)=>ty==='drone'?t*80+e.wob:ty==='gunheli'?t*26+e.wob:ty==='uav'?t*70+e.wob:ty==='airboss'?t*50:0;
+function drawCraft(e,x,y,k){const t=G.time,hot=t-(e.fl??-9)<0.06,ty=e.type,B=_skyB;
+  if(B&&CRAFT_BOX[ty]){const bx=CRAFT_BOX[ty],pk=Math.hypot(B.a,B.b)*k,rot=ty==='drone'||ty==='uav'||ty==='gunheli'||ty==='airboss',per=ty==='gunheli'?TAU/5:Math.PI,nq=ty==='gunheli'?12:8;
+    let i=0;if(rot){const th=craftTh(ty,e,t);i=(Math.round((((th%per)+per)%per)/per*nq)%nq)*2+(ty==='gunheli'?(hot?1:0):ty==='drone'?Math.floor(t*5+e.wob)%2:ty==='uav'?Math.floor(t*3+e.wob)%2:0)}
+    else if(ty==='heavybomber')i=e.bay>0?1:0;
+    const T=_crM[ty]||(_crM[ty]=[]),bi=hqBi(pk);let s=T[i];
+    if(!s||s._bi!==bi){const col=e.col,th=(i>>1)*per/nq,f=i&1;
+      s=hqBake('cr'+ty+'|'+i,pk,bx[0],bx[1],bx[2],bx[3],()=>craftArt(ty,col,th,ty==='drone'||ty==='uav'?f:0,ty==='gunheli'&&f===1,ty==='heavybomber'&&f===1,0),0,0);s._bi=bi;T[i]=s}
+    xf(B,x,y,e.ang,k);hqDraw(s);
+    if(ty==='strikejet'){if(hot){ell(24,0,2.6,1.2,'#ffcf5a');ell(23.4,0,1.2,.6,'#fff')}const ab=0.75+0.25*Math.sin(t*40+e.wob);
+      ctx.globalCompositeOperation='lighter';for(const s of[-2.6,2.6]){ell(-20.5,s,2.8*ab,1.2,'rgba(255,150,60,.75)');ell(-19.8,s,1.2,.7,'#fff3c0')}ctx.globalCompositeOperation='source-over'}
+    else if(ty==='airboss'&&hot){ell(4,-14.5,1.4,2.8,'#ffcf5a');ell(4,-14,.7,1.3,'#fff')}
+    if(e.flash>0){ctx.fillStyle='rgba(255,255,255,.35)';ctx.fill(skySil(ty))}
+    xr(B);return}
+  ctx.save();ctx.translate(x,y);ctx.rotate(e.ang);ctx.scale(k,k);
+  craftArt(ty,e.col,craftTh(ty,e,t),ty==='drone'?Math.floor(t*5+e.wob)%2:ty==='uav'?Math.floor(t*3+e.wob)%2:0,hot,e.bay>0,0.75+0.25*Math.sin(t*40+e.wob));
+  if(e.flash>0){ctx.fillStyle='rgba(255,255,255,.35)';ctx.fill(skySil(ty))}
+  ctx.restore()}
+function craftArt(type,col,th,blink,hot,bay,ab){
+  switch(type){
   case'drone':
     for(const[a,b]of DRONE_ARMS)limb(0,0,a,b,1.3,'#26282a');
-    box(-2.6,-1.8,5.2,3.6,e.col);box(-2.6,-1.8,5.2,.7,'#6c7066');box(2.2,-.75,3.2,1.5,'#6b5a3a');ell(5.5,0,.95,.8,'#8f7c4c');ell(-1.2,0,.8,.8,'#111');   // airframe + strapped-on warhead
-    for(const[a,b]of DRONE_ARMS){const r=t*80+a*1.3+e.wob;ell(a,b,3,3,'rgba(200,205,210,.16)');limb(a-Math.cos(r)*2.8,b-Math.sin(r)*2.8,a+Math.cos(r)*2.8,b+Math.sin(r)*2.8,.5,'rgba(20,20,20,.6)');ell(a,b,.75,.75,'#111')}
-    if(Math.floor(t*5+e.wob)%2){ell(-2.3,0,.55,.55,'#ff3b30');ell(-2.3,0,1.4,1.4,'rgba(255,60,50,.3)')}
+    box(-2.6,-1.8,5.2,3.6,col);box(-2.6,-1.8,5.2,.7,'#6c7066');box(2.2,-.75,3.2,1.5,'#6b5a3a');ell(5.5,0,.95,.8,'#8f7c4c');ell(-1.2,0,.8,.8,'#111');   // airframe + strapped-on warhead
+    for(const[a,b]of DRONE_ARMS){const r=th+a*1.3;ell(a,b,3,3,'rgba(200,205,210,.16)');limb(a-Math.cos(r)*2.8,b-Math.sin(r)*2.8,a+Math.cos(r)*2.8,b+Math.sin(r)*2.8,.5,'rgba(20,20,20,.6)');ell(a,b,.75,.75,'#111')}
+    if(blink){ell(-2.3,0,.55,.55,'#ff3b30');ell(-2.3,0,1.4,1.4,'rgba(255,60,50,.3)')}
     break;
   case'gunheli':
     box(-23,-1.1,15,2.2,'#55543f');box(-24.5,-5,2.4,10,'#44432f');ell(-23.3,6.2,3,.8,'rgba(40,40,40,.35)');box(-17,-1.1,2.2,2.2,'#b3261e');   // boom, fin, tail rotor, red band
     box(-4,-10,5,20,'#4a4935');for(const s of[-1,1]){ell(-1.2,8.6*s,3.6,1.6,'#2c2c24');ell(2,8.6*s,.9,1.2,'#111')}                                 // stub wings + rocket pods
-    ell(-1,0,11.5,4.8,e.col);ell(-2,-1.6,8,1.8,'rgba(255,245,210,.12)');ell(-5,-3.6,3.2,1.2,'#3d3c2c');ell(-5,3.6,3.2,1.2,'#3d3c2c');             // fuselage + engine fairings
+    ell(-1,0,11.5,4.8,col);ell(-2,-1.6,8,1.8,'rgba(255,245,210,.12)');ell(-5,-3.6,3.2,1.2,'#3d3c2c');ell(-5,3.6,3.2,1.2,'#3d3c2c');             // fuselage + engine fairings
     ell(5.5,0,3.2,2.3,'#1b2a33');ell(9.2,0,2.3,1.8,'#1b2a33');ell(8.8,-.7,.9,.45,'rgba(170,220,255,.5)');                                          // tandem cockpits
     ell(11.2,0,1.5,1.5,'#2a2a22');box(11.2,-.45,5.6,.9,'#111');if(hot){ell(17.8,0,2.4,1.3,'#ffcf5a');ell(17.4,0,1.1,.6,'#fff')}                       // chin cannon
     ell(0,0,20,20,'rgba(25,25,25,.07)');ctx.strokeStyle='rgba(20,20,20,.4)';ctx.lineWidth=1.1;ctx.lineCap='round';ctx.beginPath();
-    for(let i=0;i<5;i++){const a=t*26+e.wob+i*TAU/5;ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*19.5,Math.sin(a)*19.5)}ctx.stroke();ell(0,0,1.8,1.8,'#222');
+    for(let i=0;i<5;i++){const a=th+i*TAU/5;ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*19.5,Math.sin(a)*19.5)}ctx.stroke();ell(0,0,1.8,1.8,'#222');
     break;
-  case'strikejet':{const P=skySil('strikejet'),ab=0.75+0.25*Math.sin(t*40+e.wob);
-    ctx.fillStyle=e.col;ctx.fill(P);ctx.save();ctx.clip(P);ell(-6,-9,4,2,'#585d55',0.5);ell(-4,8,3.6,1.8,'#585d55',-0.4);ell(-16,-4,3,1.4,'#80867c');ell(8,1.8,5,1,'#81877d');ctx.restore();   // two-tone camo
+  case'strikejet':{const P=skySil('strikejet');
+    ctx.fillStyle=col;ctx.fill(P);ctx.save();ctx.clip(P);ell(-6,-9,4,2,'#585d55',0.5);ell(-4,8,3.6,1.8,'#585d55',-0.4);ell(-16,-4,3,1.4,'#80867c');ell(8,1.8,5,1,'#81877d');ctx.restore();   // two-tone camo
     box(-18,-3.8,9,2.4,'#43473f');box(-18,1.4,9,2.4,'#43473f');                                                                                   // engine nacelles
     for(const s of[-1,1]){ell(-3.5,9.5*s,3.2,.9,'#34342c');ell(-0.3,9.5*s,.7,.7,'#b3261e');ell(-6,6*s,2.4,.8,'#34342c')}                              // rocket pods + bombs on pylons
     box(-22.5,-9.5,3,1.8,'#b3261e');box(-22.5,7.7,3,1.8,'#b3261e');
     ell(9.5,0,4.2,1.5,'#1c2a33');ell(10.5,-.5,1.6,.5,'rgba(170,220,255,.5)');                                                                     // canopy
     if(hot){ell(24,0,2.6,1.2,'#ffcf5a');ell(23.4,0,1.2,.6,'#fff')}
-    ctx.globalCompositeOperation='lighter';for(const s of[-2.6,2.6]){ell(-20.5,s,2.8*ab,1.2,'rgba(255,150,60,.75)');ell(-19.8,s,1.2,.7,'#fff3c0')}ctx.globalCompositeOperation='source-over';
+    if(ab>0){ctx.globalCompositeOperation='lighter';for(const s of[-2.6,2.6]){ell(-20.5,s,2.8*ab,1.2,'rgba(255,150,60,.75)');ell(-19.8,s,1.2,.7,'#fff3c0')}ctx.globalCompositeOperation='source-over'}
     break}
   case'heavybomber':
     for(const s of[1,-1]){fpoly(s>0?BMR_WING:flipY(BMR_WING),'#50554f');fpoly(s>0?BMR_TAIL:flipY(BMR_TAIL),'#50554f')}
     for(const s of[1,-1])for(const[ex,ey]of[[-3,14],[-10,27]]){box(ex-4,ey*s-1.8,9,3.6,'#3b3f3a');ell(ex+5,ey*s,1,1.6,'#111');ell(ex-4.6,ey*s,1.3,1.2,'rgba(255,150,60,.55)')}   // four engine pods
-    ell(2,0,44,5.4,e.col);ell(0,-1.8,38,1.6,'rgba(255,250,230,.1)');box(-45,-.7,14,1.4,'#474c46');                                                // fuselage, sheen, fin
+    ell(2,0,44,5.4,col);ell(0,-1.8,38,1.6,'rgba(255,250,230,.1)');box(-45,-.7,14,1.4,'#474c46');                                                // fuselage, sheen, fin
     ell(43,0,3.4,3,'#3e433d');ell(37,0,3.6,2.6,'#1c2a33');ell(38,-.8,1.4,.6,'rgba(170,220,255,.45)');                                             // nose + cockpit
-    if(e.bay>0){box(-14,-2.6,20,5.2,'#141414');for(let i=0;i<4;i++)ell(-11+i*5,0,1.8,1,'#4a4a40')}else{ctx.strokeStyle='rgba(20,20,20,.5)';ctx.lineWidth=.4;ctx.strokeRect(-14,-2.6,20,5.2)}
+    if(bay){box(-14,-2.6,20,5.2,'#141414');for(let i=0;i<4;i++)ell(-11+i*5,0,1.8,1,'#4a4a40')}else{ctx.strokeStyle='rgba(20,20,20,.5)';ctx.lineWidth=.4;ctx.strokeRect(-14,-2.6,20,5.2)}
     box(-36,-2.4,2.6,4.8,'#b3261e');
     break;
   case'uav':
     fpoly(UAV_WING,'#9aa0a5');box(0.7,-21,3.6,.7,'rgba(255,255,255,.2)');for(const s of[1,-1])fpoly(s>0?UAV_TAIL:flipY(UAV_TAIL),'#80868b');
-    ell(0,0,10,2,e.col);ell(-1,-.7,8,.6,'rgba(255,255,255,.18)');ell(6.8,0,3.4,2.4,'#a9aeb2');ell(8.4,0,1.3,1.3,'#1a1d20');ell(8.1,-.4,.45,.45,'rgba(140,210,255,.8)');   // pod, sensor dome, EO/IR ball
-    {const r=t*70+e.wob;ell(-10.4,0,1,3.2,'rgba(210,214,218,.18)');limb(-10.4,-Math.cos(r)*3,-10.4,Math.cos(r)*3,.6,'rgba(25,25,25,.7)')}   // pusher prop
-    if(Math.floor(t*3+e.wob)%2){ell(-2,0,.6,.6,'#ff3b30');ell(-2,0,1.8,1.8,'rgba(255,60,50,.28)')}
+    ell(0,0,10,2,col);ell(-1,-.7,8,.6,'rgba(255,255,255,.18)');ell(6.8,0,3.4,2.4,'#a9aeb2');ell(8.4,0,1.3,1.3,'#1a1d20');ell(8.1,-.4,.45,.45,'rgba(140,210,255,.8)');   // pod, sensor dome, EO/IR ball
+    {const r=th;ell(-10.4,0,1,3.2,'rgba(210,214,218,.18)');limb(-10.4,-Math.cos(r)*3,-10.4,Math.cos(r)*3,.6,'rgba(25,25,25,.7)')}   // pusher prop
+    if(blink){ell(-2,0,.6,.6,'#ff3b30');ell(-2,0,1.8,1.8,'rgba(255,60,50,.28)')}
     break;
   default:   // airboss: four-turboprop heavy gunship
     fpoly(BOSS_WING,'#474d4a');box(-6.5,-56,3,112,'rgba(255,250,230,.07)');box(-41,-18,7,36,'#474d4a');box(-41,-18,7,1,'#5d6460');
-    for(const ey of[-32,-16,16,32]){const r=t*50+ey;box(2,ey-2.6,12,5.2,'#2b2f2d');ell(15,ey,1.1,7.5,'rgba(200,205,200,.14)');limb(15,ey-Math.cos(r)*7,15,ey+Math.cos(r)*7,.9,'rgba(25,25,25,.7)');ell(15,ey,1,1,'#111')}
-    ell(0,0,40,7.5,e.col);ell(-2,-3,34,2.2,'rgba(255,250,230,.08)');ell(37,0,4,5,'#2f3432');ell(35,0,3,3.8,'#1c2a33');box(-40,-.8,12,1.6,'#2b2f2d');
+    for(const ey of[-32,-16,16,32]){const r=th+ey;box(2,ey-2.6,12,5.2,'#2b2f2d');ell(15,ey,1.1,7.5,'rgba(200,205,200,.14)');limb(15,ey-Math.cos(r)*7,15,ey+Math.cos(r)*7,.9,'rgba(25,25,25,.7)');ell(15,ey,1,1,'#111')}
+    ell(0,0,40,7.5,col);ell(-2,-3,34,2.2,'rgba(255,250,230,.08)');ell(37,0,4,5,'#2f3432');ell(35,0,3,3.8,'#1c2a33');box(-40,-.8,12,1.6,'#2b2f2d');
     for(const gx of[-8,4,14]){box(gx-1.6,-8.6,3.2,2.4,'#151515');box(gx-.5,-12.4,1,3.8,'#0c0c0c')}                                                   // left-side gun battery
     if(hot){ell(4,-14.5,1.4,2.8,'#ffcf5a');ell(4,-14,.7,1.3,'#fff')}
     box(-28,-7.2,3,14.4,'#b3261e');ell(20,-40,2.4,2.4,'#b3261e');ell(20,40,2.4,2.4,'#b3261e');
   }
-  if(e.flash>0){ctx.fillStyle='rgba(255,255,255,.35)';ctx.fill(skySil(e.type))}
-  ctx.restore()}
-function craftShadow(type,x,y,ang,alt,k){ctx.save();ctx.translate(x+alt*0.55,y+alt*0.7);ctx.rotate(ang);ctx.scale(k,k);ctx.fillStyle='rgba(0,0,0,.26)';ctx.fill(skySil(type));
+}
+// B given: the same silhouette fill (and the gunship's rotor-disc shade) baked with its alphas into a sprite, one drawImage
+function craftShadow(type,x,y,ang,alt,k,B){if(B&&CRAFT_BOX[type]){const bx=CRAFT_BOX[type],pk=Math.hypot(B.a,B.b)*k,bi=hqBi(pk);let s=_crM['sh'+type];
+    if(!s||s._bi!==bi){s=hqBake('crsh'+type,pk,bx[0],bx[1],bx[2],bx[3],()=>{ctx.fillStyle='rgba(0,0,0,.26)';ctx.fill(skySil(type));if(type==='gunheli')ell(0,0,20,20,'rgba(0,0,0,.05)')},0,0);s._bi=bi;_crM['sh'+type]=s}
+    xf(B,x+alt*0.55,y+alt*0.7,ang,k);hqDraw(s);xr(B);return}
+  ctx.save();ctx.translate(x+alt*0.55,y+alt*0.7);ctx.rotate(ang);ctx.scale(k,k);ctx.fillStyle='rgba(0,0,0,.26)';ctx.fill(skySil(type));
   if(type==='gunheli')ell(0,0,20,20,'rgba(0,0,0,.05)');ctx.restore()}
 // AA emplacement: every tier (incl. tier 0 twin 35) goes through the tier painters (baked on High, flat on Medium/Low)
 function drawAAGun(u){drawAAGunT(u,tierOf('aagun'))}
@@ -5592,13 +5735,13 @@ function drawRadar(u){const s=US.radar*bS(),a=G.time*1.6;ctx.save();ctx.translat
 // ground pass (before the fog): emplacements, and shadows of anything flying over ground you can see
 function drawSkyGround(){
   for(const u of G.aa)(u.k==='aagun'?drawAAGun:u.k==='sam'?drawSAM:drawRadar)(u);
-  const V=vision();
-  for(const e of G.sky)if(!e.dead&&Math.hypot(e.x,e.y)<V+e.r)craftShadow(e.type,e.x,e.y,e.ang,e.alt,craftK(e));
-  for(const w of G.wrecks)craftShadow(w.type,w.x,w.y,w.ang,w.alt,1);
+  const V=vision(),B=ctx.getTransform();
+  for(const e of G.sky)if(!e.dead&&Math.hypot(e.x,e.y)<V+e.r)craftShadow(e.type,e.x,e.y,e.ang,e.alt,craftK(e),B);
+  for(const w of G.wrecks)craftShadow(w.type,w.x,w.y,w.ang,w.alt,1,B);
   for(const s of G.skyShots)if(s.k==='bomb'&&s.t>0){const k=Math.min(1,s.t/s.dur),x=s.x+(s.tx-s.x)*k,y=s.y+(s.ty-s.y)*k,z=s.alt*(1-k);ell(x+z*0.55,y+z*0.7,1.8,1,'rgba(0,0,0,.3)')}}
 // air pass (after the fog, like friendly aircraft): ordnance, wrecks, aircraft, radar contacts, fog-edge warnings
 const ARW=new Path2D('M9 0L-3 -3L-6 -8L-8.5 -8L-6.5 -2L-8.5 0L-6.5 2L-8.5 8L-6 8L-3 3Z');
-function drawSky(){const V=vision(),SV=skyVision(),ta=Math.max(1,1/sc),lw=Math.max(1,1/sc),t=G.time;
+function drawSky(){const V=vision(),SV=skyVision(),ta=Math.max(1,1/sc),lw=Math.max(1,1/sc),t=G.time;_skyB=ctx.getTransform();
   if(L('radar')&&S.set.ring){ctx.strokeStyle='rgba(110,195,255,.16)';ctx.lineWidth=lw;ctx.setLineDash([3*ta,9*ta]);ctx.beginPath();ctx.arc(0,0,SV,0,TAU);ctx.stroke();ctx.setLineDash([])}
   for(const s of G.skyShots){if(s.t<0)continue;const k=Math.min(1,s.t/s.dur),x=s.x+(s.tx-s.x)*k,y=s.y+(s.ty-s.y)*k,a=Math.atan2(s.ty-s.y,s.tx-s.x);
     if(s.k==='shell'){ctx.globalCompositeOperation='lighter';ell(x,y,3.4,3.4,'rgba(255,170,80,.35)');ell(x,y,1.6,1.6,'#fff0c8');ctx.globalCompositeOperation='source-over';continue}
@@ -5622,7 +5765,7 @@ function drawSky(){const V=vision(),SV=skyVision(),ta=Math.max(1,1/sc),lw=Math.m
     if(far){const r=ext+4*ta,q=Math.min(r*0.45,10*ta);ctx.strokeStyle='rgba(110,195,255,.85)';ctx.lineWidth=lw;ctx.beginPath();    // radar contact bracket
       for(const[sx,sy]of[[-1,-1],[1,-1],[1,1],[-1,1]]){ctx.moveTo(e.x+sx*r,e.y+sy*(r-q));ctx.lineTo(e.x+sx*r,e.y+sy*r);ctx.lineTo(e.x+sx*(r-q),e.y+sy*r)}ctx.stroke()}
     if(e.hp<e.max){const w=Math.max(14,Math.min(ext*1.2,e.r*3*k)),by=e.y-ext*0.8-bh-3*ta;bars[0].rect(e.x-w/2,by,w,bh);bars[e.type==='airboss'?2:1].rect(e.x-w/2,by,w*Math.max(0,e.hp/e.max),bh)}}
-  ctx.fillStyle='#000';ctx.fill(bars[0]);ctx.fillStyle='#6c4';ctx.fill(bars[1]);ctx.fillStyle='#f44';ctx.fill(bars[2]);
+  ctx.fillStyle='#000';ctx.fill(bars[0]);ctx.fillStyle='#6c4';ctx.fill(bars[1]);ctx.fillStyle='#f44';ctx.fill(bars[2]);_skyB=null;
   const tg=G.sold[0].tgt;if(tg&&tg.air&&!tg.dead&&Math.hypot(tg.x,tg.y)>V){ctx.strokeStyle='#ffd23f';ctx.lineWidth=Math.max(1.2,1.5/sc);const r=Math.max(tg.r+5,(tg.r*sc+6)/sc)+Math.sin(t*10);ctx.beginPath();ctx.arc(tg.x,tg.y,r,0,TAU);ctx.stroke()}
   // incoming aircraft beyond the air picture: a red aircraft glyph on the fog edge (kept on screen), pulsing, fading with range
   const hw=VW/2/sc,hh=VH/2/sc,edge=L('radar')?SV:V+22*ta;
@@ -5985,8 +6128,18 @@ const WPAL={
   concrete:{top:'#9ea4a4',side:'#51575b',line:'#2a2f32',hi:'#d0d6d7',floor:'#5f6466',floorLine:'#50555a'}};
 const wallTier=l=>l<=3?'wood':l<=6?'stone':'concrete';
 const hash=(a,b)=>{const x=Math.sin(a*12.9898+b*78.233)*43758.5453;return x-Math.floor(x)};
+// Medium/Low: floor + walls + towers (+ their ground shadow) are static between wall-state changes, so they are baked together
+// (stSpr) keyed by layout, walls up/down and the set of cracked segments; drawWalls() then has nothing left to draw this frame.
+let _fortLo=false;
 function drawFloor(ph,wlv){
   if(hiGfx())return drawFortHi(ph,wlv);
+  _fortLo=false;const m=ctx.getTransform(),up=wlv&&G.wallHp>0;let key=ph+'|'+wlv+'|'+(up?1:0),E=ph+1;
+  if(wlv){const T=wallThickAt(wlv),tier=wallTier(wlv);E=ph+T/2+T*1.05+2+3+wlv*0.25+4;
+    if(up){const hk=G.wallMax?Math.max(0,G.wallHp/G.wallMax):0,th=hk+(tier==='wood'?0.35:0.3),st=tier==='wood'?T*0.62:tier==='stone'?7:12,n=Math.ceil(ph*2/st)+1;let c=0;
+      for(let q=0;q<4;q++)for(let i=0;i<n;i++)if(hash(i,q)>th)c++;key+='|'+c}}   // cracks / scorched stakes appear per segment as hash > hp + margin: the count names the set
+  const f=stSpr('fortLo',key,Math.hypot(m.a,m.b),-E,-E,2*E,2*E,()=>{floorLo(ph,wlv);if(wlv)wallsLo(ph,wlv)});
+  if(f){stDraw(f);_fortLo=!!wlv;return}floorLo(ph,wlv)}
+function floorLo(ph,wlv){
   const P=WPAL[wallTier(Math.max(1,wlv))];ctx.fillStyle=P.floor;ctx.fillRect(-ph,-ph,ph*2,ph*2);
   ctx.strokeStyle=P.floorLine;ctx.lineWidth=0.8;
   if(!wlv||wallTier(wlv)==='wood'){for(let i=-ph;i<ph;i+=6){ctx.beginPath();ctx.moveTo(i,-ph);ctx.lineTo(i,ph);ctx.stroke()}
@@ -6001,6 +6154,8 @@ function drawFloor(ph,wlv){
 }
 function drawWalls(ph,wlv){
   if(hiGfx())return drawWallsHi(ph,wlv);
+  if(_fortLo)return;wallsLo(ph,wlv)}
+function wallsLo(ph,wlv){
   const tier=wallTier(wlv),P=WPAL[tier],up=G.wallHp>0,hk=G.wallMax?Math.max(0,G.wallHp/G.wallMax):0;
   const T=wallThickAt(wlv),h=T/2,o=ph+h,inn=ph-h;
   // cast shadow on the ground (fake height, light from top-left)
@@ -6059,19 +6214,22 @@ function drawWalls(ph,wlv){
 // melts into the ground. On Medium/Low, enemies below GFX.lod px radius skip the ~20-op sprite for a batched silhouette.
 // Markers, silhouettes and health bars are each built into one path per colour, so 200 enemies cost a handful of fills.
 function drawEnemies(){
-  if(S.set.gfx==='high'){_hqBase=ctx.getTransform();drawCorpses()}else drawVWrecks();
+  _hqBase=ctx.getTransform();_hqDirty=false;if(S.set.gfx==='high'){vcFrame();drawCorpses()}else drawVWrecks();
   const es=G.enemies,px=1/sc,mk=3*px,lod=GFX.lod*px,rims={},sil={},bars=[new Path2D(),new Path2D(),new Path2D()];let nb=0;
-  for(const e of es){let x=e.x,y=e.y;if(e.lunge>0){const d=Math.hypot(x,y);x-=x/d*3;y-=y/d*3}
+  // an enemy (with its shadow, marker and bar) wholly beyond the fog's opaque ring is painted over by drawFog() later this frame
+  const V=vision(),fr=S.set.gfx==='high'?V*1.12+10+(V*0.05+5)*1.3+(V*1.22+30)/128:V*1.06+6;
+  for(const e of es){let x=e.x,y=e.y;const lim=fr+e.r*2.5+10;if(e._cull=x*x+y*y>lim*lim)continue;if(e.lunge>0){const d=Math.hypot(x,y);x-=x/d*3;y-=y/d*3}
     let top=e.r;
     if(e.r<mk){const a=Math.min(1,(mk-e.r)*sc*0.8+0.35).toFixed(1),R1=Math.max(e.r,2.4*px)+px;top=R1;
       const g=rims[a]||(rims[a]={o:new Path2D(),i:new Path2D()});g.o.moveTo(x+R1,y);g.o.arc(x,y,R1,0,7);g.i.moveTo(x+R1-px,y);g.i.arc(x,y,R1-px,0,7)}
     e._sx=x;e._sy=y;e._top=top}
   for(const a in rims){ctx.globalAlpha=+a;ctx.fillStyle='rgba(12,8,6,.9)';ctx.fill(rims[a].o);ctx.fillStyle='#e8553f';ctx.fill(rims[a].i)}ctx.globalAlpha=1;
-  for(const e of es){const x=e._sx,y=e._sy;
+  for(const e of es){if(e._cull)continue;const x=e._sx,y=e._sy;
     if(e.r<lod){const c=e.flash>0?'#fff':e.col,p=sil[c]||(sil[c]=new Path2D()),r=e.r*0.65;p.moveTo(x+r,y);p.arc(x,y,r,0,7)}
     else drawEnemy(e,x,y);
     if(e.hp<e.max){const w=Math.max(12,e.r*2),bh=Math.max(2.5,1.5*px),by=y-Math.max(e.r+7,e._top+bh+1.5*px);nb++;
       bars[0].rect(x-w/2,by,w,bh);bars[e.boss?2:1].rect(x-w/2,by,w*Math.max(0,e.hp/e.max),bh)}}
+  const B=_hqBase;ctx.setTransform(B.a,B.b,B.c,B.d,B.e,B.f);_hqDirty=false;
   for(const c in sil){ctx.fillStyle=c;ctx.fill(sil[c])}
   if(nb){ctx.fillStyle='#000';ctx.fill(bars[0]);ctx.fillStyle='#6c4';ctx.fill(bars[1]);ctx.fillStyle='#f44';ctx.fill(bars[2])}
   _hqBase=null}
@@ -6140,18 +6298,33 @@ function dnCone(kind){let c=_dn['c'+kind];if(c)return c;const w=192,hh=96,[k,x]=
   x.putImageData(im,0,0);return _dn['c'+kind]=k}
 function dnConeT(kind,rgb){const key='ct'+kind+rgb;let c=_dn[key];if(c)return c;const src=dnCone(kind),[k,x]=mkCv(src.width,src.height);
   x.drawImage(src,0,0);x.globalCompositeOperation='source-in';x.fillStyle=`rgb(${rgb})`;x.fillRect(0,0,k.width,k.height);return _dn[key]=k}
-const dnPool=rgb=>radialSprite('dnp'+rgb,[[0,`rgba(${rgb},1)`],[.3,`rgba(${rgb},.72)`],[.65,`rgba(${rgb},.26)`],[1,`rgba(${rgb},0)`]]);
-const dnFlat=rgb=>radialSprite('dnflat'+rgb,[[0,`rgba(${rgb},1)`],[.74,`rgba(${rgb},1)`],[.88,`rgba(${rgb},.5)`],[1,`rgba(${rgb},0)`]]);   // lit-ring lift, colour quantised so few variants exist
+const dnPool=rgb=>_spr['dnp'+rgb]||radialSprite('dnp'+rgb,[[0,`rgba(${rgb},1)`],[.3,`rgba(${rgb},.72)`],[.65,`rgba(${rgb},.26)`],[1,`rgba(${rgb},0)`]]);   // cache hit first: no stop arrays / strings per call
+const dnFlat=rgb=>_spr['dnflat'+rgb]||radialSprite('dnflat'+rgb,[[0,`rgba(${rgb},1)`],[.74,`rgba(${rgb},1)`],[.88,`rgba(${rgb},.5)`],[1,`rgba(${rgb},0)`]]);   // lit-ring lift, colour quantised so few variants exist
 const DN_EN='255,222,150',DN_FR='214,232,255',DN_LAMP='255,178,98',DN_FIRE='255,150,60',DN_TAIL='255,40,30';
 // Set context c to world matrix m, then translate(x,y) . rotate(th) . scale(sx,sy) - no save/restore churn.
 function cxf(c,m,x,y,th,sx,sy){const co=Math.cos(th),si=Math.sin(th);c.setTransform((m.a*co+m.c*si)*sx,(m.b*co+m.d*si)*sx,(m.c*co-m.a*si)*sy,(m.d*co-m.b*si)*sy,m.a*x+m.c*y+m.e,m.b*x+m.d*y+m.f)}
-// ---- light rigs. Ground vehicles: [x, y, heading, front, half-width, tint, beam length, rear] ----
-const _rig=[];
-function dnRigs(){const r=_rig;r.length=0;const V=vision(),R2=Math.pow(V*1.42,2);
-  for(const e of G.enemies){if(!e.veh&&!e.boss||e.dead||e.x*e.x+e.y*e.y>R2)continue;const k=e.r/6,A=HQ&&!e.boss&&VEH_ART[e.type];
-    r.push([e.x,e.y,Math.atan2(-e.y,-e.x),A?(A.hull[0]-A.hull[2])*k:e.r*1.15,A?A.hull[1]*k*.34:e.r*.42,DN_EN,e.boss?130:e.r*6.4,A?-A.hull[2]*k:-e.r])}
-  for(const u of G.units)if(u.k==='truck'||u.k==='apc'||u.k==='tank'){const s=US[u.k];r.push([u.x,u.y,u.ang,8*s,2.6*s,DN_FR,90,-7.5*s])}
+// ---- light rigs. Ground vehicles: [x, y, heading, front, half-width, tint, beam length, rear, rig def] ----
+// Rigs whose lights cannot reach the view rectangle (plus a shake margin) are dropped here: every consumer is render-only.
+const _rig=[],_rigDef={};
+function dnRigs(){const r=_rig;r.length=0;const V=vision(),R2=Math.pow(V*1.42,2),vx0=VW/2/sc+24,vy0=VH/2/sc+24;
+  for(const e of G.enemies){if(!e.veh&&!e.boss||e.dead||e.x*e.x+e.y*e.y>R2)continue;const bl=e.boss?130:e.r*6.4,reach=bl+e.r*2.5;
+    if(Math.abs(e.x)>vx0+reach||Math.abs(e.y)>vy0+reach)continue;const k=e.r/6,A=HQ&&!e.boss&&VEH_ART[e.type],
+      fr=A?(A.hull[0]-A.hull[2])*k:e.r*1.15,hw=A?A.hull[1]*k*.34:e.r*.42,rr=A?-A.hull[2]*k:-e.r,dk=(A?'h':'l')+(e.boss?'boss':e.type);
+    r.push([e.x,e.y,Math.atan2(-e.y,-e.x),fr,hw,DN_EN,bl,rr,_rigDef[dk]||(_rigDef[dk]={fr,hw,tint:DN_EN,bl,rr})])}
+  for(const u of G.units)if(u.k==='truck'||u.k==='apc'||u.k==='tank'){const s=US[u.k],dk='u'+u.k+s;r.push([u.x,u.y,u.ang,8*s,2.6*s,DN_FR,90,-7.5*s,_rigDef[dk]||(_rigDef[dk]={fr:8*s,hw:2.6*s,tint:DN_FR,bl:90,rr:-7.5*s})])}
   return r}
+// A rig's whole glow (headlight cone + lamp halos, High: 2 head + 2 tail halos) pre-composited additively in the rig's own frame,
+// with the per-part alphas baked in; drawn with globalAlpha = lamp*far it adds exactly what the separate blits added
+// (none of the parts saturates inside the sprite). Rebuilt when the zoom moves the halo size or the buffer resolution a step.
+function dnRigSpr(d,r0,unitPx,hq,cs){const r0q=Math.pow(2,Math.round(Math.log2(r0)*8)/8),res=Math.pow(2,Math.ceil(Math.log2(Math.max(.06,unitPx*2))));let c=d.gc;
+  if(c&&c.r0q===r0q&&c.res===res&&c.hq===hq&&c.cs===cs)return c;
+  const{fr,hw,tint,bl,rr}=d,R1=hq?r0q*2.6:hw+r0q*2,R2=r0q*1.5,x0=Math.min(fr-R1,hq?rr-R2:fr-R1),x1=Math.max(fr+bl,fr+R1),yh=Math.max(bl*.39,hq?hw+R1:R1),
+    [k,x]=mkCv(Math.ceil((x1-x0)*res)+4,Math.ceil(2*yh*res)+4);
+  x.setTransform(res,0,0,res,-x0*res+2,yh*res+2);x.globalCompositeOperation='lighter';
+  x.save();x.translate(fr,0);x.scale(bl/192,bl*.78/96);x.globalAlpha=Math.min(1,cs);x.drawImage(dnConeT('h',tint),0,-48);x.restore();
+  const g=glowSprite(tint),bl1=(img,px,py,r,a)=>{x.globalAlpha=a;x.drawImage(img,px-r,py-r,2*r,2*r)};
+  if(hq){const tl=glowSprite(DN_TAIL);for(const n of[-1,1]){bl1(g,fr,hw*n,R1,1);bl1(tl,rr,hw*n,R2,.7)}}else bl1(g,fr,0,R1,1);
+  return d.gc={c:k,r0q,res,hq,cs,x0:x0*res-2,y0:-yh*res-2}}
 // Aircraft (apron, low jets, strike jets, gunships, helicopters): [x, y, heading, half-span, nose, landing light?]
 const _nav=[];
 function dnNav(){const n=_nav;n.length=0;
@@ -6225,10 +6398,9 @@ function dnGlow(m,W,H,V,lamp){const q=HQ?4:6,lw=Math.max(2,Math.ceil(VW/q)),lh=M
   const sh=dnConeT('s','200,220,255'),sp=glowSprite('220,232,255'),hd=glowSprite('235,244,255'),px=1/sc,r0=Math.max(3.2,4*px);
   for(const[ox,oy,a,len]of DN.beams){if(HQ){cxf(x,M,ox,oy,a,len/192,len*.3/96);x.globalAlpha=.3*lamp;x.drawImage(sh,0,-48)}   // Medium: pools only, no full shaft
     B(sp,ox+Math.cos(a)*len*.93,oy+Math.sin(a)*len*.93,len*.17,.14*lamp*(HQ?1:.55));B(hd,ox,oy,r0*3,.9*lamp)}
-  const tl=glowSprite(DN_TAIL);
-  for(const[vx,vy,a,fr,hw,tint,bl,rr]of _rig){const far=1-sstep(V*1.05,V*1.42,Math.hypot(vx,vy));if(far<=0)continue;const co=Math.cos(a),si=Math.sin(a),g=glowSprite(tint);
-    cxf(x,M,vx+co*fr,vy+si*fr,a,bl/192,bl*.78/96);x.globalAlpha=.24*lamp*far*s;x.drawImage(dnConeT('h',tint),0,-48);
-    if(HQ)for(const n of[-1,1]){B(g,vx+co*fr-si*hw*n,vy+si*fr+co*hw*n,r0*2.6,lamp*far);B(tl,vx+co*rr-si*hw*n,vy+si*rr+co*hw*n,r0*1.5,.7*lamp*far)}else B(g,vx+co*fr,vy+si*fr,hw+r0*2,lamp*far)}   // Medium: one halo per pair
+  const uPx=Math.hypot(M.a,M.b);   // one pre-composited blit per rig (dnRigSpr): cone + halos (Medium: one halo per pair)
+  for(const[vx,vy,a,fr,hw,tint,bl,rr,d]of _rig){const far=1-sstep(V*1.05,V*1.42,Math.hypot(vx,vy));if(far<=0)continue;const c=dnRigSpr(d,r0,uPx,HQ,.24*s);
+    cxf(x,M,vx,vy,a,1/c.res,1/c.res);x.globalAlpha=Math.min(1,lamp*far);x.drawImage(c.c,c.x0,c.y0)}
   const rd=glowSprite('255,50,40'),gr=glowSprite('60,255,110');
   if(HQ)for(const[jx,jy,a,span]of _nav){const co=Math.cos(a),si=Math.sin(a);B(rd,jx+si*span,jy-co*span,r0*2.2,lamp);B(gr,jx-si*span,jy+co*span,r0*2.2,lamp)}
   if(HQ){const ph=fortHalf()+wallThick()+20,rr=Math.max(ph+20,sight()*.9),g=glowSprite('206,255,120');   // fireflies in the grass inside the lit ring
