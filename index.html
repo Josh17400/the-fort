@@ -2329,7 +2329,8 @@ function drawEShots(){const px=1/sc,t=G.time,lw=Math.max(1,1.4*px);
   for(const e of G.enemies){if(!e.mech||e.dead||!visible(e))continue;const c=G.time-(e.mechT??-9)<0.4?'#9cf5a0':'#5fbf6a';   // mechanic: green cross + tag (bright while repairing)
     box(e.x-0.7*px-1,e.y-e.r-7*px-3,1.4*px+2,5*px+4,c);box(e.x-2.5*px-2,e.y-e.r-5.2*px-1.2,5*px+4,1.4*px+2,c);
     ctx.font=`700 ${(8*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle=c;ctx.fillText('MECH',e.x,e.y-e.r-10*px-4)}
-  for(const e of G.enemies){if(!e.vbied||e.dead||!visible(e))continue;const on=Math.sin(t*14+e.wob)>0;   // car bomb: blinking red beacon + tag
+  for(const e of G.enemies){if(!e.vbied||e.dead||!visible(e))continue;const on=Math.sin(t*14+e.wob)>0,ha=e.face??Math.atan2(-e.y,-e.x),hx=Math.cos(ha),hy=Math.sin(ha);
+    for(let i=0;i<3;i++){const bx=e.x-hx*(3+i*2.6)+(i===1?hy*1.6:-hy*1.6)*(i%2?1:0.3),by=e.y-hy*(3+i*2.6)-(i===1?hx*1.6:-hx*1.6)*(i%2?1:0.3);ell(bx,by,1.7,1.7,'#8a2a1c');ell(bx-.4,by-.4,.7,.7,'#d8553a')}   // car bomb: blinking red beacon + tag
     if(on){ell(e.x,e.y,2.2*px+1,2.2*px+1,'#ff3b30');ell(e.x,e.y,6*px+3,6*px+3,'rgba(255,60,50,.3)')}
     ctx.font=`700 ${(9*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle='#ff8a70';ctx.fillText('VBIED',e.x,e.y-e.r-6*px)}
   for(const s of G.eshots){
