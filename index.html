@@ -2168,7 +2168,7 @@ function crateKind(){if(G.wave<3)return'cash';const r=Math.random(),hurt=G.hp<G.
 function dropCrate(kind){const a=Math.random()*7,r=fortHalf()+wallThick()+wireOut()+18+Math.random()*Math.max(20,sight()-fortHalf()-wireOut()-40),k=kind||crateKind();
   G.crates.push({x:Math.cos(a)*r,y:Math.sin(a)*r,life:12,k,val:k==='cash'?crateVal(G.wave,L('scav')):money(crateVal(G.wave,L('scav'))*0.4)});
   if(k!=='cash'&&!seen()['crate_'+k])spotted('crate_'+k)}   // first special crate ever: a SUPPLY DROP briefing card (seen once shown)
-function grabCrate(c){c.life=0;fxCrate(c);S.bank+=c.val;G.earned+=c.val;sfx('cash');
+function grabCrate(c){c.life=0;fxCrate(c);S.bank+=c.val;G.earned+=c.val;sfx('cash');if(c.k&&c.k!=='cash')medalBump('crates');
   if(c.k==='ammo'){G.nadeT=0;G.rapidT=RAPID_T;syncNadeBtn(true);float(c.x,c.y-10,'RAPID FIRE · GRENADE READY','#ff9d7a',13);setTimeout(()=>tone(990,0.1,'square',0,0.05),90)}
   else if(c.k==='fix'){const w=G.wallMax&&G.wallHp<G.wallMax,was=G.wallHp<=0;if(w)G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.25);G.hp=Math.min(G.maxHp,G.hp+G.maxHp*0.15);
     float(c.x,c.y-10,w?(was?'WALLS REBUILT':'WALLS +25%'):'FIELD DRESSING +15%','#8fe08a',13);sfx('wall')}
@@ -7994,6 +7994,7 @@ const MEDALS=[
  {id:'bombsquad',ic:'truck',name:'Bomb Squad',desc:'Stop 25 car bombs before they reach the walls.',st:'vbied',goal:25,cash:900,tiers:[150,750]},
  {id:'holdout',ic:'hp',name:'Holdout',desc:'Clear 3 waves in one run with the walls breached.',st:'holdout',goal:3,cash:1000,tiers:[6,12]},
  {id:'flankguard',ic:'threat',name:'Flank Guard',desc:'Repel 5 ambushes.',st:'ambush',goal:5,cash:800,tiers:[20,60]},
+ {id:'scrounger',ic:'scav',name:'Scrounger',desc:'Grab 50 special supply crates (munitions, engineer, intel, air support).',st:'crates',goal:50,cash:800,tiers:[250,1000]},
  {id:'roadblock',ic:'walls',name:'Roadblock',desc:'Repel 5 suicide convoys.',st:'convoy',goal:5,cash:900,tiers:[20,60]},
  {id:'swatter',ic:'aagun',name:'Swatter',desc:'Repel 5 drone swarms.',st:'swarm',goal:5,cash:800,tiers:[20,60]},
  {id:'counterbat',ic:'arty',name:'Counter-Battery',desc:'Repel 5 artillery barrages.',st:'barrage',goal:5,cash:800,tiers:[20,60]},
