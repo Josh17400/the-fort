@@ -1141,7 +1141,7 @@ const U=[
  {id:'apc',late:1,wave:10,need:[["walls", 4], ["truck", 2], ["vision", 6]],cat:'HEAVY ARMOR',name:'APC Squadron',max:Infinity,cost:1100,g:1.85,desc:'Armored carriers that back up the lanes with heavy weapons.',val:l=>l?Math.min(2,Math.ceil(l/3))+' '+pl(Math.min(2,Math.ceil(l/3)),'APC')+' · '+f1(apcDmg(l))+' splash':'none'},
  {id:'turret',late:1,wave:8,need:[["walls", 3], ["squad", 2]],cat:'HEAVY ARMOR',name:'MG Nests',max:Infinity,cost:500,g:1.75,desc:'Machine-gun nests on the fort corners (up to 4), then heavier guns. They can hit aircraft.',val:l=>l?Math.min(4,l)+' '+pl(Math.min(4,l),'nest')+' · '+f1(turretDmg(l)*(l>4?1+0.25*(l-4):1))+' dmg · 5/s':'none'},
  {id:'sniper',late:1,wave:10,need:[["walls", 4], ["vision", 5], ["crit", 2]],cat:'HEAVY ARMOR',name:'Sniper Tower',max:Infinity,cost:900,g:1.6,desc:'A marksman who always picks off the toughest enemy.',val:l=>l?f1(sniperDmg(l))+' dmg / '+sniperCd(l).toFixed(1)+'s':'none'},
- {id:'tank',late:1,wave:15,need:[["walls", 5], ["apc", 1], ["vision", 7]],cat:'HEAVY ARMOR',name:'Tank Platoon',max:Infinity,cost:1800,g:1.9,desc:'Tanks patrol outside the walls firing explosive shells.',val:l=>l?Math.min(3,Math.ceil(l/2))+' '+pl(Math.min(3,Math.ceil(l/2)),'tank')+' · '+f1(tankDmg(l))+' dmg':'none'},
+ {id:'tank',from:6,late:1,wave:15,need:[["walls", 5], ["apc", 1], ["vision", 7]],cat:'HEAVY ARMOR',name:'Tank Platoon',max:Infinity,cost:1800,g:1.9,desc:'Tanks patrol outside the walls firing explosive shells.',val:l=>l?Math.min(3,Math.ceil(l/2))+' '+pl(Math.min(3,Math.ceil(l/2)),'tank')+' · '+f1(tankDmg(l))+' dmg':'none'},
  {id:'depot',wave:6,need:[["truck", 1], ["vision", 5]],cat:'LOGISTICS',name:'Fuel Depot',max:1,cost:900,g:1,desc:'A fuel farm beyond the vehicle lanes. Vehicles and aircraft refuel here far faster than from field cans, several at once. Enemies will try to torch it: if it burns, nothing refuels for the rest of the run.',val:l=>l?depotSlots(L('dcap'))+' bays · '+depotRefuelT(L('dcap')).toFixed(0)+'s full tank':'field cans · '+FIELD_T+'s full tank'},
  {id:'dcap',wave:8,need:[["depot", 1]],cat:'LOGISTICS',name:'Pump Capacity',max:Infinity,cost:450,g:1.6,desc:'High-flow pumps and extra fueling bays at the depot.',val:l=>depotSlots(l)+' bays · '+depotRefuelT(l).toFixed(1)+'s full tank'},
  {id:'darmor',late:1,wave:8,need:[["depot", 1]],cat:'LOGISTICS',name:'Depot Hardening',max:Infinity,cost:500,g:1.6,desc:'Blast berms and armored tanks. The depot soaks up far more punishment.',val:l=>f1(depotHpAt(l))+' depot HP'},
@@ -1788,8 +1788,10 @@ function medalCard(m,got){const on=got[m.id]!=null,v=Math.min(m.goal,medalVal(m)
         :`<div class="meter"><i style="width:${(100*v/m.goal).toFixed(1)}%"></i></div><div class="mr"><span>${fmtN(v)} / ${fmtN(m.goal)}</span><span class="rw">$${fmtN(c)} · +3 RP</span></div><span class="rwv">${fmtN(v)}/${fmtN(m.goal)}</span>`)
     +'</div></div>'}
 function renderMedals(){const got=MG(),n=Object.keys(got).length,prog=m=>Math.min(1,medalVal(m)/m.goal);
-  const un=MEDALS.filter(m=>got[m.id]==null).sort((a,b)=>prog(b)-prog(a)),close=un.slice(0,3),rest=un.slice(3),won=MEDALS.filter(m=>got[m.id]!=null),dirs=MS().dirs;
-  let h=`<div class="vhead"><div><h1 class="vt">DECORATIONS</h1><p class="vsub">Each medal pays out once and adds +1% cash to every run, for good.</p></div><div class="mhead"><span class="mcount">${n}<em> / ${MEDALS.length}</em></span>${n?`<span class="mbon">+${medalPts()}% cash for good</span>`:''}</div></div>`
+  // slow roll-out: an unearned medal only shows once your best wave reaches the content it is about (m.from)
+  const shown=m=>got[m.id]!=null||S.best>=(m.from||0),vis=MEDALS.filter(shown).length;
+  const un=MEDALS.filter(m=>got[m.id]==null&&shown(m)).sort((a,b)=>prog(b)-prog(a)),close=un.slice(0,3),rest=un.slice(3),won=MEDALS.filter(m=>got[m.id]!=null),dirs=MS().dirs;
+  let h=`<div class="vhead"><div><h1 class="vt">DECORATIONS</h1><p class="vsub">Each medal pays out once and adds +1% cash to every run, for good.</p></div><div class="mhead"><span class="mcount">${n}<em> / ${vis}</em></span>${n?`<span class="mbon">+${medalPts()}% cash for good</span>`:''}</div></div>`
     +`<div class="eyebrow msec">SERVICE RECORD</div><div class="srec"><span class="tag">${ic('trophy',14)}Best wave <b>${fmtN(S.best)}</b></span><span class="tag">${ic('skull',14)}Lifetime kills <b>${fmtN(S.tkills)}</b></span>`
     +(dirs?`<span class="tag">${ic('star',14)}Most directives in a run <b>${fmtN(dirs)}</b></span>`:'')+'</div>';
   if(close.length)h+=`<div class="eyebrow msec">CLOSEST TO EARN</div>${n?'':'<p class="mempty">No decorations yet. The closest three are below.</p>'}<div class="mgrid close">${close.map(m=>medalCard(m,got)).join('')}</div>`;
@@ -6269,7 +6271,7 @@ const hasFuel=()=>G.units.some(u=>u.fuel!=null)||G.fleet.length>0;
 const PERKS=[
  {id:'hollow',ic:'dmg',name:'Hollow-Point Rounds',desc:'Small-arms damage +25% for you and your squad.'},
  {id:'drill',ic:'rate',name:'Rapid Reload Drill',desc:'You and every squad soldier fire 15% faster.'},
- {id:'eagle',ic:'crit',name:'Eagle Eye',desc:'+15% critical-hit chance on small-arms shots.',ok:()=>critChance()<0.9},
+ {id:'eagle',from:6,ic:'crit',name:'Eagle Eye',desc:'+15% critical-hit chance on small-arms shots.',ok:()=>critChance()<0.9},
  {id:'tungsten',ic:'crit',name:'Tungsten Cores',desc:'Small-arms rounds pierce 15% more armor.'},
  {id:'overwatch',ic:'vision',name:'Overwatch',desc:'Every gun, shell, missile and bomb you own deals +20% damage.'},
  {id:'masons',ic:'walls',name:'Combat Engineers',desc:'Walls +35% max HP and fully rebuilt right now, even if breached.',ok:()=>G.wallMax>0,go:()=>{G.wallMax*=1.35;G.wallHp=G.wallMax}},
@@ -8000,31 +8002,31 @@ Object.assign(IC,{medal:'M7 2l3.5 7.2M17 2l-3.5 7.2M7 2h10M12 15.5m-6 0a6 6 0 1 
 const MEDALS=[
  {id:'baptism',ic:'fort',name:'Baptism of Fire',desc:'Hold the fort through wave 5.',st:'wave',goal:5,cash:150},
  {id:'hold',ic:'walls',name:'Hold the Line',desc:'Hold the fort through wave 25.',st:'wave',goal:25,cash:1500},
- {id:'iron',ic:'armor',name:'Iron Curtain',desc:'Hold the fort through wave 50.',st:'wave',goal:50,cash:6000},
- {id:'unbroken',ic:'walls',name:'Unbroken',desc:'Hold the fort through wave 75.',st:'wave',goal:75,cash:15000},
- {id:'legend',ic:'trophy',name:'Legend of the Fort',desc:'Hold the fort through wave 100.',st:'wave',goal:100,cash:40000},
+ {id:'iron',from:25,ic:'armor',name:'Iron Curtain',desc:'Hold the fort through wave 50.',st:'wave',goal:50,cash:6000},
+ {id:'unbroken',from:50,ic:'walls',name:'Unbroken',desc:'Hold the fort through wave 75.',st:'wave',goal:75,cash:15000},
+ {id:'legend',from:75,ic:'trophy',name:'Legend of the Fort',desc:'Hold the fort through wave 100.',st:'wave',goal:100,cash:40000},
  {id:'eagle',ic:'uav',name:'Eagle Eye',desc:'Shoot down 5 recon UAVs.',st:'uav',goal:5,cash:600,tiers:[25,100]},
- {id:'storm',ic:'storm',name:'Storm Rider',desc:'Repel 5 sandstorms.',st:'storm',goal:5,cash:700,tiers:[20,60]},
- {id:'canopy',ic:'chute',name:'Canopy Buster',desc:'Shoot 100 paratroopers before they land.',st:'chute',goal:100,cash:700,tiers:[500,2000]},
- {id:'stonewall',ic:'threat',name:'Stonewall',desc:'Repel 5 blitz waves.',st:'blitz',goal:5,cash:700,tiers:[20,60]},
- {id:'wrench',ic:'repair',name:'Wrench Breaker',desc:'Take out 50 enemy combat mechanics.',st:'mech',goal:50,cash:900,tiers:[250,1000]},
- {id:'bombsquad',ic:'truck',name:'Bomb Squad',desc:'Stop 25 car bombs before they reach the walls.',st:'vbied',goal:25,cash:900,tiers:[150,750]},
- {id:'nightowl',ic:'vision',name:'Night Owl',desc:'Clear 25 waves in the dark.',st:'night',goal:25,cash:800,tiers:[100,400]},
- {id:'holdout',ic:'hp',name:'Holdout',desc:'Clear 3 waves in one run with the walls breached.',st:'holdout',goal:3,cash:1000,tiers:[6,12]},
- {id:'flankguard',ic:'threat',name:'Flank Guard',desc:'Repel 5 ambushes.',st:'ambush',goal:5,cash:800,tiers:[20,60]},
- {id:'scrounger',ic:'scav',name:'Scrounger',desc:'Grab 50 special supply crates (munitions, engineer, intel, air support).',st:'crates',goal:50,cash:800,tiers:[250,1000]},
- {id:'roadblock',ic:'walls',name:'Roadblock',desc:'Repel 5 suicide convoys.',st:'convoy',goal:5,cash:900,tiers:[20,60]},
- {id:'swatter',ic:'aagun',name:'Swatter',desc:'Repel 5 drone swarms.',st:'swarm',goal:5,cash:800,tiers:[20,60]},
- {id:'counterbat',ic:'arty',name:'Counter-Battery',desc:'Repel 5 artillery barrages.',st:'barrage',goal:5,cash:800,tiers:[20,60]},
+ {id:'storm',from:6,ic:'storm',name:'Storm Rider',desc:'Repel 5 sandstorms.',st:'storm',goal:5,cash:700,tiers:[20,60]},
+ {id:'canopy',from:8,ic:'chute',name:'Canopy Buster',desc:'Shoot 100 paratroopers before they land.',st:'chute',goal:100,cash:700,tiers:[500,2000]},
+ {id:'stonewall',from:5,ic:'threat',name:'Stonewall',desc:'Repel 5 blitz waves.',st:'blitz',goal:5,cash:700,tiers:[20,60]},
+ {id:'wrench',from:20,ic:'repair',name:'Wrench Breaker',desc:'Take out 50 enemy combat mechanics.',st:'mech',goal:50,cash:900,tiers:[250,1000]},
+ {id:'bombsquad',from:16,ic:'truck',name:'Bomb Squad',desc:'Stop 25 car bombs before they reach the walls.',st:'vbied',goal:25,cash:900,tiers:[150,750]},
+ {id:'nightowl',from:4,ic:'vision',name:'Night Owl',desc:'Clear 25 waves in the dark.',st:'night',goal:25,cash:800,tiers:[100,400]},
+ {id:'holdout',from:10,ic:'hp',name:'Holdout',desc:'Clear 3 waves in one run with the walls breached.',st:'holdout',goal:3,cash:1000,tiers:[6,12]},
+ {id:'flankguard',from:7,ic:'threat',name:'Flank Guard',desc:'Repel 5 ambushes.',st:'ambush',goal:5,cash:800,tiers:[20,60]},
+ {id:'scrounger',from:8,ic:'scav',name:'Scrounger',desc:'Grab 50 special supply crates (munitions, engineer, intel, air support).',st:'crates',goal:50,cash:800,tiers:[250,1000]},
+ {id:'roadblock',from:18,ic:'walls',name:'Roadblock',desc:'Repel 5 suicide convoys.',st:'convoy',goal:5,cash:900,tiers:[20,60]},
+ {id:'swatter',from:12,ic:'aagun',name:'Swatter',desc:'Repel 5 drone swarms.',st:'swarm',goal:5,cash:800,tiers:[20,60]},
+ {id:'counterbat',from:15,ic:'arty',name:'Counter-Battery',desc:'Repel 5 artillery barrages.',st:'barrage',goal:5,cash:800,tiers:[20,60]},
  {id:'tank',ic:'tank',name:'Tank Hunter',desc:'Destroy 25 enemy armored vehicles (tanks, carriers, rocket launchers).',st:'tank',goal:25,cash:900,tiers:[150,750]},
- {id:'stinger',ic:'sniper',name:'Clear Skies',desc:'Take out 50 MANPADS teams before they bring your aircraft down.',st:'manpads',goal:50,cash:900,tiers:[300,1500]},
- {id:'sky',ic:'aagun',name:'Sky Shield',desc:'Down 250 enemy aircraft.',st:'air',goal:250,cash:900,tiers:[1500,7500]},
- {id:'giant',ic:'gunship',name:'Giant Killer',desc:'Bring down a heavy gunship.',st:'gunship',goal:1,cash:2000,tiers:[5,20]},
- {id:'demo',ic:'nade',name:'Demolitions',desc:'Score 100 kills with hand grenades.',st:'nade',goal:100,cash:600,tiers:[600,3000]},
+ {id:'stinger',from:14,ic:'sniper',name:'Clear Skies',desc:'Take out 50 MANPADS teams before they bring your aircraft down.',st:'manpads',goal:50,cash:900,tiers:[300,1500]},
+ {id:'sky',from:7,ic:'aagun',name:'Sky Shield',desc:'Down 250 enemy aircraft.',st:'air',goal:250,cash:900,tiers:[1500,7500]},
+ {id:'giant',from:25,ic:'gunship',name:'Giant Killer',desc:'Bring down a heavy gunship.',st:'gunship',goal:1,cash:2000,tiers:[5,20]},
+ {id:'demo',from:3,ic:'nade',name:'Demolitions',desc:'Score 100 kills with hand grenades.',st:'nade',goal:100,cash:600,tiers:[600,3000]},
  {id:'streak',ic:'crit',name:'Hot Streak',desc:'Chain an 11-kill aimed-fire streak for the full cash bonus.',st:'streak',goal:11,cash:400},
- {id:'flawless',ic:'star',name:'Untouchable',desc:'Clear a wave from 15 on without the fort taking a hit.',st:'flawless',goal:1,cash:1200,tiers:[5,20]},
- {id:'decorated',ic:'trophy',name:'Decorated',desc:'Hold 8 directive ranks in a single run.',st:'dirs',goal:8,cash:1000},
- {id:'forward',ic:'play',name:'Forward Deployed',desc:'Deploy straight into a checkpoint wave.',st:'cp',goal:1,cash:500},
+ {id:'flawless',from:15,ic:'star',name:'Untouchable',desc:'Clear a wave from 15 on without the fort taking a hit.',st:'flawless',goal:1,cash:1200,tiers:[5,20]},
+ {id:'decorated',from:5,ic:'trophy',name:'Decorated',desc:'Hold 8 directive ranks in a single run.',st:'dirs',goal:8,cash:1000},
+ {id:'forward',from:20,ic:'play',name:'Forward Deployed',desc:'Deploy straight into a checkpoint wave.',st:'cp',goal:1,cash:500},
  {id:'centurion',ic:'skull',name:'Centurion',desc:'Rack up 2,500 career kills.',st:'kills',goal:2500,cash:800,tiers:[25000,250000]}];
 const MS=()=>S.ms||(S.ms={}),MG=()=>S.mg||(S.mg={}),MT=()=>S.mt||(S.mt={});
 // medal ranks: a medal with tiers:[g2,g3] earns ★★ and ★★★ past its goal (x3 / x8 cash, +1% cash each, no RP). medalPts counts medals + ranks
