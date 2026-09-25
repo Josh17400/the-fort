@@ -1039,6 +1039,8 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
     <div class="set"><span class="st">How to play<small>Controls, the loop and battle tips</small></span><button class="btn sm" id="howBtn">OPEN</button></div>
     <div class="set"><span class="st">Replay tips<small>Show the one-time battle tips again</small></span><button class="btn sm" id="tipsBtn">RESET TIPS</button></div>
     <div class="set-sec eyebrow">DATA</div>
+    <div class="set"><span class="st">Back up progress<small>Copies a save code: keep it somewhere safe in case the app's storage is cleared</small></span><button class="btn sm" id="bakBtn">COPY CODE</button></div>
+    <div class="set"><span class="st">Restore progress<small>Paste a save code, then tap RESTORE twice</small><input id="bakIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="FORT1:..." style="margin-top:6px;width:100%;box-sizing:border-box;font:16px monospace;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:inherit"></span><button class="btn sm" id="bakRestore">RESTORE</button></div>
     <div class="set"><span class="st">Reset progress<small>Wipes money, upgrades, research and medals</small></span><button class="btn danger sm" id="resetBtn">RESET</button></div>
   </div>
   <div class="sh-foot"><button class="btn pri" id="backBtn">DONE</button></div>
@@ -1849,6 +1851,17 @@ $('sGfx').onchange=e=>{S.set.gfx=e.target.value;applyGfx();save()};
 $('sRm').onchange=e=>{S.set.reduceMotion=e.target.checked;applyUiPrefs();save()};
 $('sLeft').onchange=e=>{S.set.leftHand=e.target.checked;applyUiPrefs();save()};
 $('tipsBtn').onclick=()=>{S.set.tips={};save();toast('Tips will show again','star')};
+// save backup: FORT1: + base64(JSON of S). Restore validates the shape, arms like RESET, and refuses mid-run.
+$('bakBtn').onclick=()=>{const code='FORT1:'+btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+  const done=()=>toast('Save code copied','star'),fail=()=>{const i=$('bakIn');i.value=code;i.focus();i.select();toast('Copy the code from the box below','star')};
+  try{navigator.clipboard.writeText(code).then(done,fail)}catch(e){fail()}};
+$('bakRestore').onclick=e=>{if(running)return;const b=e.currentTarget,raw=($('bakIn').value||'').trim();let d=null;
+  try{if(raw.startsWith('FORT1:'))d=JSON.parse(decodeURIComponent(escape(atob(raw.slice(6)))))}catch(err){d=null}
+  if(!d||typeof d!=='object'||Array.isArray(d)||typeof d.lv!=='object'){toast('That is not a valid save code','close');return}
+  if(!b.dataset.arm){b.dataset.arm=1;b.textContent='TAP TO CONFIRM';clearTimeout(b._t);b._t=setTimeout(()=>{delete b.dataset.arm;b.textContent='RESTORE'},4000);return}
+  clearTimeout(b._t);delete b.dataset.arm;b.textContent='RESTORE';d.set=Object.assign({},S.set,d.set||{});
+  try{localStorage.setItem('theFortSave',JSON.stringify(d))}catch(err){}loadSave();medalSync();lastRunMsg='';lastCause=null;lastAAR=null;_armFreeze=null;_manSet=false;$('bakIn').value='';
+  toast('Progress restored · best wave '+S.best,'star');renderHome()};
 $('resetBtn').onclick=e=>{if(running)return;const b=e.currentTarget;
   if(!b.dataset.arm){b.dataset.arm=1;b.textContent='TAP AGAIN TO WIPE';clearTimeout(b._t);b._t=setTimeout(()=>{delete b.dataset.arm;b.textContent='RESET'},4000);return}
   clearTimeout(b._t);delete b.dataset.arm;b.textContent='RESET';
