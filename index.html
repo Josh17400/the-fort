@@ -7831,9 +7831,10 @@ function hudArty(o,x,y,w,h){hudPanel(x,y,w,h);const t=G.artyT,m=artyCdNow(),rdy=
 function hudBars(o,x,y,w,h){const walls=G.wallMax>0,desk=o.mode==='desk',low=G.hp/G.maxHp<0.3;hudPanel(x,y,w,h,low?'alert':'');
   const key=x+'|'+w;if(o.gKey!==key){o.gKey=key;const g1=ctx.createLinearGradient(x,0,x+w,0);g1.addColorStop(0,'#a8322a');g1.addColorStop(1,'#ef5a4f');
     const g2=ctx.createLinearGradient(x,0,x+w,0);g2.addColorStop(0,'#7d6638');g2.addColorStop(1,'#c9a86a');o.gHp=g1;o.gWl=g2}
-  const rows=[];if(walls)rows.push({k:'walls',br:G.wallHp<=0,lab:G.wallHp>0?'WALLS':'BREACHED',ic:'walls',v:Math.max(0,G.wallHp),m:G.wallMax,gh:G._gw,g:o.gWl});
+  const wr=walls&&L('repair')>0&&G.wallHp>0&&G.wallHp<G.wallMax,wp=wr&&G.time-(G.wallHitT??-9)<=repairHold();   // label tint: amber = repairs pinned by fire, green = engineers at work
+  const rows=[];if(walls)rows.push({k:'walls',br:G.wallHp<=0,lab:G.wallHp>0?'WALLS':'BREACHED',ic:'walls',v:Math.max(0,G.wallHp),m:G.wallMax,gh:G._gw,g:o.gWl,lc:wp?'#ffb45a':wr?'#8fe08a':null});
   rows.push({k:'hp',lab:'HEALTH',ic:'hp',v:Math.max(0,G.hp),m:G.maxHp,gh:G._gh,g:o.gHp,low});
-  rows.forEach((r,i)=>{const rat=Math.max(0,Math.min(1,r.v/r.m)),vt=desk?hN(Math.ceil(r.v))+' / '+hN(r.m):hN(Math.ceil(r.v))+'/'+hN(r.m),vc=r.low?HT.redHi:r.br?HT.redHi:HT.text,lc=r.br?HT.redHi:HT.text2;
+  rows.forEach((r,i)=>{const rat=Math.max(0,Math.min(1,r.v/r.m)),vt=desk?hN(Math.ceil(r.v))+' / '+hN(r.m):hN(Math.ceil(r.v))+'/'+hN(r.m),vc=r.low?HT.redHi:r.br?HT.redHi:HT.text,lc=r.br?HT.redHi:r.lc||HT.text2;
     let tx,ty,tw,th;
     if(desk){const ry=y+10+i*28,vf='800 13px Oxanium,sans-serif',vw=hMeasure(vt,vf);cIcon(r.ic,x+12,ry+3,14,r.br?HT.redHi:HT.text2,2.2);
       ctx.font='600 11px Oxanium,sans-serif';ctx.letterSpacing='1.3px';ctx.textAlign='left';ctx.fillStyle=lc;ctx.fillText(r.lab,x+32,ry+14);ctx.letterSpacing='0px';
