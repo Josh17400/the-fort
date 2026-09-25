@@ -2208,7 +2208,7 @@ function fire(s,e,mult=1){const m0=mult;
 // src = attacker type; G.threat keeps a decaying tally (x0.6 per wave) so the after-action report names what actually broke you
 function damageFort(d,src){d*=fortPress(G.wave);if(src)G.threat[src]=(G.threat[src]||0)+d;G.wHit=1;
   if(G.shT>0){sgShieldHit();return}   // EM Armor Screen up over a fresh breach
-  if(wallsUp()){G.wallHitT=G.time;G.wallHp-=d*(1-Math.min(0.5,0.05*L('armor')));sfx('wall');if(G.wallHp<=0){G.wallHp=0;G.breachW=G.wave;banner('WALLS BREACHED!','','','crit');sfx('breach');shake(8);sgBreach()}}
+  if(wallsUp()){G.wallHitT=G.time;if(L('repair')&&G.wallHp<G.wallMax*0.7&&!seen().ev_wallhold)spotted('ev_wallhold');G.wallHp-=d*(1-Math.min(0.5,0.05*L('armor')));sfx('wall');if(G.wallHp<=0){G.wallHp=0;G.breachW=G.wave;banner('WALLS BREACHED!','','','crit');sfx('breach');shake(8);sgBreach()}}
   else{G.hp-=d;G.hurtT=0.3;sfx('hurt');shake(3);if(G.hp<=0&&!G.over)endRun()}}
 // ================= ENEMY ARMOR & SUPPORT WEAPONS =================
 // Vehicle guns fire from the muzzle end of the hull toward the aim point (a wall face, or the depot). dep: hit the depot, not the fort.
@@ -6320,6 +6320,7 @@ Object.assign(INTEL,{
  ev_para:['Airborne Assault',3,'Transports drop paratroopers just outside your wire. They can\'t fight under the canopy: shoot them before they land. Clearing the wave pays +50%.'],
  ev_blitz:['Blitz',2,'A mass rush of light infantry: 20% more hostiles, arriving faster. Auto-fire, wire and frag rounds shine. Clearing the wave pays +50%.'],
  ev_armor:['Armored Column',4,'An enemy tank leads a column of heavy troopers. Artillery, armor and airstrikes crack it open. Clearing the wave pays +60%.'],
+ ev_wallhold:['Walls Under Fire',0,'Engineers cannot patch walls that are taking hits. Repairs restart 3s after the last hit, so clear the attackers to let the walls recover.'],
  ev_swarm:['Drone Swarm',3,'Flights of kamikaze drones fly over your wire and mines and dive into the walls. AA guns, MG nests, Tesla coils and auto-fire thin them out. Clearing the wave pays +50%.'],
  ev_barrage:['Artillery Barrage',3,'Mortar teams set up in the fog and keep shelling the fort, with marksmen covering them. Each launch gives a team away for a moment: lock on, or let artillery and TARGET: THREATS hunt them. Clearing the wave pays +60%.']});
 const CHUTE_T=2.1,LAND_T=0.7,TRANS_V=150,TRANS_ALT=90;
@@ -6416,7 +6417,7 @@ function drawUavMarks(){const px=1/sc,t=G.time;
     for(let i=0;i<4;i++){const cx=e.x+(i&1?r:-r),cy=e.y+(i&2?r:-r),sx=i&1?-1:1,sy=i&2?-1:1;ctx.moveTo(cx+sx*tk,cy);ctx.lineTo(cx,cy);ctx.lineTo(cx,cy+sy*tk)}ctx.stroke();
     ctx.font=`800 ${(11*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle=`rgb(${UAV_COL})`;ctx.fillText('RECON UAV',e.x,e.y-r-4*px)}}
 // FIELD REPORT card art for a first-time event
-function evPreview(k){if(k==='armor')return drawPreview('boss');const c=$('intelCv'),W=c.width,main=ctx,grunt=t=>({type:t,r:ET[t].r,col:ET[t].col,moving:false,wob:0,flash:0});
+function evPreview(k){if(k==='armor')return drawPreview('boss');if(k==='barrage')return drawPreview('mortar');if(k==='swarm')return drawPreview('drone');if(k==='wallhold')return cratePreview('fix');const c=$('intelCv'),W=c.width,main=ctx,grunt=t=>({type:t,r:ET[t].r,col:ET[t].col,moving:false,wob:0,flash:0});
   ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,W);
     if(k==='storm'){let f=W/24;ctx.setTransform(f,0,0,f,W/2+100*f,W/2);drawEnemy(grunt('grunt'),-100,0);ctx.setTransform(1,0,0,1,0,0);
       const g=ctx.createRadialGradient(W/2,W/2,W*0.1,W/2,W/2,W*0.6);g.addColorStop(0,'rgba(200,160,100,.25)');g.addColorStop(1,'rgba(160,126,80,.95)');ctx.fillStyle=g;ctx.fillRect(0,0,W,W);
