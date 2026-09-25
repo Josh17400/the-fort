@@ -2127,12 +2127,17 @@ function spawn(type,at){if(SKY[type])return spawnSky(type);const d=ET[type],w=G.
     // every enemy keeps one hidden class and the hot per-tick loops over G.enemies stay monomorphic instead of seeing hundreds of shapes
     moving:undefined,dead:undefined,rev:undefined,dep:undefined,face:undefined,fwd:undefined,bu:undefined,fl:undefined,lunge:undefined,burn:undefined,
     stun:undefined,stunCD:undefined,slF:undefined,slT:undefined,mkB:undefined,mkT:undefined,_df:undefined,chute:undefined,chuteMax:undefined,landT:undefined,
-    _sx:undefined,_sy:undefined,_top:undefined,_cull:undefined,vtT:undefined,vt:undefined,vp:undefined,fsite:undefined,vbied:undefined,vsn:undefined});
+    _sx:undefined,_sy:undefined,_top:undefined,_cull:undefined,vtT:undefined,vt:undefined,vp:undefined,fsite:undefined,vbied:undefined,vsn:undefined,mech:undefined,mechT:undefined,mechOf:undefined});
   const e=G.enemies[G.enemies.length-1];if(d.boss)trackBoss(e);
   if(type==='technical'&&!at&&w>=VBIED_W&&R()<(G.ev==='convoy'?0.5:VBIED_P))makeVbied(e);
+  if(d.veh&&!at&&w>=MECH_W&&R()<MECH_P){const a2=R()*TAU,m=spawn('grunt',{x:e.x+Math.cos(a2)*(e.r+10),y:e.y+Math.sin(a2)*(e.r+10)});m.mech=1;m.mechOf=e;m.rew*=2;G.waveTotal++}   // combat mechanic escorts some vehicles
   return e}
 // VBIED: from VBIED_W some technicals come rigged as car bombs; shot before contact they still go up and hurt nearby hostiles
-const VBIED_W=16,VBIED_P=0.2;
+const VBIED_W=16,VBIED_P=0.2,MECH_W=20,MECH_P=0.3,MECH_R=70,MECH_HEAL=0.03;
+// mechanic tick: repairs the most damaged enemy vehicle within MECH_R by MECH_HEAL of its max HP per second (visible sparks)
+function mechTick(e,dt){const v=e.mechOf;if(v&&!v.dead){const dx=v.x-e.x,dy=v.y-e.y,dd=hyp(dx,dy);if(dd>v.r+14){const st=Math.min(dd-v.r-14,Math.max(e.spd,(v.spd||0)*1.2)*dt);e.x+=dx/dd*st;e.y+=dy/dd*st}}   // tags along with its vehicle
+  let b=null,bl=1;for(const o of G.enemies){if(o.dead||!o.veh||o.hp>=o.max)continue;const q=o.hp/o.max;if(q<bl&&within(o,e.x,e.y,MECH_R+o.r)){bl=q;b=o}}
+  if(!b)return;b.hp=Math.min(b.max,b.hp+b.max*MECH_HEAL*dt);e.mechT=G.time;if(R()<dt*6)spark(b.x+(R()-.5)*b.r,b.y+(R()-.5)*b.r,2,50,['#9cf5a0','#ffffff'],0.25,1.1)}
 function vbiedBlast(e){explode(e.x,e.y,56,0);fireball(e.x,e.y,70,0.9);ring(e.x,e.y,120,0.6,'255,200,140',4);light(e.x,e.y,160,'255,150,60',0.6);puff(e.x,e.y,8,14,3,'40,36,32',30,0.7);sfx('boom',e.x,e.y,3);shake(12)}   // wall hit: a truck-sized blast
 function makeVbied(e){e.vbied=1;e.bomb=true;e.range=0;e.vp=true;e.dmg=ET.bomber.dmg*3*waveDmg(G.wave);e.spd*=1.35;e.hp*=0.8;e.max*=0.8;e.rew*=1.5}   // no gun: rams the walls
 // ---- enemy armor: from wave 6 each wave draws a vehicle roster that takes a share of the wave's slots (a vehicle is worth a
@@ -2318,6 +2323,9 @@ function updateEShots(dt){
   if(G.vwrecks.length&&G.time-G.vwrecks[0].t0>VWRECK_T)G.vwrecks.shift()}
 // drawn above the fog: incoming ordnance, impact warning rings, and red brackets on a crew that just gave itself away
 function drawEShots(){const px=1/sc,t=G.time,lw=Math.max(1,1.4*px);
+  for(const e of G.enemies){if(!e.mech||e.dead||!visible(e))continue;const c=G.time-(e.mechT??-9)<0.4?'#9cf5a0':'#5fbf6a';   // mechanic: green cross + tag (bright while repairing)
+    box(e.x-0.7*px-1,e.y-e.r-7*px-3,1.4*px+2,5*px+4,c);box(e.x-2.5*px-2,e.y-e.r-5.2*px-1.2,5*px+4,1.4*px+2,c);
+    ctx.font=`700 ${(8*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle=c;ctx.fillText('MECH',e.x,e.y-e.r-10*px-4)}
   for(const e of G.enemies){if(!e.vbied||e.dead||!visible(e))continue;const on=Math.sin(t*14+e.wob)>0;   // car bomb: blinking red beacon + tag
     if(on){ell(e.x,e.y,2.2*px+1,2.2*px+1,'#ff3b30');ell(e.x,e.y,6*px+3,6*px+3,'rgba(255,60,50,.3)')}
     ctx.font=`700 ${(9*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle='#ff8a70';ctx.fillText('VBIED',e.x,e.y-e.r-6*px)}
@@ -2357,7 +2365,7 @@ const PRIO_TIP={near:'every gun engages the closest enemy',threat:'guns hit what
 const prio=()=>S.set.prio;
 // THREATS weights: standoff shooters in position, aircraft, sappers and mortar/rocket crews x0.25; armor on the move x0.45;
 // melee halted at the walls x0.5; infantry still approaching x1
-const threatK=e=>e.vbied?0.12:e.air||e.bomb||e.stand||(e.range&&e.moving===false)?0.25:e.veh?0.45:e.moving===false?0.5:1;
+const threatK=e=>e.vbied?0.12:e.mech?0.3:e.air||e.bomb||e.stand||(e.range&&e.moving===false)?0.25:e.veh?0.45:e.moving===false?0.5:1;
 // lower score = engaged first: THREATS d*threatK(e); TOUGHEST on heavy guns -e.hp; otherwise d (distance, hyp). tMode: 1 / 2 / 0.
 // Scans take an optional second list (G.enemies then G.sky, the old concat order) instead of copying them. A candidate whose squared
 // distance already puts it past the HB band of the current best (or of the n-th best) can't win, so it is skipped before the
@@ -2429,6 +2437,7 @@ function update(dt){
   for(const e of G.enemies){
     if(e.dead)continue;e.flash-=dt;e.wob+=dt*8;if(e.rev>0)e.rev-=dt;
     if(!seen()[e.type]&&visible(e))spotted(e.type);
+    if(e.mech){mechTick(e,dt);if(!seen().ev_mech&&visible(e))spotted('ev_mech')}
     if(e.vbied&&!e.vsn&&visible(e)){e.vsn=1;if(!seen().ev_vbied)spotted('ev_vbied');if(G.time-(G.vbHorn??-9)>1.2){G.vbHorn=G.time;tone(415,0.16,'square',0,0.05);setTimeout(()=>tone(330,0.22,'square',0,0.05),170)}}   // car bomb in sight: horn
     if(e.chute>0){e.chute-=dt;if(e.chute<=0)chuteLand(e);continue}   // paratroopers are helpless until they touch down
     if(sigStatus(e,dt))continue;   // burning / stunned (research signatures)
@@ -6369,6 +6378,7 @@ Object.assign(INTEL,{
  ev_para:['Airborne Assault',3,'Transports drop paratroopers just outside your wire. They can\'t fight under the canopy: shoot them before they land. Clearing the wave pays +50%.'],
  ev_blitz:['Blitz',2,'A mass rush of light infantry: 20% more hostiles, arriving faster. Auto-fire, wire and frag rounds shine. Clearing the wave pays +50%.'],
  ev_armor:['Armored Column',4,'An enemy tank leads a column of heavy troopers. Artillery, armor and airstrikes crack it open. Clearing the wave pays +60%.'],
+ ev_mech:['Combat Mechanic',3,'A rifleman with a tool kit, marked by a green cross. He follows the armor and patches up damaged vehicles nearby. Kill him first or your shells are wasted. TARGET: THREATS ranks him high.'],
  ev_vbied:['Car Bomb',4,'A technical packed with explosives, marked by a blinking red light. It races straight for your walls and blows a huge hole in them. Kill it early: it detonates where it dies and hurts hostiles around it.'],
  ev_wallhold:['Walls Under Fire',0,'Engineers cannot patch walls that are taking hits. Repairs restart 3s after the last hit, so clear the attackers to let the walls recover.'],
  ev_resupply:['Resupply Drop',0,'Command pushes a supply run through: three special crates land around the fort at the start of the wave. Tap them before they fade.'],
@@ -6477,7 +6487,7 @@ function drawUavMarks(){const px=1/sc,t=G.time;
     for(let i=0;i<4;i++){const cx=e.x+(i&1?r:-r),cy=e.y+(i&2?r:-r),sx=i&1?-1:1,sy=i&2?-1:1;ctx.moveTo(cx+sx*tk,cy);ctx.lineTo(cx,cy);ctx.lineTo(cx,cy+sy*tk)}ctx.stroke();
     ctx.font=`800 ${(11*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle=`rgb(${UAV_COL})`;ctx.fillText('RECON UAV',e.x,e.y-r-4*px)}}
 // FIELD REPORT card art for a first-time event
-function evPreview(k){if(k==='armor')return drawPreview('boss');if(k==='barrage')return drawPreview('mortar');if(k==='swarm')return drawPreview('drone');if(k==='wallhold')return cratePreview('fix');if(k==='vbied'||k==='convoy')return drawPreview('technical');if(k==='ambush')return drawPreview('shooter');if(k==='resupply')return cratePreview('ammo');const c=$('intelCv'),W=c.width,main=ctx,grunt=t=>({type:t,r:ET[t].r,col:ET[t].col,moving:false,wob:0,flash:0});
+function evPreview(k){if(k==='armor')return drawPreview('boss');if(k==='barrage')return drawPreview('mortar');if(k==='swarm')return drawPreview('drone');if(k==='wallhold')return cratePreview('fix');if(k==='vbied'||k==='convoy')return drawPreview('technical');if(k==='mech')return drawPreview('grunt');if(k==='ambush')return drawPreview('shooter');if(k==='resupply')return cratePreview('ammo');const c=$('intelCv'),W=c.width,main=ctx,grunt=t=>({type:t,r:ET[t].r,col:ET[t].col,moving:false,wob:0,flash:0});
   ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,W);
     if(k==='storm'){let f=W/24;ctx.setTransform(f,0,0,f,W/2+100*f,W/2);drawEnemy(grunt('grunt'),-100,0);ctx.setTransform(1,0,0,1,0,0);
       const g=ctx.createRadialGradient(W/2,W/2,W*0.1,W/2,W/2,W*0.6);g.addColorStop(0,'rgba(200,160,100,.25)');g.addColorStop(1,'rgba(160,126,80,.95)');ctx.fillStyle=g;ctx.fillRect(0,0,W,W);
