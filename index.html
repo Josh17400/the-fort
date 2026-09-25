@@ -1589,7 +1589,7 @@ function manualHtml(full){const ctl=MOBILE?[['Tap','an enemy to lock on and fire
       ['Tap','a crate to grab it (colours in Battle Tips)'],['FRAG','then touch the ground to throw'],['AIR','then drag a line for an airstrike'],['Pinch','to zoom the battlefield']]
     :[['Click','an enemy to lock on and fire'],['Hold','to keep firing'],['G','throws a grenade at the cursor'],['Q','calls an airstrike'],['T','cycles the target doctrine'],['F','changes battle speed'],['Esc','pauses'],['Click','a crate to grab it (colours in Battle Tips)']];
   const tips=['Hold waves <b>3, 5, 10, 15…</b> to earn a Field Commendation: pick one of three directives for the run.',
-    'Battlefield events (sandstorms, paratroopers, blitzes, ambushes, armor columns, drone swarms, barrages, car-bomb convoys) pay a bonus when you clear them.',
+    'Battlefield events (sandstorms, paratroopers, blitzes, ambushes, resupply drops, armor columns, drone swarms, barrages, car-bomb convoys) pay a bonus when you clear them.',
     'Crates: <b>gold</b> cash, <b>red</b> munitions, <b>green</b> wall repair, <b>blue</b> intel on hidden enemies, <b>orange</b> a free airstrike.',
     'Walls only self-repair after <b>3s</b> without a hit: kill whatever is shooting them.',
     'From <b>wave 6</b> the enemy brings armor. Rifles barely scratch it: lean on mines, grenades, artillery and heavy guns.',
@@ -6358,6 +6358,7 @@ const EVENTS={
  para:{name:'AIRBORNE ASSAULT',tag:'AIRBORNE',from:8,bonus:0.5,col:'150,200,255',sub:'Paratroopers dropping at the walls · shoot the canopies'},
  blitz:{name:'BLITZ',tag:'BLITZ',from:5,bonus:0.5,col:'255,150,95',sub:'Light infantry rush · more hostiles, arriving faster'},
  armor:{name:'ARMORED COLUMN',tag:'ARMOR',from:13,bonus:0.6,col:'205,215,140',sub:'An enemy tank leads a heavy trooper column'},
+ resupply:{name:'RESUPPLY DROP',tag:'RESUPPLY',from:6,bonus:0.2,col:'140,220,150',sub:'Three supply crates inbound · grab them while you can'},
  ambush:{name:'AMBUSH',tag:'AMBUSH',from:7,bonus:0.5,col:'255,170,90',sub:'Infantry already inside your sight line on one flank'},
  convoy:{name:'SUICIDE CONVOY',tag:'CONVOY',from:18,bonus:0.6,col:'255,110,80',sub:'Car bombs racing for the walls · kill them early'},
  swarm:{name:'DRONE SWARM',tag:'SWARM',from:12,bonus:0.5,col:'255,210,110',sub:'Kamikaze drone flights inbound · AA, MG nests and auto-fire'},
@@ -6369,6 +6370,7 @@ Object.assign(INTEL,{
  ev_armor:['Armored Column',4,'An enemy tank leads a column of heavy troopers. Artillery, armor and airstrikes crack it open. Clearing the wave pays +60%.'],
  ev_vbied:['Car Bomb',4,'A technical packed with explosives, marked by a blinking red light. It races straight for your walls and blows a huge hole in them. Kill it early: it detonates where it dies and hurts hostiles around it.'],
  ev_wallhold:['Walls Under Fire',0,'Engineers cannot patch walls that are taking hits. Repairs restart 3s after the last hit, so clear the attackers to let the walls recover.'],
+ ev_resupply:['Resupply Drop',0,'Command pushes a supply run through: three special crates land around the fort at the start of the wave. Tap them before they fade.'],
  ev_ambush:['Ambush',3,'Part of the wave has crept in unseen and opens up from one flank, already inside your sight line. Swing your fire to that side fast: auto-fire, frag rounds and MG nests help. Clearing the wave pays +50%.'],
  ev_convoy:['Suicide Convoy',4,'Three car bombs lead the wave and half the technicals behind them are rigged too. Each one that reaches the walls tears a hole in them: mines, artillery and focused fire stop them early. Clearing the wave pays +60%.'],
  ev_swarm:['Drone Swarm',3,'Flights of kamikaze drones fly over your wire and mines and dive into the walls. AA guns, MG nests, Tesla coils and auto-fire thin them out. Clearing the wave pays +50%.'],
@@ -6382,6 +6384,7 @@ function evStart(){const w=G.wave,k=rollEvent(w);G.ev=k;if(!k)return;const E=EVE
   else if(k==='armor'){const t=spawn('boss');t.hp=t.max*=Math.min(0.55,0.4+0.015*(w-13));G.waveTotal++}
   else if(k==='para')airborne(w);
   else if(k==='swarm'){for(let i=0;i<2;i++){spawnSky('drone',Math.random()*TAU);G.waveTotal++}}
+  else if(k==='resupply'){for(const c of['ammo','fix',G.wave>=8?'strike':'cash'])dropCrate(c)}
   else if(k==='ambush'){const n=Math.min(24,Math.round(G.spawnLeft*0.3)),a=Math.random()*TAU,r=Math.max(blockHalf()+90,sight()*0.85);G.spawnLeft=Math.max(0,G.spawnLeft-n);
     for(let i=0;i<n;i++){const b=a+(Math.random()-.5)*0.7,d=r+Math.random()*30;spawn(i%3===2?'shooter':i%2?'runner':'grunt',{x:Math.cos(b)*d,y:Math.sin(b)*d})}
     const dir=['EAST','SOUTH-EAST','SOUTH','SOUTH-WEST','WEST','NORTH-WEST','NORTH','NORTH-EAST'][Math.round(((a%TAU)+TAU)%TAU/(TAU/8))%8];setTimeout(()=>{if(running)feed('CONTACT '+dir,'255,170,90','threat')},900)}
@@ -6473,7 +6476,7 @@ function drawUavMarks(){const px=1/sc,t=G.time;
     for(let i=0;i<4;i++){const cx=e.x+(i&1?r:-r),cy=e.y+(i&2?r:-r),sx=i&1?-1:1,sy=i&2?-1:1;ctx.moveTo(cx+sx*tk,cy);ctx.lineTo(cx,cy);ctx.lineTo(cx,cy+sy*tk)}ctx.stroke();
     ctx.font=`800 ${(11*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle=`rgb(${UAV_COL})`;ctx.fillText('RECON UAV',e.x,e.y-r-4*px)}}
 // FIELD REPORT card art for a first-time event
-function evPreview(k){if(k==='armor')return drawPreview('boss');if(k==='barrage')return drawPreview('mortar');if(k==='swarm')return drawPreview('drone');if(k==='wallhold')return cratePreview('fix');if(k==='vbied'||k==='convoy')return drawPreview('technical');if(k==='ambush')return drawPreview('shooter');const c=$('intelCv'),W=c.width,main=ctx,grunt=t=>({type:t,r:ET[t].r,col:ET[t].col,moving:false,wob:0,flash:0});
+function evPreview(k){if(k==='armor')return drawPreview('boss');if(k==='barrage')return drawPreview('mortar');if(k==='swarm')return drawPreview('drone');if(k==='wallhold')return cratePreview('fix');if(k==='vbied'||k==='convoy')return drawPreview('technical');if(k==='ambush')return drawPreview('shooter');if(k==='resupply')return cratePreview('ammo');const c=$('intelCv'),W=c.width,main=ctx,grunt=t=>({type:t,r:ET[t].r,col:ET[t].col,moving:false,wob:0,flash:0});
   ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,W);
     if(k==='storm'){let f=W/24;ctx.setTransform(f,0,0,f,W/2+100*f,W/2);drawEnemy(grunt('grunt'),-100,0);ctx.setTransform(1,0,0,1,0,0);
       const g=ctx.createRadialGradient(W/2,W/2,W*0.1,W/2,W/2,W*0.6);g.addColorStop(0,'rgba(200,160,100,.25)');g.addColorStop(1,'rgba(160,126,80,.95)');ctx.fillStyle=g;ctx.fillRect(0,0,W,W);
