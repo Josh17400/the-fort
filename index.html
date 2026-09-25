@@ -1595,14 +1595,15 @@ function manualHtml(full){const ctl=MOBILE?[['Tap','an enemy to lock on and fire
     'Walls only self-repair after <b>3s</b> without a hit: kill whatever is shooting them.',
     'From <b>wave 6</b> the enemy brings armor. Rifles barely scratch it: lean on mines, grenades, artillery and heavy guns. Green-cross mechanics repair it: kill them first.',
     'Upgrades unlock other upgrades, and deeper waves open new tech. Research tiers deploy with your next run.'];
+  const tipGate=[0,5,8,-1,6,0],tipsNow=tips.filter((t,i)=>tipGate[i]<0?L('repair')>0:S.best>=tipGate[i]);   // short manual rolls tips out with progress; the full guide keeps them all
   const c=`<div class="mgrid2">${ctl.map(([k,t])=>`<div class="krow"><kbd>${k}</kbd><span>${t}</span></div>`).join('')}</div>`;
-  if(!full)return`<div class="subh">CONTROLS</div>${c}<div class="subh">BATTLE TIPS</div><ul class="mtips">${tips.map(t=>`<li>${t}</li>`).join('')}</ul>`
+  if(!full)return`<div class="subh">CONTROLS</div>${c}<div class="subh">BATTLE TIPS</div><ul class="mtips">${tipsNow.map(t=>`<li>${t}</li>`).join('')}</ul>`
     +`<button class="btn sm" data-howto>OPEN FULL GUIDE<span class="chev">→</span></button>`;
   return`<div class="hsec eyebrow">CONTROLS</div>${c}`+(MOBILE?'':`<div class="krow" style="margin:-4px 0 6px"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd><span>switch Base, Armory, R&amp;D and Medals · <kbd>Enter</kbd> deploys</span></div>`)
     +`<div class="hsec eyebrow">THE LOOP</div><div class="first inhow">${loopSteps()}</div>`
     +`<div class="hsec eyebrow">BATTLE TIPS</div><ul class="mtips">${tips.map(t=>`<li>${t}</li>`).join('')}</ul>`}
 let _manSet=false;
-function renderManual(){const m=$('manual');if(!_manSet){_manSet=true;m.open=S.best<5}if(!$('manualBody').innerHTML)$('manualBody').innerHTML=manualHtml(false)}
+function renderManual(){const m=$('manual');if(!_manSet){_manSet=true;m.open=S.best<5}const mb=$('manualBody'),mh=manualHtml(false);if(mb._h!==mh){mb.innerHTML=mh;mb._h=mh}}   // rebuild when tips unlock
 // ---------------- ARMORY ----------------
 // display categories (u.cat is only read by the UI): emplacements and vehicles replace HEAVY ARMOR
 const CAT_FIX={turret:'EMPLACEMENTS',sniper:'EMPLACEMENTS',flame:'EMPLACEMENTS',tesla:'EMPLACEMENTS',truck:'VEHICLES',apc:'VEHICLES',tank:'VEHICLES',heli:'VEHICLES'};
