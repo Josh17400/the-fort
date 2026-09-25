@@ -2130,7 +2130,8 @@ function vehWave(){const w=G.wave,q=[],f=w%10===0?0.5:1;   // MBT (boss) waves b
   G.spawnLeft=Math.max(q.length+Math.ceil(inf*0.5),inf-cost);G.waveTotal+=G.spawnLeft-inf;G.vq=q}
 function nextType(){const q=G.vq;return q&&q.length&&Math.random()<q.length/G.spawnLeft?q.pop():pickType(G.wave)}
 function startWave(){
-  G.breakT=0;G.wave++;G.wHit=0;for(const k in G.threat)G.threat[k]*=0.6;G.spawnLeft=waveCount(G.wave);G.waveTotal=G.spawnLeft+(G.wave%10===0?1:0);G.spawnInt=Math.max(0.05,waveWindow(G.wave)/G.spawnLeft);G.spawnT=0.5;
+  G.breakT=0;G.wave++;if(G.startBest>0&&G.wave===G.startBest+1){feed('NEW RECORD · WAVE '+G.wave,'120,230,140','trophy');[660,880,1175].forEach((f,i)=>setTimeout(()=>tone(f,i<2?0.09:0.22,'square',0,0.045),i*120))}   // first wave past your best: a moment, not just an AAR tag
+  G.wHit=0;for(const k in G.threat)G.threat[k]*=0.6;G.spawnLeft=waveCount(G.wave);G.waveTotal=G.spawnLeft+(G.wave%10===0?1:0);G.spawnInt=Math.max(0.05,waveWindow(G.wave)/G.spawnLeft);G.spawnT=0.5;
   if(G.wave%10===0)spawn('boss');
   layMines();
   if(G.wallMax){G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.25)}
