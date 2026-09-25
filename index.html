@@ -1593,7 +1593,7 @@ function manualHtml(full){const ctl=MOBILE?[['Tap','an enemy to lock on and fire
     'Battlefield events (sandstorms, paratroopers, blitzes, ambushes, resupply drops, armor columns, drone swarms, barrages, car-bomb convoys) pay a bonus when you clear them.',
     'Crates: <b>gold</b> cash, <b>red</b> munitions, <b>green</b> wall repair, <b>blue</b> intel on hidden enemies, <b>orange</b> a free airstrike.',
     'Walls only self-repair after <b>3s</b> without a hit: kill whatever is shooting them.',
-    'From <b>wave 6</b> the enemy brings armor. Rifles barely scratch it: lean on mines, grenades, artillery and heavy guns.',
+    'From <b>wave 6</b> the enemy brings armor. Rifles barely scratch it: lean on mines, grenades, artillery and heavy guns. Green-cross mechanics repair it: kill them first.',
     'Upgrades unlock other upgrades, and deeper waves open new tech. Research tiers deploy with your next run.'];
   const c=`<div class="mgrid2">${ctl.map(([k,t])=>`<div class="krow"><kbd>${k}</kbd><span>${t}</span></div>`).join('')}</div>`;
   if(!full)return`<div class="subh">CONTROLS</div>${c}<div class="subh">BATTLE TIPS</div><ul class="mtips">${tips.map(t=>`<li>${t}</li>`).join('')}</ul>`
