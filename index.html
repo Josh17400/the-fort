@@ -6905,7 +6905,7 @@ const craftK=e=>Math.max(1,4.5/(sc*e.r));
 // Live aircraft and wrecks are drawn from sprites of this art (drawCraft): baked per zoom bucket with the rotors at quantised
 // phases (8 per half turn; the gunship's 5-blade rotor 12 per blade gap) and the lamp on/off, i.e. one drawImage instead of ~20
 // vector ops. The strike jet's afterburner, the gunship's battery flash and the hit flash stay live overlays.
-const CRAFT_BOX={drone:[16,16,8,8],gunheli:[46,41,25,20.5],strikejet:[46,32,23.5,16],heavybomber:[95,96,47,48],uav:[24,43,13,21.5],airboss:[86,117,43,58.5]},_crM={};
+const CRAFT_BOX={drone:[16,16,8,8],gunheli:[49,44,27,22],strikejet:[51,37,25.5,18.5],heavybomber:[95,96,47,48],uav:[24,43,13,21.5],airboss:[86,117,43,58.5]},_crM={};
 let _skyB=null;   // world matrix while drawSky draws live aircraft and wrecks (sprite path); null for the intel previews (vector path)
 const craftTh=(ty,e,t)=>ty==='drone'?t*80+e.wob:ty==='gunheli'?t*26+e.wob:ty==='uav'?t*70+e.wob:ty==='airboss'?t*50:0;
 function drawCraft(e,x,y,k){const t=G.time,hot=t-(e.fl??-9)<0.06,ty=e.type,B=_skyB;
@@ -6926,6 +6926,8 @@ function drawCraft(e,x,y,k){const t=G.time,hot=t-(e.fl??-9)<0.06,ty=e.type,B=_sk
   craftArt(ty,e.col,craftTh(ty,e,t),ty==='drone'?Math.floor(t*5+e.wob)%2:ty==='uav'?Math.floor(t*3+e.wob)%2:0,hot,e.bay>0,0.75+0.25*Math.sin(t*40+e.wob));
   if(e.flash>0){ctx.fillStyle='rgba(255,255,255,.35)';ctx.fill(skySil(ty))}
   ctx.restore()}
+// baked outline for the aircraft sprites: a faint light rim so they lift off the ground, then the dark silhouette edge (both under the fills)
+function craftEdge(ty,w){const P=skySil(ty);ctx.lineJoin='round';ctx.strokeStyle='rgba(235,230,200,.28)';ctx.lineWidth=w*2.4;ctx.stroke(P);ctx.strokeStyle='#12140e';ctx.lineWidth=w*1.4;ctx.stroke(P);ctx.fillStyle='#12140e';ctx.fill(P)}
 function craftArt(type,col,th,blink,hot,bay,ab){
   switch(type){
   case'drone':
@@ -6938,20 +6940,31 @@ function craftArt(type,col,th,blink,hot,bay,ab){
     if(blink){ell(-2.3,0,.55,.55,'#ff3b30');ell(-2.3,0,1.4,1.4,'rgba(255,60,50,.3)')}
     break;
   case'gunheli':
-    box(-23,-1.1,15,2.2,'#55543f');box(-24.5,-5,2.4,10,'#44432f');ell(-23.3,6.2,3,.8,'rgba(40,40,40,.35)');box(-17,-1.1,2.2,2.2,'#b3261e');   // boom, fin, tail rotor, red band
-    box(-4,-10,5,20,'#4a4935');for(const s of[-1,1]){ell(-1.2,8.6*s,3.6,1.6,'#2c2c24');ell(2,8.6*s,.9,1.2,'#111')}                                 // stub wings + rocket pods
-    ell(-1,0,11.5,4.8,col);ell(-2,-1.6,8,1.8,'rgba(255,245,210,.12)');ell(-5,-3.6,3.2,1.2,'#3d3c2c');ell(-5,3.6,3.2,1.2,'#3d3c2c');             // fuselage + engine fairings
-    ell(5.5,0,3.2,2.3,'#1b2a33');ell(9.2,0,2.3,1.8,'#1b2a33');ell(8.8,-.7,.9,.45,'rgba(170,220,255,.5)');                                          // tandem cockpits
-    ell(11.2,0,1.5,1.5,'#2a2a22');box(11.2,-.45,5.6,.9,'#111');if(hot){ell(17.8,0,2.4,1.3,'#ffcf5a');ell(17.4,0,1.1,.6,'#fff')}                       // chin cannon
-    ell(0,0,20,20,'rgba(25,25,25,.07)');ctx.strokeStyle='rgba(20,20,20,.4)';ctx.lineWidth=1.1;ctx.lineCap='round';ctx.beginPath();
-    for(let i=0;i<5;i++){const a=th+i*TAU/5;ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*19.5,Math.sin(a)*19.5)}ctx.stroke();ell(0,0,1.8,1.8,'#222');
+    craftEdge('gunheli',1.1);                                                                                                                  // light rim + dark outline
+    box(-23,-1.1,15,2.2,'#4a4e36');box(-23,-1.1,15,.7,'#6a6f4c');box(-23,.5,15,.6,'#34372a');box(-24.5,-5,2.4,10,'#3e4230');box(-24.5,-5,.8,10,'#5d6247');   // boom, fin
+    ell(-23.3,6.2,3,.8,'rgba(40,40,40,.3)');box(-17,-1.1,2.2,2.2,'#b3261e');                                                                     // tail rotor, red band
+    box(-4,-10,5,20,'#3f432f');box(-4,-10,5,.8,'#5f644a');box(.4,-10,.6,20,'#2c2f22');                                                          // stub wings
+    for(const s of[-1,1]){ell(-1.2,8.6*s,3.9,1.9,'#12140e');ell(-1.2,8.6*s,3.5,1.5,'#353a2a');ell(-1.6,8.6*s-.6,2.6,.5,'#5b6146');ell(2.2,8.6*s,.9,1.2,'#0b0b09');for(const d of[-.6,.6])ell(2.3,8.6*s+d,.28,.28,'#6b6048')}   // rocket pods
+    ell(-1,0,11.5,4.8,col);ell(-1.5,1.2,10.5,3.3,'rgba(0,0,0,.2)');ell(-1.8,-1.5,9.5,2.4,'rgba(255,245,210,.14)');ell(-2.5,-2.4,7,1,'rgba(255,245,200,.22)');   // fuselage: dark belly side, lit spine
+    for(const s of[-1,1]){ell(-5,3.6*s,3.4,1.35,'#12140e');ell(-5,3.6*s,3.1,1.1,s<0?'#4c5137':'#373b29');ell(-7.6,3.6*s,.9,.7,'#1a1a16')}           // engine fairings + exhausts
+    ell(-9.5,0,1.8,.5,'#34372a');ctx.strokeStyle='rgba(20,22,14,.45)';ctx.lineWidth=.25;ctx.beginPath();ctx.moveTo(2,-4);ctx.lineTo(2,4);ctx.moveTo(-9,-3);ctx.lineTo(-9,3);ctx.stroke();   // panel lines
+    ell(5.5,0,3.4,2.5,'#0f1418');ell(5.5,0,3.2,2.3,'#1b2a33');ell(9.2,0,2.5,2,'#0f1418');ell(9.2,0,2.3,1.8,'#1b2a33');ell(8.8,-.7,.9,.45,'rgba(170,220,255,.55)');ell(5,-.9,1.1,.5,'rgba(170,220,255,.4)');   // tandem cockpits
+    ell(11.2,0,1.5,1.5,'#23241c');box(11.2,-.45,5.6,.9,'#111');box(11.2,-.45,5.6,.3,'#3a3b33');if(hot){ell(17.8,0,2.4,1.3,'#ffcf5a');ell(17.4,0,1.1,.6,'#fff')}   // chin cannon
+    ell(0,0,20,20,'rgba(25,25,25,.08)');ctx.lineCap='round';ctx.beginPath();for(let i=0;i<5;i++){const a=th+i*TAU/5;ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*19.5,Math.sin(a)*19.5)}
+    ctx.strokeStyle='rgba(18,18,16,.62)';ctx.lineWidth=1.25;ctx.stroke();ctx.strokeStyle='rgba(230,230,215,.2)';ctx.lineWidth=.3;ctx.stroke();ell(0,0,1.8,1.8,'#1c1d18');ell(-.4,-.4,.7,.7,'#5a5c50');   // thin rotor blades, hub
     break;
   case'strikejet':{const P=skySil('strikejet');
-    ctx.fillStyle=col;ctx.fill(P);ctx.save();ctx.clip(P);ell(-6,-9,4,2,'#585d55',0.5);ell(-4,8,3.6,1.8,'#585d55',-0.4);ell(-16,-4,3,1.4,'#80867c');ell(8,1.8,5,1,'#81877d');ctx.restore();   // two-tone camo
-    box(-18,-3.8,9,2.4,'#43473f');box(-18,1.4,9,2.4,'#43473f');                                                                                   // engine nacelles
-    for(const s of[-1,1]){ell(-3.5,9.5*s,3.2,.9,'#34342c');ell(-0.3,9.5*s,.7,.7,'#b3261e');ell(-6,6*s,2.4,.8,'#34342c')}                              // rocket pods + bombs on pylons
+    craftEdge('strikejet',1);
+    ctx.fillStyle=col;ctx.fill(P);ctx.save();ctx.clip(P);ell(-6,-9,4,2,'#585d55',0.5);ell(-4,8,3.6,1.8,'#585d55',-0.4);ell(-16,-4,3,1.4,'#80867c');ell(8,1.8,5,1,'#81877d');   // two-tone camo
+    ctx.fillStyle='rgba(0,0,0,.2)';ctx.beginPath();ctx.moveTo(-7,-15.5);ctx.lineTo(-6,-4);ctx.lineTo(-9,-4);ctx.lineTo(-9.5,-15.5);ctx.moveTo(-7,15.5);ctx.lineTo(-6,4);ctx.lineTo(-9,4);ctx.lineTo(-9.5,15.5);ctx.fill();   // wing trailing edges
+    box(-22,-9.5,22,6.5,'rgba(255,250,225,.07)');box(-23,3.2,23,6.5,'rgba(0,0,0,.1)');ctx.restore();                                              // lit port side, shaded starboard
+    ell(1,-.6,20,1.1,'rgba(255,250,225,.2)');ell(0,1.3,19,.8,'rgba(0,0,0,.16)');                                                                // spine highlight + shade
+    ctx.strokeStyle='rgba(25,28,24,.4)';ctx.lineWidth=.22;ctx.beginPath();for(const s of[-1,1]){ctx.moveTo(-1,3.4*s);ctx.lineTo(-5.5,11*s);ctx.moveTo(-12,4*s);ctx.lineTo(-17.5,8.4*s)}ctx.moveTo(4,-2.8);ctx.lineTo(4,2.8);ctx.moveTo(-8,-3.6);ctx.lineTo(-8,3.6);ctx.stroke();   // panel lines
+    box(-18.3,-4.1,9.6,3,'#161812');box(-18.3,1.1,9.6,3,'#161812');box(-18,-3.8,9,2.4,'#43473f');box(-18,1.4,9,2.4,'#43473f');box(-18,-3.8,9,.7,'#5d6259');box(-18,1.4,9,.7,'#5d6259');   // engine nacelles
+    for(const s of[-1,1]){ell(-3.5,9.5*s,3.5,1.2,'#12140e');ell(-3.5,9.5*s,3.2,.9,'#34342c');ell(-3.9,9.5*s-.35,2.2,.3,'#5b5b50');ell(-0.3,9.5*s,.7,.7,'#b3261e');
+      ell(-6,6*s,2.7,1.1,'#12140e');ell(-6,6*s,2.4,.8,'#34342c');ell(-6.3,6*s-.3,1.5,.25,'#5b5b50')}                                                 // rocket pods + bombs on pylons, outlined
     box(-22.5,-9.5,3,1.8,'#b3261e');box(-22.5,7.7,3,1.8,'#b3261e');
-    ell(9.5,0,4.2,1.5,'#1c2a33');ell(10.5,-.5,1.6,.5,'rgba(170,220,255,.5)');                                                                     // canopy
+    ell(9.5,0,4.5,1.8,'#0f1418');ell(9.5,0,4.2,1.5,'#1c2a33');ell(10.5,-.5,1.6,.5,'rgba(170,220,255,.55)');                                       // canopy
     if(hot){ell(24,0,2.6,1.2,'#ffcf5a');ell(23.4,0,1.2,.6,'#fff')}
     if(ab>0){ctx.globalCompositeOperation='lighter';for(const s of[-2.6,2.6]){ell(-20.5,s,2.8*ab,1.2,'rgba(255,150,60,.75)');ell(-19.8,s,1.2,.7,'#fff3c0')}ctx.globalCompositeOperation='source-over'}
     break}
