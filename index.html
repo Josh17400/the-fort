@@ -1075,7 +1075,7 @@ IC.threat='M12 3L2 20h20zM12 9.5v4.5M12 17h.01';
 IC.nade='M11 15m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M8.5 9.3V6.5h5v2.8M13.5 7.5c2.6 0 4.2 1.3 4.8 3.6M18.5 4.8m-1.7 0a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0M5.4 13.5h11.2M11 9.2v11.6';
 const _p2={};function cIcon(n,x,y,s,c,lw=2){const p=_p2[n]||(_p2[n]=new Path2D(IC[n]));ctx.save();ctx.translate(x,y);ctx.scale(s/24,s/24);ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke(p);ctx.restore()}
 // ================= SAVE =================
-const GFX_DEF=matchMedia('(pointer:coarse)').matches&&matchMedia('(hover:none)').matches?'medium':'high';
+const PHONE=matchMedia('(pointer:coarse)').matches&&matchMedia('(hover:none)').matches,GFX_DEF=PHONE?'medium':'high';   // PHONE = MOBILE (defined later), usable at load
 const DEF_SET={vol:60,music:true,shake:true,dmgNums:true,callouts:true,ring:true,blurPause:true,dayNight:true,speed:1,prio:'near'};
 let S;
 function loadSave(){try{S=JSON.parse(localStorage.getItem('theFortSave'))}catch(e){}
@@ -2041,7 +2041,38 @@ const WORLD_R=540,SPAWN_R=590,PLAT=10;
 // lod = on-screen enemy radius (px) below which the detailed sprite is swapped for a silhouette nobody could tell apart at that size
 const GFX_PRESET={high:{dpr:3,fx:1,smoke:1,lights:true,vig:true,lod:0},medium:{dpr:1.5,fx:0.65,smoke:0.5,lights:true,vig:true,lod:1.6},low:{dpr:1,fx:0.35,smoke:0.3,lights:false,vig:false,lod:2.4}};
 let GFX=GFX_PRESET[S.set.gfx]||GFX_PRESET.high;
-function resize(){dpr=Math.min(devicePixelRatio||1,GFX.dpr);VW=innerWidth;VH=innerHeight;cv.width=VW*dpr;cv.height=VH*dpr;cv.style.width=VW+'px';cv.style.height=VH+'px';sc=Math.min(VW,VH)/(2*WORLD_R)}
+// Adaptive quality (phones only; desktop never leaves level 0). aqTick() watches the real interval between draw() calls and, when the
+// device can't hold ~36fps for over a second, sheds the costliest screen-space work one level at a time; after a long run of fast
+// frames it steps back up (waiting longer each time a step back up had to be undone). Level 0 is the preset exactly.
+// Phones always render at most 2 device px per CSS px (PHONE_DPR): a 3x backing store is 2.25x the fill of 2x for detail nobody
+// sees at arm's length (HUD text stays crisp at 2x), and it was the single biggest GPU cost on 3x iPhones.
+//   1: no film grain, no dusk haze pass (phones never run the canvas read-back passes: heat haze, shockwave refraction, chroma
+//      fringe; on other devices level 1 drops them too)
+//   2: backing store one step down (phone High 2x -> 1.5x, Medium 1.5x -> 1.25x)      3: Medium 1x, High 1.25x; High drops the bloom pass
+// Desktop resolution is never governed (aqDpr ignores the level there).
+// Hitches count too: frames that are fine on average but where one in ~12 misses the 30fps budget (a GPU stall) step up just the same.
+// Before the first step, a phone running ChaosGL tries 3s with it off (each GL layer is a GL->2D composite, which some mobile browsers
+// pay for as a GPU read-back); if frames get clearly better it stays off for the session, else it goes back on and the step is taken.
+// AQ.force (QA / profiler) pins a level.
+const AQ={lv:0,force:null,t0:0,ema:16.7,jit:0,hr:0,gl:0,glT:0,glS:0,slow:0,fast:0,cool:0,wait:8000,downAt:-1e9,DH:[1,1,3/4,5/8],DM:[1,1,5/6,2/3]};
+const PHONE_DPR=2;
+const aqDpr=()=>{if(!PHONE)return GFX.dpr;const b=Math.min(GFX.dpr,PHONE_DPR);return b<=1?b:Math.max(1,b*(GFX===GFX_PRESET.high?AQ.DH:AQ.DM)[AQ.lv])};
+// API shared with the cosmetic-FX governor (perf-fx branch): AQ.lv 0-3 is the one level, AQ.force pins it, aqSet(lv) clamps and
+// changes it, aqApply() pushes it into everything that caches it. Merging the two = one AQ object, one tick, and aqApply() calling
+// both halves (aqRes() here, the FX caps there). Code that merely reads AQ.lv each frame needs no hook.
+function aqRes(){if(Math.min(devicePixelRatio||1,aqDpr())!==dpr)resize()}   // render half: backing-store size
+function aqApply(){aqRes()}
+function aqSet(lv){lv=Math.max(0,Math.min(3,lv|0));if(lv===AQ.lv)return;const t=performance.now();
+  if(AQ.force==null){if(lv>AQ.lv&&t-AQ.downAt<20000)AQ.wait=Math.min(120000,AQ.wait*2);if(lv<AQ.lv)AQ.downAt=t}
+  AQ.lv=lv;AQ.slow=AQ.fast=AQ.hr=0;AQ.cool=2500;AQ.ema=lv?22:16.7;aqApply()}
+function aqTick(){const t=performance.now(),d=t-AQ.t0;AQ.t0=t;if(AQ.force!=null){aqSet(AQ.force);return}
+  if(!MOBILE||!running||paused||!(d>0&&d<250))return;   // pauses, menus and hidden tabs don't count
+  AQ.ema+=(d-AQ.ema)*0.1;AQ.jit+=(Math.abs(d-AQ.ema)-AQ.jit)*0.1;AQ.hr+=((d>42?1:0)-AQ.hr)*0.03;if(AQ.cool>0){AQ.cool-=d;return}
+  if(AQ.gl===1){AQ.glT-=d;if(AQ.glT>0)return;if(AQ.ema+60*AQ.hr<AQ.glS*.9)AQ.gl=3;else{AQ.gl=2;CGL.off=false}AQ.slow=0}   // GL trial verdict: 3 = keep it off
+  const capped=AQ.jit<1.2&&AQ.ema>31&&AQ.ema<35.5;   // a steady 30fps vsync cap (iOS Low Power Mode): shedding quality can't help it
+  if((AQ.ema>28&&!capped||AQ.hr>0.07)&&AQ.lv<3){AQ.slow+=d;if(AQ.slow>1200){if(!AQ.gl&&CGL.live()){AQ.gl=1;AQ.glT=3000;AQ.glS=AQ.ema+60*AQ.hr;CGL.off=true;AQ.slow=0}else aqSet(AQ.lv+1)}}else AQ.slow=0;
+  if(AQ.ema<19&&AQ.hr<0.02&&AQ.lv>0){AQ.fast+=d;if(AQ.fast>AQ.wait)aqSet(AQ.lv-1)}else AQ.fast=0}
+function resize(){dpr=Math.min(devicePixelRatio||1,aqDpr());VW=innerWidth;VH=innerHeight;cv.width=VW*dpr;cv.height=VH*dpr;cv.style.width=VW+'px';cv.style.height=VH+'px';sc=Math.min(VW,VH)/(2*WORLD_R)}
 addEventListener('resize',resize);resize();
 let _gnd=null;
 const groundPaths=()=>_gnd||(_gnd=decals.reduce((m,d)=>((m[d.c]||(m[d.c]=new Path2D())).rect(d.x,d.y,d.s,d.s*0.6),m),{}));
@@ -4216,11 +4247,12 @@ function hqFx(f,k,t,m){
 const PF={};
 function pfCanvas(k,w,h){let c=PF[k];if(!c){c=PF[k]=document.createElement('canvas');c._x=c.getContext('2d')}if(c.width!==w||c.height!==h){c.width=w;c.height=h}return c}
 function postFX(){if(!HQ||!G)return;const m=ctx.getTransform(),h=hx(),W=cv.width,H=cv.height;ctx.save();
-  if(h.waves.length)shockwaves(m,h,W,H);
-  heatHaze(m,h,W,H);
-  bloom(m,W,H);
+  const rb=!PHONE&&AQ.lv<1;   // canvas read-backs (a GPU sync each): never on phones, and the first thing the governor sheds
+  if(rb&&h.waves.length)shockwaves(m,h,W,H);
+  if(rb)heatHaze(m,h,W,H);
+  if(AQ.lv<3)bloom(m,W,H);
   ctx.setTransform(1,0,0,1,0,0);
-  chroma(W,H);
+  if(rb)chroma(W,H);
   grade(W,H,h);
   ctx.restore()}
 // Bloom: re-render only the emissive layer (fire, flashes, tracers, sparks, lights) at quarter res, blur it with a
@@ -4266,7 +4298,7 @@ function chroma(W,H){const s=G.shake;if(s<4.5)return;const k=Math.min(1,(s-4.5)/
 function grade(W,H,h){
   const grain=PF.grain||(PF.grain=ctx.createPattern(pixSprite('grain',128,(d,n)=>{const rnd=_rng(4242);for(let i=0;i<n*n;i++){const v=rnd()*2-1;d[i*4]=d[i*4+1]=d[i*4+2]=v>0?255:0;d[i*4+3]=Math.abs(v)*v*v*255}}),'repeat'));
   const g=Math.max(1,dpr*.9),ox=(R()*128)|0,oy=(R()*128)|0;ctx.globalAlpha=.06;ctx.fillStyle=grain;
-  ctx.setTransform(g,0,0,g,-ox*g,-oy*g);ctx.fillRect(ox,oy,W/g,H/g);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;
+  if(AQ.lv<1){ctx.setTransform(g,0,0,g,-ox*g,-oy*g);ctx.fillRect(ox,oy,W/g,H/g)}ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;
   if(h.flash>0){ctx.globalCompositeOperation='screen';ctx.fillStyle=`rgba(255,244,222,${h.flash})`;ctx.fillRect(0,0,W,H)}
   ctx.globalCompositeOperation='source-over'}
 
@@ -4562,7 +4594,7 @@ const CGL=(()=>{
     if(typeof d.value==='function')REC[k]=NODEM.has(k)?function(){const R=real;if(k==='measureText'&&R.font!==REC.font){R.font=REC.font;rv.font=REC.font}return R[k].apply(R,arguments)}:function(){return fwd(k,arguments)};
     else if(d.get)Object.defineProperty(REC,k,{get(){return real?real[k]:undefined},set(v){if(real)(swap?demote(k):(comp(),real))[k]=v},configurable:true})}}catch(e){}
   // ---------- public ----------
-  function want(name,count){if(dead||S.set.chaosGL===false||lost||rec)return false;if(!inited)init();if(!ok)return false;
+  function want(name,count){if(dead||S.set.chaosGL===false||CGL.off||lost||rec)return false;if(!inited)init();if(!ok)return false;
     if(gl.isContextLost()){lost=true;return false}
     let s=LS[name];if(!s)s=LS[name]={on:false,n:0};const lo=CGL.min[name]||40;s.n=count;s.on=s.on?count>=lo*.5:count>=lo;return s.on}   // hysteresis: on at lo, off below lo/2
   // open a recording into target (a 2D context, tw x th device px, drawn in the GL canvas' top-left corner)
@@ -4581,7 +4613,9 @@ const CGL=(()=>{
   // Local form for code that draws through its own context variable: x=CGL.begin(...)||x ... CGL.end() before the buffer is used.
   function begin(name,count,target,tw,th,pl){return want(name,count)&&open(target,tw,th,!!pl,false)?REC:null}
   const cv2d=cv.getContext('2d');
-  return{layer,into,begin,end:close,rec:REC,min:{ground:40,fx:150,glow:60,lmap:60,bloom:120,sky:40},ofs:undefined,v1:false,last:null,
+  // lmap / glow / emis stay on Canvas2D: they draw a few dozen blits (mostly into 1/4-1/5 res buffers), and each GL layer costs a
+  // GL->2D composite, a cross-context sync point; measured on a phone-sized canvas, dropping those three cut p95 frame time ~25-30%.
+  return{layer,into,begin,end:close,rec:REC,min:{ground:40,fx:150,glow:1e9,lmap:1e9,emis:1e9,bloom:120,sky:40},ofs:undefined,v1:false,last:null,off:false,live:()=>inited&&ok&&!dead&&!lost&&S.set.chaosGL!==false,
     path:()=>{if(ctx!==REC)return new Path2D();const p=new RPath();reg.push(p);return p},
     active:()=>ctx===REC,
     status:()=>({on:S.set.chaosGL!==false,ok,why,webgl:gl?(v2?2:1):0,offscreen:ofs,chain,atlas:{size:AS,gen,rows:Math.round(atop/AS*100)+'%',fill:Math.round(aarea/AS/AS*100)+'%',sprites:aent,shelves:shelves.length},layers:JSON.parse(JSON.stringify(LS)),
@@ -7264,9 +7298,14 @@ function cloudSprite(){if(_cloud)return _cloud;const S2=256,[c,x]=mkCv(S2,S2),r=
     g.addColorStop(0,'rgba(10,16,30,.34)');g.addColorStop(0.5,'rgba(10,16,30,.2)');g.addColorStop(1,'rgba(10,16,30,0)');x.fillStyle=g;x.fillRect(0,0,S2,S2)}
   return _cloud=c}
 const CLOUDS=Array.from({length:6},(_,i)=>{const r=rng(900+i);return{u:r(),v:r(),s:0.5+r()*0.5,sx:1.2+r()*0.6}});
-function drawAtmos(){if(!hiGfx())return;const V=vision(),W=V*3.2+200,spr=cloudSprite(),hw=Math.min(VW/2/sc,V*1.1),hh=Math.min(VH/2/sc,V*1.1),t=G.time;
+// Cloud shadows are soft blobs spanning a couple of screen widths (their 256px sprite is magnified ~8x), so they are drawn into a
+// quarter-CSS-px buffer and composited once: one screen of fill instead of ~3 at full resolution, with no visible difference.
+function drawAtmos(){if(!hiGfx())return;const V=vision(),W=V*3.2+200,spr=cloudSprite(),hw=Math.min(VW/2/sc,V*1.1),hh=Math.min(VH/2/sc,V*1.1),t=G.time,m=ctx.getTransform(),k=1/(4*dpr);let b=null;
   for(const c of CLOUDS){const rw=V*0.9*c.s*c.sx,rh=V*0.9*c.s,x=((c.u*W+t*4.5)%W+W)%W-W/2,y=((c.v*W+t*2)%W+W)%W-W/2;
-    if(x+rw<-hw||x-rw>hw||y+rh<-hh||y-rh>hh)continue;ctx.drawImage(spr,x-rw,y-rh,rw*2,rh*2)}}
+    if(x+rw<-hw||x-rw>hw||y+rh<-hh||y-rh>hh)continue;
+    if(!b){const bc=pfCanvas('cloud',Math.ceil(cv.width*k)+1,Math.ceil(cv.height*k)+1);b=bc._x;b.setTransform(1,0,0,1,0,0);b.clearRect(0,0,bc.width,bc.height);b.setTransform(m.a*k,m.b*k,m.c*k,m.d*k,m.e*k,m.f*k)}
+    b.drawImage(spr,x-rw,y-rh,rw*2,rh*2)}
+  if(b){ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(b.canvas,0,0,b.canvas.width/k,b.canvas.height/k);xr(m)}}
 // ---- fog of war: noisy, soft, cool-tinted night falloff; two layers counter-drift so the edge creeps -----------------
 const FOG_RGB=[6,8,11],FOG_CSS='rgb(6,8,11)';
 let _fog=null;
@@ -7283,7 +7322,11 @@ function drawFog(V){
   if(!hiGfx()){const Vo=V*1.06+6,fg=ctx.createRadialGradient(0,0,V,0,0,Vo);fg.addColorStop(0,'rgba(5,7,4,0)');fg.addColorStop(1,'rgba(5,7,4,1)');
     ctx.fillStyle=fg;ctx.beginPath();ctx.arc(0,0,Vo,0,TAU);ctx.moveTo(V,0);ctx.arc(0,0,V,0,TAU,true);ctx.fill();
     ctx.fillStyle='rgb(5,7,4)';ctx.beginPath();ctx.rect(-ext,-ext,ext*2,ext*2);ctx.moveTo(Vo-1/sc,0);ctx.arc(0,0,Vo-1/sc,0,TAU,true);ctx.fill();return}
-  const f=fogBake(V),R=f.R;ctx.save();ctx.rotate(G.time*0.004);ctx.drawImage(f.c,-R,-R,2*R,2*R);ctx.rotate(-G.time*0.011+1.7);ctx.globalAlpha=0.5;ctx.drawImage(f.c2,-R,-R,2*R,2*R);ctx.restore();
+  // the two counter-drifting layers are merged in texture space first (layer 2 turned by the relative angle over an exact copy of
+  // layer 1; source-over is associative), so the screen gets one big rotated blit instead of two
+  const f=fogBake(V),R=f.R,M=f.c.width,cc=pfCanvas('fogc',M,M),x=cc._x;x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.clearRect(0,0,M,M);x.drawImage(f.c,0,0);
+  x.translate(M/2,M/2);x.rotate(-G.time*0.011+1.7);x.globalAlpha=0.5;x.drawImage(f.c2,-M/2,-M/2);
+  ctx.save();ctx.rotate(G.time*0.004);ctx.drawImage(cc,-R,-R,2*R,2*R);ctx.restore();
   const rr=R*0.97;ctx.fillStyle=FOG_CSS;ctx.beginPath();ctx.rect(-ext,-ext,ext*2,ext*2);ctx.moveTo(rr,0);ctx.arc(0,0,rr,0,TAU,true);ctx.fill()}
 // Bake High-preset art during idle time on the home screen (the layout is already fixed by the upgrade levels), so DEPLOY never hitches.
 setInterval(()=>{if(running||!hiGfx()||document.hidden)return;(window.requestIdleCallback||setTimeout)(()=>{if(running)return;const k=_ter&&_ter.key;terrainBake();fogBake(vision());fortBake(fortHalf(),L('walls'),true);if(_ter.key!==k)rasterNow(_ter.c)})},2000);
@@ -7525,26 +7568,55 @@ function dayMist(){if(!DN.on||!HQ||DN.mist<0.02)return;const V=vision(),W=V*3+20
 // The light pass. Runs after the whole world (ground, fx, fog, aircraft) and before world-space UI and postFX.
 function dayLight(V){if(!DN.on)return;const dk=DN.dk,lamp=DN.lamp;if(dk<0.004&&DN.haze<0.02)return;
   const m=ctx.getTransform(),W=cv.width,H=cv.height;
+  if(HQ&&PHONE){dnLite(m,W,H,V);return}
   if(dk>=0.004){
     if(HQ)dnLightMap(m,W,H,V);   // Medium: the flat tint below, with its lights drawn straight over it (no full-screen light-map composite)
+    else if(PHONE||AQ.lv>=1){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle=dnDark(1).v;ctx.fillRect(0,0,W,H);xr(m)}   // phones / adaptive quality: tinted darken, no destination read
     else{ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='multiply';ctx.fillStyle=DN.ambCss;ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over';xr(m)}
     // the emissive layer was just multiplied down with everything else: put the heat back (High re-renders it like the bloom pass)
     if(dk>0.12&&HQ){ctx.save();BP=true;try{CGL.layer('emis',G.fx.length,drawFx)}finally{BP=false}ctx.restore();xr(m)}}
-  if(DN.haze>0.02&&HQ){ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='screen';ctx.globalAlpha=DN.haze*.07;ctx.fillStyle=DN.hazeCss;ctx.fillRect(0,0,W,H);
+  if(DN.haze>0.02&&HQ&&AQ.lv<1){ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='screen';ctx.globalAlpha=DN.haze*.07;ctx.fillStyle=DN.hazeCss;ctx.fillRect(0,0,W,H);
     ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';xr(m)}
   if(lamp<0.02)return;
   if(GFX.lights){if(!HQ){dnRigs();dnNav();dnBeams(DN.beams)}dnStars(V,lamp);dnGlow(m,W,H,V,lamp)}
   dnLamps(lamp,V);xr(m);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
+// Stand-in for multiplying by the ambient (scaled by f: 1 = moonlit ring, 1-DN.near = the deep dark beyond it) with no destination
+// read: source-over black scales every channel by one level m (between the ambient's luminance and its weakest channel), and the
+// colour added back is each channel's surplus over m applied to a dim ground pixel (~20% grey), so night reads blue, dusk orange.
+const _dnDk=[];
+function dnDark(f){const i=f===1?0:1,e=_dnDk[i]||(_dnDk[i]={k:'',f:-1,v:'',al:0});if(e.k===DN.ambCss&&e.f===f)return e;e.k=DN.ambCss;e.f=f;
+  const a=_amb,mn=(.6*(a[0]*.3+a[1]*.55+a[2]*.15)+.4*Math.min(a[0],a[1],a[2]))*f/255,al=Math.min(1,Math.max(0.001,1-mn)),c=j=>Math.max(0,Math.min(255,.2*(a[j]*f-255*mn)/al))|0;
+  e.al=al;e.v=`rgba(${c(0)},${c(1)},${c(2)},${al.toFixed(3)})`;return e}
+// Phone High light pass: the light map, the dusk haze and the glow layer all go into ONE 1/5-res buffer that is laid over the frame
+// with a single source-over blit (desktop: a 'multiply' composite, a 'screen' fill, a second buffer and an emissive re-render).
+// The buffer holds darkness rather than light: the ambient darkening as alpha (dnDark), with every light source punching it out
+// ('destination-out', scaled so a light restores what it added in the multiply) plus a faint additive tint for its colour, then the
+// haze and the glow (cones, halos, fireflies) added on top. Fire and flashes punch out fully, which stands in for the emissive pass.
+function dnLite(m,W,H,V){const dk=DN.dk,lamp=DN.lamp,c=pfCanvas('dnlm',Math.max(2,Math.ceil(VW/5)),Math.max(2,Math.ceil(VH/5))),x=c._x;
+  if(dk>=0.004)dnLightMap(m,W,H,V,true);else{x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,c.width,c.height)}
+  x.setTransform(1,0,0,1,0,0);
+  if(DN.haze>0.02&&AQ.lv<1){x.globalCompositeOperation='lighter';x.globalAlpha=DN.haze*.07;x.fillStyle=DN.hazeCss;x.fillRect(0,0,c.width,c.height)}
+  x.globalAlpha=1;x.globalCompositeOperation='source-over';
+  if(lamp>=0.02&&GFX.lights)dnGlow(m,W,H,V,lamp,c);
+  ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.imageSmoothingEnabled=true;ctx.drawImage(c,0,0,W,H);xr(m);
+  if(lamp>=0.02){if(GFX.lights)dnStars(V,lamp);dnLamps(lamp,V);xr(m)}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
 // Light map: ambient (deep beyond the lit ring, moonlit inside it) plus every light source, multiplied over the world.
-function dnLightMap(m,W,H,V){const q=HQ?5:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Math.max(2,Math.ceil(VH/q)),c=pfCanvas('dnlm',lw,lh),x0=c._x,k=lw/W,lamp=DN.lamp,t=G.time,
-    x=CGL.begin('lmap',G.lights.length+G.fx.length+_rig.length*2+DN.beams.length*2,x0,lw,lh)||x0;   // opaque base: premultiplied additive is exact
+// lite (phones, via dnLite): the buffer is built as darkness instead and left for the caller to composite.
+function dnLightMap(m,W,H,V,lite){const q=HQ?5:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Math.max(2,Math.ceil(VH/q)),c=pfCanvas('dnlm',lw,lh),x0=c._x,k=lw/W,lamp=DN.lamp,t=G.time,
+    x=lite?x0:CGL.begin('lmap',G.lights.length+G.fx.length+_rig.length*2+DN.beams.length*2,x0,lw,lh)||x0;   // opaque base: premultiplied additive is exact
   try{
-  x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation='source-over';x.globalAlpha=1;x.fillStyle=DN.farCss;x.fillRect(0,0,lw,lh);
-  const M={a:m.a*k,b:m.b*k,c:m.c*k,d:m.d*k,e:m.e*k,f:m.f*k},P=(img,wx,wy,r,a)=>{if(a<=0.01||r<=0)return;x.globalAlpha=Math.min(1,a);x.setTransform(M.a,M.b,M.c,M.d,M.a*wx+M.c*wy+M.e,M.b*wx+M.d*wy+M.f);x.drawImage(img,-r,-r,2*r,2*r)};
-  x.globalCompositeOperation='lighter';
-  if(DN.near>0.01)P(dnFlat(DN.nearRgb),0,0,sight()*1.04+8,1);
-  if(G.flashT>0){x.setTransform(1,0,0,1,0,0);x.globalAlpha=Math.min(1,G.flashT*1.5);x.fillStyle='#fff';x.fillRect(0,0,lw,lh)}
-  const fire=dnPool(DN_FIRE);
+  let gm=1;const M={a:m.a*k,b:m.b*k,c:m.c*k,d:m.d*k,e:m.e*k,f:m.f*k},P=(img,wx,wy,r,a)=>{a*=gm;if(a<=0.01||r<=0)return;x.globalAlpha=Math.min(1,a);x.setTransform(M.a,M.b,M.c,M.d,M.a*wx+M.c*wy+M.e,M.b*wx+M.d*wy+M.f);x.drawImage(img,-r,-r,2*r,2*r)};
+  x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;
+  if(lite){const Aa=Math.max(.05,dnDark(1).al),fd=dnDark(1-DN.near),Af=fd.al;x.globalCompositeOperation='copy';x.fillStyle=fd.v;x.fillRect(0,0,lw,lh);
+    x.globalCompositeOperation='destination-out';if(DN.near>0.01&&Af>Aa)P(dnFlat(DN.nearRgb),0,0,sight()*1.04+8,1-Aa/Af);
+    if(G.flashT>0){x.setTransform(1,0,0,1,0,0);x.globalAlpha=Math.min(1,G.flashT*1.5);x.fillStyle='#fff';x.fillRect(0,0,lw,lh)}
+    gm=.75/Aa}   // a light of alpha a added ~.75a to the multiplier; removing .75a/Aa of darkness Aa gives the same lift
+  else{x.globalCompositeOperation='source-over';x.fillStyle=DN.farCss;x.fillRect(0,0,lw,lh);
+    x.globalCompositeOperation='lighter';
+    if(DN.near>0.01)P(dnFlat(DN.nearRgb),0,0,sight()*1.04+8,1);
+    if(G.flashT>0){x.setTransform(1,0,0,1,0,0);x.globalAlpha=Math.min(1,G.flashT*1.5);x.fillStyle='#fff';x.fillRect(0,0,lw,lh)}}
+  const fire=dnPool(DN_FIRE),rigs=lamp>0.02?dnRigs():null,navs=lamp>0.02?dnNav():null;
+  for(let pass=lite?0:1;pass<2;pass++){if(pass&&lite){x.globalCompositeOperation='lighter';gm=.22}   // lite: a second pass adds each light's colour faintly
   for(const l of G.lights)P(dnPool(l.c),l.x,l.y,l.r*1.35,1.1*l.life/l.max);
   let nt=0;for(const f of G.fx){const kk=Math.max(0,f.life/f.max);
     if(f.k==='hfire'||f.k==='fire'||f.k==='boom')P(fire,f.x,f.y,f.r*3.4,kk*1.1);
@@ -7561,25 +7633,27 @@ function dnLightMap(m,W,H,V){const q=HQ?5:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Ma
     for(const q of fcSites())if(!q.dead)P(lp,q.x,q.y+(q.top+q.bot)/2,q.rad*1.05,.75*lamp);   // floodlit repair yards
     if(G.field&&G.fleet)P(lp,G.field.x,G.field.y,54,.55*lamp);
     if(L('airstrip')&&L('walls')){const w=Math.max(ph*2.8,200),y=runwayY(),rl=dnPool('255,226,160');
-      for(const yy of[y-2.5,y+RWY_H+2.5]){cxf(x,M,0,yy,0,(w/2+10)/64,16/64);x.globalAlpha=.6*lamp;x.drawImage(rl,-64,-64)}}
+      for(const yy of[y-2.5,y+RWY_H+2.5]){cxf(x,M,0,yy,0,(w/2+10)/64,16/64);x.globalAlpha=Math.min(1,gm*.6*lamp);x.drawImage(rl,-64,-64)}}
     // tower searchlights: shaft + the bright pool where they hit
     const sc2=dnConeT('s','236,244,255'),sp=dnPool('236,244,255');
-    for(const[ox,oy,a,len]of dnBeams(DN.beams)){cxf(x,M,ox,oy,a,len/192,len*.3/96);x.globalAlpha=.8*lamp;x.drawImage(sc2,0,-48);P(sp,ox+Math.cos(a)*len*.93,oy+Math.sin(a)*len*.93,len*.2,.95*lamp)}
+    for(const[ox,oy,a,len]of pass&&lite?DN.beams:dnBeams(DN.beams)){cxf(x,M,ox,oy,a,len/192,len*.3/96);x.globalAlpha=Math.min(1,gm*.8*lamp);x.drawImage(sc2,0,-48);P(sp,ox+Math.cos(a)*len*.93,oy+Math.sin(a)*len*.93,len*.2,.95*lamp)}
     // vehicle headlights, aircraft landing lights, helicopter spotlights
-    for(const[vx,vy,a,fr,hw,tint,bl]of dnRigs()){const co=Math.cos(a),si=Math.sin(a),fx=vx+co*fr,fy=vy+si*fr;
-      cxf(x,M,fx,fy,a,bl/192,bl*.78/96);x.globalAlpha=.95*lamp;x.drawImage(dnConeT('h',tint),0,-48);P(dnPool(tint),fx+co*hw*1.6,fy+si*hw*1.6,hw*3.2,.55*lamp)}
-    for(const[jx,jy,a,,nose,ll]of dnNav()){if(!ll)continue;const co=Math.cos(a),si=Math.sin(a);cxf(x,M,jx+co*nose,jy+si*nose,a,110/192,80/96);x.globalAlpha=.8*lamp;x.drawImage(dnConeT('h',DN_FR),0,-48)}
-    for(const u of G.units)if(u.k==='heli'){const a=u.gun??u.ang;P(dnPool(DN_FR),u.x+Math.cos(a)*46,u.y+Math.sin(a)*46,34,.8*lamp)}}
+    for(const[vx,vy,a,fr,hw,tint,bl]of rigs){const co=Math.cos(a),si=Math.sin(a),fx=vx+co*fr,fy=vy+si*fr;
+      cxf(x,M,fx,fy,a,bl/192,bl*.78/96);x.globalAlpha=Math.min(1,gm*.95*lamp);x.drawImage(dnConeT('h',tint),0,-48);P(dnPool(tint),fx+co*hw*1.6,fy+si*hw*1.6,hw*3.2,.55*lamp)}
+    for(const[jx,jy,a,,nose,ll]of navs){if(!ll)continue;const co=Math.cos(a),si=Math.sin(a);cxf(x,M,jx+co*nose,jy+si*nose,a,110/192,80/96);x.globalAlpha=Math.min(1,gm*.8*lamp);x.drawImage(dnConeT('h',DN_FR),0,-48)}
+    for(const u of G.units)if(u.k==='heli'){const a=u.gun??u.ang;P(dnPool(DN_FR),u.x+Math.cos(a)*46,u.y+Math.sin(a)*46,34,.8*lamp)}}}
   x.globalAlpha=1;x.globalCompositeOperation='source-over';
   }finally{if(x!==x0)CGL.end()}
+  if(lite)return;
   ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='multiply';ctx.imageSmoothingEnabled=true;ctx.drawImage(c,0,0,W,H);ctx.globalCompositeOperation='source-over';xr(m)}
 // Glow layer: searchlight shafts, headlight cones (read as lit dust in the air - out in the fog too, a glimpse only: nothing
 // here touches visible(), so an enemy whose lights you can see still can't be targeted until it is in sight), lamp halos, nav
 // halos and fireflies are all drawn into one low-res buffer and added over the frame in a single full-screen pass.
-function dnGlow(m,W,H,V,lamp){let x;const q=HQ?4:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Math.max(2,Math.ceil(VH/q)),c=HQ?pfCanvas('dnvb',lw,lh):null,x0=HQ?c._x:ctx,k=HQ?lw/W:1,t=G.time,s=HQ?1:1.6,
+// into (phone High, dnLite): add into that buffer instead; the caller composites it.
+function dnGlow(m,W,H,V,lamp,into){let x;const q=HQ?4:6,c=into||(HQ?pfCanvas('dnvb',Math.max(2,Math.ceil(VW/q)),Math.max(2,Math.ceil(VH/q))):null),lw=c?c.width:2,lh=c?c.height:2,x0=HQ?c._x:ctx,k=HQ?lw/W:1,t=G.time,s=HQ?1:1.6,
     M={a:m.a*k,b:m.b*k,c:m.c*k,d:m.d*k,e:m.e*k,f:m.f*k},B=(img,wx,wy,r,a)=>{if(a<=0.01)return;x.globalAlpha=Math.min(1,a);x.setTransform(M.a,M.b,M.c,M.d,M.a*wx+M.c*wy+M.e,M.b*wx+M.d*wy+M.f);x.drawImage(img,-r,-r,2*r,2*r)};
-  x=x0;if(HQ){x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.clearRect(0,0,lw,lh)}
-  const gx=CGL.begin('glow',_rig.length*(HQ?5:2)+DN.beams.length*2+(HQ?34:0),x0,HQ?lw:W,HQ?lh:H,HQ);if(gx)x=gx;
+  x=x0;if(HQ&&!into){x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.clearRect(0,0,lw,lh)}
+  const gx=!into&&CGL.begin('glow',_rig.length*(HQ?5:2)+DN.beams.length*2+(HQ?34:0),x0,HQ?lw:W,HQ?lh:H,HQ);if(gx)x=gx;
   try{x.globalCompositeOperation='lighter';
   const sh=dnConeT('s','200,220,255'),sp=glowSprite('220,232,255'),hd=glowSprite('235,244,255'),px=1/sc,r0=Math.max(3.2,4*px);
   for(const[ox,oy,a,len]of DN.beams){if(HQ){cxf(x,M,ox,oy,a,len/192,len*.3/96);x.globalAlpha=.3*lamp;x.drawImage(sh,0,-48)}   // Medium: pools only, no full shaft
@@ -7593,25 +7667,29 @@ function dnGlow(m,W,H,V,lamp){let x;const q=HQ?4:6,lw=Math.max(2,Math.ceil(VW/q)
     for(let i=0;i<34;i++){const u=hash(i,7),v=hash(i,9),a=u*TAU+Math.sin(t*.13+i)*.2,d=ph+(rr-ph)*Math.sqrt(v),b=Math.sin(t*(1.1+u)+i*7);if(b<.15)continue;
       B(g,Math.cos(a)*d+Math.sin(t*.7+i*3)*6,Math.sin(a)*d+Math.cos(t*.53+i*5)*6,3.2,lamp*b)}}
   }finally{if(gx)CGL.end()}
-  if(HQ){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.drawImage(c,0,0,W,H)}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';xr(m)}
+  if(into){x.globalAlpha=1;x.globalCompositeOperation='source-over'}else if(HQ){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.drawImage(c,0,0,W,H)}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';xr(m)}
 // Lamp heads: crisp cores for head / tail lights (glimpsed through the fog out past vision), aircraft nav lights and strobes and
 // the tower lamps, batched into one path per colour. Low draws these as square dots and nothing else.
-const _lp={};
+// Each dot is a blit of a small baked disc (Low: a plain square), so nothing is allocated per frame.
+const _lpC={hd:'#fff4dc',tl:'#e0342a',nr:'#ff4a3a',ng:'#4aff7a',wh:'#ffffff'},_lpS={};
 function dnLamps(lamp,V){const t=G.time,lo=!GFX.lights,rigs=lo?dnRigs():_rig,nav=lo?dnNav():_nav,px=1/sc,dot=lo?Math.max(.9,1.3*px):Math.max(.7,1.05*px);
-  for(const k of['hd','tl','nr','ng','wh'])_lp[k]=new Path2D();
-  const P=(k,x,y,r)=>{if(lo)_lp[k].rect(x-r,y-r,2*r,2*r);else{_lp[k].moveTo(x+r,y);_lp[k].arc(x,y,r,0,TAU)}};
+  ctx.globalAlpha=lamp;ctx.globalCompositeOperation='source-over';
+  const P=(k,x,y,r)=>{if(lo){ctx.fillStyle=_lpC[k];ctx.fillRect(x-r,y-r,2*r,2*r)}else ctx.drawImage(_lpS[k]||(_lpS[k]=canvasSprite('lamp'+k,16,16,z=>{z.fillStyle=_lpC[k];z.beginPath();z.arc(8,8,8,0,TAU);z.fill()})),x-r,y-r,2*r,2*r)};
   for(const[vx,vy,a,fr,hw,,,rr]of rigs){if(Math.hypot(vx,vy)>V*1.3)continue;const co=Math.cos(a),si=Math.sin(a);
     for(const n of[-1,1]){P('hd',vx+co*fr-si*hw*n,vy+si*fr+co*hw*n,dot);P('tl',vx+co*rr-si*hw*n,vy+si*rr+co*hw*n,dot*.7)}}
   for(const[jx,jy,a,span,nose]of nav){const co=Math.cos(a),si=Math.sin(a);P('nr',jx+si*span,jy-co*span,dot);P('ng',jx-si*span,jy+co*span,dot);
     if(!lo&&(t*0.83+Math.abs(jx)*.001)%1<.08)P('wh',jx-co*nose*.8,jy-si*nose*.8,dot*1.6)}
   if(!lo)for(const[ox,oy]of DN.beams)P('wh',ox,oy,dot*1.4);
-  ctx.globalAlpha=lamp;for(const[k,c]of[['hd','#fff4dc'],['tl','#e0342a'],['nr','#ff4a3a'],['ng','#4aff7a'],['wh','#ffffff']]){ctx.fillStyle=c;ctx.fill(_lp[k])}ctx.globalAlpha=1}
-// Stars over the dark beyond the fog line: three twinkle groups, so three fills a frame.
+  ctx.globalAlpha=1}
+// Stars over the dark beyond the fog line: three twinkle groups. Each star is one blit of a small baked disc (a path of 87 arcs
+// spread over the whole screen made the rasteriser cover its full bounding box, three times a frame), and stars off screen are skipped.
 let _stars=null;
-function dnStars(V,lamp){const px=Math.round(4/sc)/4;if(!_stars||_stars.V!==V||_stars.px!==px){const r=rng(424242),g=[new Path2D(),new Path2D(),new Path2D()];
-    for(let i=0;i<260;i++){const a=r()*TAU,d=V*1.18+Math.pow(r(),.7)*V*1.9,x=Math.cos(a)*d,y=Math.sin(a)*d,s=(.45+r()*r()*1.3)*px;g[i%3].moveTo(x+s,y);g[i%3].arc(x,y,s,0,TAU)}_stars={V,px,g}}   // sizes in screen px: rebuilt only when the zoom settles on a new quarter-step
-  const t=G.time;ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgb(200,214,255)';
-  for(let i=0;i<3;i++){ctx.globalAlpha=Math.max(0,lamp*(.32+.2*Math.sin(t*(.9+i*.37)+i*2.1))*(1-(G.fogK||0)));ctx.fill(_stars.g[i])}
+function dnStars(V,lamp){const px=Math.round(4/sc)/4;if(!_stars||_stars.V!==V||_stars.px!==px){const r=rng(424242),g=[[],[],[]];
+    for(let i=0;i<260;i++){const a=r()*TAU,d=V*1.18+Math.pow(r(),.7)*V*1.9,x=Math.cos(a)*d,y=Math.sin(a)*d,s=(.45+r()*r()*1.3)*px;g[i%3].push(x,y,s)}_stars={V,px,g}}   // sizes in screen px: rebuilt only when the zoom settles on a new quarter-step
+  const t=G.time,spr=canvasSprite('star',32,32,x=>{x.fillStyle='rgb(200,214,255)';x.beginPath();x.arc(16,16,16,0,TAU);x.fill()}),hw=(VW/2+G.shake)/sc+4*px,hh=(VH/2+G.shake)/sc+4*px;
+  ctx.globalCompositeOperation='lighter';
+  for(let i=0;i<3;i++){const al=Math.max(0,lamp*(.32+.2*Math.sin(t*(.9+i*.37)+i*2.1))*(1-(G.fogK||0)));if(!(al>0))continue;ctx.globalAlpha=al;const q=_stars.g[i];
+    for(let j=0;j<q.length;j+=3){const x=q[j],y=q[j+1],s=q[j+2];if(x<-hw||x>hw||y<-hh||y>hh)continue;ctx.drawImage(spr,x-s,y-s,2*s,2*s)}}
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
 // HUD clock: a small horizon dial - sky colour for the hour, the sun or moon riding its arc, stars at night. Returns its label.
 function drawDayDial(cx,cy,r){const h=DN.h,a=_amb,nk=DN.nk;
@@ -7624,7 +7702,7 @@ function drawDayDial(cx,cy,r){const h=DN.h,a=_amb,nk=DN.nk;
   ctx.fillStyle='#232a1c';ctx.fillRect(cx-r,cy+r*.2,2*r,r);ctx.fillStyle='rgba(190,210,150,.35)';ctx.fillRect(cx-r,cy+r*.2,2*r,1);ctx.restore();
   ctx.strokeStyle='rgba(190,210,150,.3)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx,cy,r+.5,0,TAU);ctx.stroke();
   return nk>.6||h<5||h>=19.5?['NIGHT','#9fb4e6']:h<8.5?['DAWN','#ffcf8a']:h<16.5?['DAY','#c9d2b4']:['DUSK','#ffae6a']}
-function draw(){
+function draw(){aqTick();
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#161a12';ctx.fillRect(0,0,VW,VH);
   if(!G)return;
   G.zoomV+=(vision()-G.zoomV)*0.035;const pf=VH>VW*1.2?Math.min(1.35,1+(VH/VW-1.2)*0.45):1;   // portrait fill
