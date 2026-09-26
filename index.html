@@ -1075,7 +1075,7 @@ IC.threat='M12 3L2 20h20zM12 9.5v4.5M12 17h.01';
 IC.nade='M11 15m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M8.5 9.3V6.5h5v2.8M13.5 7.5c2.6 0 4.2 1.3 4.8 3.6M18.5 4.8m-1.7 0a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0M5.4 13.5h11.2M11 9.2v11.6';
 const _p2={};function cIcon(n,x,y,s,c,lw=2){const p=_p2[n]||(_p2[n]=new Path2D(IC[n]));ctx.save();ctx.translate(x,y);ctx.scale(s/24,s/24);ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke(p);ctx.restore()}
 // ================= SAVE =================
-const GFX_DEF=matchMedia('(pointer:coarse)').matches&&matchMedia('(hover:none)').matches?'medium':'high';
+const PHONE=matchMedia('(pointer:coarse)').matches&&matchMedia('(hover:none)').matches,GFX_DEF=PHONE?'medium':'high';   // PHONE = MOBILE (defined later), usable at load
 const DEF_SET={vol:60,music:true,shake:true,dmgNums:true,callouts:true,ring:true,blurPause:true,dayNight:true,speed:1,prio:'near'};
 let S;
 function loadSave(){try{S=JSON.parse(localStorage.getItem('theFortSave'))}catch(e){}
@@ -2044,15 +2044,19 @@ let GFX=GFX_PRESET[S.set.gfx]||GFX_PRESET.high;
 // Adaptive quality (phones only; desktop never leaves level 0). aqTick() watches the real interval between draw() calls and, when the
 // device can't hold ~36fps for over a second, sheds the costliest screen-space work one level at a time; after a long run of fast
 // frames it steps back up (waiting longer each time a step back up had to be undone). Level 0 is the preset exactly.
-//   1: no mid-frame canvas read-backs (heat haze, shockwave refraction, chroma fringe), no film grain, no dusk haze pass;
-//      Medium's full-screen 'multiply' ambient tint becomes a plain tinted darken (source-over, no destination read); High 3x -> 2x
-//   2: backing store one step down (High 2x -> 1.5x, Medium 1.5x -> 1.25x)      3: Medium 1x; High drops the bloom pass
+// Phones always render at most 2 device px per CSS px (PHONE_DPR): a 3x backing store is 2.25x the fill of 2x for detail nobody
+// sees at arm's length (HUD text stays crisp at 2x), and it was the single biggest GPU cost on 3x iPhones.
+//   1: no film grain, no dusk haze pass (phones never run the canvas read-back passes: heat haze, shockwave refraction, chroma
+//      fringe; on other devices level 1 drops them too)
+//   2: backing store one step down (phone High 2x -> 1.5x, Medium 1.5x -> 1.25x)      3: Medium 1x, High 1.25x; High drops the bloom pass
+// Desktop resolution is never governed (aqDpr ignores the level there).
 // Hitches count too: frames that are fine on average but where one in ~12 misses the 30fps budget (a GPU stall) step up just the same.
 // Before the first step, a phone running ChaosGL tries 3s with it off (each GL layer is a GL->2D composite, which some mobile browsers
 // pay for as a GPU read-back); if frames get clearly better it stays off for the session, else it goes back on and the step is taken.
 // AQ.force (QA / profiler) pins a level.
-const AQ={lv:0,force:null,t0:0,ema:16.7,jit:0,hr:0,gl:0,glT:0,glS:0,slow:0,fast:0,cool:0,wait:8000,downAt:-1e9,DH:[1,2/3,1/2,1/2],DM:[1,1,5/6,2/3]};
-const aqDpr=()=>GFX.dpr<=1?GFX.dpr:Math.max(1,GFX.dpr*(GFX===GFX_PRESET.high?AQ.DH:AQ.DM)[AQ.lv]);
+const AQ={lv:0,force:null,t0:0,ema:16.7,jit:0,hr:0,gl:0,glT:0,glS:0,slow:0,fast:0,cool:0,wait:8000,downAt:-1e9,DH:[1,1,3/4,5/8],DM:[1,1,5/6,2/3]};
+const PHONE_DPR=2;
+const aqDpr=()=>{if(!PHONE)return GFX.dpr;const b=Math.min(GFX.dpr,PHONE_DPR);return b<=1?b:Math.max(1,b*(GFX===GFX_PRESET.high?AQ.DH:AQ.DM)[AQ.lv])};
 function aqApply(){if(AQ.force!=null)AQ.lv=Math.max(0,Math.min(3,AQ.force|0));if(Math.min(devicePixelRatio||1,aqDpr())!==dpr)resize()}
 function aqSet(l){const t=performance.now();if(l>AQ.lv&&t-AQ.downAt<20000)AQ.wait=Math.min(120000,AQ.wait*2);if(l<AQ.lv)AQ.downAt=t;
   AQ.lv=l;AQ.slow=AQ.fast=AQ.hr=0;AQ.cool=2500;AQ.ema=AQ.lv?22:16.7;aqApply()}
