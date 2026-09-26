@@ -2358,8 +2358,19 @@ function updateEShots(dt){
   keepUndone(G.eshots);
   for(const w of G.vwrecks)if(G.time-w.t0<VWRECK_T&&R()<.3)puff(w.x+(R()-.5)*w.r*.6,w.y+(R()-.5)*w.r*.6,1,w.r*.35,2.2,'30,27,24',8,0.55);
   if(G.vwrecks.length&&G.time-G.vwrecks[0].t0>VWRECK_T)G.vwrecks.shift()}
+// enemy ordnance sprites (baked like the friendly 'msl'): MANPADS round = slim light-grey tube, canards + tail fins, dark seeker;
+// MLRS rocket = olive Grad rocket with a dark nose band and 4 tail fins. Exhaust = one baked tongue (white core -> orange), 'lighter'.
+const samArt=()=>{hqPoly([-3.3,-.7,-4.4,-1.9,-2.4,-.7],'#595d53');hqPoly([-3.3,.7,-4.4,1.9,-2.4,.7],'#4a4e45');hqCyl(-3.8,-.72,6.6,1.44,'#d4d4ca');
+  box(-3.8,-.72,.7,1.44,'#3a3d36');box(1.1,-.72,.4,1.44,'#c79b32');hqPoly([1.6,-.7,2,-1.35,2.4,-.7],'#595d53');hqPoly([1.6,.7,2,1.35,2.4,.7],'#4a4e45');
+  hqPoly([2.7,-.72,3.9,0,2.7,.72],'#2b2f35');ell(3.05,-.22,.38,.18,'rgba(190,225,255,.85)');box(-3,-.55,5.4,.26,'rgba(255,255,255,.4)')};
+const grdArt=()=>{hqPoly([-3.6,-.8,-4.8,-2,-2.6,-.8],'#3f4430');hqPoly([-3.6,.8,-4.8,2,-2.6,.8],'#343826');hqCyl(-4.4,-.82,6.8,1.64,'#6c7148');
+  box(-4.4,-.82,.55,1.64,'#26271f');box(-1.2,-.82,.25,1.64,'rgba(0,0,0,.35)');box(1.3,-.82,.7,1.64,'#2c2f22');hqPoly([2.35,-.82,3.9,0,2.35,.82],'#4b4f36');
+  box(-3.6,-.62,5,.28,'rgba(255,250,220,.28)');box(2.4,-.3,.9,.2,'rgba(255,255,255,.3)')};
+function exTongue(){let c=_hqc.ext;if(c)return c;c=_hqc.ext=hqCv(64,24);const x=c.getContext('2d');x.translate(58,12);x.scale(4.6,1);
+  const g=x.createRadialGradient(0,0,0,0,0,12);g.addColorStop(0,'rgba(255,255,245,1)');g.addColorStop(.18,'rgba(255,236,170,.95)');g.addColorStop(.5,'rgba(255,150,50,.5)');g.addColorStop(1,'rgba(255,80,20,0)');
+  x.fillStyle=g;x.beginPath();x.arc(0,0,12,0,7);x.fill();return c}
 // drawn above the fog: incoming ordnance, impact warning rings, and red brackets on a crew that just gave itself away
-function drawEShots(){const px=1/sc,t=G.time,lw=Math.max(1,1.4*px);
+function drawEShots(){const px=1/sc,t=G.time,lw=Math.max(1,1.4*px);let bp=0;
   for(const e of G.enemies){if(!e.mech||e.dead||!visible(e))continue;const c=G.time-(e.mechT??-9)<0.4?'#9cf5a0':'#5fbf6a';   // mechanic: green cross + tag (bright while repairing)
     box(e.x-0.7*px-1,e.y-e.r-7*px-3,1.4*px+2,5*px+4,c);box(e.x-2.5*px-2,e.y-e.r-5.2*px-1.2,5*px+4,1.4*px+2,c);
     ctx.font=`700 ${(8*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle=c;ctx.fillText('MECH',e.x,e.y-e.r-10*px-4)}
@@ -2372,14 +2383,15 @@ function drawEShots(){const px=1/sc,t=G.time,lw=Math.max(1,1.4*px);
       ctx.strokeStyle=`rgba(255,80,60,${(0.5+0.4*Math.sin(t*18+s.tx)).toFixed(2)})`;ctx.lineWidth=lw;ctx.beginPath();ctx.arc(s.tx,s.ty,r,0,TAU);
       ctx.moveTo(s.tx-r*0.5,s.ty);ctx.lineTo(s.tx+r*0.5,s.ty);ctx.moveTo(s.tx,s.ty-r*0.5);ctx.lineTo(s.tx,s.ty+r*0.5);ctx.stroke()}
     if(s.t<0)continue;const k=Math.min(1,s.t/s.dur),x=s.x+(s.tx-s.x)*k,y=s.y+(s.ty-s.y)*k;
-    if(s.k==='sam'){ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(s.ty-y,s.tx-x)||0);box(-3,-.5,4.6,1,'#d8d6cc');box(1.3,-.5,.5,1,'#3b3f36');
-      ctx.globalCompositeOperation='lighter';ell(-3.8,0,2.4,1.2,'#ffcf6a');ctx.restore();continue}
+    if(s.k==='sam'){bp=bp||hqPx();ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(s.ty-y,s.tx-x)||0);ctx.globalCompositeOperation='lighter';ctx.drawImage(exTongue(),-13,-1.3,10,2.6);
+      ctx.globalCompositeOperation='source-over';hqDraw(hqBake('esam',bp,9,5,5,2.5,samArt,.2));ctx.restore();continue}
     if(s.k==='rpg'){ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(s.ty-s.y,s.tx-s.x));box(-3.5,-.6,4.2,1.2,'#5d6446');hqPoly([.7,-1.1,3.2,0,.7,1.1],'#4a5034');
       ctx.globalCompositeOperation='lighter';ell(-4.4,0,2.2,1.1,'#ffb13b');ctx.restore();continue}
-    const h=Math.sin(k*Math.PI)*s.h,h2=Math.sin(Math.min(1,k+0.02)*Math.PI)*s.h,k2=Math.min(1,k+0.02);ell(x,y,1.8,1,'rgba(0,0,0,.3)');
-    if(s.k==='mortar'){ell(x,y-h,1.7,1.7,'#2c2e26');ell(x-.5,y-h-.5,.6,.6,'rgba(255,255,255,.3)')}
-    else{ctx.save();ctx.translate(x,y-h);ctx.rotate(Math.atan2(s.y+(s.ty-s.y)*k2-h2-(y-h),s.x+(s.tx-s.x)*k2-x));box(-4,-.7,5.6,1.4,'#cfcac0');box(1.6,-.7,1,1.4,'#b3261e');
-      ctx.globalCompositeOperation='lighter';ell(-4.9,0,2.2,1.1,'#ffb13b');ctx.restore()}}
+    const h=Math.sin(k*Math.PI)*s.h,h2=Math.sin(Math.min(1,k+0.02)*Math.PI)*s.h,k2=Math.min(1,k+0.02);
+    if(s.k==='mortar'){ell(x,y,1.8,1,'rgba(0,0,0,.3)');ell(x,y-h,1.7,1.7,'#2c2e26');ell(x-.5,y-h-.5,.6,.6,'rgba(255,255,255,.3)')}
+    else{const hk=h/(s.h||1);ctx.globalAlpha=.42-.24*hk;ell(x,y,2.6-1.2*hk,1.3-.5*hk,'#000');ctx.globalAlpha=1;bp=bp||hqPx();   // shadow shrinks + fades as the rocket climbs
+      ctx.save();ctx.translate(x,y-h);ctx.rotate(Math.atan2(s.y+(s.ty-s.y)*k2-h2-(y-h),s.x+(s.tx-s.x)*k2-x));ctx.globalCompositeOperation='lighter';ctx.drawImage(exTongue(),-14.2,-1.4,10.6,2.8);
+      ctx.globalCompositeOperation='source-over';hqDraw(hqBake('egrd',bp,10,5,5.5,2.5,grdArt,.2));ctx.restore()}}
   for(const e of G.enemies){if(!e.stand||!(e.rev>0)||e.dead)continue;const r=e.r+7*px+Math.sin(t*8)*1.2*px,tk=5*px,since=t-(e.fl??-9);
     if(since<0.2){ctx.globalCompositeOperation='lighter';blit(glowSprite('255,190,110'),e.x,e.y,e.r*3,1-since/0.2);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
     ctx.strokeStyle='#ff6a50';ctx.lineWidth=Math.max(1,1.5*px);ctx.beginPath();
@@ -6788,8 +6800,13 @@ const capPos=c=>{const s=-950+800*c.t;return{x:Math.cos(c.a)*s-Math.sin(c.a)*c.o
 // ---- damage + effects (air bursts only ever touch G.sky; aircraft ordnance only ever touches the fort) -------------
 function skyBurst(x,y,r,dmg,pct=0,sup=0){if(dmg)for(const e of G.sky)if(!e.dead&&within(e,x,y,r+e.r)){if(sup)skySuppress(e,sup);hurtEnemy(e,dmg+e.max*pct,false)}
   puff(x,y,2,5,0.9,'46,44,40',8,0.6);spark(x,y,4,110,['#ffe7a0','#ff9a3a'],0.25,1.3);light(x,y,26,'255,190,110',0.08)}
-function skyBlast(x,y,k){fireball(x,y,22*k,0.4+0.15*k);ring(x,y,34*k,0.35,'255,220,170',1.5+k);spark(x,y,Math.round(8+8*k),150*k,['#fff6d0','#ffc04a','#ff7a1a'],0.45,1.5);
+// High gfx: the HQ burst (flash, licking fire, faint shock ring, embers) plus a dust ring and two dark flak puffs, no hard cream ring
+function skyBlast(x,y,k){if(S.set.gfx==='high'){skyBlastHQ(x,y,k);return}fireball(x,y,22*k,0.4+0.15*k);ring(x,y,34*k,0.35,'255,220,170',1.5+k);spark(x,y,Math.round(8+8*k),150*k,['#fff6d0','#ffc04a','#ff7a1a'],0.45,1.5);
   puff(x,y,Math.round(2+3*k),9*k,1.4+k*0.5,'58,52,46',14*k,0.55);decal(x,y,'scorch',12*k);light(x,y,70*k,'255,165,70',0.3);sfx('boom',x,y,0.5+0.7*k);if(k>=0.9)shake(2*k)}
+function skyBlastHQ(x,y,k){const r=22*k;hqBurst(x,y,r,false);if(r<14)decal(x,y,'scorch',r*.5);
+  if(k>=0.6){const dl=.45+.15*k;G.fx.push({k:'dust',x,y,r:r*1.7,life:dl,max:dl})}
+  for(let i=0,n=k>=0.9?3:2;i<n;i++)hpuff(x+(R()-.5)*r*.5,y+(R()-.5)*r*.5,{vx:(R()-.5)*r*.6,vy:(R()-.5)*r*.6,r:r*(.22+R()*.1),grow:r*(.6+R()*.4),life:1.3+.5*k+R()*.4,col:R()<.5?'40,37,34':'62,57,51',a:.5,rise:-(10+R()*10),d:i*.05});
+  light(x,y,60*k,'255,165,70',0.24);sfx('boom',x,y,0.5+0.7*k);if(k>=0.9)shake(2*k)}
 function skyImpact(s){const k=s.k==='shell'?1.3:s.k==='bomb'?1:0.6;skyBlast(s.tx,s.ty,k);if(s.vt&&FC[s.vt.ck].air){if(R()<0.6)fcHit(s.vt,s.dmg,s.src)}else fcSplash(s.tx,s.ty,10+12*k,s.dmg,s.src,0);if(s.dmg&&boxD(s.tx,s.ty)<=blockHalf()+4)damageFort(s.dmg,s.src)}
 // AA suppression 0..1 (decays ~0.22/s): gunships and attack helicopters fire slower while under flak; big hits make the gunship dump flares
 function skySuppress(e,k){if(e.type!=='airboss'&&e.type!=='gunheli')return;const was=e.sup||0;e.sup=Math.min(1,was+k*(e.type==='airboss'?1:0.7));
@@ -6832,7 +6849,7 @@ const craftK=e=>Math.max(1,4.5/(sc*e.r));
 // Live aircraft and wrecks are drawn from sprites of this art (drawCraft): baked per zoom bucket with the rotors at quantised
 // phases (8 per half turn; the gunship's 5-blade rotor 12 per blade gap) and the lamp on/off, i.e. one drawImage instead of ~20
 // vector ops. The strike jet's afterburner, the gunship's battery flash and the hit flash stay live overlays.
-const CRAFT_BOX={drone:[16,16,8,8],gunheli:[46,41,25,20.5],strikejet:[46,32,23.5,16],heavybomber:[92,93,45.5,46.5],uav:[24,43,13,21.5],airboss:[83,113,41.5,56.5]},_crM={};
+const CRAFT_BOX={drone:[16,16,8,8],gunheli:[46,41,25,20.5],strikejet:[46,32,23.5,16],heavybomber:[95,96,47,48],uav:[24,43,13,21.5],airboss:[86,117,43,58.5]},_crM={};
 let _skyB=null;   // world matrix while drawSky draws live aircraft and wrecks (sprite path); null for the intel previews (vector path)
 const craftTh=(ty,e,t)=>ty==='drone'?t*80+e.wob:ty==='gunheli'?t*26+e.wob:ty==='uav'?t*70+e.wob:ty==='airboss'?t*50:0;
 function drawCraft(e,x,y,k){const t=G.time,hot=t-(e.fl??-9)<0.06,ty=e.type,B=_skyB;
@@ -6879,11 +6896,17 @@ function craftArt(type,col,th,blink,hot,bay,ab){
     if(hot){ell(24,0,2.6,1.2,'#ffcf5a');ell(23.4,0,1.2,.6,'#fff')}
     if(ab>0){ctx.globalCompositeOperation='lighter';for(const s of[-2.6,2.6]){ell(-20.5,s,2.8*ab,1.2,'rgba(255,150,60,.75)');ell(-19.8,s,1.2,.7,'#fff3c0')}ctx.globalCompositeOperation='source-over'}
     break}
-  case'heavybomber':
-    for(const s of[1,-1]){fpoly(s>0?BMR_WING:flipY(BMR_WING),'#50554f');fpoly(s>0?BMR_TAIL:flipY(BMR_TAIL),'#50554f')}
-    for(const s of[1,-1])for(const[ex,ey]of[[-3,14],[-10,27]]){box(ex-4,ey*s-1.8,9,3.6,'#3b3f3a');ell(ex+5,ey*s,1,1.6,'#111');ell(ex-4.6,ey*s,1.3,1.2,'rgba(255,150,60,.55)')}   // four engine pods
-    ell(2,0,44,5.4,col);ell(0,-1.8,38,1.6,'rgba(255,250,230,.1)');box(-45,-.7,14,1.4,'#474c46');                                                // fuselage, sheen, fin
-    ell(43,0,3.4,3,'#3e433d');ell(37,0,3.6,2.6,'#1c2a33');ell(38,-.8,1.4,.6,'rgba(170,220,255,.45)');                                             // nose + cockpit
+  case'heavybomber':   // light blue-grey strategic bomber: outlined, lit leading edges, dark flaps, shaded nacelles
+    craftLine('heavybomber');
+    for(const s of[1,-1]){fpoly(s>0?BMR_WING:flipY(BMR_WING),'#6f7a84');fpoly(s>0?BMR_TAIL:flipY(BMR_TAIL),'#6f7a84');
+      fpoly([[10,-4*s],[-12,-46*s],[-14.6,-46*s],[6.2,-4*s]],'#909ba4');fpoly([[-12,-4*s],[-20,-46*s],[-17.6,-46*s],[-9.2,-4*s]],'#515b64');
+      fpoly([[-30,-3*s],[-37,-17*s],[-38.6,-17*s],[-31.8,-3*s]],'#909ba4');fpoly([[-40,-3*s],[-42,-17*s],[-40.6,-17*s],[-38.4,-3*s]],'#515b64')}
+    ctx.strokeStyle='rgba(20,24,28,.4)';ctx.lineWidth=.35;ctx.beginPath();
+    for(const s of[1,-1]){ctx.moveTo(-.6,-4*s);ctx.lineTo(-16,-46*s);for(const f of[.35,.7]){const y=-4-42*f,x=-12-8*f;ctx.moveTo(x,y*s);ctx.lineTo(x+2.8,y*s)}}ctx.stroke();
+    for(const s of[1,-1])for(const[ex,ey]of[[-3,14],[-10,27]]){hqCyl(ex-4,ey*s-1.9,9.6,3.8,'#4f5961');ell(ex+5.3,ey*s,1.05,1.7,'#0d0f10');ell(ex+5,ey*s-.9,.5,.3,'rgba(255,255,255,.45)');ell(ex-4.6,ey*s,1.3,1.2,'rgba(255,150,60,.55)')}   // four engine pods
+    ell(2,0,44,5.4,'#7d8892');ell(1,-2,39,2,'rgba(255,255,255,.16)');ell(2,2.5,42,2.4,'rgba(0,0,0,.2)');box(-45,-.7,14,1.4,'#56606a');box(-45,-.7,14,.4,'#8c97a0');   // fuselage, lit spine, shaded belly, fin
+    ctx.strokeStyle='rgba(20,24,28,.35)';ctx.lineWidth=.3;ctx.beginPath();for(const fx of[-26,20,30]){const hy=5.4*Math.sqrt(1-((fx-2)/44)**2);ctx.moveTo(fx,-hy);ctx.lineTo(fx,hy)}ctx.stroke();
+    ell(43,0,3.4,3,'#454e56');ell(37,0,3.6,2.6,'#1c2a33');ell(38,-.8,1.4,.6,'rgba(170,220,255,.5)');ell(36.4,-1.2,.7,.35,'rgba(255,255,255,.8)');   // nose + cockpit + glint
     if(bay){box(-14,-2.6,20,5.2,'#141414');for(let i=0;i<4;i++)ell(-11+i*5,0,1.8,1,'#4a4a40')}else{ctx.strokeStyle='rgba(20,20,20,.5)';ctx.lineWidth=.4;ctx.strokeRect(-14,-2.6,20,5.2)}
     box(-36,-2.4,2.6,4.8,'#b3261e');
     break;
@@ -6893,15 +6916,26 @@ function craftArt(type,col,th,blink,hot,bay,ab){
     {const r=th;ell(-10.4,0,1,3.2,'rgba(210,214,218,.18)');limb(-10.4,-Math.cos(r)*3,-10.4,Math.cos(r)*3,.6,'rgba(25,25,25,.7)')}   // pusher prop
     if(blink){ell(-2,0,.6,.6,'#ff3b30');ell(-2,0,1.8,1.8,'rgba(255,60,50,.28)')}
     break;
-  default:   // airboss: four-turboprop heavy gunship
-    fpoly(BOSS_WING,'#474d4a');box(-6.5,-56,3,112,'rgba(255,250,230,.07)');box(-41,-18,7,36,'#474d4a');box(-41,-18,7,1,'#5d6460');
-    for(const ey of[-32,-16,16,32]){const r=th+ey;box(2,ey-2.6,12,5.2,'#2b2f2d');ell(15,ey,1.1,7.5,'rgba(200,205,200,.14)');limb(15,ey-Math.cos(r)*7,15,ey+Math.cos(r)*7,.9,'rgba(25,25,25,.7)');ell(15,ey,1,1,'#111')}
-    ell(0,0,40,7.5,col);ell(-2,-3,34,2.2,'rgba(255,250,230,.08)');ell(37,0,4,5,'#2f3432');ell(35,0,3,3.8,'#1c2a33');box(-40,-.8,12,1.6,'#2b2f2d');
-    for(const gx of[-8,4,14]){box(gx-1.6,-8.6,3.2,2.4,'#151515');box(gx-.5,-12.4,1,3.8,'#0c0c0c')}                                                   // left-side gun battery
+  default:   // airboss: four-turboprop heavy gunship, dark charcoal-olive, outlined, side gun sponson, red-yellow boss markings
+    craftLine('airboss');
+    fpoly(BOSS_WING,'#3b4034');fpoly([[8,-56],[12,0],[8,56],[4.6,56],[8.3,0],[4.6,-56]],'#545b4b');fpoly([[-1.3,-56],[-5,0],[-1.3,56],[-4,56],[-8,0],[-4,-56]],'#262a22');
+    ctx.strokeStyle='rgba(0,0,0,.4)';ctx.lineWidth=.35;ctx.beginPath();ctx.moveTo(2.6,-55);ctx.lineTo(4.4,0);ctx.lineTo(2.6,55);
+    for(const y of[-44,-22,22,44]){const x=-8+4*Math.abs(y)/56;ctx.moveTo(x,y);ctx.lineTo(x+3.4,y)}ctx.stroke();
+    box(-41,-18,7,36,'#3b4034');box(-35.9,-18,1.9,36,'#545b4b');box(-41,-18,2,36,'#262a22');
+    for(const s of[-1,1]){ell(-.5,40*s,3.8,3.8,'#e2b43a');ell(-.5,40*s,2.5,2.5,'#b3261e');ell(-.5,40*s,.9,.9,'#15160f')}   // boss roundels
+    for(const ey of[-32,-16,16,32]){const r=th+ey;hqCyl(1,ey-2.9,13.6,5.8,'#30352b');ell(14.2,ey,1.2,2.1,'#0c0d0a');ell(15.5,ey,1.1,7.5,'rgba(200,205,200,.14)');limb(15.5,ey-Math.cos(r)*7,15.5,ey+Math.cos(r)*7,.9,'rgba(25,25,25,.7)');ell(15.5,ey,1.1,1.1,'#111')}
+    ell(0,0,40,7.5,'#474d3e');ell(-1,-3.1,35,2.6,'rgba(255,250,225,.13)');ell(0,3.7,38,3.1,'rgba(0,0,0,.24)');
+    ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=.3;ctx.beginPath();ctx.moveTo(-33,0);ctx.lineTo(30,0);for(const fx of[-22,-10,20,28]){const hy=7.5*Math.sqrt(1-(fx/40)**2);ctx.moveTo(fx,-hy);ctx.lineTo(fx,hy)}ctx.stroke();
+    ell(37,0,4,5,'#2b2f27');ell(35,0,3,3.8,'#1c2a33');ell(35.6,-1.4,1.3,.55,'rgba(190,225,255,.6)');box(-40,-.8,12,1.6,'#2b2f2d');
+    hqRR(-14,-10.4,33,3.6,1,'#2c3027');box(-13,-10.4,31,.8,'#565d4c');   // left-side gun sponson: 2x 40mm + the 105mm howitzer
+    for(const gx of[-8,4]){box(gx-2,-10,4,3,'#151515');box(gx-1.4,-9.5,2.8,.7,'#5d6356');box(gx-.8,-14,1.6,5,'#0c0c0c');box(gx-.35,-13.7,.6,4.4,'#7c8278')}   // 40mm pair
+    box(11.6,-10.4,4.8,3.6,'#151515');box(12.2,-9.9,3.6,.8,'#5d6356');box(12.9,-16.6,2.2,7.2,'#0c0c0c');box(13.45,-16.3,.8,6.6,'#868c80');box(12.4,-17.2,3.2,1.4,'#1d1f1b');   // 105mm + muzzle brake
     if(hot){ell(4,-14.5,1.4,2.8,'#ffcf5a');ell(4,-14,.7,1.3,'#fff')}
-    box(-28,-7.2,3,14.4,'#b3261e');ell(20,-40,2.4,2.4,'#b3261e');ell(20,40,2.4,2.4,'#b3261e');
+    box(-29,-7.2,5,14.4,'#e2b43a');box(-28.1,-7.2,3.2,14.4,'#b3261e');ell(6,-55,1.1,1.1,'#e0342a');ell(6,55,1.1,1.1,'#3fcf5a');
   }
 }
+// dark outline for the big airframes: stroke of the silhouette (half of it lands outside), ~1-1.5 screen px at any zoom
+function craftLine(ty){const m=ctx.getTransform(),pu=Math.hypot(m.a,m.b)||1;ctx.lineWidth=Math.min(2.6,Math.max(1.2,2.8/pu));ctx.strokeStyle='#15160f';ctx.lineJoin='round';ctx.stroke(skySil(ty))}
 // ChaosGL helpers: the hit-flash / wreck-char silhouette and the CAP fighter, baked (a Path2D fill or clip would demote a GL layer)
 const craftBox=ty=>(SKY_EXT[ty]||40)*1.25+3;
 function silSpr(ty,c){const h=craftBox(ty);return hqBake('sil'+ty+c,hqPx(),2*h,2*h,h,h,()=>{ctx.fillStyle=c;ctx.fill(skySil(ty))},0)}
@@ -6917,8 +6951,23 @@ function drawAAGun(u){drawAAGunT(u,tierOf('aagun'))}
 // SAM site: tiered pad + carrier and rotating launcher (caps show loaded rounds, dark tubes while reloading)
 function drawSAM(u){drawSAMT(u,tierOf('sam'))}
 // Air-search radar: lattice base, rotating planar array, faint sweep on the ground
+// High: baked static base (concrete pad, sandbag ring, lattice tower legs + bracing, equipment hut) and a baked rotating
+// array (curved reflector with a shaded face, dipole rows, feed boom + horn); per frame only the rotation and the lamp
+function hqRadarBase(){hqBagRing(7.9,20,2,k=>k===5||k===6);hqRR(-6.2,-6.2,12.4,12.4,.8,'#5f5e55');hqRR(-5.6,-5.6,11.2,11.2,.6,'#8a887c');ctx.beginPath();ctx.roundRect(-5.6,-5.6,11.2,11.2,.6);adLit(-5.6,-5.6,11.2,11.2);
+  hqSpeckle(-5.6,-5.6,11.2,11.2,50,'rgba(40,40,36,.3)',.35);ctx.lineWidth=.14;ctx.strokeStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.moveTo(0,-5.6);ctx.lineTo(0,5.6);ctx.moveTo(-5.6,0);ctx.lineTo(5.6,0);ctx.stroke();
+  hqRR(1.6,2.2,3.6,2.8,.3,'#4f5a3a');box(1.6,2.2,3.6,.6,'#6c7a50');box(1.9,3.2,1.2,.9,'#1d2226');ell(4.6,4.6,.35,.35,'#c33');   // equipment hut
+  ctx.strokeStyle='#2a2d27';ctx.lineWidth=.45;ctx.beginPath();ctx.moveTo(-3.4,-3.4);ctx.lineTo(3.4,3.4);ctx.moveTo(3.4,-3.4);ctx.lineTo(-3.4,3.4);ctx.rect(-3.4,-3.4,6.8,6.8);ctx.stroke();   // lattice bracing
+  ctx.strokeStyle='rgba(255,250,220,.25)';ctx.lineWidth=.16;ctx.beginPath();ctx.moveTo(-3.4,-3.25);ctx.lineTo(3.4,-3.25);ctx.moveTo(-3.25,-3.4);ctx.lineTo(-3.25,3.4);ctx.stroke();
+  for(const[x,y]of[[-3.4,-3.4],[3.4,-3.4],[-3.4,3.4],[3.4,3.4]]){box(x-.8,y-.8,1.6,1.6,'#262923');box(x-.8,y-.8,1.6,.5,'#5b6056')}
+  hqDome(0,0,2.3,2.3,'#6b6f66',.3,-.5);ell(0,0,1,1,'#2d302a')}
+function hqRadarArray(){ctx.beginPath();ctx.moveTo(-1.6,-7.6);ctx.quadraticCurveTo(.2,0,-1.6,7.6);ctx.lineTo(.9,7.6);ctx.quadraticCurveTo(2.6,0,.9,-7.6);ctx.closePath();
+  const g=ctx.createLinearGradient(-1.6,0,2,0);g.addColorStop(0,'#f2f3ee');g.addColorStop(.55,'#c9cdc4');g.addColorStop(1,'#80867c');ctx.fillStyle=g;ctx.fill();
+  ctx.strokeStyle='rgba(60,66,58,.55)';ctx.lineWidth=.2;ctx.beginPath();for(let y=-6.4;y<7;y+=1.6){const x=-1.6+1.8*(1-(y/7.6)**2);ctx.moveTo(x-.1,y);ctx.lineTo(x+2.3,y)}ctx.stroke();
+  box(1.2,-.35,3,.7,'#4c5049');hqRR(3.8,-1,1.4,2,.3,'#3b3f38');box(3.9,-.9,.4,1.8,'#6c7068');ell(0,0,1.3,1.3,'#3a3d36')}
 function drawRadar(u){const s=US.radar*bS(),a=G.time*1.6;ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);
   ctx.save();ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgba(110,230,150,.07)';ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,20,a-0.5,a);ctx.closePath();ctx.fill();ctx.restore();
+  if(HQ){const px=hqPx(),b=hqBake('rdB',px,20,20,10,10,hqRadarBase),ar=hqBake('rdA',px,9,17,2.2,8.5,hqRadarArray);hqShadow(b,.8,1,.45);hqDraw(b);ctx.rotate(a);const l=hqLoc(1.4,1.8,a,1);hqShadow(ar,l[0],l[1],.5);hqDraw(ar);
+    if(Math.floor(G.time*2)%2){ell(0,0,.7,.7,'#ff3b30');ctx.globalCompositeOperation='lighter';ell(0,0,1.6,1.6,'rgba(255,60,50,.35)');ctx.globalCompositeOperation='source-over'}ctx.restore();return}
   ell(1,1.2,6.4,6.4,'rgba(0,0,0,.3)');box(-5,-5,10,10,'#4d524a');ctx.strokeStyle='#2c302a';ctx.lineWidth=.4;ctx.beginPath();ctx.moveTo(-5,-5);ctx.lineTo(5,5);ctx.moveTo(5,-5);ctx.lineTo(-5,5);ctx.stroke();ctx.strokeRect(-5,-5,10,10);
   ell(0,0,2.2,2.2,'#6b6f66');ctx.rotate(a);box(-1,-7.5,2.4,15,'#cfd3cb');box(-1,-7.5,.6,15,'#f0f2ec');for(let y=-6.5;y<7;y+=2)box(-.4,y,1.6,.3,'#9aa096');box(1.4,-.8,2.2,1.6,'#5b5f58');
   if(Math.floor(G.time*2)%2)ell(0,0,.7,.7,'#ff3b30');ctx.restore()}
@@ -7241,7 +7290,23 @@ function mineSprite(){if(_mineSpr)return _mineSpr;const S2=128,k=S2/12,[c,x]=mkC
   x.fillStyle='rgba(98,80,56,.95)';x.beginPath();x.moveTo(3.6,-1.2);x.bezierCurveTo(2.2,0.2,1.6,1.8,-0.6,3.6);x.lineTo(2.6,3.6);x.lineTo(4,1);x.closePath();x.fill();
   for(let i=0;i<60;i++){const a=r()*TAU,d=2.4+r()*2.6;x.fillStyle=r()<.5?'rgba(120,100,72,.8)':'rgba(50,40,28,.7)';x.fillRect(Math.cos(a)*d,Math.sin(a)*d,0.22+r()*0.3,0.22+r()*0.3)}
   return _mineSpr=c}
-function crateSprite(){if(_crateSpr)return _crateSpr;const S2=320,k=S2/32,[c,x]=mkCv(S2,S2),r=rng(8);x.setTransform(k,0,0,k,S2/2,S2/2);x.lineCap='round';x.lineJoin='round';
+// crate kind marks (filled glyphs, unit box ~[-1,1]): $, artillery shell, cross, dish antenna, jet. Dark rim first so they read small.
+const CR_STRAP={cash:'#c8912c',ammo:'#b3442c',fix:'#4f9a48',intel:'#4b7fb8',strike:'#d5782a'};
+function crGlyph(x,k,col,rim){x.save();x.lineJoin='round';x.lineCap='round';const P=new Path2D();
+  if(k==='cash'){x.font='bold 2px monospace';x.textAlign='center';x.textBaseline='middle';x.lineWidth=rim;x.strokeStyle='rgba(12,14,9,.9)';x.strokeText('$',0,.1);x.fillStyle=col;x.fillText('$',0,.1);x.restore();return}
+  if(k==='ammo'){P.moveTo(-.46,-.15);P.quadraticCurveTo(-.46,-.72,0,-1.05);P.quadraticCurveTo(.46,-.72,.46,-.15);P.lineTo(.46,.78);P.lineTo(.56,.78);P.lineTo(.56,1);P.lineTo(-.56,1);P.lineTo(-.56,.78);P.lineTo(-.46,.78);P.closePath()}
+  else if(k==='fix'){P.rect(-.32,-.95,.64,1.9);P.rect(-.95,-.32,1.9,.64)}
+  else if(k==='intel'){const D=new Path2D();D.arc(0,0,.78,0,Math.PI);D.closePath();D.rect(-.07,-.72,.14,.72);D.moveTo(.2,-.8);D.arc(0,-.8,.2,0,TAU);
+    P.addPath(D,new DOMMatrix().translate(.05,-.12).rotate(-38));P.moveTo(-.16,.3);P.lineTo(.16,.3);P.lineTo(.6,1);P.lineTo(-.6,1);P.closePath()}
+  else{const H=[[0,-1.05],[.16,-.55],[.98,.08],[.98,.3],[.16,.12],[.13,.62],[.44,.86],[.44,1],[0,.92]];P.moveTo(0,-1.05);for(const[a,b]of H)P.lineTo(a,b);for(let i=H.length-1;i>=0;i--)P.lineTo(-H[i][0],H[i][1]);P.closePath()}
+  x.lineWidth=rim;x.strokeStyle='rgba(12,14,9,.9)';x.stroke(P);x.fillStyle=col;x.fill(P);
+  if(k==='ammo'){x.fillStyle='rgba(12,14,9,.55)';x.fillRect(-.46,.12,.92,.2);x.fillStyle='rgba(255,255,255,.3)';x.fillRect(-.3,-.3,.14,1)}
+  x.restore()}
+const _crBadge={};   // floating kind badge over non-cash crates: dark disc, kind-colour ring, big filled glyph (baked once per kind)
+function crBadge(k){let c=_crBadge[k];if(c)return c;const[cv,x]=mkCv(96,96),col='rgb('+CRATE[k].c+')';x.fillStyle='rgba(20,24,16,.88)';x.beginPath();x.arc(48,48,45,0,TAU);x.fill();
+  x.strokeStyle=col;x.lineWidth=4;x.beginPath();x.arc(48,48,42,0,TAU);x.stroke();x.setTransform(29,0,0,29,48,48);crGlyph(x,k,col,.16);return _crBadge[k]=cv}
+const _crSpr={};
+function crateSprite(kind='cash'){if(_crSpr[kind])return _crSpr[kind];const S2=320,k=S2/32,[c,x]=mkCv(S2,S2),r=rng(8);x.setTransform(k,0,0,k,S2/2,S2/2);x.lineCap='round';x.lineJoin='round';
   // canopy lying in a heap up-wind of the crate, rigging lines back to the corners
   const cp=new Path2D();cp.moveTo(3,-15);cp.bezierCurveTo(9,-16,15,-13,15,-7);cp.bezierCurveTo(15.5,-3,12,-1.5,10,-4);cp.bezierCurveTo(8,-6,6,-5,4,-8);cp.bezierCurveTo(1,-10,0,-14,3,-15);cp.closePath();
   x.save();x.shadowColor='rgba(6,8,4,.5)';x.shadowBlur=1.2*k;x.shadowOffsetX=0.8*k;x.shadowOffsetY=0.8*k;x.fillStyle='#7d7a5a';x.fill(cp);x.restore();
@@ -7253,11 +7318,12 @@ function crateSprite(){if(_crateSpr)return _crateSpr;const S2=320,k=S2/32,[c,x]=
   bevel(x,[-7,-7,14,14],'#4c5334',1.1,0.22,0.4);bevel(x,[-5.6,-5.6,11.2,11.2],'#5f6842',0.35,0.12,0.3);
   x.strokeStyle='rgba(28,32,18,.4)';x.lineWidth=0.2;x.beginPath();for(let i=-5.6+2.8;i<5.6;i+=2.8){x.moveTo(-5.6,i);x.lineTo(5.6,i)}x.stroke();
   x.fillStyle='rgba(20,22,14,.45)';x.fillRect(-6.8,-6.8,1,1);x.fillRect(5.8,-6.8,1,1);x.fillRect(-6.8,5.8,1,1);x.fillRect(5.8,5.8,1,1);
-  for(const[X,Y,W,H]of[[-7.2,-1.9,14.4,1.3],[-1.9,-7.2,1.3,14.4]]){x.fillStyle='rgba(6,8,4,.35)';x.fillRect(X+0.25,Y+0.25,W,H);x.fillStyle='#c8912c';x.fillRect(X,Y,W,H);x.fillStyle='rgba(255,230,160,.35)';x.fillRect(X,Y,W,0.25)}
+  for(const[X,Y,W,H]of[[-7.2,-1.9,14.4,1.3],[-1.9,-7.2,1.3,14.4]]){x.fillStyle='rgba(6,8,4,.35)';x.fillRect(X+0.25,Y+0.25,W,H);x.fillStyle=CR_STRAP[kind]||CR_STRAP.cash;x.fillRect(X,Y,W,H);x.fillStyle='rgba(255,230,160,.35)';x.fillRect(X,Y,W,0.25)}
+  if(kind!=='cash'){x.fillStyle=CR_STRAP[kind];x.fillRect(-5.6,-5.6,3.7,1.1);x.fillRect(-0.6,-5.6,6.2,1.1);x.fillStyle='rgba(255,255,255,.18)';x.fillRect(-5.6,-5.6,11.2,.25)}   // painted kind band across the lid
   x.fillStyle='#8a8a86';x.fillRect(-2.1,-2.1,1.7,1.7);x.fillStyle='rgba(255,255,255,.4)';x.fillRect(-2.1,-2.1,1.7,0.35);
-  x.fillStyle='rgba(20,22,14,.55)';x.fillRect(0.4,1.2,5,4.2);x.fillStyle='#e9dfb4';x.font='bold 3.4px monospace';x.textAlign='center';x.textBaseline='middle';x.fillText('$',2.9,3.4);
+  x.fillStyle='rgba(20,22,14,.6)';x.fillRect(0.4,1.2,5,4.2);x.save();x.translate(2.9,3.3);x.scale(1.75,1.75);crGlyph(x,kind,kind==='cash'?'#e9dfb4':'rgb('+CRATE[kind].c+')',.22);x.restore();
   x.fillStyle='rgba(233,223,180,.75)';x.fillRect(-5.2,1.6,4.2,0.5);x.fillRect(-5.2,2.6,3.2,0.5);x.fillRect(-5.2,3.6,3.8,0.5);x.fillRect(-5.2,4.6,2.4,0.5);
-  return _crateSpr=c}
+  return _crSpr[kind]=c}
 function drawWire(){if(hiGfx()||!L('wire'))return;   // High bakes the concertina into the terrain
   const r=fortHalf()+wallThick()/2+wireOut();ctx.strokeStyle='#8a8a7a';ctx.lineWidth=1.2;ctx.setLineDash([3,3]);ctx.strokeRect(-r,-r,2*r,2*r);ctx.strokeRect(-r+3,-r+3,2*r-6,2*r-6);ctx.setLineDash([])}
 function drawMines(){
@@ -7270,11 +7336,10 @@ function drawCrates(){
   const cz=Math.max(1,9/(14*sc));   // crates never shrink below ~9px on screen: they're tap targets
   if(!hiGfx()){for(const c of G.crates){if(c.life<3&&Math.floor(c.life*6)%2)continue;const h=7*cz,K=CRATE[c.k||'cash'];ctx.fillStyle='#8a6a2a';ctx.fillRect(c.x-h,c.y-h,h*2,h*2);ctx.strokeStyle=c.k==='cash'?'#4a3510':'rgb('+K.c+')';ctx.lineWidth=1.5*cz;ctx.strokeRect(c.x-h,c.y-h,h*2,h*2);
     ctx.fillStyle=c.k==='cash'?'#ffe066':'rgb('+K.c+')';ctx.font=`bold ${10*cz}px monospace`;ctx.textAlign='center';ctx.fillText(K.t,c.x,c.y+4*cz)}return}
-  const spr=crateSprite();
-  for(const c of G.crates){if(c.life<3&&Math.floor(c.life*6)%2)continue;const h=7*cz,t=G.time+c.x*0.013,pulse=0.5+0.5*Math.sin(t*4),K=CRATE[c.k||'cash'];
+  for(const c of G.crates){const spr=crateSprite(c.k||'cash');if(c.life<3&&Math.floor(c.life*6)%2)continue;const h=7*cz,t=G.time+c.x*0.013,pulse=0.5+0.5*Math.sin(t*4),K=CRATE[c.k||'cash'];
     ctx.strokeStyle=`rgba(${K.c},${0.25+pulse*0.35})`;ctx.lineWidth=Math.max(0.8,1.2/sc)*(c.k==='cash'?1:1.6);ctx.beginPath();ctx.arc(c.x,c.y,h*(1.75+pulse*0.2),0,TAU);ctx.stroke();
     ctx.drawImage(spr,c.x-16*cz,c.y-16*cz,32*cz,32*cz);
-    if(c.k!=='cash'){const s=9*cz,y=c.y-h*2.9-pulse*cz;ell(c.x,y,s*0.72,s*0.72,'rgba(20,24,16,.8)');cIcon(K.ic,c.x-s/2,y-s/2,s,'rgb('+K.c+')',2.6)}
+    if(c.k&&c.k!=='cash'){const s=9*cz,y=c.y-h*2.9-pulse*cz;ctx.drawImage(crBadge(c.k),c.x-s*.8,y-s*.8,s*1.6,s*1.6)}
     const g=(t*0.45)%1;if(g<0.35){const u=g/0.35,gx=c.x-h*1.6+u*h*3.2;ctx.save();ctx.beginPath();ctx.rect(c.x-h,c.y-h,2*h,2*h);ctx.clip();ctx.globalCompositeOperation='lighter';
       ctx.fillStyle='rgba(255,245,200,.28)';ctx.beginPath();ctx.moveTo(gx-h*0.5,c.y+h);ctx.lineTo(gx,c.y+h);ctx.lineTo(gx+h*0.9,c.y-h);ctx.lineTo(gx+h*0.4,c.y-h);ctx.fill();ctx.restore()}}}
 // ---- atmosphere: slow cloud shadows drifting on the wind ----------------------------------------------------------
@@ -7779,8 +7844,8 @@ Object.assign(INTEL,{crate_ammo:['Munitions Crate',0,'Red crates reload your gre
   crate_fix:['Engineer Crate',0,'Green crates rebuild a quarter of the walls, even after a breach, and patch up the fort.'],
   crate_strike:['Air Support Crate',0,'Orange crates carry a radio call-in: grab one and a free bombing run hits the thickest cluster of hostiles in sight. It does not use your own airstrike.'],
   crate_intel:['Intel Crate',0,'Blue crates carry captured maps: every ground hostile, even mortar crews in the fog, is marked for 6s so your guns can hunt them.']});
-function cratePreview(k){const c=$('intelCv'),W=c.width,K=CRATE[k],main=ctx;ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,W);ctx.drawImage(crateSprite(),W*0.12,W*0.2,W*0.76,W*0.76);
-  ctx.fillStyle='rgba(20,24,16,.88)';ctx.beginPath();ctx.arc(W*0.5,W*0.22,W*0.17,0,TAU);ctx.fill();cIcon(K.ic,W*0.5-W*0.11,W*0.22-W*0.11,W*0.22,'rgb('+K.c+')',2.4)}finally{ctx=main}}
+function cratePreview(k){const c=$('intelCv'),W=c.width,K=CRATE[k],main=ctx;ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,W);ctx.drawImage(crateSprite(k),W*0.12,W*0.2,W*0.76,W*0.76);
+  ctx.drawImage(crBadge(k),W*0.5-W*0.18,W*0.22-W*0.18,W*0.36,W*0.36)}finally{ctx=main}}
 IC.near=IC.near||'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0M12 12m-4.5 0a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0 -9 0M12 12l6.4-6.4M12 12h.01';
 IC.zoom=IC.zoom||'M10.5 10.5m-6.5 0a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0 -13 0M20 20l-4.8-4.8M10.5 7.5v6M7.5 10.5h6';
 function hudMode(){return VH<=500&&VW>VH?'land':VW<640?'port':'desk'}
