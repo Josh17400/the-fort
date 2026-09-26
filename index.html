@@ -3582,9 +3582,7 @@ function updateAir(dt,ph){
   const vis=G.air.length?visInto(_airVis,G.enemies):null;   // only read inside the G.air loop
   for(const u of G.air){u.cd-=dt;
     if(u.k==='mlaunch'&&(vis.length||G.sky.length&&skyTargets().length)){const t=nearestTo(u);u.ang=Math.atan2(t.y-u.y,t.x-u.x);
-      if(u.cd<=0){u.cd=2.8;const n=Math.min(8,1+Math.floor(L('mlaunch')/2))*(sg('mlaunch','salvo')||1),tg=[...vis,...skyTargets()].sort((a,b)=>b.hp*(b.air?3:1)-a.hp*(a.air?3:1));
-        for(let i=0;i<n;i++){const e=tg[i%tg.length],a=u.ang+(Math.random()-.5)*1.5;G.missiles.push(sgMissile('mlaunch',u,{x:u.x,y:u.y,vx:Math.cos(a)*80,vy:Math.sin(a)*80,tgt:e,tx:e.x,ty:e.y,life:4,dmg:mslDmg(L('mlaunch')),delay:i*0.12}))}
-        sfx('launch',u.x,u.y)}}
+      if(u.cd<=0){u.cd=2.8;mlVolley(u,vis)}}
     if(u.k==='silo'&&u.cd<=0){const all=G.enemies.filter(e=>!e.dead&&visible(e));if(all.length<4){u.cd=1;continue}
       const c=bestCluster(90,all),T=sg('silo','instant')?0.45:3;u.cd=siloCd(L('silo'));G.nukes.push({x:c.x,y:c.y,t:T,max:T,sx:u.x,sy:u.y});banner('MISSILE AWAY','','','feed');sfx('silo',u.x,u.y)}
     if(u.k==='gunship'){if(gunshipOut(u,dt))continue;u.orb-=0.12*dt;const r=Math.max(ph+140,vision()*0.75);u.x=Math.cos(u.orb)*r;u.y=Math.sin(u.orb)*r;u.ang=u.orb-Math.PI/2;
@@ -3593,14 +3591,8 @@ function updateAir(dt,ph){
       if(u.gcd<=0){u.gcd=0.22;const top=topTargets(vis,u,4),t=top[Math.floor(Math.random()*top.length)];explode(t.x+(Math.random()-.5)*8,t.y+(Math.random()-.5)*8,10,gsGun(L('gunship')),false);
         sgTracer('gunship',u.x,u.y,t.x,t.y,'#ffb15a',1.2,0.06);sfx('cannon',u.x,u.y)}}
   }
-  // homing missiles
-  for(const m of G.missiles){if(m.delay>0){m.delay-=dt;continue}m.life-=dt;
-    if(m.rt&&m.tgt&&m.tgt.dead)m.tgt=sgRetarget(m)||m.tgt;   // research: retargeting missiles / ATGMs
-    if(m.tgt&&!m.tgt.dead){m.tx=m.tgt.x;m.ty=m.tgt.y}
-    const dx=m.tx-m.x,dy=m.ty-m.y,d=Math.hypot(dx,dy)||1;m.vx+=dx/d*600*dt;m.vy+=dy/d*600*dt;const sp=Math.hypot(m.vx,m.vy),mx=260;if(sp>mx){m.vx*=mx/sp;m.vy*=mx/sp}
-    m.x+=m.vx*dt;m.y+=m.vy*dt;if(Math.random()<.85)puff(m.x,m.y,1,2.4,0.9,'200,200,195',4,0.4);if(Math.random()<.3)light(m.x,m.y,16,'255,170,80',0.05);
-    if(d<8||m.life<=0){m.done=true;if(m.atgm)sgAtgmHit(m);else if(m.tgt&&m.tgt.air)skyBurst(m.x,m.y,18,m.dmg*AIR_BONUS.msl*aaMul());else explode(m.x,m.y,28,m.dmg)}}
-  keepUndone(G.missiles);
+  // guided missiles (launcher volleys + ATGM racks): see MISSILES below
+  updateMissiles(dt);
   // silo strikes
   for(const n of G.nukes){n.t-=dt;if(n.t<=0){n.done=true;explode(n.x,n.y,95*rMult('silo','radius'),siloDmg(L('silo')));sigNuke(n);explode(n.x,n.y,60,0);ring(n.x,n.y,280,1.3,'255,240,210',7);ring(n.x,n.y,160,0.9,'255,190,120',4);fireball(n.x,n.y,130,1.3);puff(n.x,n.y,34,45,5,'64,56,48',70,.65);light(n.x,n.y,520,'255,200,120',1.1);decal(n.x,n.y,'scorch',140);shake(14);G.flashT=0.4;sfx('nuke',n.x,n.y)}}
   keepUndone(G.nukes);
@@ -3637,11 +3629,11 @@ function drawAirGround(){
       for(let r=0;r<2;r++)for(let c=0;c<3;c++){box(1+r*3.6,-4.4+c*3.1,3,2.6,'#2f3825');ell(2.5+r*3.6,-3.1+c*3.1,.9,.9,hot&&r===1?'#ff9a2a':'#151515')}
       ctx.restore()}
   }
-  for(const m of G.missiles){if(m.delay>0)continue;ctx.save();ctx.translate(m.x,m.y);ctx.rotate(Math.atan2(m.vy,m.vx));box(-4,-1,7,2,'#eee');box(3,-1,1.5,2,'#c33');ell(-5,0,2,1.2,'#ffb13b');ctx.restore()}
-}
+  drawMslShadows()}
 function drawJet(k=1){const ft=tierOf('fighter');if(ft){drawJetT(k,ft);return}ctx.save();ctx.scale(k,k);ctx.beginPath();ctx.moveTo(14,0);ctx.lineTo(-2,-11);ctx.lineTo(-6,-11);ctx.lineTo(-2,-2);ctx.lineTo(-10,-2);ctx.lineTo(-13,-6);ctx.lineTo(-14,0);ctx.lineTo(-13,6);ctx.lineTo(-10,2);ctx.lineTo(-2,2);ctx.lineTo(-6,11);ctx.lineTo(-2,11);ctx.closePath();ctx.fill();ctx.restore()}
 function drawAirTop(){
   if(S.set.gfx==='high'){drawAirTopHQ();return}
+  drawMissiles();
   for(const n of G.nukes){const k=n.t/n.max;ctx.strokeStyle=`rgba(255,60,40,${0.5+0.5*Math.sin(G.time*12)})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(n.x,n.y,95,0,7);ctx.stroke();
     ctx.beginPath();ctx.arc(n.x,n.y,95*k,0,7);ctx.stroke();if(k<0.35){const s=k/0.35;ctx.save();ctx.translate(n.x,n.y-200*s);ctx.rotate(Math.PI/2);box(-8,-2.5,16,5,'#ddd');box(6,-2.5,3,5,'#c33');ell(-10,0,4,2,'#ffb13b');ctx.restore()}}
   for(const j of G.jets){const s=-900+700*j.t,x=j.x+j.dx*s,y=j.y+j.dy*s,a=Math.atan2(j.dy,j.dx);
@@ -3654,6 +3646,178 @@ function drawAirTop(){
     for(const py of [-24,-13,13,24])ell(1,py,4.5,2,'#2e3431');ell(18,0,4,3.5,'#1c2a33');ctx.restore()}
   if(G.flashT>0){ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle=`rgba(255,240,200,${G.flashT*1.5})`;ctx.fillRect(0,0,VW,VH);ctx.restore()}
 }
+
+// ================= MISSILES =================
+// Every guided round the fort fires (launcher volleys, ATGM racks) flies through mslFly: it is kicked out of the tube at a low
+// eject speed, lights its motor, then steers by proportional navigation (turn = N x line-of-sight rate, plus a little pursuit
+// so a round launched off-axis still comes round), always inside a turn-rate limit that loosens as the round ages, so it never
+// snaps onto a target. m.z is altitude (top-attack climb and dive, loft, loiter), drawn as scale + an offset ground shadow;
+// m.pt is the pitch, drawn as foreshortening. Sprites are baked once per zoom bucket (mslSpr), exhaust is one baked tongue,
+// smoke trails go through puff() (FXCAP + the AQ governor), so a missile costs a few drawImage calls and no allocations.
+// MK: flight model per round. ej/v0 eject time + speed, vm/ac top speed + boost, tr/N turn-rate limit + PN gain,
+// zp/cl cruise (or top-attack apex) altitude + climb rate, dv dive slope (z <= ground range x dv), ts/sr/sl smoke puff spacing
+// (world units) / radius / life, gl exhaust length (0 = none), ct 1 = hypersonic contrail.
+const MK={
+  jav: {ej:.22,v0:55, vm:240, ac:380, tr:3,  N:3.5,zp:74,cl:115,dv:.95,ts:5, sr:2.6,sl:1.2,gl:1,   ct:0},   // Javelin: soft launch, top-attack
+  stg: {ej:.12,v0:70, vm:390, ac:950, tr:5.5,N:4,  zp:0, cl:0,  dv:0,  ts:5, sr:2.1,sl:.9, gl:.9,  ct:0},   // Stinger: fast dart vs aircraft
+  spk: {ej:.3, v0:45, vm:175, ac:240, tr:2.2,N:3,  zp:40,cl:55, dv:.6, ts:6, sr:3.4,sl:1.8,gl:1.25,ct:0},   // Spike NLOS: heavy, lofted, slow
+  jagm:{ej:.1, v0:85, vm:330, ac:820, tr:4.5,N:4,  zp:24,cl:85, dv:.8, ts:5, sr:2.2,sl:.9, gl:.85, ct:0},   // JAGM: small dual-mode quad-pack round
+  sw:  {ej:.45,v0:30, vm:150, ac:200, tr:3.2,N:3,  zp:50,cl:130,dv:1.3,ts:0, sr:0,  sl:0,  gl:0,   ct:0},   // Switchblade 600: electric, loiters
+  hyp: {ej:.05,v0:260,vm:1900,ac:9000,tr:9,  N:3,  zp:0, cl:0,  dv:0,  ts:26,sr:3,  sl:1.5,gl:1.7, ct:1},   // hypersonic strike pod
+  tow: {ej:.1, v0:70, vm:230, ac:620, tr:2.6,N:3,  zp:6, cl:30, dv:.5, ts:6, sr:2.4,sl:1,  gl:.9,  ct:0},   // Bradley TOW: flat, wire-guided
+  hf:  {ej:.05,v0:130,vm:330, ac:700, tr:3.5,N:3.5,zp:30,cl:60, dv:.7, ts:5, sr:2.4,sl:1,  gl:.95, ct:0},   // Apache Hellfire / JAGM
+  grf: {ej:.3, v0:60, vm:260, ac:420, tr:3,  N:3.5,zp:0, cl:0,  dv:.55,ts:6, sr:2.2,sl:1,  gl:.8,  ct:0}};   // AC-130 Griffin, dropped from altitude
+// The launcher's research line picks the round: count factor n and damage factor d keep a volley's total damage (n x d = 1),
+// r = blast radius, ab = anti-armor bonus on the direct hit, gap = ripple spacing (s), fan = launch spread (rad).
+const ML_T=[
+  {k:'jav', n:1, d:1,r:56,ab:1.3, gap:.16,fan:.3},    // Javelin (top-attack vs ground) / Stinger (vs aircraft)
+  {k:'spk', n:.5,d:2,r:72,ab:1.45,gap:.4, fan:.16},   // Spike NLOS: half the rounds, twice the warhead, long lofted shots
+  {k:'jagm',n:1, d:1,r:52,ab:1.15,gap:.07,fan:.55},   // JAGM Quad-Pack: salvo x2, fired in ripples of four onto four marks
+  {k:'sw',  n:1, d:1,r:60,ab:1.2, gap:.12,fan:0},     // Switchblade 600: loitering munitions
+  {k:'hyp', n:.5,d:2,r:82,ab:1.2, gap:.2, fan:.04}];  // Hypersonic Strike Pod
+// launch tubes per launcher tier, in the launcher's art frame (x = forward); scaled by US.mlaunch*bS() and rotated to u.ang
+const ML_TUBE=[
+  [[7.6,-3.15],[7.6,3.05],[7.6,-.05],[4,-3.15],[4,3.05],[4,-.05]],
+  [[8.2,-2.5],[8.2,2.4],[3.8,-2.5],[3.8,2.4]],
+  [[8.2,-3.9],[8.2,3.6],[8.2,-1.4],[8.2,1.1],[4,-3.9],[4,3.6],[4,-1.4],[4,1.1]],
+  [[1.6,-4.2],[4.4,4.2],[7.2,0],[1.6,2.1],[4.4,-2.1],[7.2,-4.2],[1.6,0],[4.4,2.1],[7.2,4.2],[1.6,4.2],[4.4,-4.2],[7.2,-2.1],[1.6,-2.1],[4.4,0],[7.2,2.1]],
+  [[9.8,0]]];
+// AOE: blast damage is full inside 30% of the radius and falls to MSL_RIM of it at the rim. The radius grew from 28 to 52-82 with
+// this model; MSL_K trims the warhead so a volley's total damage stays in the old ballpark (measured, see the missiles commit).
+const MSL_RIM=.4,MSL_K=.8;
+function mlVolley(u,vis){const l=L('mlaunch'),t=rTier('mlaunch'),T=ML_T[t],n0=Math.min(8,1+Math.floor(l/2))*(sg('mlaunch','salvo')||1),
+    n=Math.max(1,Math.round(n0*T.n)),dmg=mslDmg(l)*n0/n*MSL_K,sky=skyTargets(),s=US.mlaunch*bS(),c=Math.cos(u.ang),sn=Math.sin(u.ang),tubes=ML_TUBE[t],
+    heavy=e=>e.boss?6:e.veh?4:e.stand?3:1,
+    tg=[...vis,...sky].sort(t===1?(a,b)=>heavy(b)*b.hp-heavy(a)*a.hp:(a,b)=>b.hp*(b.air?3:1)-a.hp*(a.air?3:1));   // Spike NLOS hunts armor and standoff crews first
+  if(!tg.length)return;
+  for(let i=0;i<n;i++){const e=tg[i%tg.length],p=tubes[i%tubes.length],x=u.x+(p[0]*c-p[1]*sn)*s,y=u.y+(p[0]*sn+p[1]*c)*s,
+      k=t===0&&e.air?'stg':T.k,h=Math.atan2(e.y-y,e.x-x)+(R()-.5)*T.fan,
+      gap=t===2?Math.floor(i/4)*.5+(i%4)*T.gap:i*T.gap;
+    G.missiles.push(mslNew(k,x,y,h,e,dmg,T.r,T.ab,gap,0,!!sg('mlaunch','retarget'),0))}}
+// one missile; every field is set here so the flight loop sees a single hidden class
+function mslNew(k,x,y,h,tgt,dmg,r,ab,delay,z,rt,atgm){const S=MK[k];
+  return{k,x,y,h,v:S.v0,z,pt:0,t:0,life:3+hyp(tgt.x-x,tgt.y-y)/S.vm*2.2+(k==='sw'?5:0),dmg,r,ab,delay,rt,atgm,air:!!tgt.air,
+    tgt,tx:tgt.x,ty:tgt.y,tvx:0,tvy:0,trk:tgt,lam:Math.atan2(tgt.y-y,tgt.x-x),ph:0,tl:0,lt:0,la:0,dir:R()<.5?1:-1,ox:x,oy:y,sd:R()*99,lit:0,done:false}}
+function updateMissiles(dt){if(!(dt>0))return;
+  for(const m of G.missiles){if(m.delay>0){m.delay-=dt;continue}if(!m.lit){m.lit=1;mslLaunchFx(m)}mslFly(m,dt);if(!running)return}
+  keepUndone(G.missiles)}
+// tube flash + back-blast (a Switchblade just pops out of its tube on a gas charge)
+function mslLaunchFx(m){const c=Math.cos(m.h),s=Math.sin(m.h),sw=m.k==='sw',big=m.k==='spk'||m.k==='hyp';
+  puff(m.x-c*7,m.y-s*7,sw?2:big?5:3,sw?3.5:big?6:4.5,sw?.8:1.3,'206,200,188',sw?10:26,.5);
+  if(!sw){spark(m.x-c*5,m.y-s*5,big?5:3,70,['#fff0c0','#ffb050'],.22,1.1);light(m.x,m.y,big?46:30,'255,200,140',.1)}
+  sfx(sw?'nade':'launch',m.x,m.y)}
+function mslFly(m,dt){const S=MK[m.k];m.t+=dt;m.life-=dt;
+  if(m.rt&&m.tgt&&m.tgt.dead)m.tgt=sgRetarget(m)||m.tgt;
+  const tg=m.tgt&&!m.tgt.dead?m.tgt:null;
+  if(tg){if(tg===m.trk){const k=Math.min(1,dt*6);m.tvx+=((tg.x-m.tx)/dt-m.tvx)*k;m.tvy+=((tg.y-m.ty)/dt-m.tvy)*k;const vv=hyp(m.tvx,m.tvy);if(vv>160){m.tvx*=160/vv;m.tvy*=160/vv}}
+    else{m.trk=tg;m.tvx=m.tvy=0}m.tx=tg.x;m.ty=tg.y}
+  else{m.tvx=m.tvy=0}
+  if(m.k==='spk'&&tg&&!tg.air)tg.rev=Math.max(tg.rev||0,.25);   // Spike NLOS: the round's camera keeps its mark on screen, fog or not
+  let vm=S.vm,tr=S.tr*(1+m.t*.6),ax=m.tx,ay=m.ty,dg=hyp(m.tx-m.x,m.ty-m.y),zc=S.zp,dv=S.dv;
+  if(m.k==='sw'){   // Switchblade: climb out, fly to the mark, circle it, pick the best target under it, then dive
+    if(m.ph===1&&(m.air||dg<70)){if(m.air)m.ph=3;else{m.ph=2;m.la=Math.atan2(m.y-m.ty,m.x-m.tx);m.lt=.9+R()*.7}}
+    if(m.ph===2){m.la+=m.dir*m.v/34*dt;const q=m.la+m.dir*.7;ax=m.tx+Math.cos(q)*34;ay=m.ty+Math.sin(q)*34;tr=4;m.lt-=dt;
+      if(m.lt<=0&&tg){if(!tg.air){const o=sgSeek(G.enemies,m,110);if(o&&o!==tg){m.tgt=o;m.trk=o;m.tx=o.x;m.ty=o.y;m.tvx=m.tvy=0}}m.ph=3;sfx('launch',m.x,m.y,.5)}}
+    if(m.ph<3)dv=0;else{vm=340;tr=7+m.t}}
+  else if(dg>1){const tgo=dg/Math.max(80,m.v);ax+=m.tvx*tgo;ay+=m.tvy*tgo}
+  const los=Math.atan2(ay-m.y,ax-m.x),ld=angTo(m.lam,los);m.lam=los;
+  if(m.ph===0){m.v+=(S.v0*.7-m.v)*Math.min(1,dt*3);if(m.t>=S.ej){m.ph=1;mslIgnite(m,S)}}   // eject: coasting on the kick charge, no steering
+  else{m.v=Math.min(vm,m.v+S.ac*dt);const cmd=S.N*ld+1.8*angTo(m.h,los)*dt,lim=tr*dt;m.h+=Math.max(-lim,Math.min(lim,cmd))}
+  const c=Math.cos(m.h),s=Math.sin(m.h),st=m.v*dt,z0=m.z;m.x+=c*st;m.y+=s*st;dg=hyp(m.tx-m.x,m.ty-m.y);
+  if(!m.air){if(zc&&(m.ph>0||m.k==='sw'))m.z=Math.min(zc,m.z+S.cl*dt*(m.ph?1:.6));if(dv)m.z=Math.min(m.z,dg*dv);if(m.z<0)m.z=0}
+  const pz=Math.atan2(m.z-z0,st||1);m.pt+=(pz-m.pt)*Math.min(1,dt*10);
+  if(S.ts&&m.ph>0&&m.z<400){m.tl+=st;let n=0;const b=MSA[m.k].L*.5*MSL_VS*(1+m.z/110);   // smoke puffs spaced by distance, so a fast round still leaves a solid trail
+    while(m.tl>=S.ts&&n<3){m.tl-=S.ts;n++;const o=b+m.tl;puff(m.x-c*o,m.y-s*o,1,S.sr,S.sl,m.k==='hyp'?'232,238,244':'214,211,203',3,m.k==='hyp'?.5:.42)}
+    if(n&&R()<.35)light(m.x-c*b,m.y-s*b,m.k==='hyp'?40:16,'255,170,80',.05)}
+  const hr=tg?(m.air?tg.r+6:tg.r*.5+3):5;
+  if(m.life<=0||(m.k!=='sw'||m.ph===3)&&dg<hr+st*.5&&(m.air||m.z<14))mslBlast(m)}
+function mslIgnite(m,S){if(!S.gl)return;const c=Math.cos(m.h),s=Math.sin(m.h);puff(m.x-c*5,m.y-s*5,2,3,.7,'226,222,212',14,.45);light(m.x,m.y,24,'255,190,110',.06)}
+// warhead: ATGM racks keep their own hit; aircraft take an air burst; ground targets take the big AOE blast
+function mslBlast(m){m.done=true;const x=m.x,y=m.y,R0=m.r;
+  if(m.k==='hyp'){sgBeam(m.ox,m.oy,x,y,'214,236,255',1.3,.5);const L0=hyp(x-m.ox,y-m.oy),n=Math.min(12,L0/28|0);   // the contrail hangs a moment
+    for(let i=1;i<=n;i++){const q=i/(n+1);puff(m.ox+(x-m.ox)*q,m.oy+(y-m.oy)*q,1,3.4,1.4,'230,236,242',4,.34)}}
+  if(m.atgm){sgAtgmHit(m);return}
+  if(m.air){skyBurst(x,y,Math.max(22,R0*.36),m.dmg*AIR_BONUS.msl*aaMul());skyBlast(x,y,.45+R0/110);return}
+  const core=R0*.3;
+  for(const e of G.enemies){if(e.dead||!within(e,x,y,R0+e.r))continue;const d=Math.max(0,hyp(e.x-x,e.y-y)-e.r),f=d<=core?1:1-(1-MSL_RIM)*Math.min(1,(d-core)/(R0-core));
+    hurtEnemy(e,m.dmg*f*(e===m.tgt&&(e.veh||e.boss)?m.ab:1),false)}
+  boomFx(x,y,R0*.74,true);light(x,y,R0*2.4,'255,160,70',.3);if(R0>70){fireball(x,y,R0*.55,.5);shake(3)}}
+// ---- sprites: one parametric painter (x = nose forward; tail at -L/2). Top-down, a cruciform tail reads as one pair of fins.
+// fins/wings/canards [leading-edge x, root chord, span, sweep, colour]; bands [x, width, colour]; nose 'ogive' | 'dome' | 'cone'
+const MSA={
+  jav: {L:9,  w:.85,c:'#5f6a43',nc:'#262a22',nl:1.5,nose:'dome', gl:1,bands:[[1.3,.5,'#c9a54a'],[-2.6,.35,'#3e4630']],wings:[[.9,1.7,1.25,.55,'#4d5736']],fins:[[-3.3,1.1,1.1,.45,'#4d5736']]},
+  stg: {L:8,  w:.6, c:'#c8cbbf',nc:'#3c4148',nl:1.2,nose:'dome', gl:1,bands:[[1,.4,'#8a5a2b'],[-.9,.35,'#c9a54a']],can:[[2.5,.6,.7,.1,'#8e9288']],fins:[[-3.1,.9,1.15,.35,'#8e9288']]},
+  spk: {L:12, w:1.15,c:'#6b7258',nc:'#1d2127',nl:1.9,nose:'dome',gl:1,bands:[[2.3,.5,'#c9a54a'],[-3.6,.4,'#454b38']],wings:[[1.6,3,2.5,1.3,'#565d45']],fins:[[-4.5,1.4,1.5,.6,'#565d45']]},
+  jagm:{L:8.4,w:.8, c:'#5a6147',nc:'#2b3035',nl:1.4,nose:'ogive',gl:1,bands:[[1.4,.45,'#c9a54a'],[-.8,.4,'#8a5a2b']],can:[[2.6,.6,.75,.15,'#474d38']],fins:[[-3.1,1.1,1.1,.45,'#474d38']]},
+  hyp: {L:11, w:1.05,c:'#26292e',nc:'#d8e6f2',nl:3.8,nose:'cone',bands:[[-.2,.3,'#5fd4ff'],[-3.4,.25,'#5fd4ff']],fins:[[-3.9,2.1,1.7,1.3,'#1b1d21']]},
+  tow: {L:8.6,w:.8, c:'#b8b8a6',nc:'#6d7058',nl:1.3,nose:'dome', bands:[[.9,.4,'#c9a54a'],[-2.4,.4,'#6d7058']],wings:[[.6,1.2,1.3,.2,'#8e8f7e']],fins:[[-3.3,1,1,.3,'#8e8f7e']]},
+  hf:  {L:8.4,w:.8, c:'#50583c',nc:'#2b3035',nl:1.3,nose:'ogive',gl:1,bands:[[1.3,.45,'#c9a54a'],[-.9,.4,'#8a5a2b']],can:[[2.6,.6,.75,.15,'#40472f']],fins:[[-3.1,1.1,1.1,.45,'#40472f']]},
+  grf: {L:7,  w:.6, c:'#9ea4a8',nc:'#34383c',nl:1.2,nose:'ogive',gl:1,bands:[[.9,.3,'#c9a54a']],wings:[[.6,1.3,2.2,.5,'#80868a']],fins:[[-2.6,.9,.9,.35,'#80868a']]},
+  // SAM site interceptors per tier: Stinger, AMRAAM-ER, PAC-3 MSE, AIM-9X (Enduring Shield), Glide-Phase Interceptor
+  sam0:{L:7.6,w:.55,c:'#c8cbbf',nc:'#3c4148',nl:1.1,nose:'dome', gl:1,bands:[[.9,.35,'#8a5a2b']],can:[[2.4,.55,.65,.1,'#8e9288']],fins:[[-2.9,.85,1,.3,'#8e9288']]},
+  sam1:{L:10.5,w:.78,c:'#e6e6e0',nc:'#8d949a',nl:2.1,nose:'ogive',bands:[[-.2,.3,'#c9a54a']],wings:[[.9,1.9,1.05,.85,'#c3c5be']],fins:[[-4.2,1.25,1.15,.55,'#c3c5be']]},
+  sam2:{L:14, w:1.35,c:'#dcdcd2',nc:'#2d3136',nl:3,  nose:'ogive',bands:[[-2.2,.6,'#7b7f63'],[3.4,.35,'#9a9d8a']],fins:[[-5.6,2,1.5,.85,'#aeb0a6']]},
+  sam3:{L:9.6,w:.6, c:'#d0d2cc',nc:'#6f7780',nl:1.2,nose:'dome', gl:1,bands:[[.7,.35,'#c9a54a']],can:[[2.9,.85,.85,.2,'#9ca0a4']],fins:[[-3.8,1.5,1.35,.45,'#9ca0a4']]},
+  sam4:{L:12, w:1.2,c:'#1f2226',nc:'#dfe8f0',nl:3.8,nose:'cone', bands:[[.2,.3,'#5fd4ff'],[-3,.25,'#5fd4ff']],fins:[[-4.9,1.6,1.25,.75,'#15171a']]},
+  // fighter AAMs: AIM-9 (F-16), AIM-120 (F-15EX / F-35), AIM-260 class (NGAD)
+  aam0:{L:8.4,w:.55,c:'#c9ccc6',nc:'#5d646c',nl:1.1,nose:'dome', gl:1,bands:[[.6,.3,'#c9a54a']],can:[[2.5,.8,.8,.2,'#999d9f']],fins:[[-3.3,1.2,1.1,.4,'#999d9f']]},
+  aam1:{L:9.4,w:.66,c:'#e2e2dc',nc:'#8a9197',nl:1.8,nose:'ogive',bands:[[-.4,.3,'#c9a54a']],wings:[[.7,1.6,.9,.75,'#bfc1ba']],fins:[[-3.8,1.1,1,.5,'#bfc1ba']]},
+  aam4:{L:9.4,w:.7, c:'#2a2e33',nc:'#c9d6e2',nl:2.4,nose:'cone', bands:[[-.4,.25,'#5fd4ff']],fins:[[-3.8,1.3,.9,.6,'#1b1e22']]},
+  // enemy aircraft ordnance: helicopter rocket-pod mini rockets, strike-jet air-to-ground missile
+  hyd: {L:6.2,w:.42,c:'#d4d2c8',nc:'#a8321f',nl:1.1,nose:'ogive',bands:[[-.6,.3,'#6a6d62']],fins:[[-2.6,.7,.62,.15,'#55574f']]},
+  agm: {L:10, w:.85,c:'#b9bcb2',nc:'#3a3d40',nl:1.8,nose:'dome', gl:1,bands:[[.6,.4,'#a8321f']],wings:[[.9,2.3,1.6,.85,'#8f9389']],fins:[[-4.1,1.3,1.25,.5,'#8f9389']]},
+  // silo: PrSM, a re-entry warhead (Increment 2 splits into these), Dark Eagle / CPS glide bodies, tungsten rod
+  prsm:{L:18, w:1.5,c:'#dfddd2',nc:'#3b4046',nl:3.6,nose:'ogive',bands:[[-3.2,.8,'#6b7050'],[4.2,.35,'#a8321f']],fins:[[-7.5,2.1,1.7,.85,'#8c8f86']]},
+  rv:  {L:6,  w:1,  c:'#2f3236',nc:'#4a4f55',nl:4,  nose:'cone', bands:[[-2.2,.3,'#a8321f']]},
+  dke: {L:16, w:1.5,c:'#23262a',nc:'#16181b',nl:6.5,nose:'cone',bands:[[-2.4,.35,'#ffb347'],[-5,.25,'#ffb347']],fins:[[-6.6,2.3,1.7,1.1,'#15171a']]},
+  cps: {L:16, w:1.5,c:'#23262a',nc:'#16181b',nl:6.5,nose:'cone',bands:[[-2.4,.35,'#5fd4ff'],[-5,.25,'#5fd4ff']],fins:[[-6.6,2.3,1.7,1.1,'#15171a']]},
+  rod: {L:20, w:.72,c:'#8d949c',nc:'#dfe4ea',nl:1.6,nose:'ogive',bands:[[6,.25,'#5d6268'],[-4,.25,'#5d6268']],fins:[[-8.8,1.9,.95,.25,'#5d6268']]},
+  sw:  {L:10.4,w:.78,c:'#3d4238',nc:'#1d2023',nl:1.5,nose:'dome',gl:1,bands:[[-3.3,.35,'#c9a54a']],
+        draw:hi=>{for(const s of[-1,1]){hqPoly([2.7,s*.6,2.4,s*6,1.3,s*6,1.5,s*.6],hqSh('#4a5043',s>0?-.2:0));hqPoly([-2.4,s*.6,-2.8,s*5,-3.9,s*5,-3.6,s*.6],hqSh('#4a5043',s>0?-.2:0))}
+          if(hi){box(1.35,-6,.2,12,'rgba(255,255,255,.18)');box(-3.85,-5,.2,10,'rgba(255,255,255,.14)')}
+          box(-5.7,-2.6,.55,5.2,'rgba(28,30,26,.32)');box(-5.55,-.35,.3,.7,'#1a1b19')}}};   // two pairs of pop-out wings, rear pusher-prop disc
+function mslPaint(d,hi){const h=d.L/2,w=d.w,nl=d.nl,x1=h-nl;
+  const fin=f=>{const[x,ch,sp,sw,c]=f;for(const s of[-1,1])hqPoly([x,s*w*.7,x-sw,s*(w+sp),x-sw-ch*.45,s*(w+sp),x-ch,s*w*.7],hqSh(c,s>0?-.25:.05))};
+  (d.fins||[]).forEach(fin);(d.wings||[]).forEach(fin);(d.can||[]).forEach(fin);
+  if(d.draw)d.draw(hi);
+  if(hi)hqCyl(-h,-w,x1+h+w*.6,2*w,d.c);else hqRR(-h,-w,x1+h+w*.6,2*w,w*.6,d.c);
+  for(const[x,bw,c]of d.bands||[])box(x,-w*.97,bw,w*1.94,c);
+  ctx.fillStyle=d.nc;ctx.beginPath();ctx.moveTo(x1,-w);
+  if(d.nose==='cone'){ctx.lineTo(h,0);ctx.lineTo(x1,w)}
+  else if(d.nose==='dome'){ctx.quadraticCurveTo(h,-w,h,0);ctx.quadraticCurveTo(h,w,x1,w)}
+  else{ctx.quadraticCurveTo(x1+nl*.55,-w*.92,h,0);ctx.quadraticCurveTo(x1+nl*.55,w*.92,x1,w)}
+  ctx.closePath();ctx.fill();box(-h-.4,-w*.62,.5,w*1.24,'#18191a');
+  if(hi){box(-h+.5,-w*.62,x1+h-.5,w*.26,'rgba(255,255,255,.32)');box(-h+.5,w*.45,x1+h-.5,w*.3,'rgba(0,0,0,.18)');ell(x1+nl*.35,-w*.42,nl*.3,w*.2,'rgba(255,255,255,.22)');
+    if(d.gl)ell(h-nl*.42,-w*.22,Math.min(.7,nl*.26),w*.3,'rgba(190,228,255,.85)')}}
+// baked per kind x zoom bucket; High gets the shaded, outlined sprite, Medium/Low a flat one with no outline
+const _mslSz={};function mslSpr(k,pk,hi){const d=MSA[k],e=_mslSz[k]||(_mslSz[k]=Math.max(d.w+(d.draw?6.2:0),...['fins','wings','can'].map(f=>(d[f]||[]).reduce((a,q)=>Math.max(a,d.w+q[2]),0)))+.6);
+  return hqBake('msl.'+k+(hi?'':'.lo'),pk,d.L+2.2,2*e,d.L/2+1.4,e,()=>mslPaint(d,hi),hi?.2:0)}
+// exhaust: the baked tongue (white core at 58/64 of its width) placed with its core on the nozzle, g = length scale
+function mslFlame(tx,g,f){ctx.drawImage(exTongue(),tx-9.06*g*f,-1.3*g*Math.sqrt(f),10*g*f,2.6*g*Math.sqrt(f))}
+// hypersonic contrail: a soft white-blue streak, baked once and stretched from the launch point to the round
+function ctrailSpr(){let c=_hqc.ctr;if(c)return c;c=_hqc.ctr=hqCv(128,16);const x=c.getContext('2d'),g=x.createLinearGradient(0,0,128,0);
+  g.addColorStop(0,'rgba(190,220,255,0)');g.addColorStop(.7,'rgba(205,230,255,.45)');g.addColorStop(1,'rgba(245,250,255,.95)');x.fillStyle=g;x.fillRect(0,0,128,16);
+  x.globalCompositeOperation='destination-in';const v=x.createLinearGradient(0,0,0,16);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(.5,'rgba(0,0,0,1)');v.addColorStop(1,'rgba(0,0,0,0)');
+  x.fillStyle=v;x.fillRect(0,0,128,16);return c}
+function drawStreak(x0,y0,x1,y1,w,a){const L0=hyp(x1-x0,y1-y0);if(L0<1)return;const B=ctx.getTransform();xf(B,x0,y0,Math.atan2(y1-y0,x1-x0));
+  ctx.globalAlpha=a;ctx.drawImage(ctrailSpr(),0,-w/2,L0,w);ctx.globalAlpha=1;xr(B)}
+// ground shadows (drawn on the ground pass, under the fort's units): offset by altitude like the bombers' bombs
+function drawMslShadows(){if(!G.missiles||!G.missiles.length)return;const B=ctx.getTransform(),sh=mslShadowSpr();
+  for(const m of G.missiles){if(m.delay>0||m.air)continue;const d=MSA[m.k],k=MSL_VS*(1+m.z/110),a=.5*(1-Math.min(.6,m.z/200));
+    xf(B,m.x+m.z*.55+1,m.y+m.z*.7+1.2,m.h,k);ctx.globalAlpha=a;ctx.drawImage(sh,-d.L*.6,-d.w*2.2,d.L*1.2,d.w*4.4)}
+  xr(B);ctx.globalAlpha=1}
+const MSL_VS=1.15;   // rounds are drawn a touch over scale so they read as missiles at phone zoom
+const mslShadowSpr=()=>hqGlow('msh',[[0,'rgba(0,0,0,.9)'],[.55,'rgba(0,0,0,.55)'],[1,'rgba(0,0,0,0)']]);
+// the rounds themselves (air pass, above the fog): contrail, exhaust tongue, then the baked sprite scaled by altitude
+function drawMissiles(){if(!G.missiles||!G.missiles.length)return;const B=ctx.getTransform(),bp=Math.hypot(B.a,B.b),t=G.time;
+  for(const m of G.missiles){if(m.delay>0)continue;const S=MK[m.k],d=MSA[m.k],k=MSL_VS*(1+m.z/110),fs=1-.55*Math.abs(Math.sin(m.pt));
+    if(S.ct){ctx.globalCompositeOperation='lighter';drawStreak(m.ox,m.oy,m.x,m.y,5,.9);ctx.globalCompositeOperation='source-over'}
+    xf(B,m.x,m.y,m.h,k);if(fs<.98)ctx.scale(fs,1);
+    if(S.gl&&m.ph>0){ctx.globalCompositeOperation='lighter';const f=.85+.2*Math.sin(t*53+m.sd);mslFlame(-d.L/2-.2,S.gl*(m.ph===1&&m.t<S.ej+.15?.6:1),f);
+      if(S.ct){ctx.globalAlpha=.8;ctx.drawImage(hqGlow('hyn',[[0,'rgba(255,255,255,1)'],[.35,'rgba(170,220,255,.55)'],[1,'rgba(90,170,255,0)']]),d.L/2-3,-2.5,6,5);ctx.globalAlpha=1}
+      ctx.globalCompositeOperation='source-over'}
+    hqDraw(mslSpr(m.k,bp*k,HQ))}
+  xr(B)}
 
 // ================= SIGNATURE MECHANICS =================
 // Each research tier adds one signature mechanic (RLINES sig). Every mechanic is one helper here, and the weapon code calls it with
@@ -3793,9 +3957,9 @@ function sgAps(o,x,y,R0,rate,cap,dt,col,mode){o.aps=Math.min(cap,(o.aps??cap)+ra
 // ---- anti-tank missile rack: a top-attack missile every n seconds at the nearest armor (else the toughest target), worth half
 // of n seconds of the line's own fire, full damage against armor
 function sgAtgm(u,id,n,dt){u.atT=(u.atT??n*(0.3+0.7*R()))-dt;if(u.atT>0)return;const t=sgSeek(G.enemies,u,420)||bestTarget(G.enemies,u,true);if(!t){u.atT=0.5;return}
-  u.atT=n;const a=Math.atan2(t.y-u.y,t.x-u.x)+(R()-.5)*0.8;
-  G.missiles.push({x:u.x,y:u.y,vx:Math.cos(a)*90,vy:Math.sin(a)*90,tgt:t,tx:t.x,ty:t.y,life:5,dmg:sgDps(id)*n*0.5,delay:0,atgm:1,rt:1});
-  puff(u.x,u.y,3,4,0.9,'200,196,188',18,0.45);sfx('launch',u.x,u.y)}
+  u.atT=n;G.missiles.push(mslNew(ATGM_K[id]||'hf',u.x,u.y,Math.atan2(t.y-u.y,t.x-u.x)+(R()-.5)*0.5,t,sgDps(id)*n*0.5,0,1,0,ATGM_Z[id]||0,true,1))}
+// the round each rack fires (ISV Javelin, Bradley TOW, Apache Hellfire, AC-130 Griffin) and its launch altitude
+const ATGM_K={truck:'jav',apc:'tow',heli:'hf',gunship:'grf'},ATGM_Z={heli:24,gunship:90};
 function sgAtgmHit(m){const t=m.tgt;if(t&&!t.dead&&Math.hypot(t.x-m.x,t.y-m.y)<t.r+14)sgHit(t,m.dmg,'',0);
   G.fx.push({k:'boom',x:m.x,y:m.y,r:14,life:0.25,max:0.25});spark(m.x,m.y,8,140,['#fff6d0','#ffc04a','#ff7a1a'],0.35,1.4);light(m.x,m.y,50,'255,170,80',0.2);sfx('boom',m.x,m.y,0.6)}
 // retarget: a missile whose mark died turns onto the nearest armor, else the nearest target
@@ -3884,8 +4048,6 @@ function sigBomb(b){let p;const lk=G.sold[0].tgt,lock=sg('air','snapToLock')&&lk
   for(let i=0;i<n;i++){let o=sgSeek(G.enemies,b,80);if(!o||used.has(o)){o=null;for(const e of G.enemies)if(!used.has(e)&&within(e,b.x,b.y,70)&&sgLive(e)){o=e;break}}
     if(!o)break;used.add(o);sgHit(o,b.dmg*0.25,'',0);sgBeam(b.x,b.y-24,o.x,o.y,'255,215,170',0.7,0.1);G.fx.push({k:'boom',x:o.x,y:o.y,r:9,life:0.2,max:0.2})}}
 // ---- missiles and interceptors: hitscan tiers arrive at the target the tick they launch ----
-function sgMissile(id,src,m){if(sg(id,'instant')&&m.tgt){m.x=m.tgt.x;m.y=m.tgt.y;m.delay=Math.min(m.delay,0.05);sgBeam(src.x,src.y,m.tgt.x,m.tgt.y,BEAMC[id],1.2,0.14)}
-  if(sg(id,'retarget'))m.rt=1;return m}
 function sgAam(id,src,m){if(sg(id,'instant')&&m.tgt){m.x=m.tgt.x;m.y=m.tgt.y;m.v=m.spd;m.delay*=0.3;sgBeam(src.x,src.y,m.tgt.x,m.tgt.y,BEAMC[id],1.2,0.14)}return m}
 // ---- AA gun: hitscan flak, finishing crippled aircraft ----
 function sgFlak(t,f){if(sg('aagun','instant')){f.tx=t.x;f.ty=t.y;f.dur=0.001;sgBeam(f.x,f.y,t.x,t.y,BEAMC.aagun,1,0.08)}return f}
@@ -3993,6 +4155,9 @@ function ring(x,y,r,life,c='255,230,180',w=3){G.fx.push({k:'ring',x,y,r,life,max
 function fireball(x,y,r,life){G.fx.push({k:'fire',x,y,r,life,max:life})}
 function explode(x,y,r,dmg,big=true){
   for(const e of G.enemies)if(!e.dead&&within(e,x,y,r+e.r))hurtEnemy(e,dmg,false);
+  boomFx(x,y,r,big)}
+// the look (and sound) of an explosion of radius r, with no damage: explode() and the missile blasts share it
+function boomFx(x,y,r,big=true){
   if(HQ){hqBurst(x,y,r,big);if(big){sfx('boom',x,y,r/30);shake(4)}return}
   const k=Math.max(0.6,Math.min(3,r/30));
   fireball(x,y,r*0.95,big?0.55:0.3);
@@ -5223,10 +5388,9 @@ function drawAirGroundHQ(){const px=hqPx(),ph=wallHalfAt(L('walls'));
       ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);hqShadow(base,.9,1.1,.45);hqDraw(base);ctx.rotate(u.ang);const l=hqLoc(.8,1,u.ang,1);hqShadow(ln,l[0],l[1],.45);hqDraw(ln);
       if(hot){ctx.globalCompositeOperation='lighter';const gl=hqGlow('ex',[[0,'rgba(255,230,160,1)'],[.4,'rgba(255,150,50,.6)'],[1,'rgba(255,90,20,0)']]);if(mt)ctx.drawImage(gl,6,-3,6,6);else for(let c=0;c<3;c++)ctx.drawImage(gl,4.05,-5.15+c*3.1,4,4);ctx.globalCompositeOperation='source-over'}
       ctx.restore()}}
-  for(const m of G.missiles){if(m.delay>0)continue;ctx.save();ctx.translate(m.x,m.y);ctx.rotate(Math.atan2(m.vy,m.vx));
-    {const mt=tierOf('mlaunch');hqDraw(hqBake('msl'+(mt?'_t'+mt:''),px,10,5,5.5,2.5,missileArt(mt,MSL_BODY[mt]),.2))}
-    ctx.globalCompositeOperation='lighter';ctx.drawImage(hqGlow('ex',[[0,'rgba(255,230,160,1)'],[.4,'rgba(255,150,50,.6)'],[1,'rgba(255,90,20,0)']]),-8.5,-2.5,5,5);ctx.globalCompositeOperation='source-over';ctx.restore()}}
+  drawMslShadows()}
 function drawAirTopHQ(){const px=hqPx();
+  drawMissiles();
   for(const n of G.nukes){const k=n.t/n.max;ctx.strokeStyle=`rgba(255,60,40,${0.5+0.5*Math.sin(G.time*12)})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(n.x,n.y,95,0,7);ctx.stroke();
     ctx.beginPath();ctx.arc(n.x,n.y,95*k,0,7);ctx.stroke();if(k<0.35){const s=k/0.35;ctx.save();ctx.translate(n.x,n.y-200*s);ctx.rotate(Math.PI/2);ctx.scale(2.2,2.2);
       {const st=tierOf('silo');hqDraw(hqBake('msls'+st,px*2.2,10,5,5.5,2.5,missileArt(st>=2?4:0,st===4?'#9aa0a8':st>=2?'#3a3e44':'#e8e8e2'),.2))}
