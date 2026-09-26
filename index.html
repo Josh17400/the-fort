@@ -2047,18 +2047,22 @@ let GFX=GFX_PRESET[S.set.gfx]||GFX_PRESET.high;
 //   1: no mid-frame canvas read-backs (heat haze, shockwave refraction, chroma fringe), no film grain, no dusk haze pass;
 //      Medium's full-screen 'multiply' ambient tint becomes a plain tinted darken (source-over, no destination read); High 3x -> 2x
 //   2: backing store one step down (High 2x -> 1.5x, Medium 1.5x -> 1.25x)      3: Medium 1x; High drops the bloom pass
+// Hitches count too: frames that are fine on average but where one in ~12 misses the 30fps budget (a GPU stall) step up just the same.
+// Before the first step, a phone running ChaosGL tries 3s with it off (each GL layer is a GL->2D composite, which some mobile browsers
+// pay for as a GPU read-back); if frames get clearly better it stays off for the session, else it goes back on and the step is taken.
 // AQ.force (QA / profiler) pins a level.
-const AQ={lv:0,force:null,t0:0,ema:16.7,jit:0,slow:0,fast:0,cool:0,wait:8000,downAt:-1e9,DH:[1,2/3,1/2,1/2],DM:[1,1,5/6,2/3]};
+const AQ={lv:0,force:null,t0:0,ema:16.7,jit:0,hr:0,gl:0,glT:0,glS:0,slow:0,fast:0,cool:0,wait:8000,downAt:-1e9,DH:[1,2/3,1/2,1/2],DM:[1,1,5/6,2/3]};
 const aqDpr=()=>GFX.dpr<=1?GFX.dpr:Math.max(1,GFX.dpr*(GFX===GFX_PRESET.high?AQ.DH:AQ.DM)[AQ.lv]);
 function aqApply(){if(AQ.force!=null)AQ.lv=Math.max(0,Math.min(3,AQ.force|0));if(Math.min(devicePixelRatio||1,aqDpr())!==dpr)resize()}
 function aqSet(l){const t=performance.now();if(l>AQ.lv&&t-AQ.downAt<20000)AQ.wait=Math.min(120000,AQ.wait*2);if(l<AQ.lv)AQ.downAt=t;
-  AQ.lv=l;AQ.slow=AQ.fast=0;AQ.cool=2500;AQ.ema=AQ.lv?22:16.7;aqApply()}
+  AQ.lv=l;AQ.slow=AQ.fast=AQ.hr=0;AQ.cool=2500;AQ.ema=AQ.lv?22:16.7;aqApply()}
 function aqTick(){const t=performance.now(),d=t-AQ.t0;AQ.t0=t;if(AQ.force!=null){if(AQ.lv!==AQ.force)aqApply();return}
   if(!MOBILE||!running||paused||!(d>0&&d<250))return;   // pauses, menus and hidden tabs don't count
-  AQ.ema+=(d-AQ.ema)*0.1;AQ.jit+=(Math.abs(d-AQ.ema)-AQ.jit)*0.1;if(AQ.cool>0){AQ.cool-=d;return}
+  AQ.ema+=(d-AQ.ema)*0.1;AQ.jit+=(Math.abs(d-AQ.ema)-AQ.jit)*0.1;AQ.hr+=((d>42?1:0)-AQ.hr)*0.03;if(AQ.cool>0){AQ.cool-=d;return}
+  if(AQ.gl===1){AQ.glT-=d;if(AQ.glT>0)return;if(AQ.ema+60*AQ.hr<AQ.glS*.9)AQ.gl=3;else{AQ.gl=2;CGL.off=false}AQ.slow=0}   // GL trial verdict: 3 = keep it off
   const capped=AQ.jit<1.2&&AQ.ema>31&&AQ.ema<35.5;   // a steady 30fps vsync cap (iOS Low Power Mode): shedding quality can't help it
-  if(AQ.ema>28&&!capped&&AQ.lv<3){AQ.slow+=d;if(AQ.slow>1200)aqSet(AQ.lv+1)}else AQ.slow=0;
-  if(AQ.ema<19&&AQ.lv>0){AQ.fast+=d;if(AQ.fast>AQ.wait)aqSet(AQ.lv-1)}else AQ.fast=0}
+  if((AQ.ema>28&&!capped||AQ.hr>0.07)&&AQ.lv<3){AQ.slow+=d;if(AQ.slow>1200){if(!AQ.gl&&CGL.live()){AQ.gl=1;AQ.glT=3000;AQ.glS=AQ.ema+60*AQ.hr;CGL.off=true;AQ.slow=0}else aqSet(AQ.lv+1)}}else AQ.slow=0;
+  if(AQ.ema<19&&AQ.hr<0.02&&AQ.lv>0){AQ.fast+=d;if(AQ.fast>AQ.wait)aqSet(AQ.lv-1)}else AQ.fast=0}
 function resize(){dpr=Math.min(devicePixelRatio||1,aqDpr());VW=innerWidth;VH=innerHeight;cv.width=VW*dpr;cv.height=VH*dpr;cv.style.width=VW+'px';cv.style.height=VH+'px';sc=Math.min(VW,VH)/(2*WORLD_R)}
 addEventListener('resize',resize);resize();
 let _gnd=null;
@@ -4510,7 +4514,7 @@ const CGL=(()=>{
     if(typeof d.value==='function')REC[k]=NODEM.has(k)?function(){const R=real;if(k==='measureText'&&R.font!==REC.font){R.font=REC.font;rv.font=REC.font}return R[k].apply(R,arguments)}:function(){return fwd(k,arguments)};
     else if(d.get)Object.defineProperty(REC,k,{get(){return real?real[k]:undefined},set(v){if(real)(swap?demote(k):(comp(),real))[k]=v},configurable:true})}}catch(e){}
   // ---------- public ----------
-  function want(name,count){if(dead||S.set.chaosGL===false||lost||rec)return false;if(!inited)init();if(!ok)return false;
+  function want(name,count){if(dead||S.set.chaosGL===false||CGL.off||lost||rec)return false;if(!inited)init();if(!ok)return false;
     if(gl.isContextLost()){lost=true;return false}
     let s=LS[name];if(!s)s=LS[name]={on:false,n:0};const lo=CGL.min[name]||40;s.n=count;s.on=s.on?count>=lo*.5:count>=lo;return s.on}   // hysteresis: on at lo, off below lo/2
   // open a recording into target (a 2D context, tw x th device px, drawn in the GL canvas' top-left corner)
@@ -4531,7 +4535,7 @@ const CGL=(()=>{
   const cv2d=cv.getContext('2d');
   // lmap / glow / emis stay on Canvas2D: they draw a few dozen blits (mostly into 1/4-1/5 res buffers), and each GL layer costs a
   // GL->2D composite, a cross-context sync point; measured on a phone-sized canvas, dropping those three cut p95 frame time ~25-30%.
-  return{layer,into,begin,end:close,rec:REC,min:{ground:40,fx:150,glow:1e9,lmap:1e9,emis:1e9,bloom:120,sky:40},ofs:undefined,v1:false,last:null,
+  return{layer,into,begin,end:close,rec:REC,min:{ground:40,fx:150,glow:1e9,lmap:1e9,emis:1e9,bloom:120,sky:40},ofs:undefined,v1:false,last:null,off:false,live:()=>inited&&ok&&!dead&&!lost&&S.set.chaosGL!==false,
     path:()=>{if(ctx!==REC)return new Path2D();const p=new RPath();reg.push(p);return p},
     active:()=>ctx===REC,
     status:()=>({on:S.set.chaosGL!==false,ok,why,webgl:gl?(v2?2:1):0,offscreen:ofs,chain,atlas:{size:AS,gen,rows:Math.round(atop/AS*100)+'%',fill:Math.round(aarea/AS/AS*100)+'%',sprites:aent,shelves:shelves.length},layers:JSON.parse(JSON.stringify(LS)),
@@ -7214,9 +7218,14 @@ function cloudSprite(){if(_cloud)return _cloud;const S2=256,[c,x]=mkCv(S2,S2),r=
     g.addColorStop(0,'rgba(10,16,30,.34)');g.addColorStop(0.5,'rgba(10,16,30,.2)');g.addColorStop(1,'rgba(10,16,30,0)');x.fillStyle=g;x.fillRect(0,0,S2,S2)}
   return _cloud=c}
 const CLOUDS=Array.from({length:6},(_,i)=>{const r=rng(900+i);return{u:r(),v:r(),s:0.5+r()*0.5,sx:1.2+r()*0.6}});
-function drawAtmos(){if(!hiGfx())return;const V=vision(),W=V*3.2+200,spr=cloudSprite(),hw=Math.min(VW/2/sc,V*1.1),hh=Math.min(VH/2/sc,V*1.1),t=G.time;
+// Cloud shadows are soft blobs spanning a couple of screen widths (their 256px sprite is magnified ~8x), so they are drawn into a
+// quarter-CSS-px buffer and composited once: one screen of fill instead of ~3 at full resolution, with no visible difference.
+function drawAtmos(){if(!hiGfx())return;const V=vision(),W=V*3.2+200,spr=cloudSprite(),hw=Math.min(VW/2/sc,V*1.1),hh=Math.min(VH/2/sc,V*1.1),t=G.time,m=ctx.getTransform(),k=1/(4*dpr);let b=null;
   for(const c of CLOUDS){const rw=V*0.9*c.s*c.sx,rh=V*0.9*c.s,x=((c.u*W+t*4.5)%W+W)%W-W/2,y=((c.v*W+t*2)%W+W)%W-W/2;
-    if(x+rw<-hw||x-rw>hw||y+rh<-hh||y-rh>hh)continue;ctx.drawImage(spr,x-rw,y-rh,rw*2,rh*2)}}
+    if(x+rw<-hw||x-rw>hw||y+rh<-hh||y-rh>hh)continue;
+    if(!b){const bc=pfCanvas('cloud',Math.ceil(cv.width*k)+1,Math.ceil(cv.height*k)+1);b=bc._x;b.setTransform(1,0,0,1,0,0);b.clearRect(0,0,bc.width,bc.height);b.setTransform(m.a*k,m.b*k,m.c*k,m.d*k,m.e*k,m.f*k)}
+    b.drawImage(spr,x-rw,y-rh,rw*2,rh*2)}
+  if(b){ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(b.canvas,0,0,b.canvas.width/k,b.canvas.height/k);xr(m)}}
 // ---- fog of war: noisy, soft, cool-tinted night falloff; two layers counter-drift so the edge creeps -----------------
 const FOG_RGB=[6,8,11],FOG_CSS='rgb(6,8,11)';
 let _fog=null;
@@ -7233,7 +7242,11 @@ function drawFog(V){
   if(!hiGfx()){const Vo=V*1.06+6,fg=ctx.createRadialGradient(0,0,V,0,0,Vo);fg.addColorStop(0,'rgba(5,7,4,0)');fg.addColorStop(1,'rgba(5,7,4,1)');
     ctx.fillStyle=fg;ctx.beginPath();ctx.arc(0,0,Vo,0,TAU);ctx.moveTo(V,0);ctx.arc(0,0,V,0,TAU,true);ctx.fill();
     ctx.fillStyle='rgb(5,7,4)';ctx.beginPath();ctx.rect(-ext,-ext,ext*2,ext*2);ctx.moveTo(Vo-1/sc,0);ctx.arc(0,0,Vo-1/sc,0,TAU,true);ctx.fill();return}
-  const f=fogBake(V),R=f.R;ctx.save();ctx.rotate(G.time*0.004);ctx.drawImage(f.c,-R,-R,2*R,2*R);ctx.rotate(-G.time*0.011+1.7);ctx.globalAlpha=0.5;ctx.drawImage(f.c2,-R,-R,2*R,2*R);ctx.restore();
+  // the two counter-drifting layers are merged in texture space first (layer 2 turned by the relative angle over an exact copy of
+  // layer 1; source-over is associative), so the screen gets one big rotated blit instead of two
+  const f=fogBake(V),R=f.R,M=f.c.width,cc=pfCanvas('fogc',M,M),x=cc._x;x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.clearRect(0,0,M,M);x.drawImage(f.c,0,0);
+  x.translate(M/2,M/2);x.rotate(-G.time*0.011+1.7);x.globalAlpha=0.5;x.drawImage(f.c2,-M/2,-M/2);
+  ctx.save();ctx.rotate(G.time*0.004);ctx.drawImage(cc,-R,-R,2*R,2*R);ctx.restore();
   const rr=R*0.97;ctx.fillStyle=FOG_CSS;ctx.beginPath();ctx.rect(-ext,-ext,ext*2,ext*2);ctx.moveTo(rr,0);ctx.arc(0,0,rr,0,TAU,true);ctx.fill()}
 // Bake High-preset art during idle time on the home screen (the layout is already fixed by the upgrade levels), so DEPLOY never hitches.
 setInterval(()=>{if(running||!hiGfx()||document.hidden)return;(window.requestIdleCallback||setTimeout)(()=>{if(running)return;const k=_ter&&_ter.key;terrainBake();fogBake(vision());fortBake(fortHalf(),L('walls'),true);if(_ter.key!==k)rasterNow(_ter.c)})},2000);
