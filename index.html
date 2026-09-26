@@ -2057,10 +2057,15 @@ let GFX=GFX_PRESET[S.set.gfx]||GFX_PRESET.high;
 const AQ={lv:0,force:null,t0:0,ema:16.7,jit:0,hr:0,gl:0,glT:0,glS:0,slow:0,fast:0,cool:0,wait:8000,downAt:-1e9,DH:[1,1,3/4,5/8],DM:[1,1,5/6,2/3]};
 const PHONE_DPR=2;
 const aqDpr=()=>{if(!PHONE)return GFX.dpr;const b=Math.min(GFX.dpr,PHONE_DPR);return b<=1?b:Math.max(1,b*(GFX===GFX_PRESET.high?AQ.DH:AQ.DM)[AQ.lv])};
-function aqApply(){if(AQ.force!=null)AQ.lv=Math.max(0,Math.min(3,AQ.force|0));if(Math.min(devicePixelRatio||1,aqDpr())!==dpr)resize()}
-function aqSet(l){const t=performance.now();if(l>AQ.lv&&t-AQ.downAt<20000)AQ.wait=Math.min(120000,AQ.wait*2);if(l<AQ.lv)AQ.downAt=t;
-  AQ.lv=l;AQ.slow=AQ.fast=AQ.hr=0;AQ.cool=2500;AQ.ema=AQ.lv?22:16.7;aqApply()}
-function aqTick(){const t=performance.now(),d=t-AQ.t0;AQ.t0=t;if(AQ.force!=null){if(AQ.lv!==AQ.force)aqApply();return}
+// API shared with the cosmetic-FX governor (perf-fx branch): AQ.lv 0-3 is the one level, AQ.force pins it, aqSet(lv) clamps and
+// changes it, aqApply() pushes it into everything that caches it. Merging the two = one AQ object, one tick, and aqApply() calling
+// both halves (aqRes() here, the FX caps there). Code that merely reads AQ.lv each frame needs no hook.
+function aqRes(){if(Math.min(devicePixelRatio||1,aqDpr())!==dpr)resize()}   // render half: backing-store size
+function aqApply(){aqRes()}
+function aqSet(lv){lv=Math.max(0,Math.min(3,lv|0));if(lv===AQ.lv)return;const t=performance.now();
+  if(AQ.force==null){if(lv>AQ.lv&&t-AQ.downAt<20000)AQ.wait=Math.min(120000,AQ.wait*2);if(lv<AQ.lv)AQ.downAt=t}
+  AQ.lv=lv;AQ.slow=AQ.fast=AQ.hr=0;AQ.cool=2500;AQ.ema=lv?22:16.7;aqApply()}
+function aqTick(){const t=performance.now(),d=t-AQ.t0;AQ.t0=t;if(AQ.force!=null){aqSet(AQ.force);return}
   if(!MOBILE||!running||paused||!(d>0&&d<250))return;   // pauses, menus and hidden tabs don't count
   AQ.ema+=(d-AQ.ema)*0.1;AQ.jit+=(Math.abs(d-AQ.ema)-AQ.jit)*0.1;AQ.hr+=((d>42?1:0)-AQ.hr)*0.03;if(AQ.cool>0){AQ.cool-=d;return}
   if(AQ.gl===1){AQ.glT-=d;if(AQ.glT>0)return;if(AQ.ema+60*AQ.hr<AQ.glS*.9)AQ.gl=3;else{AQ.gl=2;CGL.off=false}AQ.slow=0}   // GL trial verdict: 3 = keep it off
