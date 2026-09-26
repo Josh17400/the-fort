@@ -6890,7 +6890,7 @@ function aiBoss(e,dt,h){const Ro=Math.max(h+110,Math.min(sight()-e.r-26,h+230));
   if((e.vtT=(e.vtT||0)-dt)<=0){e.vtT=3;e.vt=R()<0.35?fcNear(e,280,true):null}const v=e.vt&&!e.vt.dead?e.vt:null;   // some bursts hunt your aircraft and armor
   // side guns in turn, like yours: a 25mm stream (24 rounds) then a 40mm burst (5), 0.3s between; e.n = which gun, e.burst = rounds
   // left. Same damage a second as the old lone cannon (0.08 dmg per 0.28s): 45% through the 25mm, 55% through the 40mm
-  e.gt-=dt;if(e.gt<=0){const mg=!e.n,j=1+1.6*sup;if(!e.burst){e.burst=mg?24:5;if(mg)sfx('ciws',e.x,e.y,Math.min(1,1.08*j))}e.burst--;e.gt=(mg?0.045:0.22)*j;if(!e.burst){e.n=mg?1:0;e.gt+=0.3*j}
+  e.gt-=dt;if(e.gt<=0){const mg=!e.n,j=1+1.6*sup;if(!e.burst){e.burst=mg?24:5;if(mg)sfx('ciws',e.x,e.y,Math.min(1,1.08*j))}e.burst--;e.gt=Math.max(e.gt,-0.1)+(mg?0.045:0.22)*j;if(!e.burst){e.n=mg?1:0;e.gt+=0.3*j}
     e.fl=G.time;let[wx,wy]=v?[v.x+(R()-.5)*10,v.y+(R()-.5)*10]:wallPt(e.x,e.y,h,h*0.9);const miss=Math.random()<sup*0.6,d=e.dmg*(mg?0.0149:0.0874);
     if(miss){const a=Math.atan2(wy,wx)+(Math.random()-.5)*0.5,o=24+Math.random()*40;wx+=Math.cos(a)*o;wy+=Math.sin(a)*o}
     G.fx.push({k:'tracer',x:gx,y:gy,x2:wx,y2:wy,life:mg?0.08:0.07,max:mg?0.08:0.07,c:mg?'#ff6a4a':'#ffb15a',w:mg?1.1:1.8});if(!mg)sfx('cannon',e.x,e.y);
