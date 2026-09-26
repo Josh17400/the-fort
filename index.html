@@ -3875,12 +3875,34 @@ const _sdM=[];function sigDroneSpr(lo,pk){const i=lo?1:0,bi=hqBi(pk);let s=_sdM[
     if(!lo)for(const[ax,ay]of DRONE_ARMS)ell(ax*0.8,ay*0.8,2.4,2.4,'rgba(190,210,220,.28)');
     box(-2.2,-1.6,4.4,3.2,'#3b3f44');box(-2.2,-1.6,4.4,0.8,'#5a6068');box(1.6,-0.7,1.4,1.4,'#1a1d20')},0,0);s._bi=bi;return _sdM[i]=s}
 // ================= VFX =================
-const FXCAP={parts:700,smoke:260,decals:160,lights:70,sig:180};
+const FXCAP={parts:700,smoke:260,decals:160,lights:70,sig:180,emb:320,deb:200,cas:180};
 const FXBASE=Object.assign({},FXCAP);
 let HQ=false;   // High preset: cinematic VFX + post-processing. Medium/Low never enter a code path gated on it.
 function applyGfx(){GFX=GFX_PRESET[S.set.gfx]||GFX_PRESET.high;HQ=GFX===GFX_PRESET.high;document.body.dataset.gfx=S.set.gfx||'high';
   for(const k in FXBASE)FXCAP[k]=Math.round(FXBASE[k]*(k==='smoke'?GFX.smoke:k==='lights'?+GFX.lights:GFX.fx));if(HQ)FXCAP.smoke=340;resize()}
 applyGfx();
+// ADAPTIVE QUALITY governor (cosmetic FX only, never gameplay). Its own rAF chain measures the real frame interval while a battle
+// is live (not paused/choosing/hidden). A 1s window whose mean is slow AND hitchy (>30ms with >8% of frames over 45ms), or plainly
+// slow (>38ms), steps AQ.lv up (max 3); a steady 30fps cap (iOS Low Power) is not hitchy, so it never trips, and a fast desktop
+// never gets near it. AQ.lv scales the cosmetic caps (particles, smoke, decals, lights, embers, debris, casings) and thins spawns by
+// AQ.q. Recovery needs 3*AQ.back fast windows (<20ms, <2% hitches) in a row; back doubles each time a recovered level trips again,
+// so it can't oscillate. AQ.force (0-3) pins a level for testing.
+const AQ={lv:0,q:1,n:0,sum:0,slow:0,t0:0,last:0,good:0,back:1,rec:false,force:null};
+const AQ_Q=[1,.7,.5,.35];
+function aqApply(){const q=AQ.q=AQ_Q[AQ.lv];
+  for(const k in FXBASE){if(k==='sig')continue;const b=k==='smoke'&&HQ?340:FXBASE[k]*(k==='smoke'?GFX.smoke:k==='lights'?+GFX.lights:GFX.fx);FXCAP[k]=Math.round(b*q)}
+  if(G&&G.decals&&G.decals.length>FXCAP.decals)G.decals.splice(0,G.decals.length-FXCAP.decals)}
+function aqSet(lv){lv=Math.max(0,Math.min(3,lv|0));if(lv===AQ.lv)return;AQ.lv=lv;aqApply()}
+function aqFrame(now){requestAnimationFrame(aqFrame);const dt=now-AQ.last;AQ.last=now;
+  if(AQ.force!=null){aqSet(AQ.force);return}
+  if(!running||paused||!G||G.choosing||G.over||document.hidden||!(dt>0)||dt>250){AQ.n=AQ.sum=AQ.slow=0;AQ.t0=now;return}
+  AQ.n++;AQ.sum+=dt;if(dt>45)AQ.slow++;if(now-AQ.t0<1000||AQ.n<10)return;
+  const mean=AQ.sum/AQ.n,hitch=AQ.slow/AQ.n;AQ.n=AQ.sum=AQ.slow=0;AQ.t0=now;
+  if((mean>30&&hitch>.08)||mean>38){AQ.good=0;if(AQ.lv<3){if(AQ.rec){AQ.back=Math.min(8,AQ.back*2);AQ.rec=false}aqSet(AQ.lv+1)}}
+  else if(mean<20&&hitch<.02){if(AQ.lv&&++AQ.good>=3*AQ.back){AQ.good=0;AQ.rec=true;aqSet(AQ.lv-1)}}
+  else AQ.good=0;
+  if(AQ.lv)aqApply()}
+requestAnimationFrame(aqFrame);
 // Pre-rendered radial sprites: one gradient raster per look instead of createRadialGradient per object per frame.
 // Hot getters check the cache first so a cache hit allocates no stop arrays/strings (called ~200x per busy frame).
 // Stops are authored at full strength; per-object fade is applied through globalAlpha, which is equivalent since every stop scales linearly.
@@ -3896,9 +3918,9 @@ function blit(img,x,y,r,a){if(a<=0||r<=0)return;ctx.globalAlpha=Math.min(1,a);ct
 const R=Math.random;
 // Every G.parts entry uses one field layout {x,y,vx,vy,life,max,c,sz,glow,rot,spin} (fields it doesn't use are undefined, exactly
 // what an absent field reads as), so the per-frame particle loops see a single hidden class.
-function spark(x,y,n,spd,cols,life=0.5,sz=1.6){for(let i=0;i<n&&G.parts.length<FXCAP.parts;i++){const a=R()*6.283,s=spd*(0.3+R()*0.9);G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:life*(0.5+R()*0.7),max:life,c:cols[i%cols.length],sz,glow:1,rot:undefined,spin:undefined})}}
-function gib(x,y,n,spd,c,life=0.7,sz=2){for(let i=0;i<n&&G.parts.length<FXCAP.parts;i++){const a=R()*6.283,s=spd*(0.3+R()*0.9);G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:life*(0.6+R()*0.6),max:life,c,sz:sz*(0.6+R()*0.8),glow:undefined,rot:R()*6,spin:undefined})}}
-function puff(x,y,n,r,life,col='60,60,60',spd=15,a=0.5){for(let i=0;i<n&&G.smoke.length<FXCAP.smoke;i++){if(GFX.smoke<1&&R()>GFX.smoke)continue;const an=R()*6.283,s=spd*R();
+function spark(x,y,n,spd,cols,life=0.5,sz=1.6){if(AQ.lv)n=Math.ceil(n*AQ.q);for(let i=0;i<n&&G.parts.length<FXCAP.parts;i++){const a=R()*6.283,s=spd*(0.3+R()*0.9);G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:life*(0.5+R()*0.7),max:life,c:cols[i%cols.length],sz,glow:1,rot:undefined,spin:undefined})}}
+function gib(x,y,n,spd,c,life=0.7,sz=2){if(AQ.lv)n=Math.ceil(n*AQ.q);for(let i=0;i<n&&G.parts.length<FXCAP.parts;i++){const a=R()*6.283,s=spd*(0.3+R()*0.9);G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:life*(0.6+R()*0.6),max:life,c,sz:sz*(0.6+R()*0.8),glow:undefined,rot:R()*6,spin:undefined})}}
+function puff(x,y,n,r,life,col='60,60,60',spd=15,a=0.5){if(AQ.lv)n=Math.ceil(n*AQ.q);for(let i=0;i<n&&G.smoke.length<FXCAP.smoke;i++){if(GFX.smoke<1&&R()>GFX.smoke)continue;const an=R()*6.283,s=spd*R();
   G.smoke.push({x:x+(R()-.5)*r*.6,y:y+(R()-.5)*r*.6,vx:Math.cos(an)*s,vy:Math.sin(an)*s,r:r*(0.5+R()*0.5),grow:r*(0.6+R()*0.6),life:life*(0.7+R()*0.5),max:life,col,a});
   if(HQ){const p=G.smoke[G.smoke.length-1];p.rot=(R()-.5)*.8;p.spin=(R()-.5)*.3;p.v=(R()*3)|0;p.rise=-6}}}
 function light(x,y,r,c,life){if(G.lights.length<FXCAP.lights)G.lights.push({x,y,r,c,life,max:life})}
@@ -3930,12 +3952,35 @@ function fxUpdate(dt){
   for(const d of G.decals)d.life-=dt;keepLive(G.decals);
   for(const p of G.parts)if(p.spin)p.rot+=p.spin*dt;
 }
-function drawDecals(){if(HQ){hqDecals();return}
+// Medium/Low blood splats: each decal's 6 seeded ellipses are rasterised once into a 96px slot of one shared atlas canvas the first
+// time it is drawn, then drawn as a single drawImage from that one texture (was 6 path fills per decal per frame, ~600 on a busy
+// medium screen). Slots whose decal is gone are recycled each frame. Same shapes and colour; the only difference is where splats
+// overlap while fading out (the last 6s), which now fades as one layer. Under a ChaosGL layer (atlas must be immutable) it falls back.
+const DA={c:null,x:null,own:[],free:[],g:0,N:16,S:96};
+function decalSlot(d){if(d._s!==undefined&&DA.own[d._s]===d)return d._s;
+  if(!DA.c){DA.c=document.createElement('canvas');DA.c.width=DA.c.height=DA.N*DA.S;DA.x=DA.c.getContext('2d');for(let i=DA.N*DA.N-1;i>=0;i--)DA.free.push(i)}
+  if(!DA.free.length)return -1;const s=DA.free.pop(),x=DA.x,S=DA.S,E=d.r*1.45,k=(S/2-2)/E,cx=(s%DA.N)*S,cy=((s/DA.N)|0)*S;DA.own[s]=d;d._s=s;
+  x.setTransform(1,0,0,1,0,0);x.clearRect(cx,cy,S,S);x.setTransform(k,0,0,k,cx+S/2,cy+S/2);x.fillStyle='rgba(90,10,10,0.55)';
+  for(let i=0;i<6;i++){const an=d.seed*i*1.7,rr=d.r*(0.25+((d.seed*(i+3))%1)*0.6),o=i?d.r*0.55:0;x.beginPath();x.ellipse(Math.cos(an)*o,Math.sin(an)*o,rr,rr*0.7,an,0,7);x.fill()}
+  return s}
+function drawDecals(){if(HQ){hqDecals();return}const at=!CGL.active(),g=++DA.g;
   for(const d of G.decals){const a=Math.min(1,d.life/6);
-    if(d.kind==='scorch'){blit(scorchSprite(),d.x,d.y,d.r,a);ctx.globalAlpha=1}
-    else{ctx.fillStyle=`rgba(90,10,10,${0.55*a})`;for(let i=0;i<6;i++){const an=d.seed*i*1.7,rr=d.r*(0.25+((d.seed*(i+3))%1)*0.6),o=i?d.r*0.55:0;
-      ctx.beginPath();ctx.ellipse(d.x+Math.cos(an)*o,d.y+Math.sin(an)*o,rr,rr*0.7,an,0,7);ctx.fill()}}}}
-function drawSmoke(){if(HQ){hqSmoke();return}for(const s of G.smoke){const k=s.life/s.max;ctx.fillStyle=`rgba(${s.col},${s.a*k*Math.min(1,(1-k)*6)})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fill()}}
+    if(d.kind==='scorch'){blit(scorchSprite(),d.x,d.y,d.r,a);ctx.globalAlpha=1;continue}
+    const s=at?decalSlot(d):-1;
+    if(s>=0){d._g=g;const S=DA.S,E=d.r*1.45;ctx.globalAlpha=a;ctx.drawImage(DA.c,(s%DA.N)*S,((s/DA.N)|0)*S,S,S,d.x-E,d.y-E,E*2,E*2);ctx.globalAlpha=1;continue}
+    ctx.fillStyle=`rgba(90,10,10,${0.55*a})`;for(let i=0;i<6;i++){const an=d.seed*i*1.7,rr=d.r*(0.25+((d.seed*(i+3))%1)*0.6),o=i?d.r*0.55:0;
+      ctx.beginPath();ctx.ellipse(d.x+Math.cos(an)*o,d.y+Math.sin(an)*o,rr,rr*0.7,an,0,7);ctx.fill()}}
+  if(at)for(let i=0;i<DA.own.length;i++){const o=DA.own[i];if(o&&o._g!==g){DA.own[i]=null;DA.free.push(i)}}}
+// Medium/Low smoke: one solid disc sprite per colour (128px, cached) drawn at the puff's alpha, instead of a new rgba() string and a
+// path fill per puff per frame. Unbounded colour sets fall back to the path fill after 48 colours.
+const _dsc=new Map();
+function discSpr(col){let c=_dsc.get(col);if(c===undefined){if(_dsc.size>=48)return null;c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');
+  x.fillStyle=`rgb(${col})`;x.beginPath();x.arc(64,64,63,0,7);x.fill();_dsc.set(col,c)}return c}
+function drawSmoke(){if(HQ){hqSmoke();return}
+  for(const s of G.smoke){const k=s.life/s.max,al=s.a*k*Math.min(1,(1-k)*6);if(!(al>0))continue;const im=discSpr(s.col);
+    if(im){ctx.globalAlpha=Math.min(1,al);const r=s.r*64/63;ctx.drawImage(im,s.x-r,s.y-r,r*2,r*2);continue}
+    ctx.globalAlpha=1;ctx.fillStyle=`rgba(${s.col},${al})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fill()}
+  ctx.globalAlpha=1}
 function drawParts(){if(HQ){hqParts();return}const m=ctx.getTransform();let rx=false;   // rotated bits: one setTransform each instead of save/translate/rotate/restore
   for(const p of G.parts){if(p.glow)continue;ctx.globalAlpha=Math.min(1,p.life/((p.max||1)*0.4));ctx.fillStyle=p.c;
     if(p.rot!==undefined){xf(m,p.x,p.y,p.rot);rx=true;ctx.fillRect(-p.sz,-p.sz/2,p.sz*2,p.sz)}else{if(rx){xr(m);rx=false}ctx.fillRect(p.x,p.y,p.sz,p.sz)}}
@@ -3972,7 +4017,7 @@ function drawFx(){const m=HQ&&ctx.getTransform();
     else if(f.k==='ring'){ctx.strokeStyle=`rgba(${f.c},${k*0.8})`;ctx.lineWidth=f.w*k+0.5;ctx.beginPath();ctx.arc(f.x,f.y,f.r*(0.15+0.85*Math.sqrt(t)),0,7);ctx.stroke()}
     else if(f.k==='fire'||f.k==='boom'){const r=f.r*(0.35+0.75*Math.sqrt(t))*(f.k==='boom'?0.8:1);ctx.globalCompositeOperation='lighter';blit(fireSprite(),f.x,f.y,r,k);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}}
 }
-function drawLights(){if(!GFX.lights||!G.lights.length)return;ctx.globalCompositeOperation='lighter';const la=(HQ?(BP?.05:.42):.45)*(1+.5*DN.dk);   // flashes bloom harder in the dark
+function drawLights(){if(!GFX.lights||!G.lights.length||(BP&&AQ.lv))return;ctx.globalCompositeOperation='lighter';const la=(HQ?(BP?.05:.42):.45)*(1+.5*DN.dk);   // flashes bloom harder in the dark
   for(const l of G.lights)blit(glowSprite(l.c),l.x,l.y,l.r,la*l.life/l.max);
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
 let _vig=null,_vigK='';
@@ -4003,30 +4048,38 @@ function pixSprite(key,n,fn){let c=_spr[key];if(c)return c;c=_spr[key]=document.
   const x=c.getContext('2d'),im=x.createImageData(n,n);fn(im.data,n);x.putImageData(im,0,0);return c}
 function canvasSprite(key,w,h,fn){let c=_spr[key];if(c)return c;c=_spr[key]=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);return c}
 // Smoke puff: noisy soft silhouette, shaded as a volume lit from the top-left (matches the scene's bottom-right shadows).
-function smokeSpr(col,v){return pixSprite('sm'+col+'|'+v,96,(d,n)=>{const nz=vfxFbm(n,31+v*977),[r0,g0,b0]=col.split(',').map(Number);
+// Hot sprite getters (called ~600x per busy frame) go through small array/Map caches first: no key string or builder closure per call.
+const _smM=new Map(),_fbA=[],_scA=[],_stA=[],_trM=new Map();
+function smokeSpr(col,v){let a=_smM.get(col);if(!a)_smM.set(col,a=[]);return a[v]||(a[v]=smokeSpr0(col,v))}
+function fireSpr(hot,v){const i=hot*8+v;return _fbA[i]||(_fbA[i]=fireSpr0(hot,v))}
+function scorchSpr(v){return _scA[v]||(_scA[v]=scorchSpr0(v))}
+function stainSpr(v){return _stA[v]||(_stA[v]=stainSpr0(v))}
+function tracerSpr(c){let t=_trM.get(c);if(!t)_trM.set(c,t=tracerSpr0(c));return t}
+function smokeSpr0(col,v){return pixSprite('sm'+col+'|'+v,96,(d,n)=>{const nz=vfxFbm(n,31+v*977),[r0,g0,b0]=col.split(',').map(Number);
   for(let y=0;y<n;y++)for(let x=0;x<n;x++){const i=y*n+x,u=(x+.5)/n*2-1,w=(y+.5)/n*2-1,q=nz[i],e=Math.hypot(u,w)*(1+(q-.5)*.9),a=sstep(1,.25,e)*(.5+.7*q);if(a<=0)continue;
     const l=Math.max(.55,Math.min(1.4,1-(u+w)*.32+(q-.5)*.4)),add=(l-1)*60;
     d[i*4]=r0*l+add;d[i*4+1]=g0*l+add;d[i*4+2]=b0*l+add;d[i*4+3]=Math.min(1,a)*255}})}
 // Fireball: colour ramp over a noise-warped radius gives ragged, turbulent edges; 'hot' is additive, 'cool' is the sooty outer shell.
 const FIRE_HOT=[[0,255,250,225,1],[.16,255,226,140,1],[.4,255,158,52,.95],[.68,222,78,20,.7],[1,110,26,6,0]];
 const FIRE_COOL=[[0,255,196,110,.85],[.3,226,112,42,.8],[.58,110,52,26,.72],[.84,46,36,30,.48],[1,30,26,24,0]];
-function fireSpr(hot,v){return pixSprite('fb'+hot+v,128,(d,n)=>{const nz=vfxFbm(n,7+v*131+hot*50),st=hot?FIRE_HOT:FIRE_COOL;
+function fireSpr0(hot,v){return pixSprite('fb'+hot+v,128,(d,n)=>{const nz=vfxFbm(n,7+v*131+hot*50),st=hot?FIRE_HOT:FIRE_COOL;
   for(let y=0;y<n;y++)for(let x=0;x<n;x++){const i=y*n+x,u=(x+.5)/n*2-1,w=(y+.5)/n*2-1,q=nz[i],e=Math.hypot(u,w)*(1+(q-.5)*1.15)+(q-.5)*.06;if(e>=1)continue;
     let j=1;while(j<st.length-1&&e>st[j][0])j++;const A=st[j-1],B=st[j],k=Math.max(0,Math.min(1,(e-A[0])/(B[0]-A[0])));
     for(let c=0;c<3;c++)d[i*4+c]=A[c+1]+(B[c+1]-A[c+1])*k;d[i*4+3]=(A[4]+(B[4]-A[4])*k)*(hot?1:Math.min(1,.55+.7*q))*255}})}
 // Scorch: charred core, radial soot spray, mottled by noise so no two blasts read the same.
-function scorchSpr(v){return canvasSprite('sc'+v,256,256,(x,n)=>{const rnd=_rng(v*7919+5);x.translate(n/2,n/2);
+function scorchSpr0(v){return canvasSprite('sc'+v,256,256,(x,n)=>{const rnd=_rng(v*7919+5);x.translate(n/2,n/2);
   for(let i=0;i<54;i++){const a=rnd()*TAU,L=n*(.26+rnd()*.23),w=.03+rnd()*.09,g=x.createLinearGradient(0,0,Math.cos(a)*L,Math.sin(a)*L);
     g.addColorStop(0,'rgba(14,11,8,.55)');g.addColorStop(1,'rgba(14,11,8,0)');x.fillStyle=g;x.beginPath();x.moveTo(0,0);x.lineTo(Math.cos(a-w)*L,Math.sin(a-w)*L);x.lineTo(Math.cos(a+w)*L,Math.sin(a+w)*L);x.fill()}
   const g=x.createRadialGradient(0,0,0,0,0,n*.34);g.addColorStop(0,'rgba(4,3,2,.95)');g.addColorStop(.4,'rgba(10,8,6,.82)');g.addColorStop(.75,'rgba(22,17,12,.4)');g.addColorStop(1,'rgba(24,19,14,0)');
   x.fillStyle=g;x.beginPath();x.arc(0,0,n*.34,0,TAU);x.fill();
   const im=x.getImageData(0,0,n,n),d=im.data,nz=vfxFbm(n,v*53+11);for(let i=0;i<n*n;i++)d[i*4+3]*=.35+.95*nz[i];x.putImageData(im,0,0)})}
 // Kill stain: small, dark and desaturated — reads as "someone fell here", not gore.
-function stainSpr(v){return pixSprite('st'+v,64,(d,n)=>{const nz=vfxFbm(n,v*211+3);
+function stainSpr0(v){return pixSprite('st'+v,64,(d,n)=>{const nz=vfxFbm(n,v*211+3);
   for(let y=0;y<n;y++)for(let x=0;x<n;x++){const i=y*n+x,u=(x+.5)/n*2-1,w=(y+.5)/n*2-1,q=nz[i],e=Math.hypot(u,w)*(1+(q-.5)*1.3),a=sstep(1,.5,e)*(.6+.4*q);if(a<=0)continue;
     const l=.75+.5*q;d[i*4]=52*l;d[i*4+1]=16*l;d[i*4+2]=12*l;d[i*4+3]=a*190}})}
 // Muzzle star: long forward tongue, two raked side petals and a hot core. Origin is (14,24); the barrel points along +x.
-function flashSpr(v){return canvasSprite('mf'+v,96,48,x=>{const rnd=_rng(v*97+13);x.translate(14,24);x.globalCompositeOperation='lighter';
+const _mfA=[];function flashSpr(v){return _mfA[v]||(_mfA[v]=flashSpr0(v))}
+function flashSpr0(v){return canvasSprite('mf'+v,96,48,x=>{const rnd=_rng(v*97+13);x.translate(14,24);x.globalCompositeOperation='lighter';
   const spike=(a,len,wd,col)=>{x.save();x.rotate(a);const g=x.createLinearGradient(0,0,len,0);g.addColorStop(0,col);g.addColorStop(1,'rgba(255,130,40,0)');x.fillStyle=g;
     x.beginPath();x.moveTo(0,-wd);x.quadraticCurveTo(len*.35,-wd*.7,len,0);x.quadraticCurveTo(len*.35,wd*.7,0,wd);x.closePath();x.fill();x.restore()};
   spike(0,64+rnd()*14,7,'rgba(255,236,180,1)');spike(0,44+rnd()*8,3,'rgba(255,255,255,1)');
@@ -4035,7 +4088,7 @@ function flashSpr(v){return canvasSprite('mf'+v,96,48,x=>{const rnd=_rng(v*97+13
   x.fillStyle=g;x.beginPath();x.arc(0,0,13,0,TAU);x.fill()})}
 const hexRGB=h=>{if(h.length===4)h='#'+h[1]+h[1]+h[2]+h[2]+h[3]+h[3];return parseInt(h.slice(1,3),16)+','+parseInt(h.slice(3,5),16)+','+parseInt(h.slice(5,7),16)};
 // Tracer: tapered capsule whose tail fades to nothing and whose head burns white-hot. The head sits at the right edge.
-function tracerSpr(c){return canvasSprite('tr'+c,128,16,(x,W)=>{const rgb=hexRGB(c),g=x.createLinearGradient(0,0,W,0);
+function tracerSpr0(c){return canvasSprite('tr'+c,128,16,(x,W)=>{const rgb=hexRGB(c),g=x.createLinearGradient(0,0,W,0);
   g.addColorStop(0,`rgba(${rgb},0)`);g.addColorStop(.65,`rgba(${rgb},.55)`);g.addColorStop(1,`rgba(${rgb},1)`);x.shadowColor=`rgba(${rgb},.9)`;x.shadowBlur=5;
   x.fillStyle=g;x.beginPath();x.moveTo(0,8);x.lineTo(W-12,5);x.quadraticCurveTo(W-2,5.5,W-2,8);x.quadraticCurveTo(W-2,10.5,W-12,11);x.closePath();x.fill();x.shadowBlur=0;
   const h=x.createLinearGradient(W*.5,0,W,0);h.addColorStop(0,'rgba(255,255,255,0)');h.addColorStop(1,'rgba(255,255,255,1)');x.strokeStyle=h;x.lineWidth=1.6;x.lineCap='round';
@@ -4044,7 +4097,7 @@ const dustRing=()=>radialSprite('dustring',[[0,'rgba(152,134,104,0)'],[.5,'rgba(
 // Set the world matrix m, then translate/rotate/scale — without save()/restore() churn per sprite.
 function xf(m,x,y,th,s=1){const c=Math.cos(th)*s,n=Math.sin(th)*s;ctx.setTransform(m.a*c+m.c*n,m.b*c+m.d*n,m.c*c-m.a*n,m.d*c-m.b*n,m.a*x+m.c*y+m.e,m.b*x+m.d*y+m.f)}
 const xr=m=>ctx.setTransform(m.a,m.b,m.c,m.d,m.e,m.f);
-function hpuff(x,y,o){if(G.smoke.length>=FXCAP.smoke)return;
+function hpuff(x,y,o){if(G.smoke.length>=FXCAP.smoke||(AQ.lv&&R()>AQ.q))return;
   G.smoke.push({x,y,vx:o.vx||0,vy:o.vy||0,r:o.r,grow:o.grow,life:o.life,max:o.life,col:o.col,a:o.a,rise:o.rise||0,d:o.d||0,rot:(R()-.5)*.8,spin:(R()-.5)*.3,v:(R()*3)|0})}
 
 // ---- spawners ----
@@ -4053,12 +4106,12 @@ function hqBurst(x,y,r,big){const h=hx(),k=Math.max(.35,Math.min(3.5,r/30)),fl=.
   G.fx.push({k:'hfire',x,y,r:r*.95,life:fl2,max:fl2,rot:R()*TAU,sp:(R()<.5?-1:1)*(.7+R()*.8),v:(R()*3)|0});
   ring(x,y,r*1.35,big?.38:.2,'255,236,200',big?2.2:1.1);
   light(x,y,r*(big?2.6:1.8),'255,150,60',big?.4:.14);
-  for(let i=0,n=Math.round((big?14:4)*k);i<n&&h.emb.length<320;i++){const a=R()*TAU,s=r*(1.4+R()*4.2),l=.35+R()*(big?1.1:.35);
+  for(let i=0,n=Math.round((big?14:4)*k);i<n&&h.emb.length<FXCAP.emb;i++){const a=R()*TAU,s=r*(1.4+R()*4.2),l=.35+R()*(big?1.1:.35);
     h.emb.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:l,max:l,sz:.7+R()*1.1,c:R()<.3?'#fff0c0':'#ff9a3c',cu:(R()-.5)*3})}
   spark(x,y,Math.round((big?8:3)*k),r*5,['#fff6d0','#ffc04a'],big?.32:.22,big?1.7:1.1);
   if(!big){if(r>=14){puff(x,y,2,r*.5,.9,'96,90,80',r*.8,.42);decal(x,y,'scorch',r*.5)}return}
   const dl=.55+.2*k;G.fx.push({k:'dust',x,y,r:r*2.2,life:dl,max:dl});
-  for(let i=0,n=Math.round(4+k*5);i<n&&h.deb.length<200;i++){const a=R()*TAU,s=r*(1.1+R()*2.4);
+  for(let i=0,n=Math.round(4+k*5);i<n&&h.deb.length<FXCAP.deb;i++){const a=R()*TAU,s=r*(1.1+R()*2.4);
     h.deb.push({x,y,z:2,vx:Math.cos(a)*s,vy:Math.sin(a)*s,vz:70+R()*120*Math.sqrt(k),rot:R()*TAU,spin:(R()-.5)*18,life:2.6+R()*2,max:4.6,sz:(1+R()*1.6)*Math.sqrt(k),
       c:['#2a2620','#443c33','#5b5145'][(R()*3)|0],tr:R()<.5,hot:R()<.4})}
   for(let i=0,n=Math.round(6+k*4);i<n;i++){const a=i/n*TAU+R()*.4,s=r*(1.5+R()*1.2);
@@ -4078,7 +4131,7 @@ function hqKill(e){const b=e.boss||e.veh;decal(e.x,e.y,b?'scorch':'stain',e.r*(b
 function vfxMuzzle(s){const a=s.ang,mx=s.x+Math.cos(a)*15,my=s.y+Math.sin(a)*15,h=hx();light(mx,my,s.main?42:30,'255,200,110',0.06);
   G.fx.push({k:'mf',x:mx-Math.cos(a)*2,y:my-Math.sin(a)*2,a:a+(R()-.5)*.22,s:(s.main?.16:.12)*(.75+R()*.5),v:(R()*4)|0,life:.05,max:.05});
   spark(mx,my,2,110,['#ffe7a0'],0.1,1);
-  const p=a+Math.PI/2+(R()-.5)*.6,sp=45+R()*35;if(h.cas.length>=180)h.cas.shift();
+  const p=a+Math.PI/2+(R()-.5)*.6,sp=45+R()*35;if(h.cas.length>=FXCAP.cas)h.cas.shift();
   h.cas.push({x:s.x,y:s.y,z:4,vx:Math.cos(p)*sp,vy:Math.sin(p)*sp,vz:45+R()*40,rot:R()*6,spin:(R()-.5)*40,life:3+R()*1.5});
   if(s.main||R()<.3)hpuff(mx,my,{vx:Math.cos(a)*16,vy:Math.sin(a)*16,r:1.8,grow:6,life:.6,col:'176,172,162',a:.2})}
 
@@ -4098,7 +4151,7 @@ function hqUpdate(dt){const h=hx(),dr=Math.pow(.97,dt*60);
     while(e.t<=0&&e.life>0){e.t+=.09;hpuff(e.x+(R()-.5)*8,e.y+(R()-.5)*8,{vx:(R()-.5)*6,vy:(R()-.5)*6,r:6+R()*4,grow:28+R()*18,life:2.6+R(),col:R()<.6?'20,18,17':'36,32,29',a:.62*f,rise:-24});
       if(R()<.45*f){const l=.3+R()*.2;G.fx.push({k:'hfire',x:e.x+(R()-.5)*12,y:e.y+(R()-.5)*12,r:(6+R()*7)*(.4+.6*f),life:l,max:l,rot:R()*TAU,sp:2,v:(R()*3)|0})}
       if(R()<.3*f)light(e.x,e.y,50+R()*24,'255,140,50',.16);
-      if(R()<.2*f&&h.emb.length<320){const l=.6+R()*.6;h.emb.push({x:e.x,y:e.y,vx:(R()-.5)*40,vy:-20-R()*30,life:l,max:l,sz:.8,c:'#ff9a3c',cu:(R()-.5)*4})}}}
+      if(R()<.2*f&&h.emb.length<FXCAP.emb){const l=.6+R()*.6;h.emb.push({x:e.x,y:e.y,vx:(R()-.5)*40,vy:-20-R()*30,life:l,max:l,sz:.8,c:'#ff9a3c',cu:(R()-.5)*4})}}}
   for(const f of G.fx)if(f.k==='tracer'&&!f.hq){f.hq=1;G.fx.push({k:'flash',x:f.x2,y:f.y2,r:4+(f.w||1.2)*2,life:.05,max:.05,c:'255,236,190'})}
   keepLive(h.deb);keepLive(h.cas);keepLive(h.emb);keepLive(h.waves);keepLive(h.emit);
   if(h.flash>0)h.flash=Math.max(0,h.flash-dt*1.4)}
@@ -4114,7 +4167,7 @@ function hqDecals(){const m=ctx.getTransform(),vw=VW/2/sc+40,vh=VH/2/sc+40;
 // layer records: there the puffs are GPU instances already, and a buffer redrawn every frame can't be an atlas sprite.
 function hqSmoke(){const m=ctx.getTransform(),vw=VW/2/sc+40,vh=VH/2/sc+40;   // view half-extents in world units (+ shake margin)
   let M=m,main=null,c=null,half=false;
-  if(dpr>=2&&!CGL.active()){const p2=(m.a*m.a+m.b*m.b)*7.84;let f=0;for(const s of G.smoke)if(!(s.d>0))f+=s.r*s.r*p2;half=f>1.5*cv.width*cv.height}
+  if(dpr>=2&&!CGL.active()){const p2=(m.a*m.a+m.b*m.b)*7.84;let f=0;for(const s of G.smoke)if(!(s.d>0))f+=s.r*s.r*p2;half=f>(AQ.lv?.5:1.5)*cv.width*cv.height}
   if(half){c=pfCanvas('smk',Math.ceil(cv.width/2),Math.ceil(cv.height/2));const x=c._x;x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.clearRect(0,0,c.width,c.height);
     M={a:m.a/2,b:m.b/2,c:m.c/2,d:m.d/2,e:m.e/2,f:m.f/2};main=ctx;ctx=x}
   try{for(const s of G.smoke){if(s.d>0)continue;const k=s.life/s.max,al=s.a*1.3*k*Math.min(1,(1-k)*8);if(al<.01)continue;const rc=s.r*2;if(Math.abs(s.x)-rc>vw||Math.abs(s.y)-rc>vh)continue;
@@ -4125,15 +4178,15 @@ function hqParts(){const m=ctx.getTransform(),h=hx();
   if(!BP){
     for(const p of G.parts){if(p.glow)continue;ctx.globalAlpha=Math.min(1,p.life/((p.max||1)*0.4));ctx.fillStyle=p.c;
       if(p.rot!==undefined){xf(m,p.x,p.y,p.rot);ctx.fillRect(-p.sz,-p.sz/2,p.sz*2,p.sz)}else ctx.fillRect(p.x,p.y,p.sz,p.sz)}
-    xr(m);ctx.fillStyle='rgba(0,0,0,.32)';
+    xr(m);ctx.fillStyle='rgba(0,0,0,.32)';if(!AQ.lv){
     for(const p of h.deb){ctx.globalAlpha=Math.min(1,p.life/.8);xf(m,p.x+p.z*.5+.6,p.y+p.z*.6+.8,p.rot);ctx.fillRect(-p.sz,-p.sz*.6,p.sz*2,p.sz*1.2)}
-    for(const p of h.cas){ctx.globalAlpha=Math.min(1,p.life/.6);xf(m,p.x+p.z*.5+.4,p.y+p.z*.6+.5,p.rot);ctx.fillRect(-1.1,-.5,2.2,1)}
+    for(const p of h.cas){ctx.globalAlpha=Math.min(1,p.life/.6);xf(m,p.x+p.z*.5+.4,p.y+p.z*.6+.5,p.rot);ctx.fillRect(-1.1,-.5,2.2,1)}}
     for(const p of h.deb){ctx.globalAlpha=Math.min(1,p.life/.8);xf(m,p.x,p.y,p.rot,1+p.z/60);ctx.fillStyle=p.c;ctx.fillRect(-p.sz,-p.sz*.6,p.sz*2,p.sz*1.2);
       ctx.fillStyle='rgba(255,240,210,.14)';ctx.fillRect(-p.sz,-p.sz*.6,p.sz*2,p.sz*.4)}
     for(const p of h.cas){ctx.globalAlpha=Math.min(1,p.life/.6);xf(m,p.x,p.y,p.rot,1+p.z/40);ctx.fillStyle='#b8862e';ctx.fillRect(-1.1,-.5,2.2,1);ctx.fillStyle='#f4d58a';ctx.fillRect(-1.1,-.5,2.2,.38)}
     xr(m)}
   ctx.globalCompositeOperation='lighter';ctx.lineCap='round';const wm=BP?2.2:1;glowSparks(wm);
-  for(const p of h.emb){const a=Math.min(1,p.life*2.5/p.max)*(.65+.35*Math.sin(p.life*47+p.x));ctx.globalAlpha=a;ctx.strokeStyle=p.c;ctx.lineWidth=p.sz*wm;
+  if(!(BP&&AQ.lv>=2))for(const p of h.emb){const a=Math.min(1,p.life*2.5/p.max)*(.65+.35*Math.sin(p.life*47+p.x));ctx.globalAlpha=a;ctx.strokeStyle=p.c;ctx.lineWidth=p.sz*wm;
     ctx.beginPath();ctx.moveTo(p.x-p.vx*.045,p.y-p.vy*.045);ctx.lineTo(p.x,p.y);ctx.stroke()}
   const gs=glowSprite('255,150,60');
   for(const p of h.emb)blit(gs,p.x,p.y,p.sz*3.5,Math.min(1,p.life*2/p.max)*.45);
