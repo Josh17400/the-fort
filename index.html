@@ -1161,7 +1161,7 @@ const U=[
  {id:'airstrip',wave:24,need:[["walls", 7], ["air", 2], ["vision", 9]],cat:'AIR & MISSILES',name:'Air Strip',max:3,cost:6000,g:2.2,desc:'A runway outside the south wall. Unlocks aircraft; higher levels speed up sorties.',val:l=>l?'Lv '+l+' · sorties -'+pct(1-Math.pow(0.85,l-1)):'no runway'},
  {id:'fighter',late:1,wave:26,need:[["airstrip", 1], ["vision", 10]],cat:'AIR & MISSILES',name:'Fighter Jets',max:Infinity,cost:8000,g:1.95,desc:'Jets scramble from the strip and strafe enemy columns with cannons.',val:l=>l?Math.min(4,1+Math.floor(l/2))+' '+pl(Math.min(4,1+Math.floor(l/2)),'jet')+' · '+f1(jetDmg(l))+' dmg/pass':'none'},
  {id:'silo',late:1,wave:30,need:[["walls", 9], ["mlaunch", 3]],cat:'AIR & MISSILES',name:'Missile Silo',max:Infinity,cost:15000,g:2.0,desc:'A ballistic missile that levels the biggest enemy concentration on the map.',val:l=>l?f1(siloDmg(l))+' dmg · every '+Math.round(siloCd(l))+'s':'none'},
- {id:'gunship',late:1,wave:35,need:[["airstrip", 2], ["fighter", 2], ["vision", 12]],cat:'AIR & MISSILES',name:'Gunship',max:Infinity,cost:25000,g:2.0,desc:'A gunship circles overhead cycling three guns: a 25mm minigun mows infantry, a 30mm cannon bursts trucks and groups, the 105mm is saved for armor.',val:l=>l?f1(gsRound(l,'h'))+' 105mm · '+f1(gsRound(l,'c'))+' 30mm · '+(rSigP('gunship','instant')?f1(gsRound(l,'l'))+' laser':f1(gsRound(l,'m'))+' 25mm'):'none'},
+ {id:'gunship',late:1,wave:35,need:[["airstrip", 2], ["fighter", 2], ["vision", 12]],cat:'AIR & MISSILES',name:'Gunship',max:Infinity,cost:25000,g:2.0,desc:'25mm minigun mows infantry, 30mm cannon hits trucks and groups, 105mm is saved for armor: a circling gunship cycles them as each reloads.',val:l=>l?f1(gsRound(l,rSigP('gunship','instant')?'l':'m'))+' · '+f1(gsRound(l,'c'))+' · '+f1(gsRound(l,'h'))+' dmg':'none'},
 ];
 function lockWhy(u){const miss=[];
   for(const[id,l]of u.need||[])if(L(id)<l)miss.push(U.find(x=>x.id===id).name+' Lv '+l);
@@ -1356,10 +1356,10 @@ const RLINES={currency:'RP',rpCost:RP_COST,refit:{mul:REFIT_MUL,cost:'300*1.15^n
   {n:'NGAD Sixth-Gen',g:80,mul:60,pen:0.8,sig:{instant:1}}]},
  {id:'gunship',label:'Gunship',u:'gunship',t:[
   {n:'AC-130J Ghostrider',w:'25mm minigun, 30mm, 105mm',g:1,mul:1},
-  {n:'AC-130J Block 30 (Griffin)',w:'+ Griffin volleys vs armor',g:45,mul:3,sig:{seek:1,atgm:6}},
-  {n:'Laser Gunship',w:'Laser beam replaces the 25mm',g:60,mul:12.5,pen:0.7,sig:{instant:1}},
+  {n:'AC-130J Block 30 (Griffin)',w:'Adds Griffin missiles vs armor',g:45,mul:3,sig:{seek:1,atgm:6}},
+  {n:'Laser Gunship',w:'Laser replaces the 25mm',g:60,mul:12.5,pen:0.7,sig:{instant:1}},
   {n:'Arsenal Plane',w:'105mm fires 6-shell barrages',g:80,mul:30,sig:{salvo:6}},
-  {n:'Autonomous Arsenal Wing',w:'Two gunships split the targets',g:110,mul:40,pen:0.9,sig:{mounts:2}}]},
+  {n:'Autonomous Arsenal Wing',w:'Two gunships split targets',g:110,mul:40,pen:0.9,sig:{mounts:2}}]},
  {id:'silo',label:'Missile Silo',u:'silo',t:[
   {n:'PrSM Tactical Missile',g:1,mul:1},
   {n:'PrSM Increment 2 (multi-warhead)',g:45,mul:8,sig:{bomblets:3}},
