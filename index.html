@@ -3690,6 +3690,7 @@ const ML_TUBE=[
 // ML_T[t].K trims each tier's warhead so a volley's total damage stays in the old ballpark (measured per tier against a fixed
 // target field: clustered infantry + armor within ~+20%, a lone vehicle within ~-10%).
 const MSL_CORE=.25,MSL_RIM=.35;
+const MSL_VS=1.15;   // rounds are drawn a touch over scale so they read as missiles at phone zoom
 function mlVolley(u,vis){const l=L('mlaunch'),t=rTier('mlaunch'),T=ML_T[t],n0=Math.min(8,1+Math.floor(l/2))*(sg('mlaunch','salvo')||1),
     n=Math.max(1,Math.round(n0*T.n)),dmg=mslDmg(l)*n0/n*T.K,sky=skyTargets(),s=US.mlaunch*bS(),c=Math.cos(u.ang),sn=Math.sin(u.ang),tubes=ML_TUBE[t],
     heavy=e=>e.boss?6:e.veh?4:e.stand?3:1,
@@ -3834,7 +3835,6 @@ function drawSkyMsl(){if(!G.sams.length)return;const B=ctx.getTransform(),bp=Mat
     xf(B,m.x,m.y,m.h,MSL_VS);ctx.globalCompositeOperation='lighter';mslFlame(-d.L/2-.2,S.gl*(m.v<m.spd*.5?.7:1),.85+.2*Math.sin(t*53+m.sd));
     ctx.globalCompositeOperation='source-over';hqDraw(mslSpr(m.k,bp,HQ))}
   xr(B)}
-const MSL_VS=1.15;   // rounds are drawn a touch over scale so they read as missiles at phone zoom
 // the rounds themselves (air pass, above the fog): contrail, exhaust tongue, then the baked sprite scaled by altitude
 function drawMissiles(){if(!G.missiles||!G.missiles.length)return;const B=ctx.getTransform(),bp=Math.hypot(B.a,B.b),t=G.time;
   for(const m of G.missiles){if(m.delay>0)continue;const S=MK[m.k],d=MSA[m.k],k=MSL_VS*(1+m.z/110),fs=1-.55*Math.abs(Math.sin(m.pt));
@@ -3872,7 +3872,7 @@ function drawSiloMsl(n){const q=1-n.t/n.max,o=siloPos(n,q,_sp1),x=o.gx,y=o.gy-o.
   else if(n.st>=2){ctx.lineCap='round';ctx.beginPath();for(let i=0;i<=10;i++){const s=siloPos(n,Math.max(0,q-.7)+Math.min(q,.7)*i/10,_sp2);if(i)ctx.lineTo(s.gx,s.gy-s.z*SILO_LIFT);else ctx.moveTo(s.gx,s.gy-s.z*SILO_LIFT)}
     ctx.strokeStyle='rgba(170,215,255,.28)';ctx.lineWidth=6;ctx.stroke();ctx.strokeStyle='rgba(235,245,255,.8)';ctx.lineWidth=1.6;ctx.stroke()}
   xf(B,x,y,a,k*MSL_VS);
-  if(n.st>=2&&n.st<4||q<.55)mslFlame(-d.L/2-.2,n.st>=2?2:1.7*(q>.45?(.55-q)*10:1),.85+.2*Math.sin(t*53));   // a ballistic round burns out before it tips over
+  if(n.st<4&&(n.st>=2||q<.55))mslFlame(-d.L/2-.2,n.st>=2?2:1.7*(q>.45?(.55-q)*10:1),.85+.2*Math.sin(t*53));   // a ballistic round burns out before it tips over
   const hot=n.st===4?1:q>.7&&a>0?Math.min(1,(q-.7)/.2):0;   // re-entry: the nose glows on the way down
   if(hot)ctx.drawImage(rentSpr(),d.L/2-7*hot,-4.5*hot,12*hot,9*hot);
   ctx.globalCompositeOperation='source-over';hqDraw(mslSpr(n.k,Math.hypot(B.a,B.b)*k*MSL_VS,HQ));xr(B)}
