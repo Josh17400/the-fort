@@ -1161,7 +1161,7 @@ const U=[
  {id:'airstrip',wave:24,need:[["walls", 7], ["air", 2], ["vision", 9]],cat:'AIR & MISSILES',name:'Air Strip',max:3,cost:6000,g:2.2,desc:'A runway outside the south wall. Unlocks aircraft; higher levels speed up sorties.',val:l=>l?'Lv '+l+' · sorties -'+pct(1-Math.pow(0.85,l-1)):'no runway'},
  {id:'fighter',late:1,wave:26,need:[["airstrip", 1], ["vision", 10]],cat:'AIR & MISSILES',name:'Fighter Jets',max:Infinity,cost:8000,g:1.95,desc:'Jets scramble from the strip and strafe enemy columns with cannons.',val:l=>l?Math.min(4,1+Math.floor(l/2))+' '+pl(Math.min(4,1+Math.floor(l/2)),'jet')+' · '+f1(jetDmg(l))+' dmg/pass':'none'},
  {id:'silo',late:1,wave:30,need:[["walls", 9], ["mlaunch", 3]],cat:'AIR & MISSILES',name:'Missile Silo',max:Infinity,cost:15000,g:2.0,desc:'A ballistic missile that levels the biggest enemy concentration on the map.',val:l=>l?f1(siloDmg(l))+' dmg · every '+Math.round(siloCd(l))+'s':'none'},
- {id:'gunship',late:1,wave:35,need:[["airstrip", 2], ["fighter", 2], ["vision", 12]],cat:'AIR & MISSILES',name:'Gunship',max:Infinity,cost:25000,g:2.0,desc:'A heavy gunship circles overhead raining 105mm shells and cannon fire.',val:l=>l?f1(gsDmg(l))+' howitzer · '+f1(gsGun(l))+' cannon':'none'},
+ {id:'gunship',late:1,wave:35,need:[["airstrip", 2], ["fighter", 2], ["vision", 12]],cat:'AIR & MISSILES',name:'Gunship',max:Infinity,cost:25000,g:2.0,desc:'A gunship circles overhead cycling three guns: a 25mm minigun mows infantry, a 30mm cannon bursts trucks and groups, the 105mm is saved for armor.',val:l=>l?f1(gsRound(l,'h'))+' 105mm · '+f1(gsRound(l,'c'))+' 30mm · '+f1(gsRound(l,'m'))+' 25mm':'none'},
 ];
 function lockWhy(u){const miss=[];
   for(const[id,l]of u.need||[])if(L(id)<l)miss.push(U.find(x=>x.id===id).name+' Lv '+l);
@@ -1355,11 +1355,11 @@ const RLINES={currency:'RP',rpCost:RP_COST,refit:{mul:REFIT_MUL,cost:'300*1.15^n
   {n:'F-35 + CCA Wingmen',g:60,mul:50,sig:{drones:[2,0.4]}},
   {n:'NGAD Sixth-Gen',g:80,mul:60,pen:0.8,sig:{instant:1}}]},
  {id:'gunship',label:'Gunship',u:'gunship',t:[
-  {n:'AC-130J Ghostrider',g:1,mul:1},
-  {n:'AC-130J Block 30 (Griffin)',g:45,mul:3,sig:{seek:1,atgm:6}},
-  {n:'Laser Gunship',g:60,mul:12.5,pen:0.7,sig:{instant:1}},
-  {n:'Arsenal Plane',g:80,mul:30,sig:{salvo:6}},
-  {n:'Autonomous Arsenal Wing',g:110,mul:40,pen:0.9,sig:{mounts:2}}]},
+  {n:'AC-130J Ghostrider',w:'25mm minigun, 30mm, 105mm',g:1,mul:1},
+  {n:'AC-130J Block 30 (Griffin)',w:'+ Griffin volleys vs armor',g:45,mul:3,sig:{seek:1,atgm:6}},
+  {n:'Laser Gunship',w:'Laser beam replaces the 25mm',g:60,mul:12.5,pen:0.7,sig:{instant:1}},
+  {n:'Arsenal Plane',w:'105mm fires 6-shell barrages',g:80,mul:30,sig:{salvo:6}},
+  {n:'Autonomous Arsenal Wing',w:'Two gunships split the targets',g:110,mul:40,pen:0.9,sig:{mounts:2}}]},
  {id:'silo',label:'Missile Silo',u:'silo',t:[
   {n:'PrSM Tactical Missile',g:1,mul:1},
   {n:'PrSM Increment 2 (multi-warhead)',g:45,mul:8,sig:{bomblets:3}},
@@ -2847,6 +2847,7 @@ function drawUnits(){
   for(const s of G.tshells){const k=Math.min(1,s.t/s.dur),x=s.x+(s.tx-s.x)*k,y=s.y+(s.ty-s.y)*k;
     if(s.kind==='rocket'){ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(s.ty-s.y,s.tx-s.x));box(-4,-0.8,6,1.6,'#ddd');ell(-4.5,0,1.8,1,'#ffb13b');ctx.restore()}
     else if(s.kind==='nade')ell(x,y,1.4,1.4,'#2a2a2a');
+    else if(s.kind==='gs'){ell(x,y,2.6,2.6,'#ffb45a');ell(x,y,1.3,1.3,'#fff4d6')}
     else ell(x,y,1.8,1.8,'#ffe9a0')}
 }
 function drawHelis(){
@@ -3588,10 +3589,7 @@ function updateAir(dt,ph){
     if(u.k==='silo'&&u.cd<=0){const all=G.enemies.filter(e=>!e.dead&&visible(e));if(all.length<4){u.cd=1;continue}
       const c=bestCluster(90,all),T=sg('silo','instant')?0.45:3;u.cd=siloCd(L('silo'));G.nukes.push({x:c.x,y:c.y,t:T,max:T,sx:u.x,sy:u.y});banner('MISSILE AWAY','','','feed');sfx('silo',u.x,u.y)}
     if(u.k==='gunship'){if(gunshipOut(u,dt))continue;u.orb-=0.12*dt;const r=Math.max(ph+140,vision()*0.75);u.x=Math.cos(u.orb)*r;u.y=Math.sin(u.orb)*r;u.ang=u.orb-Math.PI/2;
-      if(!vis.length)continue;u.gcd-=dt;
-      if(u.cd<=0){u.cd=2.4;sgGunship(u,vis)}
-      if(u.gcd<=0){u.gcd=0.22;const top=topTargets(vis,u,4),t=top[Math.floor(Math.random()*top.length)];explode(t.x+(Math.random()-.5)*8,t.y+(Math.random()-.5)*8,10,gsGun(L('gunship')),false);
-        sgTracer('gunship',u.x,u.y,t.x,t.y,'#ffb15a',1.2,0.06);sfx('cannon',u.x,u.y)}}
+      if(!vis.length){u.gk='';continue}if(u.cd<=0)gsFire(u,vis,dt)}
   }
   // homing missiles
   for(const m of G.missiles){if(m.delay>0){m.delay-=dt;continue}m.life-=dt;
@@ -3745,7 +3743,7 @@ function sigInit(){G._sg=null;G.sgfx=[];G.drones=[];G.sgl=[];G.shT=0;G.shW=-1;G.
   if((p=sg('squad','drones')))for(const s of G.sold.slice(1))drones(s,'squad',p);
   for(const u of G.units){if(u.k==='apc'&&(p=sg('apc','drones')))drones(u,'apc',p);if(u.k==='tank'&&(p=sg('tank','drones')))drones(u,'tank',p)}
   if(G.fleet.length&&(p=sg('fighter','drones'))){G.cca={x:0,y:-fortHalf()-140,a:-Math.PI/2};drones(G.cca,'fighter',p);for(const d of G.drones)if(d.o===G.cca)d.rr=26+d.i*10}
-  if(L('gunship')&&(p=sg('gunship','mounts')))for(let i=1;i<p;i++)G.air.push({k:'gunship',orb:i*TAU/p,x:0,y:0,cd:2+i*1.2,gcd:0.1*i,ang:0});
+  if(L('gunship')&&(p=sg('gunship','mounts')))for(let i=1;i<p;i++)G.air.push({k:'gunship',orb:i*TAU/p,x:0,y:0,cd:2+i*0.6,gcd:0,ang:0,gq:i%3});
   sgFuel()}
 function sgFuel(){for(const u of G.units)if(u.fuel!=null&&((u.k==='truck'&&sg('truck','noFuel'))||(u.k==='heli'&&sg('heli','noFuel'))))u.fuel=1}
 // RPG knockouts: up-armored trucks shake them off sooner, a self-repairing tank crew patches twice as fast
@@ -3763,7 +3761,6 @@ function sigUpdate(dt){G._bf=Math.round(14*GFX.fx);
     if(u.stun>0)continue;
     if(u.k==='heli'&&u.fs==='air'&&(p=sg('heli','speed')))u.orb+=0.35*(p-1)*dt;   // compound helo: faster orbit
     if((p=sg(u.k,'atgm'))&&armed(u))sgAtgm(u,u.k,p,dt)}
-  for(const u of G.air){const p=u.k==='gunship'&&sg('gunship','atgm');if(p)sgAtgm(u,'gunship',p,dt)}
   // HPM: each AA gun sweeps a microwave cone across the sky that fries and stuns everything in it
   const hp=sg('aagun','cone')&&sg('aagun','stun');if(hp)for(const u of G.aa){if(u.k!=='aagun')continue;u.hpm=(u.hpm??1)-dt;if(u.hpm>0)continue;
     const t=bestTarget(G.sky,u,false,true);if(!t){u.hpm=0.4;continue}u.hpm=2.4;sgCone(u.x,u.y,Math.atan2(t.y-u.y,t.x-u.x),0.42,300,G.sky,aaDmg(L('aagun'))*aaMul()*2,hp[0],'150,220,255');sfx('emp',u.x,u.y)}
@@ -3905,11 +3902,91 @@ function sigCiws(u,t,hit){const l=L('tesla'),pen=rPen('tesla'),d=teslaDmg(l),m=s
       for(let i=0;i<list.length;i++){const e=list[i],dx=e.x-u.x,dy=e.y-u.y,dd=dx*dx+dy*dy;if(dd>bdd*HB||hit.has(e)||!sgLive(e))continue;const q=hyp(dx,dy);if(q<bd){bd=q;f=e;bdd=dd}}}if(!f)break;
     hit.add(f);sgHit(f,d*(f.air?am:1),'p',pen);add(f);sigChain(f,Math.min(12,3+l)-1,d,'p',pen,beam?HEL_C:'255,210,140',80,hit,am).forEach(add)}
   if(beam){const s=11*US.tesla*bS();for(const b of u.burst){const a=Math.atan2(b.y-u.y,b.x-u.x);sgBeam(u.x+Math.cos(a)*s,u.y+Math.sin(a)*s,b.x,b.y,HEL_C,1.2,0.12);b.t=0}}}
-// ---- gunship: 105mm salvos across the clusters (follow-up rounds at half weight) ----
-function sgGunship(u,vis){const n=sg('gunship','salvo')||1,c=bestCluster(40,vis),l=L('gunship');
-  for(let i=0;i<n;i++){const e=i?vis[Math.floor(R()*vis.length)]:c,d=Math.hypot(e.x-u.x,e.y-u.y);
-    G.tshells.push(sgShell('gunship',{x:u.x,y:u.y,tx:e.x+(i?(R()-.5)*12:0),ty:e.y+(i?(R()-.5)*12:0),t:0,dur:Math.max(.05,d/500)*(1+i*0.12),dmg:gsDmg(l)*(i?0.5:1),r:40,kind:'shell'}))}
-  sfx('howitzer',u.x,u.y,1.5)}
+// ---- AC-130 fire control ----
+// Three left-side guns fire one at a time in a fixed rotation (25mm -> 30mm -> 105mm [-> Griffins]); each reloads while the others
+// fire, so one gun is always working. Roles: the 25mm GAU-12 walks bursts through infantry groups (small-arms armor rules); the 30mm
+// airbursts light vehicles (doctrine order), else groups; the 105mm is HELD for armor (boss > MBT > MLRS > IFV > APC, never a second
+// shell on a hull the shells in flight already cover) and only drops on a cluster once no armor has been in sight for GS_HOLD s.
+// R&D: Block 30 adds a Griffin volley to the rotation and seek (the 30mm also hunts armor, the hold halves); the Laser Gunship's HEL
+// sweeps a burning beam through the group in place of the 25mm; the Arsenal Plane's 105 fires `salvo`-shell barrages spread over
+// the armor; the Autonomous Wing's second ship starts on another gun and skips aim points the other ship is already working.
+// Budget per ship = the old fire (gsDmg every 2.4s + gsGun every 0.22s), paid per rotation of gsT() s: 105 = gsDmg*T/2.4 (salvo
+// follow-ups at half weight, as before), 25mm/HEL = GS_MINI of gsGun/0.22*T, 30mm = the rest; the Griffins keep sgAtgm's budget.
+const GS_T=2.2,GS_HOLD=6,GS_K={m:6.5,l:6.5,c:1,h:1.15},GS_RAD={m:7,l:9,c:12},GS_N={m:40,l:25,c:5,h:1,g:2},GS_DT={m:0.025,l:0.04,c:0.14,h:0.12,g:0.18},GS_ORD='mchg',GS_W=38,GS_Z=0.58;
+const gsHeavy=e=>!!(e.boss||e.veh&&e.arm>=0.35),gsInf=e=>!e.veh&&!e.boss,gsLight=e=>e.veh&&!gsHeavy(e),gsSoft=e=>!gsHeavy(e),gsAny=()=>true;
+const gsArmK=e=>e.boss?5:e.type==='mbt'?4:e.type==='mlrs'?3:e.type==='ifv'?2:1;
+const gsSalvo=()=>rSigP('gunship','salvo')||1,gsLen=(k,n)=>k==='h'?0.45+GS_DT.h*(n-1):n*GS_DT[k];
+function gsT(){return Math.max(GS_T,gsLen(rSigP('gunship','instant')?'l':'m',GS_N.m)+gsLen('c',GS_N.c)+gsLen('h',gsSalvo())+(rSigP('gunship','atgm')?0.2:0))}
+// damage per round: m 25mm, l HEL tick, c 30mm airburst, h first 105mm shell of a barrage
+const gsRound=(l,k)=>k==='c'?gsGun(l)/0.22*gsT()*GS_K.c/GS_N.c:gsDmg(l)*gsT()/2.4*GS_K[k]/(k==='h'?1:GS_N[k]);
+// muzzles in airframe units (x forward, -y = the left, firing side): Hercules, then the T4 flying wing; g = the left Griffin pylon
+const GS_MZ={m:[7,-5.2],l:[6.3,-1.6],c:[1.8,-7.4],h:[-3.2,-10],g:[-2,-18.6]},GS_MZW={m:[4,-9],l:[12,0],c:[-2,-14],h:[-6,-21],g:[-6,-24]},_gm={x:0,y:0};
+function gsMz(u,k,side){const o=(tierOf('gunship')===4?GS_MZW:GS_MZ)[k],s=US.gunship,c=Math.cos(u.ang),n=Math.sin(u.ang),lx=o[0]*s,ly=o[1]*s*side;
+  _gm.x=u.x+lx*c-ly*n;_gm.y=u.y+lx*n+ly*c;return _gm}
+// side-gun flash: baked muzzle star on High, a small fire sprite below it; s 0 (25mm) .. 1 (105mm)
+function gsFlash(x,y,a,s){const l=0.05+0.04*s;light(x,y,16+30*s,'255,200,120',l);
+  if(HQ)G.fx.push({k:'mf',x,y,a,s:0.09+0.22*s,v:(R()*4)|0,life:l,max:l});else G.fx.push({k:'boom',x,y,r:3+8*s,life:l,max:l})}
+const gsClaimed=(u,x,y)=>{for(const o of G.air)if(o!==u&&o.gk&&o.k==='gunship'&&Math.abs(o.gx-x)<45&&Math.abs(o.gy-y)<45)return true;return false};
+const gsNear=(vis,p,r)=>{let b=null,bd=r;for(const e of vis){if(e.dead)continue;const d=hyp(e.x-p.x,e.y-p.y);if(d<bd){bd=d;b=e}}return b};
+// densest group of ok() targets within rad (first 40 candidates, as bestCluster), shunning points another gunship is working
+function gsCluster(u,vis,rad,ok){let b=null,bc=0;for(let i=0,n=Math.min(40,vis.length);i<n;i++){const c=vis[i];if(!ok(c))continue;let k=0;
+  for(const o of vis)if(ok(o)&&within(o,c.x,c.y,rad))k+=o.boss?5:o.veh?3:1;if(gsClaimed(u,c.x,c.y))k*=0.3;if(k>bc){bc=k;b=c}}return b}
+// up to n ok() targets around c into u.gw (appended when keep), ordered across the line of fire so the shots walk through the group
+function gsWalk(u,c,vis,rad,ok,n,keep){const m=u.gw,a=Math.atan2(c.y-u.y,c.x-u.x),s=R()<.5?1:-1,ax=-Math.sin(a)*s,ay=Math.cos(a)*s,i0=keep?m.length:0,cmp=(p,q)=>(p.x-q.x)*ax+(p.y-q.y)*ay;m.length=i0;
+  for(const o of vis)if(ok(o)&&within(o,c.x,c.y,rad)){m.push(o);if(m.length-i0>=n)break}
+  if(m.length===i0)m.push(c);if(i0){const t=m.splice(i0).sort(cmp);for(const o of t)m.push(o)}else m.sort(cmp)}
+// armor the 105mm / Griffins may still take: by rank (boss > MBT > MLRS > IFV > APC), then escorts inside the blast, then HP;
+// hulls the 105 shells in flight already cover are skipped
+const gsPend=e=>{let d=0;for(const s of G.tshells)if(s.tg===e&&s.kind==='gs')d+=s.dmg;return d};
+const _gsA=new Map();
+function gsArmor(vis,m){_gsA.clear();for(const e of vis)if(gsHeavy(e)&&gsPend(e)<e.hp){let k=0;for(const o of vis)if(o!==e&&within(o,e.x,e.y,40))k++;_gsA.set(e,gsArmK(e)*100+Math.min(12,k));m.push(e)}
+  m.sort((a,b)=>_gsA.get(b)-_gsA.get(a)||b.hp-a.hp)}
+// the 105mm's shells into u.gw: each hull in armor order takes shells until they cover its HP; shells left over (or all of them,
+// once the hold has run out with no armor in sight) go one per group, densest first, never twice into the same blast circle.
+// A barrage with no armor in it spends the hold, so the big gun only drops on crowds every GS_HOLD s. Returns the first mark or null.
+const _gsL=[];
+function gsAim105(u,vis,n,hold){const m=u.gw,a=_gsL,d=gsRound(L('gunship'),'h');a.length=0;gsArmor(vis,a);let i=0;
+  for(const e of a){let hp=e.hp-gsPend(e);while(i<n&&hp>0){m.push(e);hp-=d*(i?0.5:1);i++}if(i>=n)break}
+  if(i<n&&(i||hold)){const i0=i,free=o=>{if(!gsSoft(o))return false;for(let j=i0;j<m.length;j++)if(within(o,m[j].x,m[j].y,40))return false;return true};
+    for(let c;i<n&&(c=gsCluster(u,vis,40,free));i++)m.push(c);if(i>i0)for(let j=0,w=i-i0;m.length<n;j++)m.push(m[i0+j%w]);if(!i0)u.gh=0}
+  a.length=0;return m[0]||null}
+// the 30mm's vehicle: light (technical, car bomb) or, with seek, heavy; picked by the player's doctrine from the fort
+function gsVeh(vis,heavy){let b=null,bs=Infinity;for(const e of vis){if(heavy?!gsHeavy(e):!e.veh||gsHeavy(e))continue;const s=tScore(e,hyp(e.x,e.y),false);if(s<bs){bs=s;b=e}}return b}
+// open a burst of gun k on its role's target; false when k has nothing it should shoot (the 105 and Griffins waiting on armor)
+function gsStart(u,k,vis){const m=u.gw,seek=!!sg('gunship','seek');let c=null;m.length=0;
+  if(k==='m'||k==='l'){const ok=vis.some(gsInf)?gsInf:vis.some(gsLight)?gsLight:gsHeavy;u.gA=ok===gsHeavy;
+    if((c=gsCluster(u,vis,40,ok))){const a=Math.atan2(c.y-u.y,c.x-u.x),s=R()<.5?1:-1;let sp=0,nc=0;for(const o of vis)if(ok(o)){const d=hyp(o.x-c.x,o.y-c.y);if(d<60){nc++;if(d>sp)sp=d}}
+      u.gW=u.gA?16:Math.max(16,Math.min(46,sp+8));u.gc=c;u.gfx=Math.cos(a);u.gfy=Math.sin(a);u.gax=-u.gfy*s;u.gay=u.gfx*s;u.gL=k==='l'&&!u.gA&&nc<4;if(u.gL){u.gW=16;gsWalk(u,c,vis,140,ok,6)}}}
+  else if(k==='c'){if((c=gsVeh(vis,false)||(seek?gsVeh(vis,true):null)))m.push(c);else if((c=gsCluster(u,vis,24,gsSoft)||gsCluster(u,vis,24,gsAny)))gsWalk(u,c,vis,30,gsAny,GS_N.c)}
+  else if(k==='g'){gsArmor(vis,m);if(!m.length&&u.gh>=GS_HOLD*(seek?0.5:1)){for(const e of vis)if(!c||e.hp>c.hp)c=e;m.push(c)}c=m[0]}
+  else c=gsAim105(u,vis,gsSalvo(),u.gh>=GS_HOLD*(seek?0.5:1))
+  if(!c)return false;const n=k==='h'?gsSalvo():GS_N[k],at=sg('gunship','atgm');
+  u.gk=k;u.gi=0;u.gn=n;u.gt=0;u.gp=0;u.gb=gsLen(k,n);u.gx=c.x;u.gy=c.y;const l=L('gunship');u.gd=k==='g'?sgDps('gunship')*at*0.5/n:k!=='m'&&k!=='l'?gsRound(l,k):u.gA?gsRound(l,'c')*GS_N.c/n:gsRound(l,k)*(u.gW/GS_W)**2;u.gr[k]=k==='g'?at:gsT();
+  if(k==='m'){const p=gsMz(u,'m',1);sfx('ciws',p.x,p.y,u.gb)}return true}
+// every enemy within rad of the impact takes d (damage class dk, the line's armor penetration)
+function gsSplash(x,y,rad,d,dk){const pen=rPen('gunship');for(const e of G.enemies)if(!e.dead&&within(e,x,y,rad+e.r))sgHit(e,d,dk,pen)}
+// one round of the open burst
+function gsShot(u,vis){const k=u.gk,m=u.gw,i=u.gi++;
+  if(k==='m'||k==='l'){const f=u.gn>1?i/(u.gn-1):0.5,j=k==='m'?6:2;let x,y;
+    if(u.gL){const n=m.length-1,g=f*n,h=Math.min(n,g|0),a=m[h],b=m[Math.min(n,h+1)],q=g-h;x=a.x+(b.x-a.x)*q;y=a.y+(b.y-a.y)*q}
+    else{const c=u.gc,w=(f*2-1)*u.gW,z=Math.sin(f*Math.PI*5)*u.gW*GS_Z;x=c.x+u.gax*w+u.gfx*z+(R()-.5)*j;y=c.y+u.gay*w+u.gfy*z+(R()-.5)*j}const p=gsMz(u,k,1),px=p.x,py=p.y;
+    if(k==='l'){sgBeam(px,py,x,y,HEL_C,1.5,0.07);gsSplash(x,y,GS_RAD.l,u.gd,'p');spark(x,y,1,50,['#ffb08a','#fff4e0'],0.18,1.1);if(i%3===0)sfx('laser',x,y);if(i%5===0)decal(x,y,'scorch',4);return}
+    G.fx.push({k:'tracer',x:px,y:py,x2:x,y2:y,life:0.05,max:0.05,c:'#ff5a32',w:0.85});if(!(i&1))gsFlash(px,py,Math.atan2(y-py,x-px),0);
+    gsSplash(x,y,GS_RAD.m,u.gd,'s');spark(x,y,1,70,['#ffd9a0'],0.14,1);if(i%4===0)puff(x,y,1,3,0.5,'122,106,82',6,0.35)}
+  else if(k==='c'){let e=m[i%m.length];if(e.dead)e=gsNear(vis,e,30)||e;const x=e.x+(R()-.5)*10,y=e.y+(R()-.5)*10,p=gsMz(u,'c',1),px=p.x,py=p.y;
+    G.fx.push({k:'tracer',x:px,y:py,x2:x,y2:y,life:0.07,max:0.07,c:'#ffc04a',w:1.7});gsFlash(px,py,Math.atan2(y-py,x-px),0.4);
+    explode(x,y,GS_RAD.c,u.gd,false);puff(x,y,1,5,0.9,'64,60,56',5,0.5);sfx('cannon',px,py)}
+  else if(k==='h'){const e=m[i%m.length],p=gsMz(u,'h',1),px=p.x,py=p.y,sc=m.indexOf(e)<i?14:4,tx=e.x+(R()-.5)*sc,ty=e.y+(R()-.5)*sc;
+    G.tshells.push({x:px,y:py,tx,ty,t:0,dur:Math.max(0.05,Math.hypot(tx-px,ty-py)/520),dmg:u.gd*(i?0.5:1),r:40,kind:'gs',id:'gunship',tg:e});
+    gsFlash(px,py,Math.atan2(ty-py,tx-px),1);puff(px,py,2,6,1.1,'170,165,155',12,0.35);sfx('howitzer',px,py,i?1.1:1.5)}
+  else{const e=m[i%m.length],p=gsMz(u,'g',i&1?1:-1),a=Math.atan2(e.y-p.y,e.x-p.x)+(R()-.5)*0.6;
+    G.missiles.push({x:p.x,y:p.y,vx:Math.cos(a)*90,vy:Math.sin(a)*90,tgt:e,tx:e.x,ty:e.y,life:5,dmg:u.gd,delay:0,atgm:1,rt:1});puff(p.x,p.y,3,4,0.9,'200,196,188',18,0.45);sfx('launch',p.x,p.y)}}
+// per tick: reloads, the no-armor clock, the open burst, else the next ready gun in the rotation with something to shoot
+function gsFire(u,vis,dt){const r=u.gr||(u.gr={m:0,l:0,c:0,h:0,g:0});if(!u.gw){u.gw=[];u.gq=u.gq||0;u.gk='';u.gh=0}
+  r.m-=dt;r.l-=dt;r.c-=dt;r.h-=dt;r.g-=dt;let arm=false;for(const e of vis)if(gsHeavy(e)){arm=true;break}u.gh=arm?0:u.gh+dt;
+  if(u.gk){u.gp+=dt;u.gt-=dt;while(u.gi<u.gn&&u.gt<=0){gsShot(u,vis);u.gt+=GS_DT[u.gk]}if(u.gi>=u.gn&&u.gp>=u.gb)u.gk='';return}
+  const las=!!sg('gunship','instant'),at=sg('gunship','atgm');
+  for(let i=0;i<4;i++){const q=(u.gq+i)%4,k=q?GS_ORD[q]:las?'l':'m';if(k==='g'&&!at||r[k]>0)continue;if(gsStart(u,k,vis)){u.gq=q+1;break}}}
 // ---- drawing: mark reticles, stun crackle, burn glow, beams, arcs, cones, EM screen, loitering munitions, escort drones ----
 function drawSigFx(){if(!G.sgfx)return;const px=1/sc,lo=GFX.fx<0.5,t=G.time,mk=CGL.path(),st=CGL.path();let nm=0,ns=0;
   const tag=e=>{if(e.dead)return;if(e.mkT>t){const r=e.r+4+Math.sin(t*9)*0.8,k=Math.min(4,r*0.5);nm++;
@@ -5135,6 +5212,7 @@ function drawUnitsHQ(){const px=hqPx(),ph=wallHalfAt(L('walls'));
     if(s.kind==='rocket'){ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(s.ty-s.y,s.tx-s.x));hqDraw(hqBake('rkt',px,9,4,5,2,()=>{hqCyl(-4,-.8,6,1.6,'#d8d8d0');hqPoly([2,-.8,3.4,0,2,.8],'#c33');hqPoly([-4,-.8,-4.8,-1.8,-3,-.8],'#555');hqPoly([-4,.8,-4.8,1.8,-3,.8],'#555')},.2));
       ctx.globalCompositeOperation='lighter';ctx.drawImage(hqGlow('ex',[[0,'rgba(255,230,160,1)'],[.4,'rgba(255,150,50,.6)'],[1,'rgba(255,90,20,0)']]),-7.5,-2.5,5,5);ctx.globalCompositeOperation='source-over';ctx.restore()}
     else if(s.kind==='nade')ell(x,y,1.4,1.4,'#2a2a2a');
+    else if(s.kind==='gs'){ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(s.ty-s.y,s.tx-s.x));ctx.globalCompositeOperation='lighter';ctx.drawImage(tracerSpr('#ffa040'),-22,-3.5,24,7);ctx.globalCompositeOperation='source-over';ctx.restore()}
     else ell(x,y,1.8,1.8,'#ffe9a0')}}
 // ---- helicopters ----
 function hqRotor(R,blades,key,px){return hqBake(key,px,2*R+2,2*R+2,R+1,R+1,()=>{
