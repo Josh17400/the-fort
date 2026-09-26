@@ -3999,7 +3999,7 @@ function drawFx(){const m=HQ&&ctx.getTransform();
     else if(f.k==='ring'){ctx.strokeStyle=`rgba(${f.c},${k*0.8})`;ctx.lineWidth=f.w*k+0.5;ctx.beginPath();ctx.arc(f.x,f.y,f.r*(0.15+0.85*Math.sqrt(t)),0,7);ctx.stroke()}
     else if(f.k==='fire'||f.k==='boom'){const r=f.r*(0.35+0.75*Math.sqrt(t))*(f.k==='boom'?0.8:1);ctx.globalCompositeOperation='lighter';blit(fireSprite(),f.x,f.y,r,k);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}}
 }
-function drawLights(){if(!GFX.lights||!G.lights.length)return;ctx.globalCompositeOperation='lighter';const la=(HQ?(BP?.05:.42):.45)*(1+.5*DN.dk);   // flashes bloom harder in the dark
+function drawLights(){if(!GFX.lights||!G.lights.length||(BP&&AQ.lv))return;ctx.globalCompositeOperation='lighter';const la=(HQ?(BP?.05:.42):.45)*(1+.5*DN.dk);   // flashes bloom harder in the dark
   for(const l of G.lights)blit(glowSprite(l.c),l.x,l.y,l.r,la*l.life/l.max);
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
 let _vig=null,_vigK='';
@@ -4149,7 +4149,7 @@ function hqDecals(){const m=ctx.getTransform(),vw=VW/2/sc+40,vh=VH/2/sc+40;
 // layer records: there the puffs are GPU instances already, and a buffer redrawn every frame can't be an atlas sprite.
 function hqSmoke(){const m=ctx.getTransform(),vw=VW/2/sc+40,vh=VH/2/sc+40;   // view half-extents in world units (+ shake margin)
   let M=m,main=null,c=null,half=false;
-  if(dpr>=2&&!CGL.active()){const p2=(m.a*m.a+m.b*m.b)*7.84;let f=0;for(const s of G.smoke)if(!(s.d>0))f+=s.r*s.r*p2;half=f>1.5*cv.width*cv.height}
+  if(dpr>=2&&!CGL.active()){const p2=(m.a*m.a+m.b*m.b)*7.84;let f=0;for(const s of G.smoke)if(!(s.d>0))f+=s.r*s.r*p2;half=f>(AQ.lv?.5:1.5)*cv.width*cv.height}
   if(half){c=pfCanvas('smk',Math.ceil(cv.width/2),Math.ceil(cv.height/2));const x=c._x;x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.clearRect(0,0,c.width,c.height);
     M={a:m.a/2,b:m.b/2,c:m.c/2,d:m.d/2,e:m.e/2,f:m.f/2};main=ctx;ctx=x}
   try{for(const s of G.smoke){if(s.d>0)continue;const k=s.life/s.max,al=s.a*1.3*k*Math.min(1,(1-k)*8);if(al<.01)continue;const rc=s.r*2;if(Math.abs(s.x)-rc>vw||Math.abs(s.y)-rc>vh)continue;
@@ -4160,15 +4160,15 @@ function hqParts(){const m=ctx.getTransform(),h=hx();
   if(!BP){
     for(const p of G.parts){if(p.glow)continue;ctx.globalAlpha=Math.min(1,p.life/((p.max||1)*0.4));ctx.fillStyle=p.c;
       if(p.rot!==undefined){xf(m,p.x,p.y,p.rot);ctx.fillRect(-p.sz,-p.sz/2,p.sz*2,p.sz)}else ctx.fillRect(p.x,p.y,p.sz,p.sz)}
-    xr(m);ctx.fillStyle='rgba(0,0,0,.32)';
+    xr(m);ctx.fillStyle='rgba(0,0,0,.32)';if(!AQ.lv){
     for(const p of h.deb){ctx.globalAlpha=Math.min(1,p.life/.8);xf(m,p.x+p.z*.5+.6,p.y+p.z*.6+.8,p.rot);ctx.fillRect(-p.sz,-p.sz*.6,p.sz*2,p.sz*1.2)}
-    for(const p of h.cas){ctx.globalAlpha=Math.min(1,p.life/.6);xf(m,p.x+p.z*.5+.4,p.y+p.z*.6+.5,p.rot);ctx.fillRect(-1.1,-.5,2.2,1)}
+    for(const p of h.cas){ctx.globalAlpha=Math.min(1,p.life/.6);xf(m,p.x+p.z*.5+.4,p.y+p.z*.6+.5,p.rot);ctx.fillRect(-1.1,-.5,2.2,1)}}
     for(const p of h.deb){ctx.globalAlpha=Math.min(1,p.life/.8);xf(m,p.x,p.y,p.rot,1+p.z/60);ctx.fillStyle=p.c;ctx.fillRect(-p.sz,-p.sz*.6,p.sz*2,p.sz*1.2);
       ctx.fillStyle='rgba(255,240,210,.14)';ctx.fillRect(-p.sz,-p.sz*.6,p.sz*2,p.sz*.4)}
     for(const p of h.cas){ctx.globalAlpha=Math.min(1,p.life/.6);xf(m,p.x,p.y,p.rot,1+p.z/40);ctx.fillStyle='#b8862e';ctx.fillRect(-1.1,-.5,2.2,1);ctx.fillStyle='#f4d58a';ctx.fillRect(-1.1,-.5,2.2,.38)}
     xr(m)}
   ctx.globalCompositeOperation='lighter';ctx.lineCap='round';const wm=BP?2.2:1;glowSparks(wm);
-  for(const p of h.emb){const a=Math.min(1,p.life*2.5/p.max)*(.65+.35*Math.sin(p.life*47+p.x));ctx.globalAlpha=a;ctx.strokeStyle=p.c;ctx.lineWidth=p.sz*wm;
+  if(!(BP&&AQ.lv>=2))for(const p of h.emb){const a=Math.min(1,p.life*2.5/p.max)*(.65+.35*Math.sin(p.life*47+p.x));ctx.globalAlpha=a;ctx.strokeStyle=p.c;ctx.lineWidth=p.sz*wm;
     ctx.beginPath();ctx.moveTo(p.x-p.vx*.045,p.y-p.vy*.045);ctx.lineTo(p.x,p.y);ctx.stroke()}
   const gs=glowSprite('255,150,60');
   for(const p of h.emb)blit(gs,p.x,p.y,p.sz*3.5,Math.min(1,p.life*2/p.max)*.45);
