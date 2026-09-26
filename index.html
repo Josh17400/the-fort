@@ -3573,7 +3573,7 @@ const mslDmg=l=>60*Math.pow(1.28,l-1)*late('mlaunch',l,1.28)*rMult('mlaunch'),si
 const jetDmg=l=>40*Math.pow(1.27,l-1)*late('fighter',l,1.27)*rMult('fighter'),gsDmg=l=>120*Math.pow(1.3,l-1)*late('gunship',l,1.3)*rMult('gunship'),gsGun=l=>12*Math.pow(1.25,l-1)*late('gunship',l,1.25)*rMult('gunship');
 const stripMul=()=>Math.pow(0.85,Math.max(0,L('airstrip')-1));
 function buildAir(){const ph=wallHalfAt(L('walls')),a=[];
-  if(L('mlaunch'))a.push({k:'mlaunch',x:ph*0.55,y:-ph*0.55,cd:2,ang:-Math.PI/2});
+  if(L('mlaunch'))a.push({k:'mlaunch',x:ph*0.55,y:-ph*0.55,cd:2,ang:-Math.PI/2,aimT:0,aimE:null});
   if(L('silo'))a.push({k:'silo',x:-ph*0.55,y:-ph*0.55,cd:siloCd(L('silo'))*0.5});
   if(L('gunship'))a.push({k:'gunship',orb:0,x:0,y:0,cd:2,gcd:0,ang:0});
   return a}
@@ -3581,7 +3581,7 @@ function bestCluster(R,list){let best=null,bc=-1;for(let i=0,nc=Math.min(30,list
 function updateAir(dt,ph){
   const vis=G.air.length?visInto(_airVis,G.enemies):null;   // only read inside the G.air loop
   for(const u of G.air){u.cd-=dt;
-    if(u.k==='mlaunch'&&(vis.length||G.sky.length&&skyTargets().length)){const t=nearestTo(u);u.ang=Math.atan2(t.y-u.y,t.x-u.x);
+    if(u.k==='mlaunch'&&(vis.length||G.sky.length&&skyTargets().length)){if(u.aimT>0)u.aimT-=dt;const t=u.aimT>0&&!u.aimE.dead?u.aimE:nearestTo(u);u.ang+=Math.max(-5*dt,Math.min(5*dt,angTo(u.ang,Math.atan2(t.y-u.y,t.x-u.x))));
       if(u.cd<=0){u.cd=2.8;mlVolley(u,vis)}}
     if(u.k==='silo'&&u.cd<=0){const all=G.enemies.filter(e=>!e.dead&&visible(e));if(all.length<4){u.cd=1;continue}
       const c=bestCluster(90,all),T=sg('silo','instant')?0.45:3;u.cd=siloCd(L('silo'));G.nukes.push(siloNew(u,c,T));banner('MISSILE AWAY','','','feed');sfx('silo',u.x,u.y)}
@@ -3658,27 +3658,27 @@ function drawAirTop(){
 // zp/cl cruise (or top-attack apex) altitude + climb rate, dv dive slope (z <= ground range x dv), ts/sr/sl smoke puff spacing
 // (world units) / radius / life, gl exhaust length (0 = none), ct 1 = hypersonic contrail.
 const MK={
-  jav: {ej:.22,v0:55, vm:240, ac:380, tr:3,  N:3.5,zp:74,cl:115,dv:.95,ts:5, sr:2.6,sl:1.2,gl:1,   ct:0},   // Javelin: soft launch, top-attack
-  stg: {ej:.12,v0:70, vm:390, ac:950, tr:5.5,N:4,  zp:0, cl:0,  dv:0,  ts:5, sr:2.1,sl:.9, gl:.9,  ct:0},   // Stinger: fast dart vs aircraft
-  spk: {ej:.3, v0:45, vm:175, ac:240, tr:2.2,N:3,  zp:40,cl:55, dv:.6, ts:6, sr:3.4,sl:1.8,gl:1.25,ct:0},   // Spike NLOS: heavy, lofted, slow
-  jagm:{ej:.1, v0:85, vm:330, ac:820, tr:4.5,N:4,  zp:24,cl:85, dv:.8, ts:5, sr:2.2,sl:.9, gl:.85, ct:0},   // JAGM: small dual-mode quad-pack round
+  jav: {ej:.22,v0:55, vm:240, ac:380, tr:3,  N:3.5,zp:74,cl:115,dv:.95,ts:6, sr:3,  sl:1.2,gl:1,   ct:0},   // Javelin: soft launch, top-attack
+  stg: {ej:.12,v0:70, vm:390, ac:950, tr:5.5,N:4,  zp:0, cl:0,  dv:0,  ts:6, sr:2.5,sl:.9, gl:.9,  ct:0},   // Stinger: fast dart vs aircraft
+  spk: {ej:.3, v0:45, vm:175, ac:240, tr:2.2,N:3,  zp:40,cl:55, dv:.6, ts:7, sr:3.8,sl:1.8,gl:1.25,ct:0},   // Spike NLOS: heavy, lofted, slow
+  jagm:{ej:.1, v0:85, vm:330, ac:820, tr:4.5,N:4,  zp:24,cl:85, dv:.8, ts:6, sr:2.6,sl:.9, gl:.85, ct:0},   // JAGM: small dual-mode quad-pack round
   sw:  {ej:.45,v0:30, vm:150, ac:200, tr:3.2,N:3,  zp:50,cl:130,dv:1.3,ts:0, sr:0,  sl:0,  gl:0,   ct:0},   // Switchblade 600: electric, loiters
   hyp: {ej:.05,v0:260,vm:1900,ac:9000,tr:9,  N:3,  zp:0, cl:0,  dv:0,  ts:26,sr:3,  sl:1.5,gl:1.7, ct:1},   // hypersonic strike pod
-  tow: {ej:.1, v0:70, vm:230, ac:620, tr:2.6,N:3,  zp:6, cl:30, dv:.5, ts:6, sr:2.4,sl:1,  gl:.9,  ct:0},   // Bradley TOW: flat, wire-guided
-  hf:  {ej:.05,v0:130,vm:330, ac:700, tr:3.5,N:3.5,zp:30,cl:60, dv:.7, ts:5, sr:2.4,sl:1,  gl:.95, ct:0},   // Apache Hellfire / JAGM
-  grf: {ej:.3, v0:60, vm:260, ac:420, tr:3,  N:3.5,zp:0, cl:0,  dv:.55,ts:6, sr:2.2,sl:1,  gl:.8,  ct:0},    // AC-130 Griffin, dropped from altitude
+  tow: {ej:.1, v0:70, vm:230, ac:620, tr:2.6,N:3,  zp:6, cl:30, dv:.5, ts:7, sr:2.8,sl:1,  gl:.9,  ct:0},   // Bradley TOW: flat, wire-guided
+  hf:  {ej:.05,v0:130,vm:330, ac:700, tr:3.5,N:3.5,zp:30,cl:60, dv:.7, ts:6, sr:2.8,sl:1,  gl:.95, ct:0},   // Apache Hellfire / JAGM
+  grf: {ej:.3, v0:60, vm:260, ac:420, tr:3,  N:3.5,zp:0, cl:0,  dv:.55,ts:7, sr:2.6,sl:1,  gl:.8,  ct:0},    // AC-130 Griffin, dropped from altitude
   // sky interceptors (SAM site per tier, fighter AAMs): they steer in updateAAD, so only the trail and exhaust fields apply
-  sam0:{ts:5, sr:2,  sl:.8, gl:.75,ct:0},sam1:{ts:5,sr:2.4,sl:1,gl:.95,ct:0},sam2:{ts:4.5,sr:3.5,sl:1.5,gl:1.45,ct:0},sam3:{ts:5,sr:2.2,sl:.9,gl:.9,ct:0},
-  sam4:{ts:22,sr:3,  sl:1.4,gl:1.6, ct:1},aam0:{ts:5,sr:2,  sl:.8,gl:.8, ct:0},aam1:{ts:5,  sr:2.2,sl:.9, gl:.95,ct:0},aam4:{ts:22,sr:2.6,sl:1.2,gl:1.4,ct:1}};
-// The launcher's research line picks the round: count factor n and damage factor d keep a volley's total damage (n x d = 1),
-// K = warhead trim for the bigger blast (see MSL_RIM), r = blast radius, ab = anti-armor bonus on the direct hit,
+  sam0:{ts:6, sr:2.4,sl:.8, gl:.75,ct:0},sam1:{ts:6,sr:2.8,sl:1,gl:.95,ct:0},sam2:{ts:7,sr:3.9,sl:1.5,gl:1.45,ct:0},sam3:{ts:6,sr:2.6,sl:.9,gl:.9,ct:0},
+  sam4:{ts:22,sr:3,  sl:1.4,gl:1.6, ct:1},aam0:{ts:6,sr:2.4,sl:.8,gl:.8, ct:0},aam1:{ts:6,  sr:2.6,sl:.9, gl:.95,ct:0},aam4:{ts:22,sr:2.6,sl:1.2,gl:1.4,ct:1}};
+// The launcher's research line picks the round: n = round-count factor (each round carries 1/n of its share, so the volley total
+// is unchanged), K = warhead trim for the bigger blast (see MSL_CORE), r = blast radius, ab = anti-armor bonus on the direct hit,
 // gap = ripple spacing (s), fan = launch spread (rad).
 const ML_T=[
-  {k:'jav', n:1, d:1,K:.6, r:56,ab:1.5, gap:.16,fan:.3},    // Javelin (top-attack vs ground) / Stinger (vs aircraft)
-  {k:'spk', n:.5,d:2,K:.55,r:72,ab:1.7, gap:.4, fan:.16},   // Spike NLOS: half the rounds, twice the warhead, long lofted shots
-  {k:'jagm',n:1, d:1,K:.7, r:52,ab:1.15,gap:.07,fan:.55},   // JAGM Quad-Pack: salvo x2, fired in ripples of four onto four marks
-  {k:'sw',  n:1, d:1,K:.65,r:60,ab:1.35,gap:.12,fan:0},     // Switchblade 600: loitering munitions
-  {k:'hyp', n:.5,d:2,K:.9, r:82,ab:1.2, gap:.2, fan:.04}];  // Hypersonic Strike Pod
+  {k:'jav', n:1, K:.6, r:56,ab:1.5, gap:.16,fan:.3},    // Javelin (top-attack vs ground) / Stinger (vs aircraft)
+  {k:'spk', n:.5,K:.55,r:72,ab:1.7, gap:.4, fan:.16},   // Spike NLOS: half the rounds, twice the warhead, long lofted shots
+  {k:'jagm',n:1, K:.7, r:52,ab:1.15,gap:.07,fan:.55},   // JAGM Quad-Pack: salvo x2, fired in ripples of four onto four marks
+  {k:'sw',  n:1, K:.65,r:60,ab:1.35,gap:.12,fan:0},     // Switchblade 600: loitering munitions
+  {k:'hyp', n:.5,K:.9, r:82,ab:1.2, gap:.2, fan:.04}];  // Hypersonic Strike Pod
 // launch tubes per launcher tier, in the launcher's art frame (x = forward); scaled by US.mlaunch*bS() and rotated to u.ang
 const ML_TUBE=[
   [[7.6,-3.15],[7.6,3.05],[7.6,-.05],[4,-3.15],[4,3.05],[4,-.05]],
@@ -3694,7 +3694,7 @@ function mlVolley(u,vis){const l=L('mlaunch'),t=rTier('mlaunch'),T=ML_T[t],n0=Ma
     n=Math.max(1,Math.round(n0*T.n)),dmg=mslDmg(l)*n0/n*T.K,sky=skyTargets(),s=US.mlaunch*bS(),c=Math.cos(u.ang),sn=Math.sin(u.ang),tubes=ML_TUBE[t],
     heavy=e=>e.boss?6:e.veh?4:e.stand?3:1,
     tg=[...vis,...sky].sort(t===1?(a,b)=>heavy(b)*b.hp-heavy(a)*a.hp:(a,b)=>b.hp*(b.air?3:1)-a.hp*(a.air?3:1));   // Spike NLOS hunts armor and standoff crews first
-  if(!tg.length)return;
+  if(!tg.length)return;u.aimE=tg[0];u.aimT=1.2;
   for(let i=0;i<n;i++){const e=tg[i%tg.length],p=tubes[i%tubes.length],x=u.x+(p[0]*c-p[1]*sn)*s,y=u.y+(p[0]*sn+p[1]*c)*s,
       k=t===0&&e.air?'stg':T.k,h=Math.atan2(e.y-y,e.x-x)+(R()-.5)*T.fan,
       gap=t===2?Math.floor(i/4)*.5+(i%4)*T.gap:i*T.gap;
@@ -3702,7 +3702,7 @@ function mlVolley(u,vis){const l=L('mlaunch'),t=rTier('mlaunch'),T=ML_T[t],n0=Ma
 // one missile; every field is set here so the flight loop sees a single hidden class
 function mslNew(k,x,y,h,tgt,dmg,r,ab,delay,z,rt,atgm){const S=MK[k];
   return{k,x,y,h,v:S.v0,z,pt:0,t:0,life:3+hyp(tgt.x-x,tgt.y-y)/S.vm*2.2+(k==='sw'?5:0),dmg,r,ab,delay,rt,atgm,air:!!tgt.air,
-    tgt,tx:tgt.x,ty:tgt.y,tvx:0,tvy:0,trk:tgt,lam:Math.atan2(tgt.y-y,tgt.x-x),ph:0,tl:0,lt:0,la:0,dir:R()<.5?1:-1,ox:x,oy:y,sd:R()*99,lit:0,done:false}}
+    tgt,tx:tgt.x,ty:tgt.y,tvx:0,tvy:0,trk:tgt,lam:Math.atan2(tgt.y-y,tgt.x-x),ph:0,tl:0,lt:0,la:0,dir:R()<.5?1:-1,ox:x,oy:y,sd:R()*99,pd:1e9,lit:0,done:false}}
 function updateMissiles(dt){if(!(dt>0))return;
   for(const m of G.missiles){if(m.delay>0){m.delay-=dt;continue}if(!m.lit){m.lit=1;mslLaunchFx(m)}mslFly(m,dt);if(!running)return}
   keepUndone(G.missiles)}
@@ -3719,10 +3719,10 @@ function mslFly(m,dt){const S=MK[m.k];m.t+=dt;m.life-=dt;
   else{m.tvx=m.tvy=0}
   if(m.k==='spk'&&tg&&!tg.air)tg.rev=Math.max(tg.rev||0,.25);   // Spike NLOS: the round's camera keeps its mark on screen, fog or not
   let vm=S.vm,tr=S.tr*(1+m.t*.6),ax=m.tx,ay=m.ty,dg=hyp(m.tx-m.x,m.ty-m.y),zc=S.zp,dv=S.dv;
-  if(m.k==='sw'){   // Switchblade: climb out, fly to the mark, circle it, pick the best target under it, then dive
+  if(m.k==='sw'){   // Switchblade: climb out, fly to the mark, circle it; a round marked on infantry (or on nothing) re-picks armor under it, then dives
     if(m.ph===1&&(m.air||dg<70)){if(m.air)m.ph=3;else{m.ph=2;m.la=Math.atan2(m.y-m.ty,m.x-m.tx);m.lt=.9+R()*.7}}
     if(m.ph===2){m.la+=m.dir*m.v/34*dt;const q=m.la+m.dir*.7;ax=m.tx+Math.cos(q)*34;ay=m.ty+Math.sin(q)*34;tr=4;m.lt-=dt;
-      if(m.lt<=0&&tg){if(!tg.air){const o=sgSeek(G.enemies,m,110);if(o&&o!==tg){m.tgt=o;m.trk=o;m.tx=o.x;m.ty=o.y;m.tvx=m.tvy=0}}m.ph=3;sfx('launch',m.x,m.y,.5)}}
+      if(m.lt<=0){const o=tg&&(tg.veh||tg.boss)?null:sgSeek(G.enemies,m,110)||(tg?null:sgNear(G.enemies,m,140));if(o&&o!==tg){m.tgt=o;m.trk=o;m.tx=o.x;m.ty=o.y;m.tvx=m.tvy=0}m.ph=3;sfx('launch',m.x,m.y,.5)}}
     if(m.ph<3)dv=0;else{vm=340;tr=7+m.t}}
   else if(dg>1){const tgo=dg/Math.max(80,m.v);ax+=m.tvx*tgo;ay+=m.tvy*tgo}
   const los=Math.atan2(ay-m.y,ax-m.x),ld=angTo(m.lam,los);m.lam=los;
@@ -3732,12 +3732,12 @@ function mslFly(m,dt){const S=MK[m.k];m.t+=dt;m.life-=dt;
   if(!m.air){if(zc&&(m.ph>0||m.k==='sw'))m.z=Math.min(zc,m.z+S.cl*dt*(m.ph?1:.6));if(dv)m.z=Math.min(m.z,dg*dv);if(m.z<0)m.z=0}
   const pz=Math.atan2(m.z-z0,st||1);m.pt+=(pz-m.pt)*Math.min(1,dt*10);
   if(S.ts&&m.ph>0)mslTrail(m,S,st,MSA[m.k].L*.5*MSL_VS*(1+m.z/110));
-  const hr=tg?(m.air?tg.r+6:tg.r*.5+3):5;
-  if(m.life<=0||(m.k!=='sw'||m.ph===3)&&dg<hr+st*.5&&(m.air||m.z<14))mslBlast(m)}
+  const hr=tg?(m.air?tg.r+6:tg.r*.5+3):5,arm=m.k!=='sw'||m.ph===3,pd=m.pd;m.pd=dg;
+  if(m.life<=0||arm&&(m.air||m.z<14)&&(dg<hr+st*.5||dg>pd&&pd<hr+st*1.5))mslBlast(m)}
 // smoke puffs spaced by distance flown (so a fast round still leaves a solid trail), dropped behind the nozzle (back = its offset)
 function mslTrail(m,S,st,back){m.tl+=st;let n=0;const c=Math.cos(m.h),s=Math.sin(m.h),hot=S.ct;
   while(m.tl>=S.ts&&n<3){m.tl-=S.ts;n++;const o=back+m.tl;puff(m.x-c*o,m.y-s*o,1,S.sr,S.sl,hot?'232,238,244':'214,211,203',3,hot?.5:.42)}
-  if(n&&R()<.35)light(m.x-c*back,m.y-s*back,hot?40:16,'255,170,80',.05)}
+  if(n&&R()<.2)light(m.x-c*back,m.y-s*back,hot?40:16,'255,170,80',.05)}
 function mslIgnite(m,S){if(!S.gl)return;const c=Math.cos(m.h),s=Math.sin(m.h);puff(m.x-c*5,m.y-s*5,2,3,.7,'226,222,212',14,.45);light(m.x,m.y,24,'255,190,110',.06)}
 // warhead: ATGM racks keep their own hit; aircraft take an air burst; ground targets take the big AOE blast
 function mslBlast(m){m.done=true;const x=m.x,y=m.y,R0=m.r;
@@ -3748,7 +3748,7 @@ function mslBlast(m){m.done=true;const x=m.x,y=m.y,R0=m.r;
   const core=R0*MSL_CORE;
   for(const e of G.enemies){if(e.dead||!within(e,x,y,R0+e.r))continue;const d=Math.max(0,hyp(e.x-x,e.y-y)-e.r),f=d<=core?1:1-(1-MSL_RIM)*Math.min(1,(d-core)/(R0-core));
     hurtEnemy(e,m.dmg*f*(e===m.tgt&&(e.veh||e.boss)?m.ab:1),false)}
-  boomFx(x,y,R0*.74,true);light(x,y,R0*2.4,'255,160,70',.3);if(R0>70){fireball(x,y,R0*.55,.5);shake(3)}}
+  boomFx(x,y,R0*.74,true);if(R0>70){fireball(x,y,R0*.55,.5);shake(3)}}
 // ---- sprites: one parametric painter (x = nose forward; tail at -L/2). Top-down, a cruciform tail reads as one pair of fins.
 // fins/wings/canards [leading-edge x, root chord, span, sweep, colour]; bands [x, width, colour]; nose 'ogive' | 'dome' | 'cone'
 const MSA={
@@ -3815,10 +3815,18 @@ function ctrailSpr(){let c=_hqc.ctr;if(c)return c;c=_hqc.ctr=hqCv(128,16);const 
 function drawStreak(B,x0,y0,x1,y1,w,a){const L0=hyp(x1-x0,y1-y0);if(L0<1)return;xf(B,x0,y0,Math.atan2(y1-y0,x1-x0));
   ctx.globalAlpha=a;ctx.drawImage(ctrailSpr(),0,-w/2,L0,w);ctx.globalAlpha=1;xr(B)}
 // ground shadows (drawn on the ground pass, under the fort's units): offset by altitude like the bombers' bombs
-function drawMslShadows(){if(!G.missiles||!G.missiles.length)return;const B=ctx.getTransform(),sh=mslShadowSpr();
-  for(const m of G.missiles){if(m.delay>0||m.air)continue;const d=MSA[m.k],k=MSL_VS*(1+m.z/110),a=.5*(1-Math.min(.6,m.z/200));
+function drawMslShadows(){if(!G.missiles||!G.missiles.length)return;const B=ctx.getTransform(),sh=mslShadowSpr(),sa=SH.on?SH.a:1;if(sa<.02)return;
+  for(const m of G.missiles){if(m.delay>0||m.air)continue;const d=MSA[m.k],k=MSL_VS*(1+m.z/110),a=.5*sa*(1-Math.min(.6,m.z/200));
     xf(B,m.x+m.z*.55+1,m.y+m.z*.7+1.2,m.h,k);ctx.globalAlpha=a;ctx.drawImage(sh,-d.L*.6,-d.w*2.2,d.L*1.2,d.w*4.4)}
   xr(B);ctx.globalAlpha=1}
+// night: rocket motors stay lit. The rounds are drawn before the light pass (so their bodies darken with the world); this puts
+// a motor glow back on top afterwards, scaled by how dark it is (nothing is drawn by day)
+function drawMslGlow(){const dk=DN.dk;if(!(dk>.05))return;const gs=glowSprite('255,176,90'),a=Math.min(1,.9*dk);ctx.globalCompositeOperation='lighter';
+  for(const m of G.missiles){if(m.delay>0||m.ph===0)continue;const g=MK[m.k].gl;if(!g)continue;const b=MSA[m.k].L*.5*MSL_VS*(1+m.z/110);blit(gs,m.x-Math.cos(m.h)*b,m.y-Math.sin(m.h)*b,11*g,a)}
+  for(const m of G.sams){if(m.delay>0)continue;const b=MSA[m.k].L*.5*MSL_VS;blit(gs,m.x-Math.cos(m.h)*b,m.y-Math.sin(m.h)*b,9*MK[m.k].gl,a)}
+  for(const s of G.skyShots){if(s.k!=='rocket'||s.t<0)continue;const k=Math.min(1,s.t/s.dur);blit(gs,s.x+(s.tx-s.x)*k,s.y+(s.ty-s.y)*k,s.m==='agm'?9:6,a)}
+  for(const n of G.nukes){const q=1-n.t/n.max;if(n.st===4||n.st<2&&q>.55)continue;const o=siloPos(n,q,_sp1);blit(gs,o.gx,o.gy-o.z*SILO_LIFT,20,a)}
+  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
 // SAM / AAM interceptors (sky pass, maybe inside a ChaosGL layer: drawImage + transforms only)
 function drawSkyMsl(){if(!G.sams.length)return;const B=ctx.getTransform(),bp=Math.hypot(B.a,B.b)*MSL_VS,t=G.time;
   for(const m of G.sams){if(m.delay>0)continue;const S=MK[m.k],d=MSA[m.k];
@@ -8103,7 +8111,7 @@ function draw(){aqTick();
   drawHelisOps();drawJetsLow(true);drawAirTop();drawCraftAir();
   // light pass (dusk/night/dawn): the whole world above is lit by the light map; the world-space UI below stays full-bright
   dayLight(V);
-  drawEShots();drawLights();
+  drawEShots();drawLights();drawMslGlow();
   const tg=G.sold[0].tgt;if(tg){ctx.strokeStyle='#ffd23f';ctx.lineWidth=Math.max(1.2,1.5/sc);const r=Math.max(tg.r+5,(tg.r*sc+6)/sc)+Math.sin(G.time*10);ctx.beginPath();ctx.arc(tg.x,tg.y,r,0,7);ctx.stroke();
     const tk=Math.max(4,5/sc);for(let i=0;i<4;i++){const a=i*Math.PI/2;ctx.beginPath();ctx.moveTo(tg.x+Math.cos(a)*r,tg.y+Math.sin(a)*r);ctx.lineTo(tg.x+Math.cos(a)*(r+tk),tg.y+Math.sin(a)*(r+tk));ctx.stroke()}}
   for(const s of G.shells){ctx.strokeStyle='rgba(255,80,60,.9)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(s.x,s.y,s.r*(0.3+s.t*0.8),0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(s.x-5,s.y);ctx.lineTo(s.x+5,s.y);ctx.moveTo(s.x,s.y-5);ctx.lineTo(s.x,s.y+5);ctx.stroke()}
