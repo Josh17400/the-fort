@@ -2194,7 +2194,7 @@ const BOSS_NAME={boss:'ENEMY MBT',airboss:'HEAVY GUNSHIP'},BOSS_WARN=3,BOSS_FADE
 function trackBoss(e){(G.bosses||(G.bosses=[])).push({e,t:0,ghost:1,gone:0});sfx('alarm')}
 function updateBosses(dt){const bs=G.bosses;if(!bs||!bs.length)return;
   for(const b of bs){b.t+=dt;const r=Math.max(0,b.e.hp/b.e.max);b.ghost=b.ghost>r?Math.max(r,b.ghost-dt*Math.max(0.15,(b.ghost-r)*2.5)):r;if(b.e.dead)b.gone+=dt}
-  if(bs.some(b=>b.gone>=BOSS_FADE))G.bosses=bs.filter(b=>b.gone<BOSS_FADE)}
+  for(const b of bs)if(b.gone>=BOSS_FADE){G.bosses=bs.filter(b=>b.gone<BOSS_FADE);break}}
 // Floating text budget: kill cash (+$) stops spawning past FLOAT_SOFT; headline text (wave clear, crate cash) always spawns.
 const FLOAT_SOFT=40,FLOAT_HARD=90;
 function float(x,y,t,c,s=10){if(s<13&&G.floats.length>=(s<11?FLOAT_HARD:FLOAT_SOFT))return;
@@ -2937,7 +2937,7 @@ function destroyDepot(){const D=G.depot;D.dead=true;D.hp=0;G.depotWarnT=7;for(co
   explode(D.x+28,D.y-20,80,D.max*0.25);fireball(D.x+28,D.y-36,70,1.4);fireball(D.x+28,D.y-11,70,1.2);ring(D.x,D.y,240,1,'255,200,140',6);
   light(D.x,D.y,420,'255,150,60',1.2);puff(D.x,D.y,30,40,5,'28,24,20',60,0.75);decal(D.x,D.y,'scorch',120);shake(12);sfx('nuke',D.x,D.y)}
 // enemies near the depot may divert to attack it; returns true when it handled this enemy's move/attack this tick
-function depotEnemy(e,spd,dt){const D=G.depot;if(!D||D.dead||e.air||e.nodep){if(e.dep)e.dep=false;return false}
+function depotEnemy(e,spd,dt){const D=G.depot;if(!D||D.dead||e.air||e.nodep){if(e.dep)e.dep=false;return false}if(e.dep===false)return false;   // already decided against the depot: nothing below would run
   const dx=D.x-e.x,dy=D.y-e.y,d=hyp(dx,dy)||1,edge=d-50;
   if(e.dep===undefined){if(edge>(e.range||0)+70||!visible(e))return false;e.dep=Math.random()<(e.range?0.5:0.35)}
   if(!e.dep)return false;e.face=Math.atan2(dy,dx);
@@ -4087,8 +4087,8 @@ function hqUpdate(dt){const h=hx(),dr=Math.pow(.97,dt*60);
   for(const s of G.smoke){if(s.d>0){s.d-=dt;continue}s.vy+=(s.rise||0)*dt;s.x+=(s.vx+WIND_X)*dt;s.y+=(s.vy+WIND_Y)*dt;s.vx*=dr;s.vy*=dr;
     s.r+=s.grow*dt/s.max;s.rot=(s.rot||0)+(s.spin||0)*dt;s.life-=dt}
   keepLive(G.smoke);
-  const bounce=(p,rest)=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.vz-=440*dt;p.rot+=p.spin*dt;
-    if(p.z<=0){p.z=0;if(p.vz<-40){p.vz*=-rest;p.vx*=.55;p.vy*=.55;p.spin*=.5}else{p.vz=0;const f=Math.pow(.004,dt);p.vx*=f;p.vy*=f;p.spin*=f}}p.life-=dt};
+  const fr=Math.pow(.004,dt),bounce=(p,rest)=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.vz-=440*dt;p.rot+=p.spin*dt;
+    if(p.z<=0){p.z=0;if(p.vz<-40){p.vz*=-rest;p.vx*=.55;p.vy*=.55;p.spin*=.5}else{p.vz=0;p.vx*=fr;p.vy*=fr;p.spin*=fr}}p.life-=dt};   // fr: resting friction, the same for every particle this tick
   for(const p of h.deb){bounce(p,.32);if(p.tr&&p.z>1&&R()<.1&&G.smoke.length<FXCAP.smoke*.8)hpuff(p.x,p.y,{r:.8*p.sz,grow:5,life:.7,col:'64,59,53',a:.32})}
   for(const p of h.cas)bounce(p,.45);
   const de=Math.pow(.2,dt);
