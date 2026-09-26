@@ -7192,7 +7192,23 @@ function mineSprite(){if(_mineSpr)return _mineSpr;const S2=128,k=S2/12,[c,x]=mkC
   x.fillStyle='rgba(98,80,56,.95)';x.beginPath();x.moveTo(3.6,-1.2);x.bezierCurveTo(2.2,0.2,1.6,1.8,-0.6,3.6);x.lineTo(2.6,3.6);x.lineTo(4,1);x.closePath();x.fill();
   for(let i=0;i<60;i++){const a=r()*TAU,d=2.4+r()*2.6;x.fillStyle=r()<.5?'rgba(120,100,72,.8)':'rgba(50,40,28,.7)';x.fillRect(Math.cos(a)*d,Math.sin(a)*d,0.22+r()*0.3,0.22+r()*0.3)}
   return _mineSpr=c}
-function crateSprite(){if(_crateSpr)return _crateSpr;const S2=320,k=S2/32,[c,x]=mkCv(S2,S2),r=rng(8);x.setTransform(k,0,0,k,S2/2,S2/2);x.lineCap='round';x.lineJoin='round';
+// crate kind marks (filled glyphs, unit box ~[-1,1]): $, artillery shell, cross, dish antenna, jet. Dark rim first so they read small.
+const CR_STRAP={cash:'#c8912c',ammo:'#b3442c',fix:'#4f9a48',intel:'#4b7fb8',strike:'#d5782a'};
+function crGlyph(x,k,col,rim){x.save();x.lineJoin='round';x.lineCap='round';const P=new Path2D();
+  if(k==='cash'){x.font='bold 2px monospace';x.textAlign='center';x.textBaseline='middle';x.lineWidth=rim;x.strokeStyle='rgba(12,14,9,.9)';x.strokeText('$',0,.1);x.fillStyle=col;x.fillText('$',0,.1);x.restore();return}
+  if(k==='ammo'){P.moveTo(-.46,-.15);P.quadraticCurveTo(-.46,-.72,0,-1.05);P.quadraticCurveTo(.46,-.72,.46,-.15);P.lineTo(.46,.78);P.lineTo(.56,.78);P.lineTo(.56,1);P.lineTo(-.56,1);P.lineTo(-.56,.78);P.lineTo(-.46,.78);P.closePath()}
+  else if(k==='fix'){P.rect(-.32,-.95,.64,1.9);P.rect(-.95,-.32,1.9,.64)}
+  else if(k==='intel'){const D=new Path2D();D.arc(0,0,.78,0,Math.PI);D.closePath();D.rect(-.07,-.72,.14,.72);D.moveTo(.2,-.8);D.arc(0,-.8,.2,0,TAU);
+    P.addPath(D,new DOMMatrix().translate(.05,-.12).rotate(-38));P.moveTo(-.16,.3);P.lineTo(.16,.3);P.lineTo(.6,1);P.lineTo(-.6,1);P.closePath()}
+  else{const H=[[0,-1.05],[.16,-.55],[.98,.08],[.98,.3],[.16,.12],[.13,.62],[.44,.86],[.44,1],[0,.92]];P.moveTo(0,-1.05);for(const[a,b]of H)P.lineTo(a,b);for(let i=H.length-1;i>=0;i--)P.lineTo(-H[i][0],H[i][1]);P.closePath()}
+  x.lineWidth=rim;x.strokeStyle='rgba(12,14,9,.9)';x.stroke(P);x.fillStyle=col;x.fill(P);
+  if(k==='ammo'){x.fillStyle='rgba(12,14,9,.55)';x.fillRect(-.46,.12,.92,.2);x.fillStyle='rgba(255,255,255,.3)';x.fillRect(-.3,-.3,.14,1)}
+  x.restore()}
+const _crBadge={};   // floating kind badge over non-cash crates: dark disc, kind-colour ring, big filled glyph (baked once per kind)
+function crBadge(k){let c=_crBadge[k];if(c)return c;const[cv,x]=mkCv(96,96),col='rgb('+CRATE[k].c+')';x.fillStyle='rgba(20,24,16,.88)';x.beginPath();x.arc(48,48,45,0,TAU);x.fill();
+  x.strokeStyle=col;x.lineWidth=4;x.beginPath();x.arc(48,48,42,0,TAU);x.stroke();x.setTransform(29,0,0,29,48,48);crGlyph(x,k,col,.16);return _crBadge[k]=cv}
+const _crSpr={};
+function crateSprite(kind='cash'){if(_crSpr[kind])return _crSpr[kind];const S2=320,k=S2/32,[c,x]=mkCv(S2,S2),r=rng(8);x.setTransform(k,0,0,k,S2/2,S2/2);x.lineCap='round';x.lineJoin='round';
   // canopy lying in a heap up-wind of the crate, rigging lines back to the corners
   const cp=new Path2D();cp.moveTo(3,-15);cp.bezierCurveTo(9,-16,15,-13,15,-7);cp.bezierCurveTo(15.5,-3,12,-1.5,10,-4);cp.bezierCurveTo(8,-6,6,-5,4,-8);cp.bezierCurveTo(1,-10,0,-14,3,-15);cp.closePath();
   x.save();x.shadowColor='rgba(6,8,4,.5)';x.shadowBlur=1.2*k;x.shadowOffsetX=0.8*k;x.shadowOffsetY=0.8*k;x.fillStyle='#7d7a5a';x.fill(cp);x.restore();
@@ -7204,11 +7220,12 @@ function crateSprite(){if(_crateSpr)return _crateSpr;const S2=320,k=S2/32,[c,x]=
   bevel(x,[-7,-7,14,14],'#4c5334',1.1,0.22,0.4);bevel(x,[-5.6,-5.6,11.2,11.2],'#5f6842',0.35,0.12,0.3);
   x.strokeStyle='rgba(28,32,18,.4)';x.lineWidth=0.2;x.beginPath();for(let i=-5.6+2.8;i<5.6;i+=2.8){x.moveTo(-5.6,i);x.lineTo(5.6,i)}x.stroke();
   x.fillStyle='rgba(20,22,14,.45)';x.fillRect(-6.8,-6.8,1,1);x.fillRect(5.8,-6.8,1,1);x.fillRect(-6.8,5.8,1,1);x.fillRect(5.8,5.8,1,1);
-  for(const[X,Y,W,H]of[[-7.2,-1.9,14.4,1.3],[-1.9,-7.2,1.3,14.4]]){x.fillStyle='rgba(6,8,4,.35)';x.fillRect(X+0.25,Y+0.25,W,H);x.fillStyle='#c8912c';x.fillRect(X,Y,W,H);x.fillStyle='rgba(255,230,160,.35)';x.fillRect(X,Y,W,0.25)}
+  for(const[X,Y,W,H]of[[-7.2,-1.9,14.4,1.3],[-1.9,-7.2,1.3,14.4]]){x.fillStyle='rgba(6,8,4,.35)';x.fillRect(X+0.25,Y+0.25,W,H);x.fillStyle=CR_STRAP[kind]||CR_STRAP.cash;x.fillRect(X,Y,W,H);x.fillStyle='rgba(255,230,160,.35)';x.fillRect(X,Y,W,0.25)}
+  if(kind!=='cash'){x.fillStyle=CR_STRAP[kind];x.fillRect(-5.6,-5.6,3.7,1.1);x.fillRect(-0.6,-5.6,6.2,1.1);x.fillStyle='rgba(255,255,255,.18)';x.fillRect(-5.6,-5.6,11.2,.25)}   // painted kind band across the lid
   x.fillStyle='#8a8a86';x.fillRect(-2.1,-2.1,1.7,1.7);x.fillStyle='rgba(255,255,255,.4)';x.fillRect(-2.1,-2.1,1.7,0.35);
-  x.fillStyle='rgba(20,22,14,.55)';x.fillRect(0.4,1.2,5,4.2);x.fillStyle='#e9dfb4';x.font='bold 3.4px monospace';x.textAlign='center';x.textBaseline='middle';x.fillText('$',2.9,3.4);
+  x.fillStyle='rgba(20,22,14,.6)';x.fillRect(0.4,1.2,5,4.2);x.save();x.translate(2.9,3.3);x.scale(1.75,1.75);crGlyph(x,kind,kind==='cash'?'#e9dfb4':'rgb('+CRATE[kind].c+')',.22);x.restore();
   x.fillStyle='rgba(233,223,180,.75)';x.fillRect(-5.2,1.6,4.2,0.5);x.fillRect(-5.2,2.6,3.2,0.5);x.fillRect(-5.2,3.6,3.8,0.5);x.fillRect(-5.2,4.6,2.4,0.5);
-  return _crateSpr=c}
+  return _crSpr[kind]=c}
 function drawWire(){if(hiGfx()||!L('wire'))return;   // High bakes the concertina into the terrain
   const r=fortHalf()+wallThick()/2+wireOut();ctx.strokeStyle='#8a8a7a';ctx.lineWidth=1.2;ctx.setLineDash([3,3]);ctx.strokeRect(-r,-r,2*r,2*r);ctx.strokeRect(-r+3,-r+3,2*r-6,2*r-6);ctx.setLineDash([])}
 function drawMines(){
@@ -7221,11 +7238,10 @@ function drawCrates(){
   const cz=Math.max(1,9/(14*sc));   // crates never shrink below ~9px on screen: they're tap targets
   if(!hiGfx()){for(const c of G.crates){if(c.life<3&&Math.floor(c.life*6)%2)continue;const h=7*cz,K=CRATE[c.k||'cash'];ctx.fillStyle='#8a6a2a';ctx.fillRect(c.x-h,c.y-h,h*2,h*2);ctx.strokeStyle=c.k==='cash'?'#4a3510':'rgb('+K.c+')';ctx.lineWidth=1.5*cz;ctx.strokeRect(c.x-h,c.y-h,h*2,h*2);
     ctx.fillStyle=c.k==='cash'?'#ffe066':'rgb('+K.c+')';ctx.font=`bold ${10*cz}px monospace`;ctx.textAlign='center';ctx.fillText(K.t,c.x,c.y+4*cz)}return}
-  const spr=crateSprite();
-  for(const c of G.crates){if(c.life<3&&Math.floor(c.life*6)%2)continue;const h=7*cz,t=G.time+c.x*0.013,pulse=0.5+0.5*Math.sin(t*4),K=CRATE[c.k||'cash'];
+  for(const c of G.crates){const spr=crateSprite(c.k||'cash');if(c.life<3&&Math.floor(c.life*6)%2)continue;const h=7*cz,t=G.time+c.x*0.013,pulse=0.5+0.5*Math.sin(t*4),K=CRATE[c.k||'cash'];
     ctx.strokeStyle=`rgba(${K.c},${0.25+pulse*0.35})`;ctx.lineWidth=Math.max(0.8,1.2/sc)*(c.k==='cash'?1:1.6);ctx.beginPath();ctx.arc(c.x,c.y,h*(1.75+pulse*0.2),0,TAU);ctx.stroke();
     ctx.drawImage(spr,c.x-16*cz,c.y-16*cz,32*cz,32*cz);
-    if(c.k!=='cash'){const s=9*cz,y=c.y-h*2.9-pulse*cz;ell(c.x,y,s*0.72,s*0.72,'rgba(20,24,16,.8)');cIcon(K.ic,c.x-s/2,y-s/2,s,'rgb('+K.c+')',2.6)}
+    if(c.k&&c.k!=='cash'){const s=9*cz,y=c.y-h*2.9-pulse*cz;ctx.drawImage(crBadge(c.k),c.x-s*.8,y-s*.8,s*1.6,s*1.6)}
     const g=(t*0.45)%1;if(g<0.35){const u=g/0.35,gx=c.x-h*1.6+u*h*3.2;ctx.save();ctx.beginPath();ctx.rect(c.x-h,c.y-h,2*h,2*h);ctx.clip();ctx.globalCompositeOperation='lighter';
       ctx.fillStyle='rgba(255,245,200,.28)';ctx.beginPath();ctx.moveTo(gx-h*0.5,c.y+h);ctx.lineTo(gx,c.y+h);ctx.lineTo(gx+h*0.9,c.y-h);ctx.lineTo(gx+h*0.4,c.y-h);ctx.fill();ctx.restore()}}}
 // ---- atmosphere: slow cloud shadows drifting on the wind ----------------------------------------------------------
@@ -7686,8 +7702,8 @@ Object.assign(INTEL,{crate_ammo:['Munitions Crate',0,'Red crates reload your gre
   crate_fix:['Engineer Crate',0,'Green crates rebuild a quarter of the walls, even after a breach, and patch up the fort.'],
   crate_strike:['Air Support Crate',0,'Orange crates carry a radio call-in: grab one and a free bombing run hits the thickest cluster of hostiles in sight. It does not use your own airstrike.'],
   crate_intel:['Intel Crate',0,'Blue crates carry captured maps: every ground hostile, even mortar crews in the fog, is marked for 6s so your guns can hunt them.']});
-function cratePreview(k){const c=$('intelCv'),W=c.width,K=CRATE[k],main=ctx;ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,W);ctx.drawImage(crateSprite(),W*0.12,W*0.2,W*0.76,W*0.76);
-  ctx.fillStyle='rgba(20,24,16,.88)';ctx.beginPath();ctx.arc(W*0.5,W*0.22,W*0.17,0,TAU);ctx.fill();cIcon(K.ic,W*0.5-W*0.11,W*0.22-W*0.11,W*0.22,'rgb('+K.c+')',2.4)}finally{ctx=main}}
+function cratePreview(k){const c=$('intelCv'),W=c.width,K=CRATE[k],main=ctx;ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,W);ctx.drawImage(crateSprite(k),W*0.12,W*0.2,W*0.76,W*0.76);
+  ctx.drawImage(crBadge(k),W*0.5-W*0.18,W*0.22-W*0.18,W*0.36,W*0.36)}finally{ctx=main}}
 IC.near=IC.near||'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0M12 12m-4.5 0a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0 -9 0M12 12l6.4-6.4M12 12h.01';
 IC.zoom=IC.zoom||'M10.5 10.5m-6.5 0a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0 -13 0M20 20l-4.8-4.8M10.5 7.5v6M7.5 10.5h6';
 function hudMode(){return VH<=500&&VW>VH?'land':VW<640?'port':'desk'}
