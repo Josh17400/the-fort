@@ -6707,8 +6707,13 @@ const capPos=c=>{const s=-950+800*c.t;return{x:Math.cos(c.a)*s-Math.sin(c.a)*c.o
 // ---- damage + effects (air bursts only ever touch G.sky; aircraft ordnance only ever touches the fort) -------------
 function skyBurst(x,y,r,dmg,pct=0,sup=0){if(dmg)for(const e of G.sky)if(!e.dead&&within(e,x,y,r+e.r)){if(sup)skySuppress(e,sup);hurtEnemy(e,dmg+e.max*pct,false)}
   puff(x,y,2,5,0.9,'46,44,40',8,0.6);spark(x,y,4,110,['#ffe7a0','#ff9a3a'],0.25,1.3);light(x,y,26,'255,190,110',0.08)}
-function skyBlast(x,y,k){fireball(x,y,22*k,0.4+0.15*k);ring(x,y,34*k,0.35,'255,220,170',1.5+k);spark(x,y,Math.round(8+8*k),150*k,['#fff6d0','#ffc04a','#ff7a1a'],0.45,1.5);
+// High gfx: the HQ burst (flash, licking fire, faint shock ring, embers) plus a dust ring and two dark flak puffs, no hard cream ring
+function skyBlast(x,y,k){if(S.set.gfx==='high'){skyBlastHQ(x,y,k);return}fireball(x,y,22*k,0.4+0.15*k);ring(x,y,34*k,0.35,'255,220,170',1.5+k);spark(x,y,Math.round(8+8*k),150*k,['#fff6d0','#ffc04a','#ff7a1a'],0.45,1.5);
   puff(x,y,Math.round(2+3*k),9*k,1.4+k*0.5,'58,52,46',14*k,0.55);decal(x,y,'scorch',12*k);light(x,y,70*k,'255,165,70',0.3);sfx('boom',x,y,0.5+0.7*k);if(k>=0.9)shake(2*k)}
+function skyBlastHQ(x,y,k){const r=22*k;hqBurst(x,y,r,false);if(r<14)decal(x,y,'scorch',r*.5);
+  if(k>=0.6){const dl=.45+.15*k;G.fx.push({k:'dust',x,y,r:r*1.7,life:dl,max:dl})}
+  for(let i=0,n=k>=0.9?3:2;i<n;i++)hpuff(x+(R()-.5)*r*.5,y+(R()-.5)*r*.5,{vx:(R()-.5)*r*.6,vy:(R()-.5)*r*.6,r:r*(.22+R()*.1),grow:r*(.6+R()*.4),life:1.3+.5*k+R()*.4,col:R()<.5?'40,37,34':'62,57,51',a:.5,rise:-(10+R()*10),d:i*.05});
+  light(x,y,60*k,'255,165,70',0.24);sfx('boom',x,y,0.5+0.7*k);if(k>=0.9)shake(2*k)}
 function skyImpact(s){const k=s.k==='shell'?1.3:s.k==='bomb'?1:0.6;skyBlast(s.tx,s.ty,k);if(s.vt&&FC[s.vt.ck].air){if(R()<0.6)fcHit(s.vt,s.dmg,s.src)}else fcSplash(s.tx,s.ty,10+12*k,s.dmg,s.src,0);if(s.dmg&&boxD(s.tx,s.ty)<=blockHalf()+4)damageFort(s.dmg,s.src)}
 // AA suppression 0..1 (decays ~0.22/s): gunships and attack helicopters fire slower while under flak; big hits make the gunship dump flares
 function skySuppress(e,k){if(e.type!=='airboss'&&e.type!=='gunheli')return;const was=e.sup||0;e.sup=Math.min(1,was+k*(e.type==='airboss'?1:0.7));
