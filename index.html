@@ -3647,9 +3647,9 @@ function drawAirTop(){
     ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.scale(2.5,2.5);const ft=tierOf('fighter');ctx.fillStyle=ft?JET_LO[ft]:'#8a969e';drawJet();jetLoDetail(ft);if(ft)jetThrust(ft,1,false);else ell(-15,0,3,1.6,'#ffb13b');ctx.restore()}
   for(const u of G.air)if(u.k==='gunship'){const gt=tierOf('gunship');ctx.save();ctx.translate(u.x+44,u.y+52);ctx.rotate(u.ang);ctx.scale(US.gunship,US.gunship);ctx.fillStyle='rgba(0,0,0,.28)';ctx.fill(gsLoPath(gt));ctx.restore();
     ctx.save();ctx.translate(u.x,u.y);ctx.rotate(u.ang);ctx.scale(US.gunship,US.gunship);
-    if(gt){gunshipLo(gt);if(gt<4)for(const py of [-24,-13,13,24])ell(12,py,.9,4.4,'rgba(30,32,30,.4)');ctx.restore();continue}
+    if(gt){gunshipLo(gt);if(gt<4)for(const py of [-24,-13,13,24])ell(12,py,.9,4.4,'rgba(30,32,30,.4)');gsGunFx(u,gt);ctx.restore();continue}
     box(-22,-4.5,44,9,'#5d6660');box(-4,-32,10,64,'#535b56');box(-22,-12,5,24,'#535b56');
-    for(const py of [-24,-13,13,24])ell(1,py,4.5,2,'#2e3431');ell(18,0,4,3.5,'#1c2a33');ctx.restore()}
+    for(const py of [-24,-13,13,24])ell(1,py,4.5,2,'#2e3431');ell(18,0,4,3.5,'#1c2a33');gsGunFx(u,0);ctx.restore()}
   if(G.flashT>0){ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle=`rgba(255,240,200,${G.flashT*1.5})`;ctx.fillRect(0,0,VW,VH);ctx.restore()}
 }
 
@@ -3919,13 +3919,23 @@ const gsSalvo=()=>rSigP('gunship','salvo')||1,gsLen=(k,n)=>k==='h'?0.45+GS_DT.h*
 function gsT(){return Math.max(GS_T,gsLen(rSigP('gunship','instant')?'l':'m',GS_N.m)+gsLen('c',GS_N.c)+gsLen('h',gsSalvo())+(rSigP('gunship','atgm')?0.2:0))}
 // damage per round: m 25mm, l HEL tick, c 30mm airburst, h first 105mm shell of a barrage
 const gsRound=(l,k)=>k==='c'?gsGun(l)/0.22*gsT()*GS_K.c/GS_N.c:gsDmg(l)*gsT()/2.4*GS_K[k]/(k==='h'?1:GS_N[k]);
-// muzzles in airframe units (x forward, -y = the left, firing side): Hercules, then the T4 flying wing; g = the left Griffin pylon
-const GS_MZ={m:[7,-5.2],l:[6.3,-1.6],c:[1.8,-7.4],h:[-3.2,-10],g:[-2,-18.6]},GS_MZW={m:[4,-9],l:[12,0],c:[-2,-14],h:[-6,-21],g:[-6,-24]},_gm={x:0,y:0};
-function gsMz(u,k,side){const o=(tierOf('gunship')===4?GS_MZW:GS_MZ)[k],s=US.gunship,c=Math.cos(u.ang),n=Math.sin(u.ang),lx=o[0]*s,ly=o[1]*s*side;
+// muzzles in airframe units (x forward, -y = the left, firing side), on the barrels each tier's art paints (hqGunshipArt: 105mm at
+// x 2, 30mm at -6, 25mm at -8; Block 30 moves the 105 to -3.6; the flying wing fires from its left bays); l = the HEL turret lens,
+// g = the left Griffin pylon (mirrored for the right)
+const GS_MZH={m:[-7.7,-6.1],l:[6.3,-1.6],c:[-5.65,-6.4],h:[2.5,-7.7],g:[-2,-18.6]},GS_MZ=[GS_MZH,Object.assign({},GS_MZH,{h:[-2.8,-9.9]}),GS_MZH,GS_MZH,
+  {m:[-1.5,-9.6],l:[12.8,0],c:[-5,-16.5],h:[-8.5,-22.5],g:[-6,-24]}],_gm={x:0,y:0};
+function gsMz(u,k,side){const o=GS_MZ[tierOf('gunship')][k],s=US.gunship,c=Math.cos(u.ang),n=Math.sin(u.ang),lx=o[0]*s,ly=o[1]*s*side;
   _gm.x=u.x+lx*c-ly*n;_gm.y=u.y+lx*n+ly*c;return _gm}
-// side-gun flash: baked muzzle star on High, a small fire sprite below it; s 0 (25mm) .. 1 (105mm)
-function gsFlash(x,y,a,s){const l=0.05+0.04*s;light(x,y,16+30*s,'255,200,120',l);
-  if(HQ)G.fx.push({k:'mf',x,y,a,s:0.09+0.22*s,v:(R()*4)|0,life:l,max:l});else G.fx.push({k:'boom',x,y,r:3+8*s,life:l,max:l})}
+// side-gun flash: a light at the muzzle; the flash itself is drawn over the airframe by gsGunFx (u.mf*: gun, time, heading, size)
+function gsFlash(u,k,x,y,a,s){light(x,y,16+34*s,'255,200,120',0.05+0.05*s);u.mfK=k;u.mfT=G.time;u.mfA=a;u.mfS=s;u.mfV=(R()*4)|0}
+// drawn in the gunship's own frame (translated, rotated, scaled by US.gunship) right after its airframe: the last muzzle flash as the
+// baked muzzle-star sprite (High) or two ellipses, and the HEL turret glowing while the beam is on
+function gsGunFx(u,gt){const M=GS_MZ[gt],dt=G.time-(u.mfT??-9),life=0.05+0.05*(u.mfS||0);
+  if(u.gk==='l'){const o=M.l;ctx.globalCompositeOperation='lighter';blit(glowSprite(HEL_C),o[0],o[1],4.2+Math.sin(G.time*40)*0.5,0.95);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
+  if(dt>=life||!M[u.mfK])return;const o=M[u.mfK],k=1-dt/life,a=u.mfA-u.ang,z=(0.09+0.24*u.mfS)/US.gunship;
+  ctx.save();ctx.translate(o[0],o[1]);ctx.rotate(a);ctx.globalCompositeOperation='lighter';
+  if(HQ){ctx.scale(z,z);ctx.globalAlpha=Math.min(1,k*2);ctx.drawImage(flashSpr(u.mfV),-14,-24)}else{ctx.globalAlpha=k;ell(2+5*u.mfS,0,2+5*u.mfS,0.8+1.6*u.mfS,'#ffcf5a');ell(1,0,1+2*u.mfS,0.5+0.8*u.mfS,'#fff')}
+  ctx.restore()}
 const gsClaimed=(u,x,y)=>{for(const o of G.air)if(o!==u&&o.gk&&o.k==='gunship'&&Math.abs(o.gx-x)<45&&Math.abs(o.gy-y)<45)return true;return false};
 const gsNear=(vis,p,r)=>{let b=null,bd=r;for(const e of vis){if(e.dead)continue;const d=hyp(e.x-p.x,e.y-p.y);if(d<bd){bd=d;b=e}}return b};
 // densest group of ok() targets within rad (first 40 candidates, as bestCluster), shunning points another gunship is working
@@ -3971,14 +3981,15 @@ function gsShot(u,vis){const k=u.gk,m=u.gw,i=u.gi++;
     if(u.gL){const n=m.length-1,g=f*n,h=Math.min(n,g|0),a=m[h],b=m[Math.min(n,h+1)],q=g-h;x=a.x+(b.x-a.x)*q;y=a.y+(b.y-a.y)*q}
     else{const c=u.gc,w=(f*2-1)*u.gW,z=Math.sin(f*Math.PI*5)*u.gW*GS_Z;x=c.x+u.gax*w+u.gfx*z+(R()-.5)*j;y=c.y+u.gay*w+u.gfy*z+(R()-.5)*j}const p=gsMz(u,k,1),px=p.x,py=p.y;
     if(k==='l'){sgBeam(px,py,x,y,HEL_C,1.5,0.07);gsSplash(x,y,GS_RAD.l,u.gd,'p');spark(x,y,1,50,['#ffb08a','#fff4e0'],0.18,1.1);if(i%3===0)sfx('laser',x,y);if(i%5===0)decal(x,y,'scorch',4);return}
-    G.fx.push({k:'tracer',x:px,y:py,x2:x,y2:y,life:0.05,max:0.05,c:'#ff5a32',w:0.85});if(!(i&1))gsFlash(px,py,Math.atan2(y-py,x-px),0);
-    gsSplash(x,y,GS_RAD.m,u.gd,'s');spark(x,y,1,70,['#ffd9a0'],0.14,1);if(i%4===0)puff(x,y,1,3,0.5,'122,106,82',6,0.35)}
+    G.fx.push({k:'tracer',x:px,y:py,x2:x,y2:y,life:0.09,max:0.09,c:'#ff5a32',w:0.85});if(!(i&1))gsFlash(u,'m',px,py,Math.atan2(y-py,x-px),0);
+    gsSplash(x,y,GS_RAD.m,u.gd,'s');spark(x,y,2,80,['#ffd9a0','#fff2d0'],0.14,1);
+    if(!(i&1)){if(HQ)G.fx.push({k:'dust',x,y,r:6,life:0.45,max:0.45});else if(i%4===0)puff(x,y,1,3,0.5,'122,106,82',6,0.35)}}
   else if(k==='c'){let e=m[i%m.length];if(e.dead)e=gsNear(vis,e,30)||e;const x=e.x+(R()-.5)*10,y=e.y+(R()-.5)*10,p=gsMz(u,'c',1),px=p.x,py=p.y;
-    G.fx.push({k:'tracer',x:px,y:py,x2:x,y2:y,life:0.07,max:0.07,c:'#ffc04a',w:1.7});gsFlash(px,py,Math.atan2(y-py,x-px),0.4);
+    G.fx.push({k:'tracer',x:px,y:py,x2:x,y2:y,life:0.07,max:0.07,c:'#ffc04a',w:1.7});gsFlash(u,'c',px,py,Math.atan2(y-py,x-px),0.4);
     explode(x,y,GS_RAD.c,u.gd,false);puff(x,y,1,5,0.9,'64,60,56',5,0.5);sfx('cannon',px,py)}
   else if(k==='h'){const e=m[i%m.length],p=gsMz(u,'h',1),px=p.x,py=p.y,sc=m.indexOf(e)<i?14:4,tx=e.x+(R()-.5)*sc,ty=e.y+(R()-.5)*sc;
     G.tshells.push({x:px,y:py,tx,ty,t:0,dur:Math.max(0.05,Math.hypot(tx-px,ty-py)/520),dmg:u.gd*(i?0.5:1),r:40,kind:'gs',id:'gunship',tg:e});
-    gsFlash(px,py,Math.atan2(ty-py,tx-px),1);puff(px,py,2,6,1.1,'170,165,155',12,0.35);sfx('howitzer',px,py,i?1.1:1.5)}
+    gsFlash(u,'h',px,py,Math.atan2(ty-py,tx-px),1);puff(px,py,2,6,1.1,'170,165,155',12,0.35);sfx('howitzer',px,py,i?1.1:1.5)}
   else{const e=m[i%m.length],p=gsMz(u,'g',i&1?1:-1),a=Math.atan2(e.y-p.y,e.x-p.x)+(R()-.5)*0.6;
     G.missiles.push({x:p.x,y:p.y,vx:Math.cos(a)*90,vy:Math.sin(a)*90,tgt:e,tx:e.x,ty:e.y,life:5,dmg:u.gd,delay:0,atgm:1,rt:1});puff(p.x,p.y,3,4,0.9,'200,196,188',18,0.45);sfx('launch',p.x,p.y)}}
 // per tick: reloads, the no-armor clock, the open burst, else the next ready gun in the rotation with something to shoot
@@ -5267,7 +5278,7 @@ function drawPlaneHQ(){const shadow=String(ctx.fillStyle).indexOf('rgba(0, 0, 0'
 function drawGunshipHQ(u,px){const k=US.gunship,gt=tierOf('gunship'),s=gt?hqBake('gs_t'+gt,px*k,54,82,28,41,()=>hqGunshipArtT(gt)):hqBake('gs',px*k,52,68,26,34,hqGunshipArt),pr=hqRotor(4.6,4,'prop',px*k);
   ctx.save();ctx.translate(u.x,u.y);ctx.rotate(u.ang);ctx.scale(k,k);let l=hqLoc(44,52,u.ang,k);hqShadow(s,l[0],l[1],.32);hqDraw(s);
   if(gt<4)for(const y of[-24,-13,13,24]){ctx.save();ctx.translate(12,y);ctx.scale(.3,1);ctx.rotate(G.time*50+y);hqDraw(pr);ctx.restore()}
-  l=hqLoc(-3,-3,u.ang,1);hqGlint(l[0],l[1],9,.18);ctx.restore()}
+  gsGunFx(u,gt);l=hqLoc(-3,-3,u.ang,1);hqGlint(l[0],l[1],9,.18);ctx.restore()}
 // ---- airfield, silo, launcher, artillery ----
 function drawAirGroundHQ(){const px=hqPx(),ph=wallHalfAt(L('walls'));
   if(L('airstrip')&&L('walls')&&G!==_thumbG){const w=Math.max(ph*2.8,200),y=runwayY(),hgt=RWY_H,cy=y+hgt/2,P='#d8d4b0';
