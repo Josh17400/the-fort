@@ -4529,7 +4529,9 @@ const CGL=(()=>{
   // Local form for code that draws through its own context variable: x=CGL.begin(...)||x ... CGL.end() before the buffer is used.
   function begin(name,count,target,tw,th,pl){return want(name,count)&&open(target,tw,th,!!pl,false)?REC:null}
   const cv2d=cv.getContext('2d');
-  return{layer,into,begin,end:close,rec:REC,min:{ground:40,fx:150,glow:60,lmap:60,bloom:120,sky:40},ofs:undefined,v1:false,last:null,
+  // lmap / glow / emis stay on Canvas2D: they draw a few dozen blits (mostly into 1/4-1/5 res buffers), and each GL layer costs a
+  // GL->2D composite, a cross-context sync point; measured on a phone-sized canvas, dropping those three cut p95 frame time ~25-30%.
+  return{layer,into,begin,end:close,rec:REC,min:{ground:40,fx:150,glow:1e9,lmap:1e9,emis:1e9,bloom:120,sky:40},ofs:undefined,v1:false,last:null,
     path:()=>{if(ctx!==REC)return new Path2D();const p=new RPath();reg.push(p);return p},
     active:()=>ctx===REC,
     status:()=>({on:S.set.chaosGL!==false,ok,why,webgl:gl?(v2?2:1):0,offscreen:ofs,chain,atlas:{size:AS,gen,rows:Math.round(atop/AS*100)+'%',fill:Math.round(aarea/AS/AS*100)+'%',sprites:aent,shelves:shelves.length},layers:JSON.parse(JSON.stringify(LS)),
@@ -7560,12 +7562,15 @@ function dnLamps(lamp,V){const t=G.time,lo=!GFX.lights,rigs=lo?dnRigs():_rig,nav
     if(!lo&&(t*0.83+Math.abs(jx)*.001)%1<.08)P('wh',jx-co*nose*.8,jy-si*nose*.8,dot*1.6)}
   if(!lo)for(const[ox,oy]of DN.beams)P('wh',ox,oy,dot*1.4);
   ctx.globalAlpha=lamp;for(const[k,c]of[['hd','#fff4dc'],['tl','#e0342a'],['nr','#ff4a3a'],['ng','#4aff7a'],['wh','#ffffff']]){ctx.fillStyle=c;ctx.fill(_lp[k])}ctx.globalAlpha=1}
-// Stars over the dark beyond the fog line: three twinkle groups, so three fills a frame.
+// Stars over the dark beyond the fog line: three twinkle groups. Each star is one blit of a small baked disc (a path of 87 arcs
+// spread over the whole screen made the rasteriser cover its full bounding box, three times a frame), and stars off screen are skipped.
 let _stars=null;
-function dnStars(V,lamp){const px=Math.round(4/sc)/4;if(!_stars||_stars.V!==V||_stars.px!==px){const r=rng(424242),g=[new Path2D(),new Path2D(),new Path2D()];
-    for(let i=0;i<260;i++){const a=r()*TAU,d=V*1.18+Math.pow(r(),.7)*V*1.9,x=Math.cos(a)*d,y=Math.sin(a)*d,s=(.45+r()*r()*1.3)*px;g[i%3].moveTo(x+s,y);g[i%3].arc(x,y,s,0,TAU)}_stars={V,px,g}}   // sizes in screen px: rebuilt only when the zoom settles on a new quarter-step
-  const t=G.time;ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgb(200,214,255)';
-  for(let i=0;i<3;i++){ctx.globalAlpha=Math.max(0,lamp*(.32+.2*Math.sin(t*(.9+i*.37)+i*2.1))*(1-(G.fogK||0)));ctx.fill(_stars.g[i])}
+function dnStars(V,lamp){const px=Math.round(4/sc)/4;if(!_stars||_stars.V!==V||_stars.px!==px){const r=rng(424242),g=[[],[],[]];
+    for(let i=0;i<260;i++){const a=r()*TAU,d=V*1.18+Math.pow(r(),.7)*V*1.9,x=Math.cos(a)*d,y=Math.sin(a)*d,s=(.45+r()*r()*1.3)*px;g[i%3].push(x,y,s)}_stars={V,px,g}}   // sizes in screen px: rebuilt only when the zoom settles on a new quarter-step
+  const t=G.time,spr=canvasSprite('star',32,32,x=>{x.fillStyle='rgb(200,214,255)';x.beginPath();x.arc(16,16,16,0,TAU);x.fill()}),hw=(VW/2+G.shake)/sc+4*px,hh=(VH/2+G.shake)/sc+4*px;
+  ctx.globalCompositeOperation='lighter';
+  for(let i=0;i<3;i++){const al=Math.max(0,lamp*(.32+.2*Math.sin(t*(.9+i*.37)+i*2.1))*(1-(G.fogK||0)));if(!(al>0))continue;ctx.globalAlpha=al;const q=_stars.g[i];
+    for(let j=0;j<q.length;j+=3){const x=q[j],y=q[j+1],s=q[j+2];if(x<-hw||x>hw||y<-hh||y>hh)continue;ctx.drawImage(spr,x-s,y-s,2*s,2*s)}}
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
 // HUD clock: a small horizon dial - sky colour for the hour, the sun or moon riding its arc, stars at night. Returns its label.
 function drawDayDial(cx,cy,r){const h=DN.h,a=_amb,nk=DN.nk;
