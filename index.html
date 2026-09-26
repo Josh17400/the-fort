@@ -4226,7 +4226,7 @@ function gsShot(u,vis){const k=u.gk,m=u.gw,i=u.gi++;
     G.tshells.push({x:px,y:py,tx,ty,t:0,dur:Math.max(0.05,Math.hypot(tx-px,ty-py)/520),dmg:u.gd*(i?0.5:1),r:40,kind:'gs',id:'gunship',tg:e});
     gsFlash(u,'h',px,py,Math.atan2(ty-py,tx-px),1);puff(px,py,2,6,1.1,'170,165,155',12,0.35);sfx('howitzer',px,py,i?1.1:1.5)}
   else{const e=m[i%m.length],p=gsMz(u,'g',i&1?1:-1),a=Math.atan2(e.y-p.y,e.x-p.x)+(R()-.5)*0.6;
-    G.missiles.push({x:p.x,y:p.y,vx:Math.cos(a)*90,vy:Math.sin(a)*90,tgt:e,tx:e.x,ty:e.y,life:5,dmg:u.gd,delay:0,atgm:1,rt:1});puff(p.x,p.y,3,4,0.9,'200,196,188',18,0.45);sfx('launch',p.x,p.y)}}
+    G.missiles.push(mslNew('grf',p.x,p.y,a,e,u.gd,0,1,0,ATGM_Z.gunship,true,1));puff(p.x,p.y,3,4,0.9,'200,196,188',18,0.45);sfx('launch',p.x,p.y)}}
 // per tick: reloads, the no-armor clock, the open burst, else the next ready gun in the rotation with something to shoot
 function gsFire(u,vis,dt){const r=u.gr||(u.gr={m:0,l:0,c:0,h:0,g:0});if(!u.gw){u.gw=[];u.gq=u.gq||0;u.gk='';u.gh=0}
   r.m-=dt;r.l-=dt;r.c-=dt;r.h-=dt;r.g-=dt;let arm=false;for(const e of vis)if(gsHeavy(e)){arm=true;break}u.gh=arm?0:u.gh+dt;
