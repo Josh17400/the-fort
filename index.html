@@ -2888,10 +2888,12 @@ function heliOps(u,dt){const rad=laneHalf(1)+10;u.rk-=dt;u.rot+=dt*30*u.spin;
 function jetFly(j,tx,ty,v,turn,dt){j.ang=turnTo(j.ang,Math.atan2(ty-j.y,tx-j.x),turn*dt);j.spd+=Math.max(-150*dt,Math.min(120*dt,v-j.spd));j.x+=Math.cos(j.ang)*j.spd*dt;j.y+=Math.sin(j.ang)*j.spd*dt}
 function jetFollow(j,v,dt){while(j.path.length){const p=j.path[0];j.spd=v;if(!moveTo(j,p.x,p.y,v,dt,3.5))return false;j.path.shift()}j.spd=0;return true}
 function jetSfx(){if(G.jetSfxT<=0){G.jetSfxT=1.4;sfx('jet')}}
-const NO_VIS=Object.freeze([]);
+const NO_VIS=Object.freeze([]),_aadTg=[],_airVis=[],_jetVis=[];
+// list.filter(e=>!e.dead&&visible(e)) into a reused array (for per-tick lists that are only read during that call)
+function visInto(a,list){a.length=0;for(let i=0;i<list.length;i++){const e=list[i];if(!e.dead&&visible(e))a.push(e)}return a}
 function updateJets(dt){if(G.jets)G.jets.length=0;else G.jets=[];G.jetSfxT-=dt;if(!G.fleet.length)return;let vNeed=false;for(const j of G.fleet)if(j.fs==='air'||j.fs==='strafe'){vNeed=true;break}   // only the 'air' and 'strafe' cases read vis (at the state they start the tick in)
   const g=rwyGeo(),fl=L('fighter'),cdBase=Math.max(5,20*Math.pow(0.9,fl-1))*stripMul()*(sg('fighter','stealth')?0.65:1),combat=combatOn(),W1={x:g.x0-340,y:g.cy},T={x:g.x0+24,y:g.cy},
-    vis=vNeed?G.enemies.filter(e=>!e.dead&&visible(e)):NO_VIS,orbit=Math.max(fortHalf()+170,vision()*0.6),holding=G.fleet.some(j=>j.fs==='hold'||j.fs==='final');
+    vis=vNeed?visInto(_jetVis,G.enemies):NO_VIS,orbit=Math.max(fortHalf()+170,vision()*0.6),holding=G.fleet.some(j=>j.fs==='hold'||j.fs==='final');
   for(const j of G.fleet){
     if(j.alt>0||j.fs==='roll')j.fuel=Math.max(j.fs==='air'||j.fs==='strafe'?0:RESERVE,j.fuel-burnRate('jet')*dt);
     j.thr=j.fs==='roll'||j.fs==='climb'?1:j.alt>0?0.4:0;
@@ -3501,7 +3503,7 @@ function buildAir(){const ph=wallHalfAt(L('walls')),a=[];
   return a}
 function bestCluster(R,list){let best=null,bc=-1;for(let i=0,nc=Math.min(30,list.length);i<nc;i++){const c=list[i];let k=0;for(const o of list)if(within(o,c.x,c.y,R))k+=o.boss?5:o.veh?3:1;if(k>bc){bc=k;best=c}}return best}
 function updateAir(dt,ph){
-  const vis=G.air.length?G.enemies.filter(e=>!e.dead&&visible(e)):null;   // only read inside the G.air loop
+  const vis=G.air.length?visInto(_airVis,G.enemies):null;   // only read inside the G.air loop
   for(const u of G.air){u.cd-=dt;
     if(u.k==='mlaunch'&&(vis.length||G.sky.length&&skyTargets().length)){const t=nearestTo(u);u.ang=Math.atan2(t.y-u.y,t.x-u.x);
       if(u.cd<=0){u.cd=2.8;const n=Math.min(8,1+Math.floor(L('mlaunch')/2))*(sg('mlaunch','salvo')||1),tg=[...vis,...skyTargets()].sort((a,b)=>b.hp*(b.air?3:1)-a.hp*(a.air?3:1));
@@ -6455,8 +6457,8 @@ const transPos=T=>{const s=-T.S0+TRANS_V*T.t,c=Math.cos(T.a),n=Math.sin(T.a);ret
 function chuteLand(e){e.landT=LAND_T;puff(e.x,e.y,3,e.r*0.8,0.9,'128,112,84',10,0.35)}
 function evUpdate(dt){if(G.uavT>0){G.uavT-=dt;if(G.uavT<=0)launchUav()}
   const fk=G.ev==='storm'?1:0;if(G.fogK!==fk)G.fogK=fk?Math.min(1,G.fogK+dt/3):Math.max(0,G.fogK-dt/2.5);
-  if(G.drops.length){for(const d of G.drops)if(G.time>=d.at){d.done=true;const e=spawn(d.type,d);e.chute=e.chuteMax=CHUTE_T;e.moving=false}G.drops=G.drops.filter(d=>!d.done)}
-  if(G.transports.length){for(const T of G.transports){T.t+=dt;if(T.t>=0&&!T.snd){T.snd=true;sfx('plane')}if(-T.S0+TRANS_V*T.t>T.S0)T.done=true}G.transports=G.transports.filter(T=>!T.done)}
+  if(G.drops.length){for(const d of G.drops)if(G.time>=d.at){d.done=true;const e=spawn(d.type,d);e.chute=e.chuteMax=CHUTE_T;e.moving=false}keepUndone(G.drops)}
+  if(G.transports.length){for(const T of G.transports){T.t+=dt;if(T.t>=0&&!T.snd){T.snd=true;sfx('plane')}if(-T.S0+TRANS_V*T.t>T.S0)T.done=true}keepUndone(G.transports)}
   for(const e of G.enemies)if(e.landT>0)e.landT-=dt}
 // canopy seen from above: eight alternating gores, a dark hem and the open apex vent
 function chuteArt(R,rot){for(let i=0;i<8;i++){const a=rot+i*TAU/8;ctx.fillStyle=i%2?'#a39263':'#cdbd8c';ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R,a,a+TAU/8);ctx.closePath();ctx.fill()}
@@ -6676,7 +6678,7 @@ function updateSky(dt,h){
     if(Math.random()<.6)puff(w.x,w.y,1,w.r*0.35,1.4,'40,36,32',6,0.55);
     if(w.t>=w.dur){w.done=true;skyBlast(w.x,w.y,w.big?1.5:w.type==='drone'?0.35:0.85)}}
   keepUndone(G.wrecks)}
-function updateAAD(dt){const tg=G.sky.length?skyTargets():NO_VIS;let tgHp=null;   // tgHp: tg by hp, sorted once per tick for every SAM site (nothing in the loop changes hp)
+function updateAAD(dt){const tg=G.sky.length?visInto(_aadTg,G.sky):NO_VIS;let tgHp=null;   // tgHp: tg by hp, sorted once per tick for every SAM site (nothing in the loop changes hp)
   for(const u of G.aa){
     if(u.k==='aagun'){const t=bestTarget(tg,u,false,true);if(!t){u.burst=0;continue}
       u.ang+=Math.max(-7*dt,Math.min(7*dt,angTo(u.ang,Math.atan2(t.y-u.y,t.x-u.x))));
