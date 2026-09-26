@@ -4171,7 +4171,7 @@ function hqFx(f,k,t,m){
 const PF={};
 function pfCanvas(k,w,h){let c=PF[k];if(!c){c=PF[k]=document.createElement('canvas');c._x=c.getContext('2d')}if(c.width!==w||c.height!==h){c.width=w;c.height=h}return c}
 function postFX(){if(!HQ||!G)return;const m=ctx.getTransform(),h=hx(),W=cv.width,H=cv.height;ctx.save();
-  const rb=AQ.lv<1;   // adaptive quality: read-back passes go first
+  const rb=!PHONE&&AQ.lv<1;   // canvas read-backs (a GPU sync each): never on phones, and the first thing the governor sheds
   if(rb&&h.waves.length)shockwaves(m,h,W,H);
   if(rb)heatHaze(m,h,W,H);
   if(AQ.lv<3)bloom(m,W,H);
