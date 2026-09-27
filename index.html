@@ -1317,7 +1317,7 @@ body.rm .adc::before{animation:none}@keyframes adSpin{to{transform:rotate(1turn)
     <div class="set-sec eyebrow">DATA</div>
     <div class="set"><span class="st">Back up progress<small>Copies a save code: keep it somewhere safe in case the app's storage is cleared</small></span><button class="btn sm" id="bakBtn">COPY CODE</button></div>
     <div class="set"><span class="st">Restore progress<small>Paste a save code, then tap RESTORE twice</small><input id="bakIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="FORT1:..." style="margin-top:6px;width:100%;box-sizing:border-box;font:16px monospace;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:inherit"></span><button class="btn sm" id="bakRestore">RESTORE</button></div>
-    <div class="set"><span class="st">Reset progress<small>Wipes money, upgrades, research, medals and theaters (gems are kept)</small></span><button class="btn danger sm" id="resetBtn">RESET</button></div>
+    <div class="set"><span class="st">Reset progress<small>Wipes money, upgrades, research, medals and theaters (gems and purchases are kept)</small></span><button class="btn danger sm" id="resetBtn">RESET</button></div>
   </div>
   <div class="sh-foot"><button class="btn pri" id="backBtn">DONE</button></div>
 </div></div>
@@ -2027,7 +2027,7 @@ function dqRoll(d){const c=dqCtx(),r=dyRng(dyHash(S.dy.seed,d)),wt=q=>typeof q.w
   return out}
 // new day: bank yesterday's finished-but-unclaimed rewards (never lost), roll fresh missions, reset the ad caps and the challenge
 function dyTick(){const y=S.dy;if(!y||!S.lab)return;const d=today();if(y.ads.d!==d)y.ads={d};
-  if(y.dc.d!==d&&!(running&&G&&G.dc)){dcPay();y.dc={d,best:0,g:0,u:0,n:0}}
+  if(!(running&&G&&G.dc)){dcPay();if(y.dc.d!==d)y.dc={d,best:0,g:0,u:0,n:0}}   // dcPay settles a challenge the app died in (it pays only what is still due)
   if(!dyOn()||y.d===d)return;let g=0,u=0;
   if(y.d){for(const q of y.m)if(!q.c&&q.p>=q.n){q.c=1;g+=DQ_GEM;u++}if(!y.b&&y.m.length&&y.m.every(q=>q.p>=q.n)){y.b=1;g+=DQ_BONUS_GEM;u+=DQ_BONUS_U}}
   if(!y.hi){y.hi=1;setTimeout(()=>toast('Daily Ops unlocked · missions and a login streak on the Base screen','star','gm'),600)}
@@ -2074,7 +2074,8 @@ function swRevive(){const g=G;g.swUsed=1;g.swAsk=0;g.over=false;running=true;pau
 // for the day; a STANDARD KIT instead of your Armory levels in that theater (DC_KIT: a share of that theater's caps, so the challenge
 // measures play and research, not how much cash one fort has soaked up), your own research. Sandboxed: the theater's cash, Armory
 // levels, best wave, checkpoint and stars are parked in S.dcHold for the run and put back after (loadSave puts them back too if the app
-// dies mid-run); in-run RP, medal awards, stars and wave medals are held off (medals earned on the way are awarded back at base).
+// dies mid-run); in-run RP, stars and medals are held off, and the lifetime medal tallies and kill count are put back too, so the
+// challenge never pays out anywhere except its own reward (and today's daily missions, which count every run).
 // Reward: the day's best wave pays DC_TIERS once in total (a better run tops it up). Unlimited attempts.
 const DC_MODS=[{id:'hazard',ic:'skull',name:'Hazard Pay',d:'Enemies 25% tougher · everything pays 40% more'},{id:'hot',ic:'threat',name:'Hot Zone',d:'Battlefield events on most waves'},
   {id:'armor',ic:'tank',name:'Armored Push',d:'50% more enemy vehicles'},{id:'lean',ic:'scav',name:'Short Supply',d:'Supply crates drop half as often'}];
@@ -2085,12 +2086,13 @@ function dcToday(){const d=today(),open=mapsOpen(),r=dyRng(dyHash('dc',d)),m=ope
   for(let i=0;i<2;i++)dirs.push(ds.splice(Math.floor(r()*ds.length),1)[0]);return{d,map:m.id,mod:mod.id,dirs,seed:dyHash('dcs',d)}}
 function dcKit(id){const o=mapOf(id).ord,lv={};for(const k in DC_KIT){const v=DC_KIT[k],mx=CAPS[k]?capAt(k,o):UB[k].max;lv[k]=Math.max(1,Math.min(mx,v<1?Math.round(v*mx):v))}return lv}
 const dcReward=w=>{let g=0,u=0;for(const[t,gg,uu]of DC_TIERS)if(w>=t){g=gg;u=uu}return{g,u}};
-function dcEnter(c){const r=mapRec(c.map);S.dcHold={map:S.map,lv:S.lv,bank:S.bank,best:S.best,sw:S.set.startWave||1,cm:c.map,rec:{stars:r.stars,cleared:r.cleared,visited:r.visited}};
+function dcEnter(c){const r=mapRec(c.map);S.dcHold={map:S.map,lv:S.lv,bank:S.bank,best:S.best,sw:S.set.startWave||1,cm:c.map,rec:{stars:r.stars,cleared:r.cleared,visited:r.visited},ms:JSON.stringify(S.ms||{}),tk:S.tkills};
   S.map=c.map;S.lv=dcKit(c.map);S.bank=0;S.best=S.dy.dc.d===c.d?S.dy.dc.best:0;S.set.startWave=1;mapSync();_armFreeze=null;_fpW=-1;save()}
 // put the parked theater back (also run by loadSave, before campInit, when the app died mid-challenge)
 function dcRestore(){const h=S.dcHold;delete S.dcHold;if(!h||typeof h!=='object')return false;if(MAPB[h.map])S.map=h.map;
-  S.lv=h.lv&&typeof h.lv==='object'?h.lv:{};S.bank=+h.bank||0;S.best=+h.best||0;S.set.startWave=+h.sw||1;const r=S.maps&&S.maps[h.cm];if(r&&h.rec)Object.assign(r,h.rec);return true}
-function dcLeave(){if(dcRestore()){mapSync();_armFreeze=null;_fpW=-1;save()}}
+  S.lv=h.lv&&typeof h.lv==='object'?h.lv:{};S.bank=+h.bank||0;S.best=+h.best||0;S.set.startWave=+h.sw||1;const r=S.maps&&S.maps[h.cm];if(r&&h.rec)Object.assign(r,h.rec);
+  try{S.ms=JSON.parse(h.ms)}catch(e){}if(h.tk!=null)S.tkills=+h.tk||0;return true}
+function dcLeave(){if(dcRestore()){mapSync();_armFreeze=null;_fpW=-1;save();idleBake()}}
 let _dcRnd=null;   // the real Math.random while a seeded challenge run is live
 function dcStart(){if(running||!dcOn())return false;dyTick();const c=dcToday();dcEnter(c);S.dy.dc.n++;_dcRnd=Math.random;Math.random=dyRng(c.seed);
   startRun();G.dc=c;if(c.mod==='hazard')G.pk.hazard=(G.pk.hazard||0)+1;else if(c.mod==='hot')G.dcEv=2.5;else if(c.mod==='armor')G.dcVeh=1.5;else if(c.mod==='lean')G.dcCr=2;
@@ -2098,7 +2100,7 @@ function dcStart(){if(running||!dcOn())return false;dyTick();const c=dcToday();d
 function dcPay(){const c=S.dy.dc,due=dcReward(c.best),g=due.g-c.g,u=due.u-c.u;if(g<=0&&u<=0)return{g:0,rp:0};const rp=Math.max(0,u)*rpU();
   if(g>0)gemAdd(g,'challenge');if(rp)S.rp+=rp;c.g=Math.max(c.g,due.g);c.u=Math.max(c.u,due.u);save();return{g:Math.max(0,g),rp}}
 function dcEnd(){if(_dcRnd){Math.random=_dcRnd;_dcRnd=null}const c=S.dy.dc,w=G.wave;if(c.d!==G.dc.d)Object.assign(c,{d:G.dc.d,best:0,g:0,u:0,n:1});
-  const prev=c.best;c.best=Math.max(c.best,w);dcLeave();const got=dcPay();medalSync();return{prev,best:c.best,got}}
+  const prev=c.best;c.best=Math.max(c.best,w);dcLeave();const got=dcPay();return{prev,best:c.best,got}}
 // ---- notifications: research timers ping when they land; one daily reminder, scheduled for tomorrow evening on each day's first visit
 function labNote(j){if(j)Plat.notify(Date.now()+Math.max(0,j.end-labNow()),j.rf?'Refit complete':'Research complete',labName(j)+' is ready. It deploys with your next run.','lab:'+j.id)}
 function dyRemind(){const y=S.dy;if(!y||!dyOn()||y.rem===today())return;y.rem=today();const t=new Date();t.setDate(t.getDate()+1);t.setHours(19,0,0,0);
@@ -2234,7 +2236,7 @@ let _bankTw=0;
 function renderHdr(){if(!_bankTw)$('bank').textContent='$'+fmtN(S.bank);$('rpBank').textContent=fmtN(S.rp);$('gemBank').textContent=fmtN(S.gems|0);
   const aff=U.some(affordable),rd=S.lab.news.length>0||rsReady().length>0,med=medalPts()>(S.set.medalSeen|0);   // R&D dot: research landed, or the lab is free and a tier is affordable
   $('rpReady').classList.toggle('on',rd);
-  for(const d of document.querySelectorAll('.dot[data-d]'))d.classList.toggle('on',d.dataset.d==='armory'?aff:d.dataset.d==='rd'?rd:med);
+  for(const d of document.querySelectorAll('.dot[data-d]'))d.classList.toggle('on',d.dataset.d==='armory'?aff:d.dataset.d==='rd'?rd:d.dataset.d==='base'?dyDot():med);
   const w=startWaveOk();$('depTxt').textContent=w>1?'DEPLOY · WAVE '+w:'DEPLOY';$('hdrDepW').textContent=w>1?' · W'+w:'';
   const cp=$('dockCp');cp.hidden=w<=1;cp.textContent='W'+w;$('dockDeploy').setAttribute('aria-label',w>1?'Deploy at wave '+w:'Deploy')}
 // money chip counts down after a purchase (300ms)
@@ -2262,7 +2264,7 @@ function renderStartSel(){const c=checkpoints(),el=$('startSel');
     +c.map(w=>`<button data-start="${w}" aria-pressed="${w===cur}">${ph||c.length>5?'W':'WAVE '}${w}</button>`).join('')+'</div>'
     +`<p class="cpx">${cpText(cur)}</p>`}
 const cpText=w=>{const n=Math.min(8,Math.floor(w/10));return w<=1?'Full run from the first wave.':`Skips ${w-1} waves · ${n} directive ${pl(n,'pick')} · back-pay of $${fmtN(cpCash(w))} and ${cpRp(w)} RP once you hold ${CP_HOLD} waves`};
-function renderBase(){renderTheater();renderStartSel();renderMission();renderAAR();$('picks').hidden=true;$('picks').innerHTML='';renderRdSum();$('nextUnl').hidden=true;$('nextUnl').innerHTML='';renderManual();
+function renderBase(){renderTheater();renderStartSel();renderMission();renderAAR();renderDaily();$('picks').hidden=true;$('picks').innerHTML='';renderRdSum();$('nextUnl').hidden=true;$('nextUnl').innerHTML='';renderManual();
   // desktop balance: next unlocks sit under the picks while the After-Action card fills the right column, else on the right
   const nu=$('nextUnl'),aar=!!(lastAAR&&lastRunMsg),col=aar?$('picks').parentNode:$('rdSum').parentNode;if(nu.parentNode!==col)col.insertBefore(nu,aar?null:$('manual'));
   if(S.campWin&&!_thWin&&!running)openThWin()}
@@ -2336,10 +2338,9 @@ function renderMission(){const r=RLINES.dmg,k=rTier('dmg'),t=r.t[k];
 function renderAAR(){const el=$('lastRun'),a=lastAAR;
   if(!a||!lastRunMsg){el.innerHTML=careerBest()<=1?firstDeployHtml():'';return}
   const n=rsAffordN(),m=Math.floor(a.time/60),s=Math.floor(a.time%60),nm=a.medals.length,ne=(a.evs||[]).length;
-  el.innerHTML=`<div class="panel aar ticks"><div class="sec-h"><div class="eyebrow">AFTER-ACTION · WAVE ${a.wave}</div>${a.rec?'<span class="badge b-new">NEW BEST</span>':''}</div>`
-    +`<div class="tiles t4">${[['WAVE',a.wave],['KILLS',fmtN(a.kills)],['EARNED','$'+fmtN(a.earned)],['TIME',m+'<small>m</small> '+s+'<small>s</small>']].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join('')}</div>`
-    +`<button class="rprow" data-rsgo="">${ic('research',16)}<span>${a.rp||careerBest()>=10?`<b>+${fmtN(a.rp)} RP</b> · ${fmtN(S.rp)} banked`:'<b>RP starts at wave 10</b> · hold that far to fund R&amp;D'}${n?'<span class="hph"> · enough for '+n+' '+pl(n,'tier')+'</span>':''}</span><span class="chev">→</span></button>`
-    +afterAction()
+  el.innerHTML=`<div class="panel aar ticks"><div class="sec-h"><div class="eyebrow">${a.dc?'DAILY CHALLENGE':'AFTER-ACTION'} · WAVE ${a.wave}</div>${a.rec?`<span class="badge b-new">${a.dc?"TODAY'S BEST":'NEW BEST'}</span>`:''}</div>`
+    +`<div class="tiles t4">${[['WAVE',a.wave],['KILLS',fmtN(a.kills)],a.dc?['BEST TODAY','W'+a.dc.best]:['EARNED','$'+fmtN(a.earned)],['TIME',m+'<small>m</small> '+s+'<small>s</small>']].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join('')}</div>`
+    +(a.dc?dcResHtml(a):x2Html(a)+`<button class="rprow" data-rsgo="">${ic('research',16)}<span>${a.rp||careerBest()>=10?`<b>+${fmtN(a.rp)} RP</b> · ${fmtN(S.rp)} banked`:'<b>RP starts at wave 10</b> · hold that far to fund R&amp;D'}${n?'<span class="hph"> · enough for '+n+' '+pl(n,'tier')+'</span>':''}</span><span class="chev">→</span></button>`+afterAction())
     +(a.perks||nm||ne?`<details class="rund"${narrow()?'':' open'}><summary>${ic('chevR',14)}Run details${a.nPerk?' · '+a.nPerk+' '+pl(a.nPerk,'directive'):''}${nm?' · '+nm+' '+pl(nm,'medal'):''}${ne?' · '+ne+' '+pl(ne,'event'):''}</summary><div class="rdx">`
       +(ne?`<div><div class="eyebrow">EVENTS CLEARED</div><div class="pperks">${a.evs.map(k=>EVENTS[k]?`<span>${ic('threat',14)}${EVENTS[k].name}</span>`:'').join('')}</div></div>`:'')
       +(a.perks?`<div><div class="eyebrow">DIRECTIVES</div><div class="pperks">${a.perks}</div></div>`:'')
@@ -2811,7 +2812,7 @@ sheetDrag('settings',closeSettings);sheetDrag('howto',closeHowto);
 $('howClose').onclick=$('howDone').onclick=closeHowto;$('howto').addEventListener('mousedown',e=>{if(e.target.id==='howto')closeHowto()});$('howBtn').onclick=openHowto;
 const segSync=(seg,v)=>{for(const b of $(seg).children)b.setAttribute('aria-pressed',b.dataset.v===String(v))};
 const volFill=()=>$('sVol').style.setProperty('--v',$('sVol').value+'%');
-function syncSettings(){$('sVol').value=S.set.vol;volFill();$('sMusic').checked=S.set.music;$('sShake').checked=S.set.shake;$('sDmg').checked=S.set.dmgNums;$('sCall').checked=S.set.callouts!==false;$('sRing').checked=S.set.ring;$('sDay').checked=S.set.dayNight;$('sBlur').checked=S.set.blurPause;
+function syncSettings(){$('devRow').hidden=!S.set.dev&&_devTap<7;$('sDev').checked=!!S.set.dev;$('sVol').value=S.set.vol;volFill();$('sMusic').checked=S.set.music;$('sShake').checked=S.set.shake;$('sDmg').checked=S.set.dmgNums;$('sCall').checked=S.set.callouts!==false;$('sRing').checked=S.set.ring;$('sDay').checked=S.set.dayNight;$('sBlur').checked=S.set.blurPause;
   $('sSpeed').value=String(S.set.speed);$('sGfx').value=S.set.gfx;segSync('gfxSeg',S.set.gfx);segSync('spdSeg',S.set.speed);$('sRm').checked=!!S.set.reduceMotion;$('sLeft').checked=!!S.set.leftHand;
   const rb=$('resetBtn');rb.disabled=running;delete rb.dataset.arm;rb.textContent=running?'END RUN FIRST':'RESET'}
 for(const[seg,sel]of[['gfxSeg','sGfx'],['spdSeg','sSpeed']])$(seg).addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;e.preventDefault();const s=$(sel);if(s.value!==b.dataset.v){s.value=b.dataset.v;s.dispatchEvent(new Event('change'))}segSync(seg,b.dataset.v)});
@@ -2828,6 +2829,8 @@ $('sGfx').onchange=e=>{S.set.gfx=e.target.value;applyGfx();save()};
 $('sRm').onchange=e=>{S.set.reduceMotion=e.target.checked;applyUiPrefs();save()};
 $('sLeft').onchange=e=>{S.set.leftHand=e.target.checked;applyUiPrefs();save()};
 $('tipsBtn').onclick=()=>{S.set.tips={};save();toast('Tips will show again','star')};
+let _devTap=0;$('setTitle').addEventListener('click',()=>{if(++_devTap===7){$('devRow').hidden=false;toast('Developer options shown','gear')}});
+$('sDev').onchange=e=>{S.set.dev=e.target.checked;save();toast(S.set.dev?'Simulated ads and purchases on':'Simulated ads and purchases off','gear');if(!running)renderHome()};
 // save backup: FORT1: + base64(JSON of S). Restore validates the shape, arms like RESET, and refuses mid-run.
 $('bakBtn').onclick=()=>{const code='FORT1:'+btoa(unescape(encodeURIComponent(JSON.stringify(S))));
   const done=()=>toast('Save code copied','star'),fail=()=>{const i=$('bakIn');i.value=code;i.focus();i.select();toast('Copy the code from the box below','star')};
@@ -2842,7 +2845,8 @@ $('bakRestore').onclick=e=>{if(running)return;const b=e.currentTarget,raw=($('ba
 $('resetBtn').onclick=e=>{if(running)return;const b=e.currentTarget;
   if(!b.dataset.arm){b.dataset.arm=1;b.textContent='TAP AGAIN TO WIPE';clearTimeout(b._t);b._t=setTimeout(()=>{delete b.dataset.arm;b.textContent='RESET'},4000);return}
   clearTimeout(b._t);delete b.dataset.arm;b.textContent='RESET';
-  const set=S.set,gems=S.gems|0,gemT=S.gemT;set.startWave=1;S={bank:0,best:0,tkills:0,lv:{},set,rp:0,rs:{},rf:{},gems,gemT,gemv:1};campInit();econInit();migrateRS();   // gems survive a reset: they may have been boughtmedalSync();S.set.medalSeen=0;save();lastRunMsg='';lastCause=null;lastAAR=null;_armFreeze=null;_manSet=false;
+  const set=S.set,keep={gems:S.gems|0,gemT:S.gemT,gemv:1,shop:S.shop,dy:S.dy,runs:S.runs,born:S.born,ia:S.ia};set.startWave=1;S=Object.assign({bank:0,best:0,tkills:0,lv:{},set,rp:0,rs:{},rf:{}},keep);campInit();econInit();migrateRS();
+  medalSync();S.set.medalSeen=0;save();lastRunMsg='';lastCause=null;lastAAR=null;_armFreeze=null;_manSet=false;   // gems, purchases and the daily calendar survive a reset
   toast('Progress wiped','close');renderHome()};
 // theaters sheet + cleared debrief
 $('theater').onclick=openTheaters;$('thClose').onclick=$('thDone').onclick=closeTheaters;
@@ -2852,8 +2856,10 @@ $('thWin').addEventListener('click',e=>{if(e.target.closest('[data-thgo]'))close
 // home keys: 1-4 views, Enter deploys, ',' settings, Esc closes the top sheet (How to play also closes over the pause menu)
 addEventListener('keydown',e=>{const how=$('howto').classList.contains('on'),set=$('settings').classList.contains('on');
   if(e.code==='Escape'&&how){closeHowto();e.preventDefault();e.stopImmediatePropagation();return}
+  if($('adOv').classList.contains('on')||$('swWin').classList.contains('on'))return;
   if(running)return;
   if(set){if(e.code==='Escape'){closeSettings();e.preventDefault()}return}
+  if($('stWin').classList.contains('on')){if(e.code==='Escape'){closeStreak();e.preventDefault()}return}
   if($('thWin').classList.contains('on')){if(e.code==='Escape'){closeThWin(false);e.preventDefault()}return}
   if($('thList').classList.contains('on')){if(e.code==='Escape'){closeTheaters();e.preventDefault()}return}
   if($('gemSheet').classList.contains('on')){if(e.code==='Escape'){closeGems();e.preventDefault()}return}
@@ -3437,6 +3443,7 @@ function ttScan(list,fx,fy,n,thr,E,Sc,Dd){for(let i=0;i<list.length;i++){const e
 function topTargets(list,f,n,list2){const E=[];n=Math.trunc(n);if(n>0){const thr=S.set.prio==='threat',Sc=[],Dd=[];ttScan(list,f.x,f.y,n,thr,E,Sc,Dd);if(list2)ttScan(list2,f.x,f.y,n,thr,E,Sc,Dd)}return E}
 const nearestVisible=f=>bestTarget(G.enemies,f,true,undefined,G.sky),ORIGIN={x:0,y:0};
 function endRun(retreat){if(G.over)return;   // several hits in one frame can each drop hp to 0: pay out (checkpoint RP) once
+  if(!retreat&&!G.swNo&&swCan()){swOpen();return}   // Second Wind: the run freezes on the revive offer (swDecline comes back here)
   running=false;sfx('die');closePerks();G.choosing=null;
   const tot=Object.values(G.threat).reduce((a,b)=>a+b,0),top=Object.entries(G.threat).filter(([,v])=>v>=tot*0.2).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>k);
   lastCause=retreat||!top.length?null:{top,breachW:G.breachW&&!wallsUp()?G.breachW:0,doc:top.some(t=>STANDOFF.has(t))&&prio()!=='threat'?prioShown()?'threat':'lock':''};
@@ -3448,7 +3455,8 @@ function endRun(retreat){if(G.over)return;   // several hits in one frame can ea
     +`<button class="stat rpst" data-rsgo style="grid-column:1/-1"><span>${ic('research',14)}RESEARCH POINTS</span><b>+${f1(S.rpLast)} RP</b><i>${f1(S.rp)} RP banked${rsReady().length?' · '+rsReady().length+' tier'+(rsReady().length>1?'s':'')+' ready':''}</i></button>`
     +(perkList().length?`<div class="stat" style="grid-column:1/-1"><span>DIRECTIVES</span><div class="pperks" style="justify-content:flex-start;margin-top:6px">${perkChips()}</div></div>`:'')
     +(G.medals?`<div class="stat" style="grid-column:1/-1"><span>MEDALS EARNED</span><div class="pperks medal" style="justify-content:flex-start;margin-top:6px">${[...new Set(G.medals)].map(id=>{const m=MEDALS.find(q=>q.id===id),r=m.tiers?medalRank(m):0;return`<span>${ic(m.ic,14)}${m.name}${r>1?' '+'★'.repeat(r):''}</span>`}).join('')}</div></div>`:'');
-  snapAAR();homeView='base';$('home').scrollTop=0;showScreen('home');
+  snapAAR();S.runs=(S.runs|0)+1;if(G.dc){lastCause=null;lastAAR.dc=dcEnd()}lastAAR.map=S.map;dqSync();save();iaAfterRun();
+  homeView='base';$('home').scrollTop=0;showScreen('home');
 }
 
 function update(dt){
@@ -7877,15 +7885,15 @@ function offerPerks(ex){if(!running)return;let pool=PERKS.filter(p=>!p.ok||p.ok(
   const held=perkList();$('perkHold').classList.toggle('none',!held.length);$('perkHoldList').innerHTML=held.map(q=>`<span${q.risk?' class="risk"':''} title="${q.name}">${ic(q.ic,14)}<b>${rank(pk(q.id))}</b></span>`).join('');
   $('perkCards').innerHTML=pick.map((p,i)=>{const n=pk(p.id);return`<button class="pcard${p.risk?' risk':''}" data-i="${i}" style="--d:${i*70}ms"><span class="pk">${i+1}</span>
     <span class="pico">${ic(p.ic,26)}</span><span class="pnm">${p.name}</span><span class="prk">${n?'RANK '+rank(n)+' → '+rank(n+1):'NEW'}</span><span class="pd">${p.desc}</span></button>`}).join('');
-  const m=$('perkModal');m.classList.remove('ready');m.classList.add('on');perkReadyAt=Infinity;dirPop(false);setTimeout(()=>{if(G&&G.choosing===pick){m.classList.add('ready');perkReadyAt=performance.now()}},650);   // brief lockout so taps meant for the battlefield can't pick by accident
+  perkReUi();const m=$('perkModal');m.classList.remove('ready');m.classList.add('on');perkReadyAt=Infinity;dirPop(false);setTimeout(()=>{if(G&&G.choosing===pick){m.classList.add('ready');perkReadyAt=performance.now()}},650);   // brief lockout so taps meant for the battlefield can't pick by accident
   sfx('wave')}
 function pickPerk(i){const p=G&&G.choosing&&G.choosing[i];if(!p||performance.now()-perkOpenT<650)return;
-  G.pk[p.id]=(G.pk[p.id]||0)+1;if(p.go)p.go();G.choosing=null;dqAdd('dir',1);medalMax('dirs',Object.values(G.pk).reduce((a,b)=>a+b,0));
+  G.pk[p.id]=(G.pk[p.id]||0)+1;if(p.go)p.go();G.choosing=null;dqAdd('dir',1);$('perkRe').innerHTML='';medalMax('dirs',Object.values(G.pk).reduce((a,b)=>a+b,0));
   const pc=$('perkCards').querySelector('[data-i="'+i+'"]');if(pc)pc.classList.add('picked');$('perkModal').classList.remove('ready');setTimeout(()=>{if(!G||!G.choosing)$('perkModal').classList.remove('on')},160);syncDirBtn();
   if(G.breakT>0)G.breakT=G.breakMax=Math.max(G.breakT,1.6);   // a beat for the directive banner before the next wave's
   if(G.cp&&G.cp.i<G.cp.n&&++G.cp.i<G.cp.n)G.perkAt=G.time+0.3;
   feed('DIRECTIVE · '+p.name.toUpperCase()+(G.pk[p.id]>1?' '+rank(G.pk[p.id]):''),p.risk?'255,157,138':'255,207,90','star');sfx('buy');setTimeout(()=>tone(1320,0.14,'square',0,0.05),130)}
-function closePerks(){$('perkModal').classList.remove('on','ready')}
+function closePerks(){$('perkModal').classList.remove('on','ready');$('perkRe').innerHTML=''}
 $('perkCards').addEventListener('pointerdown',()=>{perkDownT=performance.now()});
 $('perkCards').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(!b)return;if(e.detail!==0&&perkDownT<perkReadyAt)return;pickPerk(+b.dataset.i)});   // a tap that began before the lockout ended never picks
 const perkList=()=>PERKS.filter(p=>pk(p.id));
@@ -10189,7 +10197,7 @@ function coachPlace(b){const r=b.getBoundingClientRect(),c=$('coach');c.classLis
     for(let moved=true,n=0;moved&&n<6;n++){moved=false;for(const q of bs)if(q.top<top+h+8&&q.bottom>top){top=q.top-h-12;moved=true}}}   // never sit on a neighbouring action button
   c.style.left=Math.round(left)+'px';c.style.top=Math.round(top)+'px';c.style.setProperty('--ax',Math.round(Math.max(14,Math.min(w-14,r.left+r.width/2-left)))+'px');c.classList.toggle('dn',below)}
 // ---- pause sheet contents (read-only run stats)
-function renderPause(){const t=G.time;$('pauseCtx').textContent='WAVE '+G.wave+' · '+Math.floor(t/60)+'m '+Math.floor(t%60)+'s';
+function renderPause(){dropUi();const t=G.time;$('pauseCtx').textContent='WAVE '+G.wave+' · '+Math.floor(t/60)+'m '+Math.floor(t%60)+'s';
   $('pauseStats').innerHTML=[['KILLS',hN(G.kills),''],['EARNED','$'+f1(G.earned),'cash'],['RP','+'+hN(G.rp||0),'rp'],['BEST',hN(S.best),'']].map(([k,v,c])=>`<div class="tile ${c}"><span>${k}</span><b>${v}</b></div>`).join('');
   const pc=perkChips();$('pausePerks').innerHTML=pc;$('pausePerksH').classList.toggle('none',!pc);
   $('pauseHelp').innerHTML=MOBILE?'Doctrine: <b style="color:var(--c-text,#e6ead9)">'+PRIO_NAME[prio()]+'</b> · Pinch or '+ic('zoom',13)+' to zoom':'<kbd>Esc</kbd> resume · <kbd>G</kbd> frag'+(L('air')>0?' · <kbd>Q</kbd> air':'')+' · <kbd>T</kbd> target'+' · <kbd>F</kbd> speed';   // only keys that do something this run
