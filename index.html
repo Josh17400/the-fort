@@ -1160,7 +1160,7 @@ function save(){try{localStorage.setItem('theFortSave',JSON.stringify(S))}catch(
 // while that theater is NOT the active one. Stars count waves HELD (cleared), like the wave medals: 1 = wave 50, 2 = wave 100
 // (theater cleared, next one opens), 3 = wave 100 in a run that deployed below wave 100 and never had its walls breached.
 // Theme fields, filled in by the theming phase: ground = terrain macro palette (terrainBake), lo = Medium/Low ground colours
-// [fill, decal A, decal B], seed = terrain layout seed, twist = theater mechanic id (mapTwist(); nothing consumes it yet), mix =
+// [fill, decal A, decal B], seed = terrain layout seed, twist = theater mechanic id (mapTwist(), see THEATER THEMES), mix =
 // enemy weight multipliers applied in pickType (mapMix), ev = battle-event weights for rollEvent (null = uniform pick),
 // hpMul/dmgMul/rewMul = multipliers on waveHp/waveDmg/waveRew. Desert Outpost is the original game: multipliers 1, original terrain.
 const CLEAR_W=100,STAR1_W=50;
@@ -1169,24 +1169,71 @@ const MAP_DIF=i=>({hpMul:Math.pow(1.9,i),dmgMul:Math.pow(1.6,i),rewMul:Math.pow(
 const MAPS=[
  {id:'desert',ord:1,name:'Desert Outpost',blurb:'A lone firebase at the edge of the sand sea. Every commander learns to hold here.',
   ground:{lush:[54,66,38],dry:[96,90,58],dirt:[98,82,60],mud:[56,47,36],scorch:[34,30,25]},lo:['#252b1d','#2a3120','#1f2518'],seed:20240,twist:null,mix:null,ev:null,hpMul:1,dmgMul:1,rewMul:1},
- // TODO-theme (theming phase): palettes, twists, mixes and event weights below are placeholders
+ // Theaters 2-8 (see THEATER THEMES for their art and twists). twist ids: ridges, landing, urban, whiteout, canopy, nightops, capital.
+ // mix weights only touch infantry/air picks; ev weight 0 = that event never rolls there (no sandstorms on the ice or in the jungle)
  {id:'mountain',ord:2,name:'Mountain Pass',blurb:'Hold the only road through the range while guns on the ridges find their range.',
-  ground:{lush:[62,68,50],dry:[104,100,86],dirt:[92,86,76],mud:[58,54,50],scorch:[34,32,30]},lo:['#262a22','#2d3128','#1f231b'],seed:31337,twist:'ridges',mix:{mortar:1.5,shooter:1.3},ev:{barrage:2,armor:1.5},...MAP_DIF(1)},
+  ground:{lush:[76,82,62],dry:[118,110,94],dirt:[104,96,84],mud:[66,62,58],scorch:[36,34,32]},lo:['#2c2e27','#36382f','#23251f'],seed:31337,
+  twist:'ridges',mix:{mortar:1.8,shooter:1.6,runner:0.8},ev:{barrage:2.5,armor:1.3,ambush:0.6,storm:0},
+  ...MAP_DIF(1)},
  {id:'coastal',ord:3,name:'Coastal Base',blurb:'A beachhead with the sea at your back. The landings never stop, and neither does the air.',
-  ground:{lush:[70,80,50],dry:[150,136,98],dirt:[138,120,88],mud:[72,66,52],scorch:[40,36,30]},lo:['#2b2c20','#333325','#24251b'],seed:40961,twist:'landing',mix:{runner:1.2},ev:{para:2,swarm:1.5},...MAP_DIF(2)},
+  ground:{lush:[92,96,60],dry:[168,152,112],dirt:[150,132,98],mud:[112,100,78],scorch:[46,42,36]},lo:['#4a4432','#554e3a','#3f3a2b'],seed:40961,
+  twist:'landing',mix:{runner:1.2,rpg:1.2},ev:{para:1.6,swarm:1.3,storm:0.6,convoy:0.7},
+  ...MAP_DIF(2)},
  {id:'city',ord:4,name:'City Ruins',blurb:'Street by street through a broken city. Contacts close in from cover, fast.',
-  ground:{lush:[68,70,62],dry:[98,96,90],dirt:[88,82,74],mud:[52,50,48],scorch:[30,29,28]},lo:['#27282a','#2e2f30','#1f2021'],seed:52711,twist:'urban',mix:{shooter:1.4,rpg:1.4},ev:{ambush:2.5,convoy:1.5},...MAP_DIF(3)},
+  ground:{lush:[72,74,64],dry:[96,95,90],dirt:[84,82,78],mud:[58,57,55],scorch:[30,29,28]},lo:['#2c2d2c','#353635','#232424'],seed:52711,
+  twist:'urban',mix:{shooter:1.5,rpg:1.5,runner:1.2},ev:{ambush:3,convoy:1.6,storm:0.4},
+  ...MAP_DIF(3)},
  {id:'arctic',ord:5,name:'Arctic Station',blurb:'A research post on the ice. Whiteouts, long nights and heavy armor on the tundra.',
-  ground:{lush:[118,126,122],dry:[168,174,176],dirt:[112,112,108],mud:[80,84,88],scorch:[50,52,56]},lo:['#343a3c','#3d4447','#2b3033'],seed:61519,twist:'whiteout',mix:{brute:1.4},ev:{storm:2,armor:1.5},...MAP_DIF(4)},
+  ground:{lush:[204,212,220],dry:[232,238,244],dirt:[168,176,186],mud:[128,138,150],scorch:[62,64,70]},lo:['#7a848c','#8a949b','#6c767e'],seed:61519,
+  twist:'whiteout',mix:{brute:1.5,runner:0.7},ev:{armor:2.2,barrage:1.2,storm:0},
+  ...MAP_DIF(4)},
  {id:'jungle',ord:6,name:'Jungle Airstrip',blurb:'A strip cut into the canopy. Ambushes out of the green and drones overhead.',
-  ground:{lush:[34,58,28],dry:[58,78,36],dirt:[84,66,44],mud:[52,42,30],scorch:[28,26,20]},lo:['#1a2414','#1f2b18','#151d10'],seed:72911,twist:'canopy',mix:{runner:1.3,bomber:1.3},ev:{ambush:2,swarm:2},...MAP_DIF(5)},
+  ground:{lush:[42,74,32],dry:[66,90,40],dirt:[104,78,50],mud:[70,54,36],scorch:[28,26,20]},lo:['#1d2c16','#24351b','#172412'],seed:72911,
+  twist:'canopy',mix:{drone:1.8,gunheli:1.6,runner:1.3,bomber:1.2},ev:{ambush:2.5,swarm:2.2,storm:0},
+  ...MAP_DIF(5)},
  {id:'island',ord:7,name:'Island Night-Ops',blurb:'Night raids on an island garrison. Fight by searchlight and flare.',
-  ground:{lush:[48,62,44],dry:[120,110,82],dirt:[104,92,70],mud:[50,46,38],scorch:[30,28,24]},lo:['#1e241b','#252c21','#181d15'],seed:83093,twist:'nightops',mix:{manpads:1.4},ev:{para:1.5,swarm:1.5},...MAP_DIF(6)},
+  ground:{lush:[46,62,42],dry:[70,66,62],dirt:[54,50,48],mud:[40,38,36],scorch:[22,20,20]},lo:['#1f221e','#272a25','#181a17'],seed:83093,
+  twist:'nightops',mix:{manpads:1.4,bomber:1.5,runner:1.2},ev:{para:2.6,convoy:2.4,storm:0},
+  ...MAP_DIF(6)},
  {id:'capital',ord:8,name:'Capital Defense',blurb:'The last line. Everything the enemy has left, thrown at the capital.',
-  ground:{lush:[60,68,48],dry:[110,106,92],dirt:[100,92,80],mud:[56,52,46],scorch:[32,30,28]},lo:['#25271f','#2c2e25','#1e2019'],seed:90217,twist:'capital',mix:{brute:1.3,rpg:1.3},ev:{armor:2,convoy:1.5,barrage:1.5},...MAP_DIF(7)}];
+  ground:{lush:[70,80,56],dry:[122,118,108],dirt:[102,98,90],mud:[62,60,56],scorch:[32,30,28]},lo:['#2e2f2b','#383934','#252622'],seed:90217,
+  twist:'capital',mix:{brute:1.3,rpg:1.3,mortar:1.2,manpads:1.3,drone:1.2,gunheli:1.5,strikejet:1.6,heavybomber:1.6},ev:{armor:2.6,convoy:1.5,barrage:1.5,swarm:1.4,storm:0.3},
+  ...MAP_DIF(7)}];
 const MAPB={};for(const m of MAPS)MAPB[m.id]=m;
 const MAP_KEYS=['lv','bank','best'];   // per-theater fields that live on S while their theater is active (plus S.set.startWave)
 const mapOf=id=>MAPB[id]||MAPS[0],mapCur=()=>mapOf(S&&S.map),mapTwist=()=>mapCur().twist;
+// Theater twists: the gameplay knobs behind each MAPS[].twist, read through tw() (cached per S.map). Desert Outpost gets TW0 itself,
+// whose values are identities (x1 multipliers, the original constants, no spawn arcs), so the original game runs bit for bit as before.
+//  sk     ground sight-line multiplier (rubble / canopy)            nk    night sight-cut multiplier (Island: 1.5 = 22.5% at night)
+//  arc    ground spawn arcs: pass = two pass bearings +-pw (Mountain); sea = sea bearing +-sw, infantry spawn on the land arc and
+//         amphibious carriers (apc/ifv) take the sea arc with chance amph (Coastal, Island); see twSpawnA
+//  lc     landing craft run in from the sea each wave (lcWave)      bliz  periodic blizzards (bzTick); slow = ground slow at full storm
+//  night  permanent night (dayTick)       veh   vehicle roster multipliers per type (vehWave)      boss2  second MBT on boss waves from this wave
+//  mechW/mechP, vbW/vbP   combat-mechanic and car-bomb onset wave / chance (spawn)
+const TW0={sk:1,nk:1,slow:0,night:false,veh:{},arc:null};
+const TWS={
+ ridges:{arc:{pass:[-Math.PI/2,Math.PI/2],pw:0.42}},
+ landing:{arc:{sea:0,sw:0.62,amph:0.45},lc:1},
+ urban:{sk:0.86,veh:{technical:1.8},mechW:12,mechP:0.55},
+ whiteout:{bliz:1,slow:0.3,veh:{apc:1.3,ifv:1.5,mbt:1.5,mlrs:1.2}},
+ canopy:{sk:0.82},
+ nightops:{night:true,nk:1.5,vbW:10,vbP:0.35,arc:{sea:Math.PI*0.75,sw:0.7}},
+ capital:{veh:{technical:1.3,apc:1.3,ifv:1.3,mlrs:1.3,mbt:1.3},boss2:20}};
+let _twK=null,_tw=TW0;
+const tw=()=>{const k=S&&S.map;if(k!==_twK){_twK=k;const t=TWS[mapOf(k).twist];_tw=t?Object.assign({},TW0,t):TW0}return _tw};
+// Ground spawn bearing: a (uniform in [0, 2pi)) is mapped onto the theater's allowed arcs without drawing any extra random numbers.
+let _amph=false;
+function twSpawnA(a,type,at){const g=tw().arc;if(!g||at)return a;const u=a/TAU;
+  if(g.pass){const f=(u*2)%1;return g.pass[u<.5?0:1]+(f*2-1)*g.pw}
+  const am=g.amph&&(type==='apc'||type==='ifv');if(am&&u<g.amph){_amph=true;return g.sea+(u/g.amph*2-1)*g.sw*0.85}
+  return g.sea+g.sw+(am?(u-g.amph)/(1-g.amph):u)*(TAU-2*g.sw)}
+const twLandA=a=>{const g=tw().arc;return g&&g.sea!=null?g.sea+g.sw+a/TAU*(TAU-2*g.sw):a};   // an ambush flank never opens out of the sea
+// Shoreline (Coastal, Island): the sea lies past a wobbling line across the sea bearing, pushed out beyond the fort, the wire and a
+// beach. seaIn(x,y) = how far a point is past the waterline (world units, > 0 = water). The terrain bake, the Medium/Low ground and the
+// landing craft all read it, so boats ground exactly where the surf is drawn.
+const shoreD=()=>Math.max(vision()*0.64,fortHalf()+wallThick()/2+wireOut()+90),shoreW=p=>(vnoise(p/260+31.7,4.2)-.5)*70+(vnoise(p/70+8.1,9.3)-.5)*16;
+function seaIn(x,y){const g=tw().arc;if(!g||g.sea==null)return -1e9;const c=Math.cos(g.sea),s=Math.sin(g.sea);return x*c+y*s-shoreD()-shoreW(y*c-x*s)}
+function landPt(p){const g=tw().arc;if(!g||g.sea==null)return p;for(let i=0;i<16&&seaIn(p.x,p.y)>-10;i++){p.x*=0.9;p.y*=0.9}return p}   // crates, mines and paratroopers land on the beach, not in the surf
 let MAPM={hp:1,dmg:1,rew:1};   // the active theater's multipliers, refreshed by mapSync()
 const mapSync=()=>{const m=mapCur();MAPM={hp:m.hpMul,dmg:m.dmgMul,rew:m.rewMul}};
 const mapRec=id=>(S.maps||(S.maps={}))[id]||(S.maps[id]={stars:0,cleared:false});
@@ -2297,7 +2344,7 @@ const wallsUp=()=>L('walls')>0&&G.wallHp>0;
 const blockHalf=()=>wallsUp()?wallHalfAt(L('walls'))+wallThickAt(L('walls'))/2:PLAT;
 // sight(): the live sight line. A sandstorm pulls it in by up to STORM_CUT and night by NIGHT_CUT (ground only: aircraft carry
 // nav lights and radar tracks them); radar still reaches the same distance past the storm line.
-const STORM_CUT=0.27,NIGHT_CUT=0.15,stormSight=()=>vision()*(1-STORM_CUT*(G&&G.fogK||0)),sight=()=>stormSight()*(1-NIGHT_CUT*(G&&G.nightK||0)*(pk('illum')?0:1));   // Illumination Rounds directive: no night penalty
+const STORM_CUT=0.27,NIGHT_CUT=0.15,stormSight=()=>vision()*(1-STORM_CUT*(G&&G.fogK||0)),sight=()=>{const T=tw();return stormSight()*(1-NIGHT_CUT*T.nk*(G&&G.nightK||0)*(pk('illum')?0:1))*T.sk};   // Illumination Rounds directive: no night penalty; T = theater twist (rubble, canopy, Island nights)
 // hyp(x,y) === Math.hypot(x,y), bit for bit: the algorithm V8 and JavaScriptCore both use (scale by the larger magnitude, sum the
 // squares, sqrt, scale back) written out so it inlines instead of calling a builtin that allocates. Hot sim scans use it, so every distance, tie-break and
 // position is exactly what Math.hypot produced. HB: a 1e-12 relative band; a squared distance outside it can't flip a comparison.
@@ -2336,7 +2383,7 @@ const mapMix=p=>{const m=mapCur().mix;if(m)for(const q of p)if(m[q[0]]!=null)q[1
 function pickType(w){const p=[['grunt',10]];if(w>=3)p.push(['runner',4+w*.3]);if(w>=4)p.push(['shooter',2+w*.2]);if(w>=6)p.push(['brute',1+w*.15]);if(w>=8)p.push(['bomber',2+w*.15]);
   if(w>=9)p.push(['rpg',Math.min(4,0.8+0.1*(w-9))]);if(w>=11)p.push(['mortar',Math.min(1.6,0.4+0.05*(w-11))]);if(w>=14&&flyingCraft())p.push(['manpads',Math.min(2.2,0.6+0.06*(w-14))]);skyWeights(w,p);evWeights(p);mapMix(p);
   let t=p.reduce((a,b)=>a+b[1],0)*Math.random();for(const[k,v]of p){if((t-=v)<=0)return k}return'grunt'}
-function spawn(type,at){if(SKY[type])return spawnSky(type);const d=ET[type],w=G.wave,a=Math.random()*Math.PI*2,hs=waveHp(w);
+function spawn(type,at){if(SKY[type])return spawnSky(type);const d=ET[type],w=G.wave,a=twSpawnA(Math.random()*Math.PI*2,type,at),hs=waveHp(w);
   G.enemies.push({type,x:at?at.x:Math.cos(a)*(vision()+80),y:at?at.y:Math.sin(a)*(vision()+80),hp:d.hp*hs*hazardHp()*(d.veh?Math.pow(VEH_THIN,Math.max(0,w-15)):1),max:d.hp*hs*hazardHp()*(d.veh?Math.pow(VEH_THIN,Math.max(0,w-15)):1),spd:d.spd*(1+Math.min(.7,w*.014))*(0.9+Math.random()*.2),
     dmg:d.dmg*waveDmg(w),rate:d.rate,atk:d.stand?1.6:0.5,rew:d.rew*waveRew(w),r:d.r,col:d.col,range:d.range||0,bomb:d.bomb,boss:d.boss,flash:0,wob:Math.random()*9,
     veh:d.veh,arm:d.arm||0,stand:d.stand,nodep:d.nodep,load:d.load?4+(w>=18)+(w>=26):0,odo:0,shots:0,
@@ -2344,10 +2391,10 @@ function spawn(type,at){if(SKY[type])return spawnSky(type);const d=ET[type],w=G.
     // every enemy keeps one hidden class and the hot per-tick loops over G.enemies stay monomorphic instead of seeing hundreds of shapes
     moving:undefined,dead:undefined,rev:undefined,dep:undefined,face:undefined,fwd:undefined,bu:undefined,fl:undefined,lunge:undefined,burn:undefined,
     stun:undefined,stunCD:undefined,slF:undefined,slT:undefined,mkB:undefined,mkT:undefined,_df:undefined,chute:undefined,chuteMax:undefined,landT:undefined,
-    _sx:undefined,_sy:undefined,_top:undefined,_cull:undefined,vtT:undefined,vt:undefined,vp:undefined,fsite:undefined,vbied:undefined,vsn:undefined,mech:undefined,mechT:undefined,mechOf:undefined,mhT:undefined,mhBy:undefined});
-  const e=G.enemies[G.enemies.length-1];if(d.boss)trackBoss(e);
-  if(type==='technical'&&!at&&w>=VBIED_W&&R()<(G.ev==='convoy'?0.5:VBIED_P))makeVbied(e);
-  if(d.veh&&!at&&w>=MECH_W&&R()<MECH_P){const a2=R()*TAU,m=spawn('grunt',{x:e.x+Math.cos(a2)*(e.r+10),y:e.y+Math.sin(a2)*(e.r+10)});m.mech=1;m.mechOf=e;m.rew*=2;G.waveTotal++}   // combat mechanic escorts some vehicles
+    _sx:undefined,_sy:undefined,_top:undefined,_cull:undefined,vtT:undefined,vt:undefined,vp:undefined,fsite:undefined,vbied:undefined,vsn:undefined,mech:undefined,mechT:undefined,mechOf:undefined,mhT:undefined,mhBy:undefined,amph:undefined,lc:undefined,lcT:undefined});
+  const e=G.enemies[G.enemies.length-1],T=tw();if(d.boss)trackBoss(e);if(_amph){_amph=false;e.amph=1}   // amphibious carrier: swims in from the sea arc
+  if(type==='technical'&&!at&&w>=(T.vbW||VBIED_W)&&R()<(G.ev==='convoy'?0.5:T.vbP||VBIED_P))makeVbied(e);
+  if(d.veh&&!at&&w>=(T.mechW||MECH_W)&&R()<(T.mechP||MECH_P)){const a2=R()*TAU,m=spawn('grunt',{x:e.x+Math.cos(a2)*(e.r+10),y:e.y+Math.sin(a2)*(e.r+10)});m.mech=1;m.mechOf=e;m.rew*=2;G.waveTotal++}   // combat mechanic escorts some vehicles
   return e}
 // VBIED: from VBIED_W some technicals come rigged as car bombs; shot before contact they still go up and hurt nearby hostiles
 const VBIED_W=16,VBIED_P=0.2,MECH_W=20,MECH_P=0.3,MECH_R=70,MECH_HEAL=0.02;
@@ -2363,7 +2410,7 @@ const VEH_WAVE={technical:6,apc:12,ifv:18,mlrs:22,mbt:25},VEH_COST={technical:2,
 function vehBase(t,w){const x=w-VEH_WAVE[t];if(x<0)return 0;
   return t==='technical'?Math.min(5,1+x/6):t==='apc'?Math.min(5,1+x/5):t==='ifv'?Math.min(5,1+x/6):t==='mlrs'?Math.min(2,0.5+x/12):Math.min(4,0.8+x/7)}
 function vehWave(){const w=G.wave,q=[],f=w%10===0?0.5:1;   // MBT (boss) waves bring half the usual escort so the tank stays the headline
-  for(const t in VEH_WAVE){let n=Math.floor(vehBase(t,w)*f+Math.random()*0.6);if(G.ev==='armor'&&(t==='apc'||t==='ifv')&&w>=VEH_WAVE[t])n++;for(let i=0;i<n;i++)q.push(t)}
+  for(const t in VEH_WAVE){let n=Math.floor(vehBase(t,w)*f*(tw().veh[t]||1)+Math.random()*0.6);if(G.ev==='armor'&&(t==='apc'||t==='ifv')&&w>=VEH_WAVE[t])n++;for(let i=0;i<n;i++)q.push(t)}
   for(let i=q.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[q[i],q[j]]=[q[j],q[i]]}
   const inf=G.spawnLeft,cost=q.reduce((s,t)=>s+VEH_COST[t]-1,0);
   G.spawnLeft=Math.max(q.length+Math.ceil(inf*0.5),inf-cost);G.waveTotal+=G.spawnLeft-inf;G.vq=q}
@@ -2375,11 +2422,11 @@ function nextType(){const q=G.vq;return q&&q.length&&Math.random()<q.length/G.sp
 function startWave(){
   G.breakT=0;G.wave++;if(G.startBest>0&&G.wave===G.startBest+1){feed('NEW RECORD · WAVE '+G.wave,'120,230,140','trophy');[660,880,1175].forEach((f,i)=>setTimeout(()=>tone(f,i<2?0.09:0.22,'square',0,0.045),i*120))}   // first wave past your best: a moment, not just an AAR tag
   G.wHit=0;for(const k in G.threat)G.threat[k]*=0.6;G.spawnLeft=waveCount(G.wave);G.waveTotal=G.spawnLeft+(G.wave%10===0?1:0);G.spawnInt=Math.max(0.05,waveWindow(G.wave)/G.spawnLeft);G.spawnT=0.5;
-  if(G.wave%10===0)spawn('boss');
+  if(G.wave%10===0){spawn('boss');const b2=tw().boss2;if(b2&&G.wave>=b2){const t=spawn('boss');t.hp=t.max*=0.6;G.waveTotal++}}   // Capital: a second tank rides with it
   layMines();
   if(G.wallMax){G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.25)}
   banner(G.wave%10===0?'WAVE '+G.wave+' — ENEMY ARMOR INCOMING':'WAVE '+G.wave,G.rsNew?'NEW KIT: '+G.rsNew:'',G.rsNew?'110,195,255':'');G.rsNew='';if(G.wave===G.startWave)rsBriefs();sfx('wave');
-  skyWaveStart();evStart();vehWave();armorCallout();
+  skyWaveStart();evStart();vehWave();lcWave(G.wave);armorCallout();
   G.uavT=!G.ev&&G.wave>=6&&G.wave%10!==0&&Math.random()<0.3?4+Math.random()*7:0;   // recon UAV pass partway into the wave
 }
 // Supply crates: mostly cash, but from wave 3 some are MUNITIONS (grenade ready + rapid fire) and, while the fort is hurt, ENGINEER kits
@@ -2388,7 +2435,7 @@ const CRATE={cash:{c:'255,210,70',ic:'coin',t:'$'},ammo:{c:'255,110,70',ic:'nade
 function crateKind(){if(G.wave<3)return'cash';const r=Math.random(),hurt=G.hp<G.maxHp*0.8||G.wallMax&&G.wallHp<G.wallMax*0.7;
   return r<0.2?'ammo':hurt&&r<0.5?'fix':G.wave>=10&&r>0.9?'intel':G.wave>=8&&r>0.82?'strike':'cash'}   // orange STRIKE (wave 8+): a free bombing run on the thickest cluster   // blue INTEL (wave 10+): every ground hostile, fog crews included, marked for INTEL_T
 function dropCrate(kind){const a=Math.random()*7,r=fortHalf()+wallThick()+wireOut()+18+Math.random()*Math.max(20,sight()-fortHalf()-wireOut()-40),k=kind||crateKind();
-  G.crates.push({x:Math.cos(a)*r,y:Math.sin(a)*r,life:12,k,val:k==='cash'?crateVal(G.wave,L('scav')):money(crateVal(G.wave,L('scav'))*0.4)});
+  G.crates.push(landPt({x:Math.cos(a)*r,y:Math.sin(a)*r,life:12,k,val:k==='cash'?crateVal(G.wave,L('scav')):money(crateVal(G.wave,L('scav'))*0.4)}));
   if(k!=='cash'&&!seen()['crate_'+k])spotted('crate_'+k)}   // first special crate ever: a SUPPLY DROP briefing card (seen once shown)
 function grabCrate(c){c.life=0;fxCrate(c);S.bank+=c.val;G.earned+=c.val;sfx('cash');if(c.k&&c.k!=='cash')medalBump('crates');
   if(c.k==='ammo'){G.nadeT=0;G.rapidT=RAPID_T;syncNadeBtn(true);float(c.x,c.y-10,'RAPID FIRE · GRENADE READY','#ff9d7a',13);setTimeout(()=>tone(990,0.1,'square',0,0.05),90)}
@@ -2399,7 +2446,7 @@ function grabCrate(c){c.life=0;fxCrate(c);S.bank+=c.val;G.earned+=c.val;sfx('cas
   else if(c.k==='intel'){let n=0;for(const e of G.enemies)if(!e.dead&&!e.air){e.rev=Math.max(e.rev||0,INTEL_T);n++}float(c.x,c.y-10,'INTEL · '+n+' HOSTILES MARKED','#9cc8ff',13);setTimeout(()=>tone(1320,0.12,'sine',0,0.05),90)}
   else float(c.x,c.y-10,'+$'+c.val,'#ffe066',13)}
 function layMines(){const ml=L('mines');if(!ml)return;const half=fortHalf()+wallThick()/2+wireOut(),n=Math.round(Math.min(30,2*ml)*rMult('mines','count'))*(1+pk('minelayer'));
-  for(let i=0;i<n&&G.mines.length<n*3;i++){const a=Math.random()*7,r=half+18+Math.random()*(Math.max(50,vision()*0.95-half-18));G.mines.push({x:Math.cos(a)*r,y:Math.sin(a)*r,blink:Math.random()*3})}}
+  for(let i=0;i<n&&G.mines.length<n*3;i++){const a=Math.random()*7,r=half+18+Math.random()*(Math.max(50,vision()*0.95-half-18));G.mines.push(landPt({x:Math.cos(a)*r,y:Math.sin(a)*r,blink:Math.random()*3}))}}
 // ---- boss contacts (enemy MBT, heavy gunship): klaxon + WARNING strip on spawn, then a top-of-screen HP bar until it dies
 const BOSS_NAME={boss:'ENEMY MBT',airboss:'HEAVY GUNSHIP'},BOSS_WARN=3,BOSS_FADE=1.6;
 function trackBoss(e){(G.bosses||(G.bosses=[])).push({e,t:0,ghost:1,gone:0});sfx('alarm')}
@@ -2651,7 +2698,7 @@ function endRun(retreat){if(G.over)return;   // several hits in one frame can ea
 
 function update(dt){
   sndCount=0;G.time+=dt;
-  if(G.bannerT>0)G.bannerT-=dt;if(G.hurtT>0)G.hurtT-=dt;G.shake*=0.88;updateBosses(dt);evUpdate(dt);dayTick(dt);
+  if(G.bannerT>0)G.bannerT-=dt;if(G.hurtT>0)G.hurtT-=dt;G.shake*=0.88;updateBosses(dt);evUpdate(dt);twTick(dt);dayTick(dt);
   if(G.stkT>0){G.stkT-=dt;G.stkPop=Math.max(0,G.stkPop-dt*4);if(G.stkT<=0)G.stk=0}
   // waves
   if(G.spawnLeft>0){G.spawnT-=dt;if(G.spawnT<=0){spawn(nextType());G.spawnLeft--;G.spawnT=G.spawnInt*(0.6+Math.random()*0.8)}}
@@ -2679,17 +2726,18 @@ function update(dt){
   updateUnits(dt,half);updateAir(dt,half);updateLogi(dt);sigUpdate(dt);repairTick(dt);
   // enemies
   intelTick();stragglers();
-  const wl=L('wire'),wireR=fortHalf()+wallThick()/2+wireOut(),slow=1-(Math.min(0.7,0.25+0.06*wl)),sgt=sight(),mR=G.mines.length?sgMineR():0;if(G.mines.length)mineIdx();   // sight line and mine reach are fixed for the whole loop
+  const wl=L('wire'),wireR=fortHalf()+wallThick()/2+wireOut(),slow=1-(Math.min(0.7,0.25+0.06*wl)),sgt=sight(),mR=G.mines.length?sgMineR():0,twS=tw().slow;if(G.mines.length)mineIdx();   // sight line and mine reach are fixed for the whole loop
   for(const e of G.enemies){
     if(e.dead)continue;e.flash-=dt;e.wob+=dt*8;if(e.rev>0)e.rev-=dt;
-    if(!seen()[e.type]&&visible(e))spotted(e.type);
+    {const sk=e.lc?'ev_lc':e.type;if(!seen()[sk]&&visible(e))spotted(sk)}
     if(e.mech){mechTick(e,dt);if(!seen().ev_mech&&visible(e))spotted('ev_mech')}
     if(e.vbied&&!e.vsn&&visible(e)){e.vsn=1;if(!seen().ev_vbied)spotted('ev_vbied');if(G.time-(G.vbHorn??-9)>1.2){G.vbHorn=G.time;tone(415,0.16,'square',0,0.05);setTimeout(()=>tone(330,0.22,'square',0,0.05),170)}}   // car bomb in sight: horn
     if(e.chute>0){e.chute-=dt;if(e.chute<=0)chuteLand(e);continue}   // paratroopers are helpless until they touch down
     if(sigStatus(e,dt))continue;   // burning / stunned (research signatures)
     const d=hyp(e.x,e.y)||1,cheb=Math.max(Math.abs(e.x),Math.abs(e.y)),stop=half+e.range+e.r;
-    let spd=e.slT>G.time?e.spd*(1-e.slF):e.spd;if(e.veh&&pk('barriers')&&cheb<wireR+40)spd*=0.8;   // Vehicle Barriers: jersey blocks outside the wire
+    let spd=e.slT>G.time?e.spd*(1-e.slF):e.spd;if(e.veh&&pk('barriers')&&cheb<wireR+40)spd*=0.8;if(twS&&G.fogK)spd*=1-twS*G.fogK;   // Vehicle Barriers: jersey blocks outside the wire; blizzards slow the ground advance
     if(wl&&cheb<wireR){if(e.veh)spd*=(1+slow)/2;else{spd*=slow;e.hp-=2*wl*dt;if(e.hp<=0){kill(e);continue}}}   // tracks and tyres crush the wire
+    if(e.lc&&lcTick(e,dt))continue;
     if(vehEnemy(e,dt)||depotEnemy(e,spd,dt)||siteEnemy(e,spd,dt))continue;
     if(e.stand)standOff(e,spd,dt);
     else if(cheb>half+e.r&&(cheb>stop||(e.range&&d>sgt-e.r*1.5))){e.x-=e.x/d*spd*dt;e.y-=e.y/d*spd*dt;e.moving=true;e.odo+=spd*dt}
@@ -6953,7 +7001,7 @@ const PERKS=[
  {id:'cas',ic:'air',name:'Close Air Support',desc:'Airstrike cooldown -35%, and a strike is ready now.',ok:()=>L('air')>0,go:()=>{G.airT=0}},
  {id:'minelayer',ic:'mines',name:'Minelayers',desc:'Twice the mines every wave, and a fresh field is laid now.',ok:()=>L('mines')>0,go:()=>layMines()},
  {id:'flak',ic:'aagun',name:'Flak Barrage',desc:'Air-defence fire +40% damage against aircraft.',ok:()=>L('aagun')>0&&G.wave>=SKY_WAVE.drone},
- {id:'illum',ic:'vision',name:'Illumination Rounds',desc:'Parachute flares over the field: night no longer shortens your sight line.',ok:()=>S.set.dayNight&&G.wave>=4&&!pk('illum')},
+ {id:'illum',ic:'vision',name:'Illumination Rounds',desc:'Parachute flares over the field: night no longer shortens your sight line.',ok:()=>dnWant()&&G.wave>=4&&!pk('illum')},
  {id:'sappers',ic:'repair',name:'Sapper Teams',desc:'Wall repairs restart twice as fast after a hit and run 50% faster.',ok:()=>L('repair')>0&&G.wave>=8},
  {id:'barriers',ic:'walls',name:'Vehicle Barriers',desc:'Car bombs deal half damage to the walls, and vehicles slow 20% near the wire.',ok:()=>G.wave>=VBIED_W},
  {id:'antiarmor',ic:'tank',name:'Anti-Armor Teams',desc:'Every gun, shell, missile and bomb deals +35% damage to vehicles and tanks.',ok:()=>G.wave>=6},
@@ -7070,7 +7118,7 @@ function evStart(){const w=G.wave,k=rollEvent(w);G.ev=k;if(!k)return;const E=EVE
   else if(k==='para')airborne(w);
   else if(k==='swarm'){for(let i=0;i<2;i++){spawnSky('drone',Math.random()*TAU);G.waveTotal++}}
   else if(k==='resupply'){for(const c of['ammo','fix',G.wave>=8?'strike':'cash'])dropCrate(c)}
-  else if(k==='ambush'){const n=Math.min(24,Math.round(G.spawnLeft*0.3)),a=Math.random()*TAU,r=Math.max(blockHalf()+90,sight()*0.85);G.spawnLeft=Math.max(0,G.spawnLeft-n);
+  else if(k==='ambush'){const n=Math.min(24,Math.round(G.spawnLeft*0.3)),a=twLandA(Math.random()*TAU),r=Math.max(blockHalf()+90,sight()*0.85);G.spawnLeft=Math.max(0,G.spawnLeft-n);
     for(let i=0;i<n;i++){const b=a+(Math.random()-.5)*0.7,d=r+Math.random()*30;spawn(i%3===2?'shooter':i%2?'runner':'grunt',{x:Math.cos(b)*d,y:Math.sin(b)*d})}
     const dir=['EAST','SOUTH-EAST','SOUTH','SOUTH-WEST','WEST','NORTH-WEST','NORTH','NORTH-EAST'][Math.round(((a%TAU)+TAU)%TAU/(TAU/8))%8];setTimeout(()=>{if(running&&S.set.callouts!==false)feed('CONTACT '+dir,'255,170,90','threat')},900)}
   else if(k==='convoy'){for(let i=0;i<3;i++){makeVbied(spawn('technical'));G.waveTotal++}}
@@ -7101,10 +7149,46 @@ function airborne(w){const n=Math.min(26,Math.max(6,Math.round(G.spawnLeft*0.45)
     for(let i=0;i<m;i++){const f=(i+0.5)/m,s=f<0.5?-s1+(s1-s0)*2*f:s0+(s1-s0)*(2*f-1),j=(Math.random()-.5)*20;
       G.drops.push({at:G.time+t0+(s+S0)/TRANS_V,x:c*s-sn*(o+j),y:sn*s+c*(o+j),type:paraType(w)})}}}
 const transPos=T=>{const s=-T.S0+TRANS_V*T.t,c=Math.cos(T.a),n=Math.sin(T.a);return[c*s-n*T.o,n*s+c*T.o]};
+// ================= THEATER TWISTS =================
+// One mechanic per theater (MAPS[].twist, knobs in TWS, art in THEATER THEMES). Each is explained once by a FIELD REPORT card
+// (ev_th_<id>) shortly after the first deployment to that theater. Desert Outpost has no twist: twTick returns at once.
+Object.assign(INTEL,{
+ ev_th_mountain:['Mountain Pass',0,'Ridges wall in the valley: every ground attack comes down the north or south pass. Mortar crews and marksmen work from the heights, so hunt them with TARGET: THREATS.'],
+ ev_th_coastal:['Coastal Base',0,'The sea guards your east flank, but landing craft run in from it to beach rifle squads, and amphibious carriers swim ashore. Sink a boat before it grounds and its squad dies with it.'],
+ ev_th_city:['City Ruins',0,'Rubble and burnt-out blocks cut your sight line by 14%. Expect ambushes, more technicals and combat mechanics patching them up: kill the mechanics first.'],
+ ev_th_arctic:['Arctic Station',0,'Blizzards roll in every minute or so: your sight line drops by a quarter while they slow every enemy on the ground. Armored columns run heavier here.'],
+ ev_th_jungle:['Jungle Airstrip',0,'The canopy cuts your sight line by 18% and hides ambushes. Drones and attack helicopters come in heavy: AA guns, SAMs and TARGET: THREATS earn their keep.'],
+ ev_th_island:['Island Night-Ops',0,'It is always night here, and the dark cuts your sight line by 22%. Paratroopers and car bombs come often. The Illumination Rounds directive cancels the night penalty.'],
+ ev_th_capital:['Capital Defense',0,'Everything the enemy has left: more armored columns, a second tank with every tenth wave from wave 20, and heavy air raids. Bring anti-armor and AA.'],
+ ev_lc:['Landing Craft',3,'A boat packed with riflemen running for the beach. Once it grounds the squad storms ashore and the boat backs off to sea. Sink it first: every trooper aboard goes down with it.']});
+function twTick(dt){const T=tw();if(T===TW0)return;
+  if(!G.twCard&&G.time>1.5){G.twCard=1;const k='ev_th_'+mapCur().id;if(!seen()[k])spotted(k)}
+  if(T.bliz)bzTick(dt)}
+// Blizzards (Arctic): from wave 3, while a wave is being fought, a whiteout every 45-70s for 16-22s. It drives the same veil as a
+// sandstorm (G.fogK: sight line -STORM_CUT, drawn white here) and slows the ground advance by up to tw().slow.
+function bzTick(dt){if(G.wave<3)return;
+  if(G.bzOn){G.bzT-=dt;if(G.bzT<=0){G.bzOn=false;G.bzT=45+Math.random()*25;feed('BLIZZARD PASSING','200,225,255','storm')}return}
+  if(G.bzT==null)G.bzT=18+Math.random()*14;
+  if(G.spawnLeft>0||G.enemies.length){G.bzT-=dt;if(G.bzT<=0){G.bzOn=true;G.bzT=16+Math.random()*6;feed('BLIZZARD · SIGHT CUT · GROUND SLOWED','200,225,255','storm');evSting('storm')}}}
+// Landing craft (Coastal): from wave LC_W each wave sends 1-4 boats in from the sea arc, staggered out in the fog so they arrive
+// one after another. Each carries `load` troopers taken out of the wave's own count. At the waterline it grounds, drops the ramp
+// (apcUnload), waits a moment and backs off to sea, where it slips away (despawns, no bounty). Killed while loaded it pays the
+// carrier bonus and the squad never lands.
+const LC_W=2,LC_MAX=4;
+function lcWave(w){if(!tw().lc||w<LC_W)return;const g=tw().arc,n=Math.min(LC_MAX,1+Math.floor((w-LC_W)/8)),load=4+(w>=15)+(w>=30);let k=0;
+  for(let i=0;i<n;i++){if(G.spawnLeft<load+2)break;G.spawnLeft-=load;G.waveTotal+=1-load;k++;
+    const a=g.sea+(Math.random()*2-1)*g.sw*0.8,R0=vision()+90+i*150,e=spawn('apc',{x:Math.cos(a)*R0,y:Math.sin(a)*R0});
+    e.lc=1;e.load=load;e.spd=ET.apc.spd*1.7*(0.9+Math.random()*0.2);e.hp*=0.7;e.max*=0.7;e.arm=0.3;e.range=0;e.rew*=0.8}
+  if(k&&S.set.callouts!==false)setTimeout(()=>{if(running&&!G.over)feed('LANDING CRAFT INBOUND · '+k+' FROM THE SEA','120,200,230','threat')},900)}
+function lcTick(e,dt){const d=hyp(e.x,e.y)||1,ux=e.x/d,uy=e.y/d;
+  if(e.lc===1){const si=seaIn(e.x,e.y);if(si>3){const st=Math.min(si-2,e.spd*dt);e.x-=ux*st;e.y-=uy*st;e.moving=true;e.odo+=st;return true}
+    e.lc=2;e.moving=false;e.lcT=2.2;apcUnload(e);return true}   // grounded: ramp down, the squad wades ashore
+  if(e.lc===2){e.lcT-=dt;if(e.lcT<=0)e.lc=3;return true}
+  const st=e.spd*0.6*dt;e.x+=ux*st;e.y+=uy*st;e.moving=true;e.odo-=st;if(d>vision()+70)e.dead=true;return true}
 function chuteLand(e){e.landT=LAND_T;puff(e.x,e.y,3,e.r*0.8,0.9,'128,112,84',10,0.35)}
 function evUpdate(dt){if(G.uavT>0){G.uavT-=dt;if(G.uavT<=0)launchUav()}
-  const fk=G.ev==='storm'?1:0;if(G.fogK!==fk)G.fogK=fk?Math.min(1,G.fogK+dt/3):Math.max(0,G.fogK-dt/2.5);
-  if(G.drops.length){for(const d of G.drops)if(G.time>=d.at){d.done=true;const e=spawn(d.type,d);e.chute=e.chuteMax=CHUTE_T;e.moving=false}keepUndone(G.drops)}
+  const fk=G.ev==='storm'||G.bzOn?1:0;if(G.fogK!==fk)G.fogK=fk?Math.min(1,G.fogK+dt/3):Math.max(0,G.fogK-dt/2.5);
+  if(G.drops.length){for(const d of G.drops)if(G.time>=d.at){d.done=true;const e=spawn(d.type,landPt(d));e.chute=e.chuteMax=CHUTE_T;e.moving=false}keepUndone(G.drops)}
   if(G.transports.length){for(const T of G.transports){T.t+=dt;if(T.t>=0&&!T.snd){T.snd=true;sfx('plane')}if(-T.S0+TRANS_V*T.t>T.S0)T.done=true}keepUndone(G.transports)}
   for(const e of G.enemies)if(e.landT>0)e.landT-=dt}
 // canopy seen from above: eight alternating gores, a dark hem and the open apex vent
@@ -8124,14 +8208,15 @@ const TOD=[[0,[70,82,132]],[4.3,[74,86,136]],[5.2,[124,104,146]],[6.0,[226,168,1
 const nightOf=h=>1-sstep(4.4,6.6,h)+sstep(18.2,20.2,h);
 const DN={on:false,h:12,nk:0,dk:0,lamp:0,ambCss:'#fff',farCss:'#fff',near:0,mist:0,haze:0,hazeCss:'',beams:[]};
 const SH={on:false,c:1,s:0,len:1,st:1,air:1,a:1};   // sun vector for hqShadow(): rotation (c,s), length, stretch, altitude scale, alpha
-const hourOf=()=>G&&S.set.dayNight&&G.todT!=null?((G.todT%24)+24)%24:11.5;
+const dnWant=()=>S.set.dayNight||tw().night,hourOf=()=>G&&dnWant()&&G.todT!=null?((G.todT%24)+24)%24:11.5;
 // Gameplay hook (update): advance the clock, publish G.nightK for sight(), and let the tower searchlights reveal what they sweep.
-function dayTick(dt){if(!S.set.dayNight){G.nightK=0;return}
+function dayTick(dt){if(!dnWant()){G.nightK=0;return}
   if(G.todT==null){G.todH0=5.8+Math.random()*9.4;G.todT=G.todH0}
   const left=G.spawnLeft+G.enemies.length+G.sky.length+G.drops.length+(G.uavT>0?1:0),cl=v=>Math.max(0,Math.min(1,v)),
     pr=left>0?0.8*cl(1-left/(G.waveTotal||1)):0.8+0.2*cl(1-G.breakT/(G.breakMax||3)),
     d=todAdvance(G.todH0,G.wave-(G.startWave||1)+pr)-G.todT;
   if(d>0&&Number.isFinite(d))G.todT+=Math.min(d,(0.015+d*0.7)*dt);
+  if(tw().night)G.todT=24+2.4*Math.sin((G.wave-(G.startWave||1)+pr)*0.45-0.6);   // Island: the moon rocks between 21:36 and 02:24, dawn never comes
   G.nightK=sstep(.3,.9,nightOf(hourOf()));if(G.nightK>0.6&&!seen().ev_night)spotted('ev_night');
   if(G.nightK>0.3&&(G._slT=(G._slT||0)-dt)<=0){G._slT=0.1;const bm=dnBeams(DN.beams);
     for(const e of G.enemies){if(e.dead)continue;for(const[ox,oy,a,len]of bm){const dx=e.x-ox,dy=e.y-oy,lim=len*1.04;if(dx>lim||dx<-lim||dy>lim||dy<-lim)continue;const dd=hyp(dx,dy);if(dd>lim||dd<1)continue;
@@ -8144,7 +8229,7 @@ function todAmb(h,o){let i=1;while(i<TOD.length-1&&h>TOD[i][0])i++;const A=TOD[i
   for(let c=0;c<3;c++)o[c]=A[1][c]+(B[1][c]-A[1][c])*t;return o}
 // Per-frame lighting state: a handful of lerps and two colour strings.
 const _amb=[255,255,255];
-function dayFrame(){const on=!!(G&&S.set.dayNight&&G.todT!=null);DN.on=on;
+function dayFrame(){const on=!!(G&&dnWant()&&G.todT!=null);DN.on=on;
   if(!on){DN.nk=DN.dk=DN.lamp=DN.mist=DN.haze=0;SH.on=false;return}
   const h=hourOf(),nk=nightOf(h),a=todAmb(h,_amb);DN.h=h;DN.nk=nk;DN.lamp=sstep(.25,.7,nk);
   DN.dk=1-(a[0]*.3+a[1]*.55+a[2]*.15)/255;
