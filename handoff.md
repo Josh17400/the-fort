@@ -242,5 +242,41 @@ Refuses while `running`, for unknown/locked ids and for the active id. Otherwise
 
 ### Hooks for the next phases
 - **Phase 2 (theming):** fill each theater's `ground/lo/seed/twist/mix/ev` (all read live, keyed by `S.map`). Implement twists by switching on `mapTwist()` (spawn, sight, events, HUD). Tuft/prop colours in `terrainBake`/`tuftSprites` are still global; key any new baked sprite on `mapCur().id`. Use `mapHooks.push(id=>...)` for anything that must be re-derived on a switch.
-- **Phase 3 (R&D by theater, timers, gems):** change `rsBest()` (one line) to per-theater gates; new account-wide state (timers, gems) goes on `S` directly, new per-theater state goes in `MAP_KEYS` (auto-swapped) or `S.maps[id]` meta.
-- **Phase 4 (economy/dailies/ads):** retune `MAP_DIF`, `rpWave`/`rpClear` (record bonus is per theater now, so a new theater pays record RP again), `medalCash`. Star/clear events are centralised in `campHold` if missions or rewards need to hang off them.
+- **Phase 3 (R&D by theater, timers, gems):** done, see the next section.
+- **Phase 4 (economy/dailies/ads):** hang daily missions, ad rewards and IAP on `gemAdd`/`gemSpend` (never sell speed). Star/clear events are centralised in `campHold` if missions or rewards need to hang off them. The shop can grow out of the gems sheet (`gemHtml`/`openGems`).
+
+## R&D economy, timers and gems (phase 3, branch `rd-economy`)
+The campaign loop is play → die → earn a little RP → start research → repeat, over many runs per theater. Cash/Armory/best/checkpoints are per theater; R&D, RP, gems and medals are account-wide.
+
+### R&D gated by theater (`RS_GATE`, `rsProg()`)
+- Campaign progress `rsProg()` = (theater order − 1) × 100 + that theater's best wave (a cleared theater counts 100; only open theaters count). A tier opens when `rsProg() >= t.gate`.
+- 107 researchable tiers (128 with the 21 starting kits): Desert Outpost 16 (Rifleman + Rifle Squad at wave 1 as the tutorial), theaters 2-8 13 each, spread over waves 3…94 in the order the old wave gates rolled them out (`.qa/gates.js` regenerates the table). Vanguard Commander is last, at Capital Defense wave 94.
+- `t.g` (old wave gate) now only picks the tier's era tint. `t.gate`, `t.cost` (RP, `RS_RP` anchors per theater, geometric in between) and `t.ms` (lab time, `RS_MIN` anchors) are filled in at load. `.qa/tiers.js` prints the per-theater table.
+- Lock text `gateTxt(g)` ("Reach wave 58 on Mountain Pass"); a tier in a theater not yet open reads "Opens in <theater>".
+
+### Lab (research timers)
+- `S.lab = {t, w, slots, q:[{id,k,rf?,t0,end}], news:[…]}`. Starting a tier (`labStart`, UI `buyResearch`) pays its RP and fills a slot; it lands (`labTick`) when `end` passes, even with the app closed. Refits use the lab too (`refitMs`).
+- Clock safety: `labNow()` advances the lab clock by positive `Date.now()` deltas only: setting the device clock back never stretches a timer, forward-then-back cannot un-finish a job. The lab clock starts at `Date.now()`, so ends are absolute timestamps unless the clock was ever set back.
+- 1 slot; `labBuySlot()` opens the 2nd for `LAB_SLOT_GEMS` (900 gems), teased in the lab strip once Desert Outpost is cleared.
+- UI: lab strip at the top of R&D (job, progress bar, countdown; idle slot; 2nd-slot teaser), a RESEARCHING tier card with bar + FINISH NOW (gem price, two-tap confirm; opens the gems sheet when short), the running job on the Base R&D panel, R&D nav dot when research landed (`S.lab.news`, cleared by opening R&D) or the lab is free with an affordable tier. `labUi()` refreshes countdowns every second without re-rendering; `labLand()` toasts landed jobs. A job that lands mid-run deploys next run (the run snapshot is unchanged).
+
+### Gems (premium currency core for phase 4)
+- `S.gems`, `gemAdd(n, src)`, `gemSpend(n, why) -> bool` (false and nothing spent when short), lifetime ledger `S.gemT = {in:{src:n}, out:{why:n}}`. Phase 4 credits with its own `src` ('daily', 'ad', 'iap:<sku>') and spends with its own `why`.
+- Free sources (`GEM_FREE`): first clear of theater k = 20 + 10k (30…100), stars +5/+5/+10, medals +3 (first award) / +2 (each rank). Old saves get a one-time credit for what they already earned (`gemInit`, `S.gemv`).
+- Uses: finish research now, `labSkipCost(ms) = ceil(10 × hours^0.8)` (10 min 3, 1 h 10, 8 h 53, 18 h 101); 2nd lab slot 900. Battle speed is never sold.
+- Header gem chip (violet, after RP) opens the gems sheet (`openGems`). RESET keeps gems (they may be bought).
+
+### Armory caps + theater prices
+- The 28 formerly endless lines have `max:0` in `U`; `capSync()` (run by `mapSync`) writes `CAPS[id] = [cap in theater 1, + per later theater]` into `u.max`, so every `u.max` reader works unchanged.
+- `costOf` multiplies by `MAPM.cost` (= the theater's `rewMul`): every theater's cash loop has the same shape, bigger bounties and bigger bills.
+
+### Theater difficulty ramp (`MAP_DIFT`, `mapMul`)
+- Rows `[hpMul, dmgMul, rewMul, hp0, dmg0]`. Enemy HP/damage use hp0/dmg0 up to wave `MAP_W0` (5) and the full value from `MAP_W1` (95), geometric in between: a fresh fort is mostly the commander's research, a finished one is research-boosted units at higher caps. `rewMul` is flat. `fortPress` uses the base curves (`hpBase/dmgBase`). Desert Outpost = exactly 1 (bit parity kept).
+
+### Battle speed, checkpoints
+- Command Tempo removed (each theater refunded what it paid, `tempoRefund`). `speedOpts()`: 1×/2× from the start, 3× once Desert Outpost is cleared (listed in its clear debrief); slow-motion assist 0.75× only (0.5× saves become 0.75×).
+- Checkpoints 25/50/75 per theater (`CP_W`), open once that theater has held the wave; `startWaveOk()` snaps an old pick to the deepest open checkpoint. `cpBackPay()` pays 50% of the skipped waves' RP and cash (clear bonus × 14, measured on bot runs) after 5 held waves, with a battle feed line; the Base preview shows the amounts.
+
+### Progression model and tests (`.qa/` in the worktree, gitignored)
+- `cbot.py`/`cbot.js`: campaign bot on a simulated clock (Date.now mocked). 4 sessions a day of 15 min (runs overflow the session, ~1.2 h/day of play), 2× in Desert Outpost then 3×, greedy cheapest Armory buys, research cheapest-first whenever a slot is free, deploys at the highest checkpoint, moves out on each clear. `--gems skip` spends gems on the longest job, `--gemday N` adds N gems a day. `cbrep.py <log>` = per-theater table. `probe.py` = capped-fort difficulty probes; `variants.py` = per-theater multiplier variants from a real arrival save.
+- Tests: `t_econ.js` (lab across close/reopen with mocked Date.now, clock rollback, gems ledger, gates, caps, prices, ramp, checkpoints/back-pay, speed, refund, reset, R&D UI) and `t_core.js` (campaign core, updated) via `python h.py dom <name> <file>`.
