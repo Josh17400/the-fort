@@ -240,6 +240,30 @@ Refuses while `running`, for unknown/locked ids and for the active id. Otherwise
 - R&D wave gates read `rsBest()` (currently `careerBest()`).
 
 ### Hooks for the next phases
-- **Phase 2 (theming):** fill each theater's `ground/lo/seed/twist/mix/ev` (all read live, keyed by `S.map`). Implement twists by switching on `mapTwist()` (spawn, sight, events, HUD). Tuft/prop colours in `terrainBake`/`tuftSprites` are still global; key any new baked sprite on `mapCur().id`. Use `mapHooks.push(id=>...)` for anything that must be re-derived on a switch.
+- **Phase 2 (theming):** DONE on branch `maps-themes`, see "Theater themes and twists" below.
 - **Phase 3 (R&D by theater, timers, gems):** change `rsBest()` (one line) to per-theater gates; new account-wide state (timers, gems) goes on `S` directly, new per-theater state goes in `MAP_KEYS` (auto-swapped) or `S.maps[id]` meta.
 - **Phase 4 (economy/dailies/ads):** retune `MAP_DIF`, `rpWave`/`rpClear` (record bonus is per theater now, so a new theater pays record RP again), `medalCash`. Star/clear events are centralised in `campHold` if missions or rewards need to hang off them.
+
+## Theater themes and twists (phase 2, branch `maps-themes`)
+Desert Outpost is untouched: it has no `TLOOK` entry and gets `TW0` (identity knobs), so its terrain pixels, spawns and a seeded 700 s sim match campaign-core bit for bit (`.qa/t_ter.js`, `.qa/t_par.js`). Difficulty (`hpMul/dmgMul/rewMul`, `MAP_DIF`) is NOT touched here (phase 3 owns it).
+
+### Gameplay: `TWS` + `tw()` (CAMPAIGN section, right after `mapTwist`)
+`tw()` returns the active theater's knobs (cached per `S.map`; Desert = `TW0`). Knobs: `sk` ground sight x (City 0.86, Jungle 0.82, applied in `sight()`), `nk` night-cut x (Island 1.5 = 22.5%), `arc` ground spawn arcs (`twSpawnA` maps the existing uniform angle onto the arcs, no extra RNG draws), `lc` landing craft, `bliz` + `slow` blizzards, `night` permanent night, `veh` vehicle roster multipliers (`vehWave`), `mechW/mechP`, `vbW/vbP` (spawn), `boss2` second MBT on boss waves.
+- **Mountain Pass (`ridges`)**: ground spawns only down the N and S passes (+-0.42 rad). Mix mortar 1.8 / shooter 1.6; events barrage 2.5, no sandstorms.
+- **Coastal Base (`landing`)**: sea to the east (`seaIn(x,y)` = distance past the waterline; `shoreD()` keeps it out past fort + wire + a beach). Infantry spawn on the land arc; APC/IFV take the sea arc 45% of the time (`e.amph`, wake while swimming). `lcWave()` sends 1-4 landing craft per wave from wave 2 (`e.lc` 1 inbound / 2 grounded / 3 backing off; `lcTick`), each carrying 4-6 of the wave's troopers; sunk before grounding = the squad never lands (carrier bonus). Boats back off and despawn (no bounty). `landPt()` keeps crates, mines and paratroopers out of the surf; ambush flanks never open from the sea (`twLandA`).
+- **City Ruins (`urban`)**: sight x0.86, technicals x1.8, combat mechanics from wave 12 at 55%, ambush weight 3.
+- **Arctic Station (`whiteout`)**: `bzTick` blizzards from wave 3 while a wave is live: every 45-70 s for 16-22 s, driving `G.fogK` (sight -27%, white veil via `TLOOK.arctic.storm`) and slowing enemy ground movement by up to 30% (`twS` in the enemy loop). APC/IFV/MBT rosters x1.3-1.5. No sandstorm event.
+- **Jungle Airstrip (`canopy`)**: sight x0.82, drones x1.8 / gunships x1.6, ambush 2.5, swarm 2.2.
+- **Island Night-Ops (`nightops`)**: `dnWant()` forces day/night on; `dayTick` rocks the clock between 21:36 and 02:24; moonlight lifted ~20% (`dayFrame`); night cut 22.5%. Paradrops 2.6, convoys 2.4, car bombs from wave 10 at 35%. `offerPerks` swaps Illumination Rounds into an offer 50% of the time. Sea to the SW (same shoreline code).
+- **Capital Defense (`capital`)**: rosters x1.3, armored column 2.6, heavy air mix, a second 60%-HP MBT on boss waves from wave 20.
+- FIELD REPORT cards `ev_th_<id>` (and `ev_lc`) queue 1.5 s into the first run on a theater (`twTick`); previews are a mini-map of the theater (`thPreview`) / the boat (`lcPreview`).
+
+### Look: `TLOOK` (THEATER THEMES section, before `bakeWire`)
+Per theater: `geo(C)` layout (ridges, streets/blocks, runway, canopy mask, smoke sites) shared by the bake, Medium/Low and the plumes via `tGeo(id,V,keep)`; `macro(C)` per-pixel hook in `terrainBake`'s colour field (hill-shaded ridge relief with snow, sea/beach, streets, drifts/ice, canopy shade, lava, plaza); `bake(C)` props (`tProps` gives `spot/cnt/take` with a spatial hash); `tufts` palette (`tuftSprites(TC)`); `grade` colours; `lo(C)` Medium/Low paths (`drawLoFeatures`); `storm`, `precip` (`drawPrecip`: snow/ash), `plumes` (`drawPlumes`: smoke columns over burning blocks), `surf` (`drawSurf`), `cloud` tint and `mist` (`drawAtmos`). New props: pine, palm, broadleaf crown, radar dome, hut, flat roof, ruin, rubble, car, jersey barrier, bunker, monuments, drift, pier, boat, plane wreck. `propRock` takes a palette and returns its outline.
+
+### UI
+- Battle HUD: `hudTheater()` prints the theater name (map glyph, small dim caps) under the status panel in every layout; on phones it yields to the pills row.
+- Emblems: `TH_SKY` + `TH_ART` (48x48 silhouettes), number as a corner tab; open cards carry the scene as a watermark (`thArt`) and a one-line twist tag (`TW_TAG`); locked tiles stay neutral.
+
+### QA (`.qa/`, gitignored)
+`t_ter.js` (terrain hash), `t_par.js` (PRE=pre_seed.js, seeded parity), `t_core.js` (campaign core; its ev/mix expectations were updated to the phase-2 data), `t_tw.js` (twists, PRE=pre_seed.js), `t_view.js` (full baked terrain, `#<id>` / `#<id>-lo`), `t_bat.js` (battle shots `#id~gfx~hour|off~secs~wave~bz`), `t_list.js`, `t_card.js`, `smoke.py` (+ `MAP=<id>`), `smoke_maps.py`, `perf_maps.py`.

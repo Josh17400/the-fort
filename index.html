@@ -7896,12 +7896,14 @@ function propTruck(x,ppu,cx,cy,a){
 //  lo(C)     Medium/Low ground features: [[style, Path2D, lineWidth (stroke) or 0 (fill)]...] over the flat lo[] ground
 //  storm     veil colours for the storm pass [haze, wall, streaks]    precip  falling snow / ash    plumes  smoke columns (sites())
 //  surf      animated foam colour (sea theaters)                      cloud   cloud-shadow tint (High)      mist  jungle ground mist
-const TAU_=Math.PI*2,STORM_DUST=['184,148,92','166,132,84','160,126,80','238,214,166'];
+const STORM_DUST=['184,148,92','166,132,84','160,126,80','238,214,166'];
 const tLook=()=>TLOOK[mapCur().id]||null;
 // shared layout context for one theater at one vision radius (bake, Medium/Low features and the smoke sites all agree on it)
 function tGeo(id,V,keep){const T=TLOOK[id];if(!T)return null;const k=id+'|'+V+'|'+keep;let C=_tGeo[k];if(C)return C;
   C={id,V,keep,R:V*1.18+30,seed:mapOf(id).seed};if(T.geo)T.geo(C);for(const q in _tGeo)delete _tGeo[q];return _tGeo[k]=C}
 const _tGeo={};
+let _tgc=null;
+const tGeoCur=()=>{const id=mapCur().id,V=vision(),k=tKeep();if(!_tgc||_tgc.id!==id||_tgc.V!==V||_tgc.keep!==k)_tgc=tGeo(id,V,k);return _tgc};
 const tKeep=()=>{const wl=L('walls'),wi=L('wire'),fh=wl?wallHalfAt(wl)+wallThickAt(wl)/2:PLAT,wr=wi?fortHalf()+wallThick()/2+wireOut():0;return Math.max(fh+12,wr+10)};
 // ---- small bake helpers ----
 function tPath(pts,close){const p=new Path2D();for(let i=0;i<pts.length;i++)i?p.lineTo(pts[i][0],pts[i][1]):p.moveTo(pts[i][0],pts[i][1]);if(close)p.closePath();return p}
@@ -7910,14 +7912,14 @@ function tRoad(x,p,w,c){x.lineCap='round';x.lineJoin='round';x.strokeStyle=c[0];
   if(c[3]){x.strokeStyle=c[3];x.lineWidth=w*0.6;x.stroke(p);x.strokeStyle=c[2];x.lineWidth=w*0.44;x.stroke(p)}
   if(c[4]){x.strokeStyle=c[4];x.lineWidth=w*0.12;x.stroke(p)}}
 function tTufts(C,dens,ok){const{x,rn,R,px}=C,TS=tuftSprites(TLOOK[C.id].tufts),nT=Math.min(26000,C.area*0.24*dens|0),tz=Math.max(1,1.6*px);
-  for(let n=0;n<nT;n++){const a=rn()*TAU_,r0=Math.sqrt(rn())*R,wx=Math.cos(a)*r0,wy=Math.sin(a)*r0;if(rn()<C.dirtAt(wx,wy)*0.9||ok&&!ok(wx,wy))continue;
+  for(let n=0;n<nT;n++){const a=rn()*TAU,r0=Math.sqrt(rn())*R,wx=Math.cos(a)*r0,wy=Math.sin(a)*r0;if(rn()<C.dirtAt(wx,wy)*0.9||ok&&!ok(wx,wy))continue;
     const s=(1.3+rn()*1.8)*tz,tone=Math.min(3,(rn()*2.2+fbm(wx/300,wy/300,2)*2)|0);x.drawImage(TS[tone*3+(rn()*3|0)],wx-s,wy-s,s*2,s*2)}}
 function tPebbles(C,cols,dens,ok){const{x,rn,R,px}=C,pb=[new Path2D(),new Path2D()],phi=new Path2D(),psh=new Path2D(),nP=Math.min(14000,C.area*0.1*dens|0);
-  for(let n=0;n<nP;n++){const a=rn()*TAU_,r0=Math.sqrt(rn())*R,wx=Math.cos(a)*r0,wy=Math.sin(a)*r0;if(rn()>0.25+C.dirtAt(wx,wy)*0.75||ok&&!ok(wx,wy))continue;const s=Math.max(0.25+rn()*0.6,0.7*px),e=0.6+rn()*0.4,b=pb[rn()<.5?0:1];
-    psh.moveTo(wx+s*1.35,wy+s*0.35);psh.ellipse(wx+s*0.35,wy+s*0.35,s,s*e,0,0,TAU_);b.moveTo(wx+s,wy);b.ellipse(wx,wy,s,s*e,0,0,TAU_);phi.moveTo(wx+s*0.15,wy-s*0.3);phi.arc(wx-s*0.2,wy-s*0.3,s*0.35,0,TAU_)}
+  for(let n=0;n<nP;n++){const a=rn()*TAU,r0=Math.sqrt(rn())*R,wx=Math.cos(a)*r0,wy=Math.sin(a)*r0;if(rn()>0.25+C.dirtAt(wx,wy)*0.75||ok&&!ok(wx,wy))continue;const s=Math.max(0.25+rn()*0.6,0.7*px),e=0.6+rn()*0.4,b=pb[rn()<.5?0:1];
+    psh.moveTo(wx+s*1.35,wy+s*0.35);psh.ellipse(wx+s*0.35,wy+s*0.35,s,s*e,0,0,TAU);b.moveTo(wx+s,wy);b.ellipse(wx,wy,s,s*e,0,0,TAU);phi.moveTo(wx+s*0.15,wy-s*0.3);phi.arc(wx-s*0.2,wy-s*0.3,s*0.35,0,TAU)}
   x.fillStyle='rgba(15,12,8,.35)';x.fill(psh);x.fillStyle=cols[0];x.fill(pb[0]);x.fillStyle=cols[1];x.fill(pb[1]);x.fillStyle='rgba(220,215,200,.3)';x.fill(phi)}
 function tTracks(C,n,col){const{x,rn,R,keep}=C;x.lineCap='round';
-  for(let k=0;k<n;k++){const a=rn()*TAU_,r0=keep+30+rn()*(R-keep),x0=Math.cos(a)*r0,y0=Math.sin(a)*r0,h=rn()*TAU_,l=80+rn()*200,b=(rn()-.5)*1.4,p=new Path2D();
+  for(let k=0;k<n;k++){const a=rn()*TAU,r0=keep+30+rn()*(R-keep),x0=Math.cos(a)*r0,y0=Math.sin(a)*r0,h=rn()*TAU,l=80+rn()*200,b=(rn()-.5)*1.4,p=new Path2D();
     p.moveTo(x0,y0);p.bezierCurveTo(x0+Math.cos(h)*l*.4,y0+Math.sin(h)*l*.4,x0+Math.cos(h+b)*l*.8,y0+Math.sin(h+b)*l*.8,x0+Math.cos(h+b*1.3)*l,y0+Math.sin(h+b*1.3)*l);
     for(const o of[-2.4,2.4]){x.save();x.translate(o*Math.sin(h),-o*Math.cos(h));x.strokeStyle=col;x.lineWidth=1.5;x.stroke(p);x.restore()}}}
 // point on the shoreline at along-shore coordinate p, pushed o past the waterline (sea theaters)
@@ -7927,33 +7929,33 @@ function shorePath(R,o,step=5){const pts=[];for(let p=-R;p<=R;p+=step)pts.push(s
 function seaPoly(R){const g=tw().arc,c=Math.cos(g.sea),s=Math.sin(g.sea),pts=[];for(let p=-R*1.6;p<=R*1.6;p+=8)pts.push(shorePt(p,0));
   const far=R*3;pts.push([c*far-s*R*1.6,s*far+c*R*1.6],[c*far+s*R*1.6,s*far-c*R*1.6]);return tPath(pts,true)}
 // ---- props (bake time: gradients and shadows are fine here) ----
-function propPine(x,ppu,cx,cy,s,rn,snow){const rot=rn()*TAU_,star=(r,n,k)=>{const p=new Path2D();for(let i=0;i<n*2;i++){const a=rot+i*Math.PI/n+(i%2?0:(rn()-.5)*0.2),rr=i%2?r*k:r*(0.88+rn()*0.24),px=cx+Math.cos(a)*rr,py=cy+Math.sin(a)*rr;i?p.lineTo(px,py):p.moveTo(px,py)}p.closePath();return p};
+function propPine(x,ppu,cx,cy,s,rn,snow){const rot=rn()*TAU,star=(r,n,k)=>{const p=new Path2D();for(let i=0;i<n*2;i++){const a=rot+i*Math.PI/n+(i%2?0:(rn()-.5)*0.2),rr=i%2?r*k:r*(0.88+rn()*0.24),px=cx+Math.cos(a)*rr,py=cy+Math.sin(a)*rr;i?p.lineTo(px,py):p.moveTo(px,py)}p.closePath();return p};
   const base=star(s,9,0.56);shadowFill(x,ppu,base,s*0.8,s*0.95,s*0.3,0.62);const cols=[[30,46,32],[42,62,40],[58,82,52]];
-  for(let t=0;t<3;t++){const r=s*(1-t*0.3),p=t?star(r,8-t*2,0.52):base;x.fillStyle=rgb(cols[t]);x.fill(p);x.save();x.clip(p);x.fillStyle=rgb(cols[t],1.45,0.45);x.beginPath();x.arc(cx-r*0.4,cy-r*0.4,r*0.62,0,TAU_);x.fill();x.restore()}
-  if(snow){x.fillStyle='rgba(238,242,246,.9)';for(let i=0;i<8;i++){const a=rn()*TAU_,r=s*(0.15+rn()*0.65);x.beginPath();x.ellipse(cx+Math.cos(a)*r-s*0.12,cy+Math.sin(a)*r-s*0.12,s*0.15,s*0.09,a,0,TAU_);x.fill()}}
-  x.fillStyle='#2a2118';x.beginPath();x.arc(cx,cy,s*0.07,0,TAU_);x.fill()}
-function propPalm(x,ppu,cx,cy,s,rn,T){const n=7+(rn()*3|0),a0=rn()*TAU_,lv=[];
-  for(let i=0;i<n;i++)lv.push([a0+i*TAU_/n+(rn()-.5)*0.45,s*(0.8+rn()*0.3),s*(0.14+rn()*0.05),(rn()-.5)*0.55]);
+  for(let t=0;t<3;t++){const r=s*(1-t*0.3),p=t?star(r,8-t*2,0.52):base;x.fillStyle=rgb(cols[t]);x.fill(p);x.save();x.clip(p);x.fillStyle=rgb(cols[t],1.45,0.45);x.beginPath();x.arc(cx-r*0.4,cy-r*0.4,r*0.62,0,TAU);x.fill();x.restore()}
+  if(snow){x.fillStyle='rgba(238,242,246,.9)';for(let i=0;i<8;i++){const a=rn()*TAU,r=s*(0.15+rn()*0.65);x.beginPath();x.ellipse(cx+Math.cos(a)*r-s*0.12,cy+Math.sin(a)*r-s*0.12,s*0.15,s*0.09,a,0,TAU);x.fill()}}
+  x.fillStyle='#2a2118';x.beginPath();x.arc(cx,cy,s*0.07,0,TAU);x.fill()}
+function propPalm(x,ppu,cx,cy,s,rn,T){const n=7+(rn()*3|0),a0=rn()*TAU,lv=[];
+  for(let i=0;i<n;i++)lv.push([a0+i*TAU/n+(rn()-.5)*0.45,s*(0.8+rn()*0.3),s*(0.14+rn()*0.05),(rn()-.5)*0.55]);
   const leaf=(p,a,l,w,b)=>{const c=Math.cos(a),si=Math.sin(a),tx=cx+c*l-si*l*b,ty=cy+si*l+c*l*b,mx=cx+c*l*0.5-si*l*b*0.3,my=cy+si*l*0.5+c*l*b*0.3;
     p.moveTo(cx,cy);p.quadraticCurveTo(mx-si*w*2,my+c*w*2,tx,ty);p.quadraticCurveTo(mx+si*w*2,my-c*w*2,cx,cy)};
   const all=new Path2D();for(const L of lv)leaf(all,...L);shadowFill(x,ppu,all,s*1.1,s*1.25,s*0.22,0.55);
-  for(const L of lv){const p=new Path2D();leaf(p,...L);x.fillStyle=rgb(T,0.72+rn()*0.3);x.fill(p);x.save();x.clip(p);x.fillStyle=rgb(T,1.45,0.5);x.beginPath();x.arc(cx-s*0.3,cy-s*0.3,s*0.7,0,TAU_);x.fill();x.restore()}
+  for(const L of lv){const p=new Path2D();leaf(p,...L);x.fillStyle=rgb(T,0.72+rn()*0.3);x.fill(p);x.save();x.clip(p);x.fillStyle=rgb(T,1.45,0.5);x.beginPath();x.arc(cx-s*0.3,cy-s*0.3,s*0.7,0,TAU);x.fill();x.restore()}
   x.lineCap='round';x.strokeStyle='rgba(8,16,6,.4)';x.lineWidth=Math.max(0.15,s*0.022);x.beginPath();
   for(const[a,l,w,b]of lv){const c=Math.cos(a),si=Math.sin(a);for(let k=0.3;k<0.92;k+=0.11){const px=cx+c*l*k-si*l*b*0.3*k,py=cy+si*l*k+c*l*b*0.3*k;x.moveTo(px,py);x.lineTo(px-si*w*1.5+c*w*0.7,py+c*w*1.5+si*w*0.7);x.moveTo(px,py);x.lineTo(px+si*w*1.5+c*w*0.7,py-c*w*1.5+si*w*0.7)}}x.stroke();
   x.strokeStyle=rgb(T,1.9,0.55);x.lineWidth=Math.max(0.2,s*0.035);x.beginPath();for(const[a,l,,b]of lv){x.moveTo(cx,cy);x.quadraticCurveTo(cx+Math.cos(a)*l*0.5-Math.sin(a)*l*b*0.3,cy+Math.sin(a)*l*0.5+Math.cos(a)*l*b*0.3,cx+Math.cos(a)*l*0.9-Math.sin(a)*l*b*0.9,cy+Math.sin(a)*l*0.9+Math.cos(a)*l*b*0.9)}x.stroke();
-  x.fillStyle='#5a4630';x.beginPath();x.arc(cx,cy,s*0.1,0,TAU_);x.fill();x.fillStyle='rgba(40,30,18,.7)';for(let i=0;i<3;i++){x.beginPath();x.arc(cx+(rn()-.5)*s*0.12,cy+(rn()-.5)*s*0.12,s*0.05,0,TAU_);x.fill()}}
+  x.fillStyle='#5a4630';x.beginPath();x.arc(cx,cy,s*0.1,0,TAU);x.fill();x.fillStyle='rgba(40,30,18,.7)';for(let i=0;i<3;i++){x.beginPath();x.arc(cx+(rn()-.5)*s*0.12,cy+(rn()-.5)*s*0.12,s*0.05,0,TAU);x.fill()}}
 // broadleaf crown: overlapping leaf masses, dark core, lit top-left, sun-flecks
 function propCrown(x,ppu,cx,cy,s,rn,T){const n=6+(rn()*5|0),b=[],body=new Path2D();
-  for(let i=0;i<n;i++){const a=rn()*TAU_,r=rn()*s*0.5,q=[cx+Math.cos(a)*r,cy+Math.sin(a)*r,s*(0.3+rn()*0.22)];b.push(q);body.moveTo(q[0]+q[2],q[1]);body.arc(q[0],q[1],q[2],0,TAU_)}
+  for(let i=0;i<n;i++){const a=rn()*TAU,r=rn()*s*0.5,q=[cx+Math.cos(a)*r,cy+Math.sin(a)*r,s*(0.3+rn()*0.22)];b.push(q);body.moveTo(q[0]+q[2],q[1]);body.arc(q[0],q[1],q[2],0,TAU)}
   shadowFill(x,ppu,body,s*0.55,s*0.65,s*0.35,0.7);x.fillStyle=rgb(T,0.6);x.fill(body);
-  for(const q of b){x.fillStyle=rgb(T,0.82+rn()*0.22);x.beginPath();x.arc(q[0]-q[2]*0.12,q[1]-q[2]*0.14,q[2]*0.8,0,TAU_);x.fill()}
-  for(const q of b){x.fillStyle=rgb(T,1.32,0.75);x.beginPath();x.arc(q[0]-q[2]*0.34,q[1]-q[2]*0.36,q[2]*0.38,0,TAU_);x.fill()}
-  x.fillStyle=rgb(T,1.75,0.45);for(const q of b)for(let k=0;k<3;k++){const a=rn()*TAU_,r=rn()*q[2]*0.55;x.beginPath();x.arc(q[0]-q[2]*0.3+Math.cos(a)*r,q[1]-q[2]*0.3+Math.sin(a)*r,q[2]*0.1,0,TAU_);x.fill()}}
-function propDome(x,ppu,cx,cy,r){const p=new Path2D();p.arc(cx,cy,r,0,TAU_);shadowFill(x,ppu,p,r*0.55,r*0.6,r*0.35,0.62);
-  x.fillStyle='#5c646b';x.beginPath();x.arc(cx,cy,r*1.1,0,TAU_);x.fill();
+  for(const q of b){x.fillStyle=rgb(T,0.82+rn()*0.22);x.beginPath();x.arc(q[0]-q[2]*0.12,q[1]-q[2]*0.14,q[2]*0.8,0,TAU);x.fill()}
+  for(const q of b){x.fillStyle=rgb(T,1.32,0.75);x.beginPath();x.arc(q[0]-q[2]*0.34,q[1]-q[2]*0.36,q[2]*0.38,0,TAU);x.fill()}
+  x.fillStyle=rgb(T,1.75,0.45);for(const q of b)for(let k=0;k<3;k++){const a=rn()*TAU,r=rn()*q[2]*0.55;x.beginPath();x.arc(q[0]-q[2]*0.3+Math.cos(a)*r,q[1]-q[2]*0.3+Math.sin(a)*r,q[2]*0.1,0,TAU);x.fill()}}
+function propDome(x,ppu,cx,cy,r){const p=new Path2D();p.arc(cx,cy,r,0,TAU);shadowFill(x,ppu,p,r*0.55,r*0.6,r*0.35,0.62);
+  x.fillStyle='#5c646b';x.beginPath();x.arc(cx,cy,r*1.1,0,TAU);x.fill();
   const g=x.createRadialGradient(cx-r*0.38,cy-r*0.42,r*0.04,cx,cy,r*1.02);g.addColorStop(0,'#ffffff');g.addColorStop(0.45,'#e2e8ed');g.addColorStop(1,'#8d99a4');x.fillStyle=g;x.fill(p);
-  x.strokeStyle='rgba(84,98,112,.32)';x.lineWidth=Math.max(0.15,r*0.025);x.beginPath();for(let i=1;i<4;i++){x.moveTo(cx+r*i/4,cy);x.arc(cx,cy,r*i/4,0,TAU_)}for(let i=0;i<6;i++){const a=i*Math.PI/6;x.moveTo(cx-Math.cos(a)*r,cy-Math.sin(a)*r);x.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r)}x.stroke();
-  x.fillStyle='rgba(255,255,255,.75)';x.beginPath();x.ellipse(cx-r*0.42,cy-r*0.44,r*0.24,r*0.14,-0.75,0,TAU_);x.fill()}
+  x.strokeStyle='rgba(84,98,112,.32)';x.lineWidth=Math.max(0.15,r*0.025);x.beginPath();for(let i=1;i<4;i++){x.moveTo(cx+r*i/4,cy);x.arc(cx,cy,r*i/4,0,TAU)}for(let i=0;i<6;i++){const a=i*Math.PI/6;x.moveTo(cx-Math.cos(a)*r,cy-Math.sin(a)*r);x.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r)}x.stroke();
+  x.fillStyle='rgba(255,255,255,.75)';x.beginPath();x.ellipse(cx-r*0.42,cy-r*0.44,r*0.24,r*0.14,-0.75,0,TAU);x.fill()}
 // pitched-roof hut / prefab; snow lies on the lit slope and in the lee of the ridge
 function propHut(x,ppu,cx,cy,w,h,a,col,snow){const P=new Path2D();P.rect(-w/2,-h/2,w,h);shadowFill(x,ppu,xPath(P,rotM(cx,cy,a)),h*0.4,h*0.5,h*0.2,0.6);
   x.save();x.translate(cx,cy);x.rotate(a);x.fillStyle=rgb(col,1.18);x.fillRect(-w/2,-h/2,w,h/2);x.fillStyle=rgb(col,0.72);x.fillRect(-w/2,0,w,h/2);
@@ -7968,7 +7970,7 @@ function propRoof(x,ppu,cx,cy,w,h,a,rn,col){const P=new Path2D();P.rect(-w/2,-h/
 // ruined building footprint: slab, broken walls (lit tops, world-space shadows), rubble spilling out, optional burn scar
 function propRuin(x,ppu,cx,cy,w,h,a,rn,burnt,brick){const ca=Math.cos(a),sa=Math.sin(a),sh=(o)=>[o*(ca+sa),o*(ca-sa)];
   x.save();x.translate(cx,cy);x.rotate(a);const slab=new Path2D();slab.rect(-w/2,-h/2,w,h);x.fillStyle=brick?'#5a4d44':'#58564f';x.fill(slab);
-  x.save();x.clip(slab);for(let i=0;i<9;i++){x.fillStyle=`rgba(${rn()<.5?'28,26,24':'128,122,112'},${(0.12+rn()*0.2).toFixed(2)})`;x.beginPath();x.arc((rn()-.5)*w,(rn()-.5)*h,3+rn()*w*0.22,0,TAU_);x.fill()}
+  x.save();x.clip(slab);for(let i=0;i<9;i++){x.fillStyle=`rgba(${rn()<.5?'28,26,24':'128,122,112'},${(0.12+rn()*0.2).toFixed(2)})`;x.beginPath();x.arc((rn()-.5)*w,(rn()-.5)*h,3+rn()*w*0.22,0,TAU);x.fill()}
   x.strokeStyle='rgba(0,0,0,.13)';x.lineWidth=0.3;x.beginPath();for(let gx=-w/2+5;gx<w/2;gx+=5){x.moveTo(gx,-h/2);x.lineTo(gx,h/2)}for(let gy=-h/2+5;gy<h/2;gy+=5){x.moveTo(-w/2,gy);x.lineTo(w/2,gy)}x.stroke();
   if(burnt){const g=x.createRadialGradient(0,0,0,0,0,Math.max(w,h)*0.62);g.addColorStop(0,'rgba(8,6,5,.78)');g.addColorStop(1,'rgba(8,6,5,0)');x.fillStyle=g;x.fillRect(-w/2,-h/2,w,h)}x.restore();
   const T=Math.max(2.6,Math.min(4.4,w*0.07)),seg=[],wall=(x0,y0,x1,y1)=>{const L=Math.hypot(x1-x0,y1-y0),n=Math.max(1,L/11|0);
@@ -7978,14 +7980,14 @@ function propRuin(x,ppu,cx,cy,w,h,a,rn,burnt,brick){const ca=Math.cos(a),sa=Math
   x.strokeStyle=brick?'#6a5244':'#6c6962';for(const s of seg){x.beginPath();x.moveTo(s[0],s[1]);x.lineTo(s[2],s[3]);x.stroke()}
   x.strokeStyle=brick?'rgba(176,136,112,.4)':'rgba(196,192,182,.38)';x.lineWidth=T*0.3;for(const s of seg){x.beginPath();x.moveTo(s[0]-T*0.2,s[1]-T*0.2);x.lineTo(s[2]-T*0.2,s[3]-T*0.2);x.stroke()}
   x.restore();for(let i=0,n=1+(rn()*3|0);i<n;i++){const e=(rn()-.5)*2,f=rn()<.5?-1:1,px=rn()<.5?e*w/2:f*w/2,py=rn()<.5?f*h/2:e*h/2;propRubble(x,ppu,cx+px*ca-py*sa,cy+px*sa+py*ca,4+rn()*6,rn,brick)}}
-function propRubble(x,ppu,cx,cy,s,rn,brick){const pile=new Path2D();pile.ellipse(cx,cy,s,s*0.8,rn()*3,0,TAU_);shadowFill(x,ppu,pile,s*0.3,s*0.35,s*0.4,0.45);
+function propRubble(x,ppu,cx,cy,s,rn,brick){const pile=new Path2D();pile.ellipse(cx,cy,s,s*0.8,rn()*3,0,TAU);shadowFill(x,ppu,pile,s*0.3,s*0.35,s*0.4,0.45);
   x.fillStyle=brick?'#5d4a3e':'#56534d';x.fill(pile);
-  for(let i=0,n=8+(rn()*8|0);i<n;i++){const a=rn()*TAU_,r=Math.sqrt(rn())*s*0.85,px=cx+Math.cos(a)*r,py=cy+Math.sin(a)*r*0.8,z=s*(0.12+rn()*0.2),c=brick&&rn()<.6?[134,88,64]:[136,132,124],p=new Path2D();
-    for(let k=0;k<5;k++){const b=k/5*TAU_+rn()*0.6,q=z*(0.6+rn()*0.5);k?p.lineTo(px+Math.cos(b)*q,py+Math.sin(b)*q):p.moveTo(px+Math.cos(b)*q,py+Math.sin(b)*q)}p.closePath();
-    x.fillStyle=rgb(c,0.62+rn()*0.5);x.fill(p);x.fillStyle='rgba(255,250,240,.2)';x.beginPath();x.arc(px-z*0.3,py-z*0.3,z*0.35,0,TAU_);x.fill()}}
+  for(let i=0,n=8+(rn()*8|0);i<n;i++){const a=rn()*TAU,r=Math.sqrt(rn())*s*0.85,px=cx+Math.cos(a)*r,py=cy+Math.sin(a)*r*0.8,z=s*(0.12+rn()*0.2),c=brick&&rn()<.6?[134,88,64]:[136,132,124],p=new Path2D();
+    for(let k=0;k<5;k++){const b=k/5*TAU+rn()*0.6,q=z*(0.6+rn()*0.5);k?p.lineTo(px+Math.cos(b)*q,py+Math.sin(b)*q):p.moveTo(px+Math.cos(b)*q,py+Math.sin(b)*q)}p.closePath();
+    x.fillStyle=rgb(c,0.62+rn()*0.5);x.fill(p);x.fillStyle='rgba(255,250,240,.2)';x.beginPath();x.arc(px-z*0.3,py-z*0.3,z*0.35,0,TAU);x.fill()}}
 function propCar(x,ppu,cx,cy,a,rn,burnt){const body=new Path2D();body.roundRect(-7,-3.2,14,6.4,1.6);shadowFill(x,ppu,xPath(body,rotM(cx,cy,a)),1.3,1.4,1,0.6);
   x.save();x.translate(cx,cy);x.rotate(a);const c=burnt?[44,39,35]:[[116,42,36],[50,68,94],[148,144,134],[68,72,64],[150,120,60]][rn()*5|0];
-  if(burnt){const g=x.createRadialGradient(0,0,2,0,0,15);g.addColorStop(0,'rgba(12,10,8,.55)');g.addColorStop(1,'rgba(12,10,8,0)');x.fillStyle=g;x.beginPath();x.arc(0,0,15,0,TAU_);x.fill()}
+  if(burnt){const g=x.createRadialGradient(0,0,2,0,0,15);g.addColorStop(0,'rgba(12,10,8,.55)');g.addColorStop(1,'rgba(12,10,8,0)');x.fillStyle=g;x.beginPath();x.arc(0,0,15,0,TAU);x.fill()}
   x.fillStyle=rgb(c);x.fill(body);if(burnt){x.fillStyle='rgba(126,64,30,.6)';x.fillRect(-6.2,-2.6,4,2.2);x.fillRect(2.4,0.4,3.2,2.1)}
   x.fillStyle=burnt?'#171513':'#1c2530';x.fillRect(-3,-2.7,6.8,5.4);x.fillStyle=rgb(c,burnt?0.85:1.16);x.fillRect(-1.8,-2.5,4,5);
   x.fillStyle='rgba(255,255,255,.16)';x.fillRect(-7,-3.2,14,0.5);if(!burnt){x.fillStyle='rgba(255,236,200,.7)';x.fillRect(6.4,-2.6,0.6,1.2);x.fillRect(6.4,1.4,0.6,1.2)}x.restore()}
@@ -8000,18 +8002,18 @@ function propMonument(x,ppu,cx,cy,kind,rn){
     for(const[r,c]of[[9,'#8f8b80'],[7,'#a7a397'],[5,'#bdb8aa']]){x.fillStyle=c;x.fillRect(cx-r,cy-r,2*r,2*r)}
     x.fillStyle='#d9d4c4';x.beginPath();x.moveTo(cx-3,cy-3);x.lineTo(cx+3,cy-3);x.lineTo(cx,cy);x.fill();x.fillStyle='#c2bdaf';x.beginPath();x.moveTo(cx-3,cy-3);x.lineTo(cx-3,cy+3);x.lineTo(cx,cy);x.fill();
     x.fillStyle='#8d887b';x.beginPath();x.moveTo(cx+3,cy+3);x.lineTo(cx+3,cy-3);x.lineTo(cx,cy);x.fill();x.fillStyle='#7b766a';x.beginPath();x.moveTo(cx+3,cy+3);x.lineTo(cx-3,cy+3);x.lineTo(cx,cy);x.fill();return}
-  if(kind==='fountain'){const b=new Path2D();b.arc(cx,cy,14,0,TAU_);shadowFill(x,ppu,b,1.2,1.4,1,0.5);x.fillStyle='#bdb8aa';x.fill(b);x.fillStyle='#2f5566';x.beginPath();x.arc(cx,cy,12,0,TAU_);x.fill();
-    const g=x.createRadialGradient(cx-4,cy-4,1,cx,cy,12);g.addColorStop(0,'rgba(170,220,235,.55)');g.addColorStop(1,'rgba(40,90,110,0)');x.fillStyle=g;x.beginPath();x.arc(cx,cy,12,0,TAU_);x.fill();
-    x.strokeStyle='rgba(220,240,245,.5)';x.lineWidth=0.4;for(const r of[4,7,10]){x.beginPath();x.arc(cx,cy,r,0,TAU_);x.stroke()}x.fillStyle='#a7a397';x.beginPath();x.arc(cx,cy,3,0,TAU_);x.fill();x.fillStyle='#e8f6fa';x.beginPath();x.arc(cx-0.6,cy-0.6,1.2,0,TAU_);x.fill();return}
-  const pl=new Path2D();pl.arc(cx,cy,11,0,TAU_);shadowFill(x,ppu,pl,2,2.4,1.2,0.55);for(const[r,c]of[[11,'#8f8b80'],[8.5,'#a7a397'],[6,'#bdb8aa']]){x.fillStyle=c;x.beginPath();x.arc(cx,cy,r,0,TAU_);x.fill()}
-  const fig=new Path2D();fig.ellipse(cx,cy,4.2,2.2,rn()*TAU_,0,TAU_);fig.moveTo(cx+1.4,cy);fig.arc(cx,cy,1.4,0,TAU_);x.save();x.translate(5,6);x.fillStyle='rgba(8,8,6,.35)';x.fill(fig);x.restore();
-  x.fillStyle='#3d4a3e';x.fill(fig);x.fillStyle='rgba(150,190,160,.45)';x.beginPath();x.arc(cx-1,cy-1,1.4,0,TAU_);x.fill()}
-function propDrift(x,cx,cy,s,a){x.save();x.translate(cx,cy);x.rotate(a);const p=new Path2D();p.ellipse(0,0,s,s*0.3,0,0,TAU_);p.moveTo(s*0.95,s*0.1);p.ellipse(s*0.35,s*0.1,s*0.6,s*0.22,0,0,TAU_);
+  if(kind==='fountain'){const b=new Path2D();b.arc(cx,cy,14,0,TAU);shadowFill(x,ppu,b,1.2,1.4,1,0.5);x.fillStyle='#bdb8aa';x.fill(b);x.fillStyle='#2f5566';x.beginPath();x.arc(cx,cy,12,0,TAU);x.fill();
+    const g=x.createRadialGradient(cx-4,cy-4,1,cx,cy,12);g.addColorStop(0,'rgba(170,220,235,.55)');g.addColorStop(1,'rgba(40,90,110,0)');x.fillStyle=g;x.beginPath();x.arc(cx,cy,12,0,TAU);x.fill();
+    x.strokeStyle='rgba(220,240,245,.5)';x.lineWidth=0.4;for(const r of[4,7,10]){x.beginPath();x.arc(cx,cy,r,0,TAU);x.stroke()}x.fillStyle='#a7a397';x.beginPath();x.arc(cx,cy,3,0,TAU);x.fill();x.fillStyle='#e8f6fa';x.beginPath();x.arc(cx-0.6,cy-0.6,1.2,0,TAU);x.fill();return}
+  const pl=new Path2D();pl.arc(cx,cy,11,0,TAU);shadowFill(x,ppu,pl,2,2.4,1.2,0.55);for(const[r,c]of[[11,'#8f8b80'],[8.5,'#a7a397'],[6,'#bdb8aa']]){x.fillStyle=c;x.beginPath();x.arc(cx,cy,r,0,TAU);x.fill()}
+  const fig=new Path2D();fig.ellipse(cx,cy,4.2,2.2,rn()*TAU,0,TAU);fig.moveTo(cx+1.4,cy);fig.arc(cx,cy,1.4,0,TAU);x.save();x.translate(5,6);x.fillStyle='rgba(8,8,6,.35)';x.fill(fig);x.restore();
+  x.fillStyle='#3d4a3e';x.fill(fig);x.fillStyle='rgba(150,190,160,.45)';x.beginPath();x.arc(cx-1,cy-1,1.4,0,TAU);x.fill()}
+function propDrift(x,cx,cy,s,a){x.save();x.translate(cx,cy);x.rotate(a);const p=new Path2D();p.ellipse(0,0,s,s*0.3,0,0,TAU);p.moveTo(s*0.95,s*0.1);p.ellipse(s*0.35,s*0.1,s*0.6,s*0.22,0,0,TAU);
   x.fillStyle='rgba(96,120,158,.22)';x.save();x.translate(s*0.06,s*0.1);x.fill(p);x.restore();x.fillStyle='rgba(248,250,253,.55)';x.fill(p);
-  x.fillStyle='rgba(255,255,255,.6)';x.beginPath();x.ellipse(-s*0.15,-s*0.09,s*0.6,s*0.1,0,0,TAU_);x.fill();x.restore()}
+  x.fillStyle='rgba(255,255,255,.6)';x.beginPath();x.ellipse(-s*0.15,-s*0.09,s*0.6,s*0.1,0,0,TAU);x.fill();x.restore()}
 function propPier(x,ppu,a,len,wd){const ca=Math.cos(a),sa=Math.sin(a);return(cx,cy)=>{const P=new Path2D();P.rect(0,-wd/2,len,wd);const W=xPath(P,rotM(cx,cy,a));
   x.save();x.translate(3,3.5);x.fillStyle='rgba(4,16,24,.4)';x.fill(W);x.restore();
-  x.save();x.translate(cx,cy);x.rotate(a);x.fillStyle='#1f1a14';for(let t=4;t<len;t+=9)for(const s of[-1,1]){x.beginPath();x.arc(t,s*(wd/2+0.4),0.9,0,TAU_);x.fill()}
+  x.save();x.translate(cx,cy);x.rotate(a);x.fillStyle='#1f1a14';for(let t=4;t<len;t+=9)for(const s of[-1,1]){x.beginPath();x.arc(t,s*(wd/2+0.4),0.9,0,TAU);x.fill()}
   x.fillStyle='#7a6246';x.fillRect(0,-wd/2,len,wd);x.strokeStyle='rgba(40,30,20,.6)';x.lineWidth=0.25;x.beginPath();for(let t=1.2;t<len;t+=1.2){x.moveTo(t,-wd/2);x.lineTo(t,wd/2)}x.stroke();
   x.fillStyle='rgba(230,210,170,.25)';x.fillRect(0,-wd/2,len,0.5);x.fillStyle='#4a3a2a';x.fillRect(len-1,-wd/2-0.5,1.6,wd+1);x.restore();return[cx+ca*len,cy+sa*len]}}
 // grey hull seen from above; ramp = bow door (landing craft), used for the moored patrol boats and beached wrecks
@@ -8019,13 +8021,13 @@ function propBoat(x,ppu,cx,cy,a,L,wreck){const W=L*0.36,P=new Path2D();P.moveTo(
   const Q=xPath(P,rotM(cx,cy,a));shadowFill(x,ppu,Q,1.6,1.9,1,0.55);x.save();x.translate(cx,cy);x.rotate(a);x.fillStyle=wreck?'#3c3a36':'#5e6862';x.fill(P);x.fillStyle=wreck?'#2a2826':'#434b47';x.fillRect(-L/2+2,-W/2+1.5,L*0.62,W-3);
   x.fillStyle=wreck?'rgba(120,64,34,.6)':'#707b76';x.fillRect(-L/2+2,-W*0.22,L*0.18,W*0.44);x.fillStyle='rgba(255,255,255,.14)';x.fillRect(-L/2,-W/2,L*0.6,0.6);x.restore()}
 // crashed twin-engine transport off the runway edge: burnt fuselage, one wing torn off, scorched ground
-function propPlaneWreck(x,ppu,cx,cy,a,rn){const g=x.createRadialGradient(cx,cy,4,cx,cy,34);g.addColorStop(0,'rgba(12,10,8,.6)');g.addColorStop(1,'rgba(12,10,8,0)');x.fillStyle=g;x.beginPath();x.arc(cx,cy,34,0,TAU_);x.fill();
+function propPlaneWreck(x,ppu,cx,cy,a,rn){const g=x.createRadialGradient(cx,cy,4,cx,cy,34);g.addColorStop(0,'rgba(12,10,8,.6)');g.addColorStop(1,'rgba(12,10,8,0)');x.fillStyle=g;x.beginPath();x.arc(cx,cy,34,0,TAU);x.fill();
   const F=new Path2D();F.roundRect(-18,-2.6,34,5.2,2.6);const Wg=new Path2D();Wg.moveTo(2,-2);Wg.lineTo(-3,-24);Wg.lineTo(-8,-24);Wg.lineTo(-6,-2);Wg.closePath();
   const W2=new Path2D();W2.moveTo(6,10);W2.lineTo(1,24);W2.lineTo(-4,23);W2.lineTo(1,9);W2.closePath();const T=new Path2D();T.moveTo(-16,-1);T.lineTo(-22,-8);T.lineTo(-24,-8);T.lineTo(-21,0);T.lineTo(-24,8);T.lineTo(-22,8);T.lineTo(-16,1);T.closePath();
   const all=new Path2D();for(const p of[F,Wg,W2,T])all.addPath(p);shadowFill(x,ppu,xPath(all,rotM(cx,cy,a)),1.6,1.9,1.2,0.6);
   x.save();x.translate(cx,cy);x.rotate(a);x.fillStyle='#4d524a';x.fill(Wg);x.fill(W2);x.fill(T);x.fillStyle='#5a6058';x.fill(F);
-  x.fillStyle='rgba(14,12,10,.75)';x.beginPath();x.ellipse(-2,0,9,3,0,0,TAU_);x.fill();x.fillStyle='rgba(126,66,32,.55)';x.fillRect(-12,-2,5,4);x.fillRect(4,-1.5,4,3);
-  x.fillStyle='#2e302c';x.beginPath();x.arc(-3,-12,2.4,0,TAU_);x.fill();x.fillStyle='rgba(255,255,255,.12)';x.fillRect(-18,-2.6,34,0.6);x.restore()}
+  x.fillStyle='rgba(14,12,10,.75)';x.beginPath();x.ellipse(-2,0,9,3,0,0,TAU);x.fill();x.fillStyle='rgba(126,66,32,.55)';x.fillRect(-12,-2,5,4);x.fillRect(4,-1.5,4,3);
+  x.fillStyle='#2e302c';x.beginPath();x.arc(-3,-12,2.4,0,TAU);x.fill();x.fillStyle='rgba(255,255,255,.12)';x.fillRect(-18,-2.6,34,0.6);x.restore()}
 // ---- per-theater looks ----
 const TLOOK={
  mountain:{tufts:[[56,64,44],[78,86,58],[106,104,80],[136,130,106]],grade:['rgba(255,228,196,.45)','rgba(70,100,150,.62)'],precip:{n:36,col:'245,248,252',v:26,wx:0.5,s:1.6},cloud:'14,20,34',
@@ -8044,18 +8046,18 @@ const TLOOK={
     for(const sgn of[-1,1]){const pts=[];for(let y=keep-6;y<R;y+=6)pts.push([C.road(sgn*y),sgn*y]);tRoad(x,tPath(pts),14,col)}
     const onRoad=(wx,wy,m)=>Math.abs(wx-C.road(wy))<m&&Math.abs(wy)>keep-8,val=(wx,wy)=>rid(wx,wy)<0.15;
     tTracks(C,3,'rgba(44,40,34,.28)');tTufts(C,0.7,(wx,wy)=>val(wx,wy)&&!onRoad(wx,wy,9));tPebbles(C,['#6d6a64','#85817a'],1,(wx,wy)=>val(wx,wy)&&!onRoad(wx,wy,9));
-    x.lineCap='round';const ld=new Path2D(),lh=new Path2D();for(let n=C.cnt(260,2600,60);n--;){let px=(rn()-.5)*2*R,py=(rn()-.5)*2*R;if(rid(px,py)<0.35)continue;const a=rn()*TAU_,l=4+rn()*14;   // rock ledges: crisp breakup on the soft relief
+    x.lineCap='round';const ld=new Path2D(),lh=new Path2D();for(let n=C.cnt(260,2600,60);n--;){let px=(rn()-.5)*2*R,py=(rn()-.5)*2*R;if(rid(px,py)<0.35)continue;const a=rn()*TAU,l=4+rn()*14;   // rock ledges: crisp breakup on the soft relief
       ld.moveTo(px,py);lh.moveTo(px-0.7,py-0.7);for(let k=0;k<3;k++){px+=Math.cos(a+(rn()-.5)*1.2)*l/3;py+=Math.sin(a+(rn()-.5)*1.2)*l/3;ld.lineTo(px,py);lh.lineTo(px-0.7,py-0.7)}}
     x.strokeStyle='rgba(34,30,28,.4)';x.lineWidth=1.3;x.stroke(ld);x.strokeStyle='rgba(255,255,255,.22)';x.lineWidth=0.7;x.stroke(lh);
     const ok=(m)=>(wx,wy,rad)=>!onRoad(wx,wy,12+rad)&&m(rid(wx,wy));
     for(let n=C.cnt(1500,220,16);n--;){const s=3+rn()**1.6*10,p=C.spot(s*0.9,ok(v=>v>0.08&&v<0.7));if(!p)continue;const q=propRock(x,ppu,p[0],p[1],s,rn,[[118,112,104],[184,178,168]]);
-      if(rn()<0.55){x.save();x.clip(q);x.fillStyle='rgba(236,240,244,.9)';x.beginPath();x.ellipse(p[0]-s*0.3,p[1]-s*0.35,s*0.75,s*0.5,-0.6,0,TAU_);x.fill();x.restore()}}
-    for(let n=C.cnt(7000,70,8);n--;){const p=C.spot(26,ok(v=>v<0.5));if(!p)continue;for(let i=5+(rn()*8|0);i--;){const a=rn()*TAU_,d=rn()*26,s=6+rn()*5;propPine(x,ppu,p[0]+Math.cos(a)*d,p[1]+Math.sin(a)*d,s,rn,rn()<0.5)}}
+      if(rn()<0.55){x.save();x.clip(q);x.fillStyle='rgba(236,240,244,.9)';x.beginPath();x.ellipse(p[0]-s*0.3,p[1]-s*0.35,s*0.75,s*0.5,-0.6,0,TAU);x.fill();x.restore()}}
+    for(let n=C.cnt(7000,70,8);n--;){const p=C.spot(26,ok(v=>v<0.5));if(!p)continue;for(let i=5+(rn()*8|0);i--;){const a=rn()*TAU,d=rn()*26,s=6+rn()*5;propPine(x,ppu,p[0]+Math.cos(a)*d,p[1]+Math.sin(a)*d,s,rn,rn()<0.5)}}
     for(let n=C.cnt(26000,30,4);n--;){const s=6+rn()*4,p=C.spot(s,ok(v=>v>0.3));if(p)propPine(x,ppu,p[0],p[1],s,rn,true)}
     for(let n=C.cnt(5000,70,6);n--;){const s=1+rn()**2*5,p=C.spot(s,ok(v=>v<0.2));if(p)propRock(x,ppu,p[0],p[1],s,rn,[[118,112,104],[184,178,168]])}
     for(let n=C.cnt(24000,14,2);n--;){const rc=3+rn()**2*10,p=C.spot(rc*1.3,ok(v=>v<0.1));if(p)propCrater(x,p[0],p[1],rc,rn)}
     for(const sgn of[-1,1]){const y=sgn*(keep+110+rn()*60),cx=C.road(y);for(let i=-2;i<=2;i++)if(i)propHedgehog(x,ppu,cx+i*7,y+(rn()-.5)*3,rn);propSandbags(x,ppu,cx+26,y-sgn*14,sgn<0?-Math.PI/2:Math.PI/2);C.take(cx,y,30)}
-    for(let n=C.cnt(90000,3,1);n--;){const p=C.spot(16,ok(v=>v<0.1));if(p)(rn()<.5?propTank:propTruck)(x,ppu,p[0],p[1],rn()*TAU_,rn)}},
+    for(let n=C.cnt(90000,3,1);n--;){const p=C.spot(16,ok(v=>v<0.1));if(p)(rn()<.5?propTank:propTruck)(x,ppu,p[0],p[1],rn()*TAU,rn)}},
   lo(C){const{R}=C,ridge=new Path2D(),snow=new Path2D(),road=[];
     for(const side of[0,Math.PI]){const pts=[],sp=[];for(let a=-0.96;a<=0.96;a+=0.04){const b=side+a;let r=C.keep+40;while(r<R*1.4&&C.ridge(Math.cos(b)*r,Math.sin(b)*r)<0.5)r+=10;pts.push([Math.cos(b)*r,Math.sin(b)*r]);sp.push([Math.cos(b)*(r+130),Math.sin(b)*(r+130)])}
       pts.push([Math.cos(side+0.96)*R*3,Math.sin(side+0.96)*R*3],[Math.cos(side-0.96)*R*3,Math.sin(side-0.96)*R*3]);ridge.addPath(tPath(pts,true));
@@ -8080,7 +8082,7 @@ const TLOOK={
     for(let n=C.cnt(4000,120,6);n--;){const s=1+rn()**2*4,p=C.spot(s,land);if(p)propRock(x,ppu,p[0],p[1],s,rn,[[142,132,112],[196,186,160]])}
     for(let n=C.cnt(20000,20,2);n--;){const rc=3+rn()**2*10,p=C.spot(rc*1.3,land);if(p)propCrater(x,p[0],p[1],rc,rn)}
     for(let n=C.cnt(40000,20);n--;){const p=C.spot(5,land);if(p)for(let i=2+(rn()*3|0);i--;)propDrum(x,ppu,p[0]+(rn()-.5)*6,p[1]+(rn()-.5)*6,rn)}
-    for(let n=C.cnt(90000,3,1);n--;){const p=C.spot(15,land);if(p)propTruck(x,ppu,p[0],p[1],rn()*TAU_,rn)}},
+    for(let n=C.cnt(90000,3,1);n--;){const p=C.spot(15,land);if(p)propTruck(x,ppu,p[0],p[1],rn()*TAU,rn)}},
   lo(C){return[['#1d4452',seaPoly(C.R),0],['rgba(146,132,98,.55)',shorePath(C.R,-30,10),50],['rgba(214,232,230,.55)',shorePath(C.R,2,10),2]]}},
  city:{tufts:[[62,70,46],[84,92,60],[104,104,76],[128,124,98]],grade:['rgba(255,220,180,.4)','rgba(60,90,140,.6)'],cloud:'16,18,24',plumes:{n:4,col:'52,50,48',r:19,a:0.95},
   geo(C){const B=150,SWd=26,m=v=>Math.abs(v-Math.round(v/B)*B);C.B=B;C.sw=SWd;C.street=(wx,wy)=>Math.min(m(wx),m(wy));
@@ -8122,17 +8124,17 @@ const TLOOK={
     tTracks(C,9,'rgba(96,112,134,.34)');tTufts(C,0.03);
     x.strokeStyle='rgba(255,255,255,.55)';x.lineWidth=0.45;x.beginPath();for(let n=C.cnt(2200,300,20);n--;){let px=(rn()-.5)*2*R,py=(rn()-.5)*2*R;if(C.ice(px,py)<0.5)continue;x.moveTo(px,py);for(let k=0;k<5;k++){px+=(rn()-.5)*14;py+=(rn()-.5)*14;x.lineTo(px,py)}}x.stroke();
     const ok=(wx,wy,rad)=>Math.abs(wx-roadX(wy,keep))>12+rad||wy<keep-10;
-    for(let n=Math.min(3,1+C.cnt(160000,2));n--;){const p=C.spot(52,(wx,wy,r)=>ok(wx,wy,r)&&Math.hypot(wx,wy)<C.V*0.85);if(!p)continue;const a=rn()*TAU_,dr=17+rn()*6;
+    for(let n=Math.min(3,1+C.cnt(160000,2));n--;){const p=C.spot(52,(wx,wy,r)=>ok(wx,wy,r)&&Math.hypot(wx,wy)<C.V*0.85);if(!p)continue;const a=rn()*TAU,dr=17+rn()*6;
       propDome(x,ppu,p[0],p[1],dr);propHut(x,ppu,p[0]+Math.cos(a)*(dr+20),p[1]+Math.sin(a)*(dr+20),28,14,a+Math.PI/2,[150,52,40],true);
       propHut(x,ppu,p[0]+Math.cos(a+2.2)*(dr+18),p[1]+Math.sin(a+2.2)*(dr+18),20,11,a+2.2+Math.PI/2,[70,84,90],true);for(let i=4;i--;)propDrum(x,ppu,p[0]+Math.cos(a-1.2)*(dr+12)+(rn()-.5)*6,p[1]+Math.sin(a-1.2)*(dr+12)+(rn()-.5)*6,rn)}
-    for(let n=C.cnt(30000,8,2);n--;){const p=C.spot(14,ok);if(p)propHut(x,ppu,p[0],p[1],16+rn()*8,9+rn()*3,rn()*TAU_,rn()<.5?[150,52,40]:[70,84,90],true)}
+    for(let n=C.cnt(30000,8,2);n--;){const p=C.spot(14,ok);if(p)propHut(x,ppu,p[0],p[1],16+rn()*8,9+rn()*3,rn()*TAU,rn()<.5?[150,52,40]:[70,84,90],true)}
     for(let n=C.cnt(9000,50,4);n--;){const s=6+rn()*8,p=C.spot(s*0.5,ok);if(p)propDrift(x,p[0],p[1],s,0.35+(rn()-.5)*0.3)}
-    for(let n=C.cnt(6000,60,6);n--;){const s=2+rn()**2*7,p=C.spot(s,ok);if(!p)continue;const q=propRock(x,ppu,p[0],p[1],s,rn,[[84,86,90],[150,156,164]]);x.save();x.clip(q);x.fillStyle='rgba(244,247,250,.92)';x.beginPath();x.ellipse(p[0]-s*0.25,p[1]-s*0.3,s*0.8,s*0.55,-0.6,0,TAU_);x.fill();x.restore()}
+    for(let n=C.cnt(6000,60,6);n--;){const s=2+rn()**2*7,p=C.spot(s,ok);if(!p)continue;const q=propRock(x,ppu,p[0],p[1],s,rn,[[84,86,90],[150,156,164]]);x.save();x.clip(q);x.fillStyle='rgba(244,247,250,.92)';x.beginPath();x.ellipse(p[0]-s*0.25,p[1]-s*0.3,s*0.8,s*0.55,-0.6,0,TAU);x.fill();x.restore()}
     for(let n=C.cnt(20000,20,2);n--;){const rc=3+rn()**2*10,p=C.spot(rc*1.3,ok);if(p)propCrater(x,p[0],p[1],rc,rn)}
-    for(let n=C.cnt(45000,14,1);n--;){const p=C.spot(14,ok);if(!p)continue;const h=rn()*TAU_,k=3+(rn()*4|0);for(let i=0;i<k;i++)propHedgehog(x,ppu,p[0]+Math.cos(h)*(i-k/2)*6.5,p[1]+Math.sin(h)*(i-k/2)*6.5,rn)}
-    for(let n=C.cnt(90000,3,1);n--;){const p=C.spot(16,ok);if(p)propTank(x,ppu,p[0],p[1],rn()*TAU_,rn)}},
-  lo(C){const ice=new Path2D(),dr=new Path2D(),r=rng(C.seed+3);for(let i=0;i<46;i++){const a=r()*TAU_,d=C.keep+40+r()*C.R,px=Math.cos(a)*d,py=Math.sin(a)*d,s=20+r()*60;
-      if(C.ice(px,py)>0.3){ice.moveTo(px+s,py);ice.ellipse(px,py,s,s*0.6,r()*3,0,TAU_)}else{dr.moveTo(px+s*0.5,py);dr.ellipse(px,py,s*0.5,s*0.14,0.35,0,TAU_)}}
+    for(let n=C.cnt(45000,14,1);n--;){const p=C.spot(14,ok);if(!p)continue;const h=rn()*TAU,k=3+(rn()*4|0);for(let i=0;i<k;i++)propHedgehog(x,ppu,p[0]+Math.cos(h)*(i-k/2)*6.5,p[1]+Math.sin(h)*(i-k/2)*6.5,rn)}
+    for(let n=C.cnt(90000,3,1);n--;){const p=C.spot(16,ok);if(p)propTank(x,ppu,p[0],p[1],rn()*TAU,rn)}},
+  lo(C){const ice=new Path2D(),dr=new Path2D(),r=rng(C.seed+3);for(let i=0;i<46;i++){const a=r()*TAU,d=C.keep+40+r()*C.R,px=Math.cos(a)*d,py=Math.sin(a)*d,s=20+r()*60;
+      if(C.ice(px,py)>0.3){ice.moveTo(px+s,py);ice.ellipse(px,py,s,s*0.6,r()*3,0,TAU)}else{dr.moveTo(px+s*0.5,py);dr.ellipse(px,py,s*0.5,s*0.14,0.35,0,TAU)}}
     return[['#8aa0b0',ice,0],['rgba(236,240,244,.35)',dr,0]]}},
  jungle:{tufts:[[36,70,28],[52,94,36],[76,116,46],[104,136,60]],grade:['rgba(255,230,170,.45)','rgba(40,110,120,.55)'],cloud:'10,26,18',mist:'214,232,214',
   geo(C){C.ry=-Math.max(C.keep+95,C.V*0.42);C.rw=24;C.can=(wx,wy)=>fbm(wx/170+21,wy/170+4,3);C.onRw=(wx,wy,m=0)=>Math.abs(wy-C.ry)<C.rw+m;C.track=wy=>Math.sin(wy*0.02)*10},
@@ -8143,8 +8145,8 @@ const TLOOK={
     for(let sx=-R;sx<R;sx+=12){x.fillStyle=`rgba(${rn()<.5?'40,40,36':'170,168,156'},${(0.06+rn()*0.1).toFixed(2)})`;x.fillRect(sx,ry-rw,12,rw);x.fillStyle=`rgba(${rn()<.5?'40,40,36':'170,168,156'},${(0.06+rn()*0.1).toFixed(2)})`;x.fillRect(sx,ry,12,rw)}
     x.strokeStyle='rgba(30,40,20,.55)';x.lineWidth=0.5;x.beginPath();for(let sx=-R;sx<R;sx+=12){x.moveTo(sx,ry-rw);x.lineTo(sx,ry+rw)}x.moveTo(-R,ry);x.lineTo(R,ry);x.stroke();
     x.fillStyle='rgba(230,230,220,.35)';for(let sx=-R;sx<R;sx+=30)x.fillRect(sx,ry-0.8,16,1.6);x.fillRect(-R,ry-rw+2,2*R,0.9);x.fillRect(-R,ry+rw-2.9,2*R,0.9);
-    x.fillStyle='rgba(58,90,36,.6)';for(let n=0;n<R;n++){const px=(rn()-.5)*2*R,py=rn()<.8?ry+(rn()<.5?-1:1)*(rw-rn()*7):ry+(rn()-.5)*2*rw;x.beginPath();x.arc(px,py,0.8+rn()*(rn()<.1?6:2.6),0,TAU_);x.fill()}
-    x.fillStyle='rgba(20,26,30,.35)';for(let n=0;n<10;n++){x.beginPath();x.ellipse((rn()-.5)*2*R,ry+(rn()-.5)*rw,4+rn()*8,2+rn()*3,0,0,TAU_);x.fill()}x.restore();
+    x.fillStyle='rgba(58,90,36,.6)';for(let n=0;n<R;n++){const px=(rn()-.5)*2*R,py=rn()<.8?ry+(rn()<.5?-1:1)*(rw-rn()*7):ry+(rn()-.5)*2*rw;x.beginPath();x.arc(px,py,0.8+rn()*(rn()<.1?6:2.6),0,TAU);x.fill()}
+    x.fillStyle='rgba(20,26,30,.35)';for(let n=0;n<10;n++){x.beginPath();x.ellipse((rn()-.5)*2*R,ry+(rn()-.5)*rw,4+rn()*8,2+rn()*3,0,0,TAU);x.fill()}x.restore();
     const clear=(wx,wy,rad)=>!C.onRw(wx,wy,rad+4)&&Math.abs(wx-roadX(wy,keep))>9+rad&&!(wy<-keep&&wy>ry&&Math.abs(wx-C.track(wy))<8+rad);
     tTufts(C,1.35,(wx,wy)=>clear(wx,wy,0));tPebbles(C,['#6a5236','#826442'],0.5,(wx,wy)=>clear(wx,wy,0));
     for(let n=C.cnt(160000,1,1);n--;){const px=(rn()<.5?-1:1)*(C.keep+60+rn()*C.V*0.3);x.save();x.translate(px,ry+rw+26);x.scale(1.8,1.8);propPlaneWreck(x,ppu*1.8,0,0,0.3+rn()*0.3,rn);x.restore();C.take(px,ry+rw+26,50)}
@@ -8156,8 +8158,8 @@ const TLOOK={
     for(let n=C.cnt(40000,14);n--;){const p=C.spot(5,clear);if(p)for(let i=2+(rn()*3|0);i--;)propDrum(x,ppu,p[0]+(rn()-.5)*6,p[1]+(rn()-.5)*6,rn)}
     for(let n=C.cnt(70000,8,2);n--;){const p=C.spot(8,clear);if(p)propSandbags(x,ppu,p[0],p[1],Math.atan2(p[1],p[0])+Math.PI)}},
   lo(C){const rw=new Path2D(),can=new Path2D(),hi=new Path2D(),r=rng(C.seed+3);rw.rect(-C.R*2,C.ry-C.rw,C.R*4,C.rw*2);
-    for(let i=0;i<150;i++){const a=r()*TAU_,d=C.keep+30+r()*C.R,px=Math.cos(a)*d,py=Math.sin(a)*d,s=10+r()*18;if(C.onRw(px,py,s)||C.can(px,py)<0.45||Math.max(Math.abs(px),Math.abs(py))<C.keep+s)continue;
-      can.moveTo(px+s,py);can.arc(px,py,s,0,TAU_);hi.moveTo(px-s*0.25+s*0.62,py-s*0.25);hi.arc(px-s*0.25,py-s*0.25,s*0.62,0,TAU_)}
+    for(let i=0;i<150;i++){const a=r()*TAU,d=C.keep+30+r()*C.R,px=Math.cos(a)*d,py=Math.sin(a)*d,s=10+r()*18;if(C.onRw(px,py,s)||C.can(px,py)<0.45||Math.max(Math.abs(px),Math.abs(py))<C.keep+s)continue;
+      can.moveTo(px+s,py);can.arc(px,py,s,0,TAU);hi.moveTo(px-s*0.25+s*0.62,py-s*0.25);hi.arc(px-s*0.25,py-s*0.25,s*0.62,0,TAU)}
     return[['#142410',can,0],['#28441c',hi,0],['#50524c',rw,0],['rgba(220,220,210,.3)',tPath([[-C.R*2,C.ry],[C.R*2,C.ry]]),1.2]]}},
  island:{tufts:[[40,62,36],[52,78,44],[70,92,54],[90,104,66]],grade:['rgba(200,220,255,.3)','rgba(30,60,120,.62)'],surf:'214,236,250',cloud:'8,14,30',
   macro(C){return(wx,wy,q,c)=>{const si=seaIn(wx,wy),lava=sstep(0.58,0.66,fbm(wx/110+13,wy/110+2,3));
@@ -8190,8 +8192,8 @@ const TLOOK={
       const n=0.9+0.12*fbm(wx/40,wy/40,2);for(let i=0;i<3;i++)c[i]=(d>C.bw-6?[118,114,106][i]:[56,58,60][i]*n);c[3]=1;return}
     if(d<C.bw+4){for(let i=0;i<3;i++)c[i]=[150,144,132][i];c[3]=1}}},
   bake(C){const{x,ppu,rn,R,keep,B}=C,bw=C.bw;tTufts(C,0.5,(wx,wy)=>C.street(wx,wy)>bw+4&&Math.hypot(wx,wy)>C.p1);
-    x.strokeStyle='rgba(60,56,50,.35)';x.lineWidth=0.6;for(let r=C.p0+8;r<C.p1;r+=9){x.beginPath();x.arc(0,0,r,0,TAU_);x.stroke()}x.beginPath();for(let a=0;a<TAU_;a+=TAU_/64){x.moveTo(Math.cos(a)*C.p0,Math.sin(a)*C.p0);x.lineTo(Math.cos(a)*C.p1,Math.sin(a)*C.p1)}x.stroke();
-    x.strokeStyle='rgba(190,178,150,.55)';x.lineWidth=2.5;x.beginPath();x.arc(0,0,C.p1-1.5,0,TAU_);x.stroke();
+    x.strokeStyle='rgba(60,56,50,.35)';x.lineWidth=0.6;for(let r=C.p0+8;r<C.p1;r+=9){x.beginPath();x.arc(0,0,r,0,TAU);x.stroke()}x.beginPath();for(let a=0;a<TAU;a+=TAU/64){x.moveTo(Math.cos(a)*C.p0,Math.sin(a)*C.p0);x.lineTo(Math.cos(a)*C.p1,Math.sin(a)*C.p1)}x.stroke();
+    x.strokeStyle='rgba(190,178,150,.55)';x.lineWidth=2.5;x.beginPath();x.arc(0,0,C.p1-1.5,0,TAU);x.stroke();
     const lines=new Path2D();for(let k=-Math.ceil(R/B);k<=Math.ceil(R/B);k++){const o=k*B;for(const[a,b]of[[-R,-C.p1],[C.p1,R]])for(const s of[-1,1]){const off=o===0?s*18:s*12;lines.moveTo(o+off,a);lines.lineTo(o+off,b);lines.moveTo(a,o+off);lines.lineTo(b,o+off)}}
     x.setLineDash([8,10]);x.strokeStyle='rgba(230,226,210,.32)';x.lineWidth=0.9;x.stroke(lines);x.setLineDash([]);
     for(const s of[-1,1])for(let d=C.p1+14;d<R;d+=22){propCrown(x,ppu,0,s*d,6+rn()*2,rn,[58,92,46]);propCrown(x,ppu,s*d,0,6+rn()*2,rn,[58,92,46])}
@@ -8201,15 +8203,15 @@ const TLOOK={
       const w=2*h-8,hh=2*h-8;if(fire||rn()<0.45)propRuin(x,ppu,cx,cy,w,hh,0,rn,fire,false);
       else{propRoof(x,ppu,cx,cy,w,hh,0,rn,[132,126,114]);const ci=h*0.45;x.fillStyle='#55624a';x.fillRect(cx-ci,cy-ci,2*ci,2*ci);x.fillStyle='rgba(0,0,0,.28)';x.fillRect(cx-ci,cy-ci,2*ci,4)}}
     const mk=['obelisk','statue','fountain','statue'];for(let i=0;i<4;i++){const a=Math.PI/4+i*Math.PI/2,r=keep*1.42+30;x.save();x.translate(Math.cos(a)*r,Math.sin(a)*r);x.scale(1.6,1.6);propMonument(x,ppu*1.6,0,0,mk[i],rn);x.restore()}
-    for(let i=0;i<16;i++){const a=(i+0.5)*TAU_/16,r=C.p1-14;if(i%4===1||i%4===2){const px=Math.cos(a)*r,py=Math.sin(a)*r;x.fillStyle='#8d887b';x.beginPath();x.arc(px,py,7,0,TAU_);x.fill();x.fillStyle='#3a2f24';x.beginPath();x.arc(px,py,5.6,0,TAU_);x.fill();propCrown(x,ppu,px,py,6,rn,[60,94,46])}}
-    for(let n=7;n--;){const a=rn()*TAU_,r=keep*1.3+rn()*(C.p1-keep*1.3);propCrater(x,Math.cos(a)*r,Math.sin(a)*r,3+rn()*5,rn)}
+    for(let i=0;i<16;i++){const a=(i+0.5)*TAU/16,r=C.p1-14;if(i%4===1||i%4===2){const px=Math.cos(a)*r,py=Math.sin(a)*r;x.fillStyle='#8d887b';x.beginPath();x.arc(px,py,7,0,TAU);x.fill();x.fillStyle='#3a2f24';x.beginPath();x.arc(px,py,5.6,0,TAU);x.fill();propCrown(x,ppu,px,py,6,rn,[60,94,46])}}
+    for(let n=7;n--;){const a=rn()*TAU,r=keep*1.3+rn()*(C.p1-keep*1.3);propCrater(x,Math.cos(a)*r,Math.sin(a)*r,3+rn()*5,rn)}
     for(const s of[-1,1]){const d=C.p1+60+rn()*40;propBarrier(x,ppu,0,s*d,0,6);propBarrier(x,ppu,s*d,0,Math.PI/2,6);propSandbags(x,ppu,26,s*(d+8),s<0?-Math.PI/2:Math.PI/2);propSandbags(x,ppu,s*(d+8),-26,s<0?Math.PI:0)}
     const onSt=(wx,wy,rad)=>C.street(wx,wy)<bw-6-rad*0.3&&Math.hypot(wx,wy)>C.p1+10;
     for(let n=C.cnt(7000,70,8);n--;){const p=C.spot(8,onSt);if(!p)continue;const alongX=Math.abs(p[1]-Math.round(p[1]/B)*B)<bw;propCar(x,ppu,p[0],p[1],(alongX?0:Math.PI/2)+(rn()-.5)*0.4+(rn()<.5?Math.PI:0),rn,rn()<0.75)}
     for(let n=C.cnt(12000,40,4);n--;){const s=3+rn()*5,p=C.spot(s,onSt);if(p)propRubble(x,ppu,p[0],p[1],s,rn,false)}
     for(let n=C.cnt(20000,20,2);n--;){const rc=3+rn()**2*9,p=C.spot(rc*1.3,onSt);if(p)propCrater(x,p[0],p[1],rc,rn)}},
   lo(C){const bl=new Path2D(),bv=new Path2D(),pz=new Path2D(),pk=new Path2D(),{R,B}=C;for(let k=-Math.ceil(R/B);k<=Math.ceil(R/B);k++){const o=k*B;bv.rect(o-C.bw,-R*2,C.bw*2,R*4);bv.rect(-R*2,o-C.bw,R*4,C.bw*2)}
-    pz.arc(0,0,C.p1,0,TAU_);for(const[cx,cy,h,kind]of C.blocks)(kind===0?pk:bl).rect(cx-h+4,cy-h+4,2*h-8,2*h-8);
+    pz.arc(0,0,C.p1,0,TAU);for(const[cx,cy,h,kind]of C.blocks)(kind===0?pk:bl).rect(cx-h+4,cy-h+4,2*h-8,2*h-8);
     return[['#212223',bv,0],['#56534c',pz,0],['#474439',bl,0],['#26361f',pk,0]]}}};
 // smoke sites: n picks from candidate points, seeded per theater (stable across the bake, Medium/Low and the plume pass)
 function tSitesPick(C,cands,n){const r=rng(C.seed+5),out=[];const c=cands.slice();for(let i=0;i<n&&c.length;i++){const k=r()*c.length|0,[x,y]=c.splice(k,1)[0];out.push({x,y,o:r(),v:i%4})}C.sites=out}
@@ -8217,23 +8219,21 @@ function tProps(C){const{R,keep,rn}=C,pa=C.area-(2*keep)**2,H=new Map(),CS=40;le
   const take=C.take=(wx,wy,rad)=>{const k=key(Math.floor(wx/CS),Math.floor(wy/CS));let a=H.get(k);if(!a)H.set(k,a=[]);a.push(wx,wy,rad);if(rad>mr)mr=rad};
   const hit=(wx,wy,rad)=>{const e=Math.ceil((rad+mr)/CS),i0=Math.floor(wx/CS),j0=Math.floor(wy/CS);for(let i=i0-e;i<=i0+e;i++)for(let j=j0-e;j<=j0+e;j++){const a=H.get(key(i,j));if(a)for(let q=0;q<a.length;q+=3)if(Math.hypot(a[q]-wx,a[q+1]-wy)<a[q+2]+rad)return true}return false};
   C.cnt=(per,cap,min=0)=>Math.max(min,Math.min(cap,Math.round(pa/per)));
-  C.spot=(rad,ok)=>{for(let t=0;t<14;t++){const a=rn()*TAU_,r0=Math.sqrt(rn()*(R*R-keep*keep)+keep*keep),wx=Math.cos(a)*r0,wy=Math.sin(a)*r0;
+  C.spot=(rad,ok)=>{for(let t=0;t<14;t++){const a=rn()*TAU,r0=Math.sqrt(rn()*(R*R-keep*keep)+keep*keep),wx=Math.cos(a)*r0,wy=Math.sin(a)*r0;
     if(Math.max(Math.abs(wx),Math.abs(wy))<keep+rad+4||r0>R-rad||ok&&!ok(wx,wy,rad)||hit(wx,wy,rad))continue;take(wx,wy,rad);return[wx,wy]}return null}}
 // ---- per-frame theater passes ----
 // Medium/Low ground features, built once per (theater, vision, fort footprint)
 let _tLo=null;
-function drawLoFeatures(){const T=tLook();if(!T||!T.lo)return;const V=vision(),k=tKeep(),key=mapCur().id+'|'+V+'|'+k;
-  if(!_tLo||_tLo.key!==key)_tLo={key,list:T.lo(tGeo(mapCur().id,V,k))};
+function drawLoFeatures(){const T=tLook();if(!T||!T.lo)return;const C=tGeoCur();if(!_tLo||_tLo.C!==C)_tLo={C,list:T.lo(C)};
   for(const[st,p,lw]of _tLo.list){if(lw){ctx.strokeStyle=st;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke(p)}else{ctx.fillStyle=st;ctx.fill(p)}}}
 // surf: the baked foam line breathes in and out, plus a travelling swell line (one cached path, two strokes a frame)
 let _surf=null;
-function drawSurf(){const T=tLook();if(!T||!T.surf)return;const V=vision(),k=tKeep(),key=mapCur().id+'|'+V+'|'+k,g=tw().arc;
-  if(!_surf||_surf.key!==key){const R=V*1.18+30;_surf={key,p:shorePath(R,0,8)}}
+function drawSurf(){const T=tLook();if(!T||!T.surf)return;const C=tGeoCur(),g=tw().arc;if(!_surf||_surf.C!==C)_surf={C,p:shorePath(C.R,0,8)};
   const t=G?G.time:0,c=Math.cos(g.sea),s=Math.sin(g.sea),ph=(t*0.16)%1,m=ctx.getTransform(),lw=Math.max(1,1.3/sc);ctx.lineCap='round';ctx.lineJoin='round';
   ctx.translate(c*(2+Math.sin(t*0.9)*2.5),s*(2+Math.sin(t*0.9)*2.5));ctx.globalAlpha=0.35+0.2*Math.sin(t*0.9+1);ctx.strokeStyle=`rgb(${T.surf})`;ctx.lineWidth=lw*1.6;ctx.stroke(_surf.p);xr(m);
   ctx.translate(c*(34-ph*30),s*(34-ph*30));ctx.globalAlpha=Math.sin(ph*Math.PI)*0.3;ctx.lineWidth=lw;ctx.stroke(_surf.p);xr(m);ctx.globalAlpha=1}
 // smoke columns over the burning blocks (City, Capital): a few big baked smoke sprites per site riding the wind, fire glow at the base
-function drawPlumes(){const T=tLook();if(!T||!T.plumes)return;const P=T.plumes,C=tGeo(mapCur().id,vision(),tKeep());if(!C||!C.sites||!C.sites.length)return;
+function drawPlumes(){const T=tLook();if(!T||!T.plumes)return;const P=T.plumes,C=tGeoCur();if(!C||!C.sites||!C.sites.length)return;
   const t=G.time,n=Math.max(2,Math.round((HQ?7:4)*(AQ.q||1))),hw=VW/2/sc+80,hh=VH/2/sc+80,lamp=DN.lamp||0;
   for(const s of C.sites){if(Math.abs(s.x)>hw+60||Math.abs(s.y)>hh+60)continue;
     ctx.globalCompositeOperation='lighter';blit(fireSprite(),s.x,s.y,P.r*(0.7+0.12*Math.sin(t*9+s.o*20)),0.35+0.4*lamp);ctx.globalCompositeOperation='source-over';
