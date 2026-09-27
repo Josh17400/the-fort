@@ -1223,7 +1223,7 @@ const CLEAR_W=100,STAR1_W=50;
 // the commander's research, a finished one's is research-boosted units at higher Armory caps, so the enemy multiplier ramps with the
 // wave: hp0/dmg0 up to wave MAP_W0, the full hpMul/dmgMul from MAP_W1, geometric in between (mapMul). Rows for theaters 2-8
 // (i = order index - 1): [hpMul, dmgMul, rewMul, hp0, dmg0]. rewMul is flat (it only scales bounties and, with them, prices).
-const MAP_DIFT=[null,[9,4.58,4.58,2,1.62],[50,15,15,6,3.46],[140,30.7,30.7,30,10.6],[550,79.3,79.3,60,17.1],[2500,226,226,80,20.8],[7000,462,462,90,22.6],[15000,783,783,100,24.3]];
+const MAP_DIFT=[null,[9,4.58,4.58,2,1.62],[38,12.4,12.4,6,3.46],[140,30.7,30.7,30,10.6],[550,79.3,79.3,60,17.1],[2500,226,226,80,20.8],[7000,462,462,90,22.6],[20000,956,956,100,24.3]];
 const MAP_DIF=i=>{const d=MAP_DIFT[i];return{hpMul:d[0],dmgMul:d[1],rewMul:d[2],hp0:d[3],dmg0:d[4]}},MAP_W0=5,MAP_W1=95;
 const MAPS=[
  {id:'desert',ord:1,name:'Desert Outpost',blurb:'A lone firebase at the edge of the sand sea. Every commander learns to hold here.',
