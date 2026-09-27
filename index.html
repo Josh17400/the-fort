@@ -544,6 +544,7 @@ body[data-gfx=high] #medalToast{background:rgba(22,27,18,.93);-webkit-backdrop-f
 #hud.on[data-mode=land] ~ #medalToast{max-width:var(--lane-w)}
 #medalToast:after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,231,160,.18) 50%,transparent 65%);transform:translateX(-100%)}
 #medalToast.on:after{animation:mshine 1.1s .25s ease-out}@keyframes mshine{to{transform:translateX(100%)}}
+#medalToast .mts{color:var(--c-gold-hi);letter-spacing:.06em}
 #medalToast .mti{width:44px;height:44px;flex:none;border-radius:50%;display:grid;place-items:center;color:#2a1d04;background:radial-gradient(circle at 50% 32%,#ffe7a0,#e3b53c 55%,#9c7418);border:1px solid #ffd76a;box-shadow:0 0 18px rgba(227,181,60,.45)}
 #medalToast.on .mti{animation:mpop .5s cubic-bezier(.2,.9,.3,1.5)}@keyframes mpop{from{transform:scale(.4) rotate(-25deg)}}
 #medalToast .mtb{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -658,7 +659,7 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
   background:linear-gradient(135deg,var(--t1) 0%,var(--t2) 58%,var(--t3) 100%);border:1px solid rgba(255,255,255,.16);box-shadow:inset 0 -10px 18px rgba(0,0,0,.3)}
 .the::after{content:"";position:absolute;inset:0;background:repeating-radial-gradient(circle at 28% 72%,transparent 0 5px,rgba(10,12,8,.16) 5px 6px)}   /* contour lines */
 .the>b,.the>.ic{position:relative;z-index:1;font:800 17px/1 var(--f-display);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8)}
-.the.lk{filter:grayscale(.9) brightness(.5)}.the.lk>.ic{color:#e6ead9}
+.the.lk{--t1:#343a2e;--t2:#272c23;--t3:#1e221a;border-color:var(--c-line-2)}.the.lk>.ic{color:var(--c-dim);text-shadow:none}
 .thn{min-width:0;font:800 15px/1.15 var(--f-display);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .thb{display:flex;align-items:center;gap:12px;width:calc(100% + 8px);min-height:56px;margin:0 -4px;padding:8px 12px 8px 8px;border-radius:12px;cursor:pointer;touch-action:manipulation;
   text-align:left;font:inherit;color:var(--c-text);background:linear-gradient(90deg,rgba(227,181,60,.08),transparent 75%);border:1px solid var(--c-line);transition:border-color var(--d-1),background var(--d-1)}
@@ -1681,7 +1682,7 @@ function renderBase(){renderTheater();renderStartSel();renderMission();renderAAR
 // second theater opens it grows into a selector (emblem, theater n of 8, best wave, CHANGE). The list sheet shows every open
 // theater, the next locked one with its unlock progress, and the rest as one-line teasers.
 const thVars=m=>{const g=m.ground,c=a=>rgb(a,1.6);return`--t1:${c(g.lush)};--t2:${c(g.dry)};--t3:${c(g.dirt)}`};
-const thEmb=(m,lk)=>`<span class="the${lk?' lk':''}" style="${thVars(m)}" aria-hidden="true">${lk?ic('lock',16):'<b>'+m.ord+'</b>'}</span>`;
+const thEmb=(m,lk)=>`<span class="the${lk?' lk':''}"${lk?'':` style="${thVars(m)}"`} aria-hidden="true">${lk?ic('lock',16):'<b>'+m.ord+'</b>'}</span>`;
 const starsHtml=(n,s=14)=>`<span class="stars" role="img" aria-label="${n} of 3 stars">${[0,1,2].map(i=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}"${i<n?' class="on"':''}><path d="${IC.star}"/></svg>`).join('')}</span>`;
 const thNew=()=>MAPS.some(m=>mapOpen(m.id)&&!mapRec(m.id).visited);
 function renderTheater(){const el=$('theater'),m=mapCur(),r=mapRec(m.id),one=mapsOpen().length<2;el.classList.toggle('one',one);
