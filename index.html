@@ -677,8 +677,8 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
 @media (max-width:419px){.thb-go .tx{display:none}}
 #thList>.panel,#gemSheet>.panel{max-width:560px}
 /* R&D lab: running jobs, countdowns and finish-now buttons (labUi() refreshes the [data-left]/[data-lpb]/[data-skipc] nodes) */
-.lab{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:6px}
-.lab>.eyebrow{margin-bottom:2px;color:var(--c-blue-hi)}.lab>.eyebrow::before{background:var(--c-blue)}
+.lstrip{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.lstrip>.eyebrow{margin-bottom:2px;color:var(--c-blue-hi)}.lstrip>.eyebrow::before{background:var(--c-blue)}
 .labs{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:6px 12px 6px 8px;border-radius:12px;border:1px solid var(--c-line);background:rgba(0,0,0,.18);color:var(--c-text);font:inherit;text-align:left}
 .labs .ico{width:34px;height:34px;flex:none;color:var(--c-blue)}
 button.labs{cursor:pointer;touch-action:manipulation;transition:border-color var(--d-1)}
@@ -1221,7 +1221,7 @@ const CLEAR_W=100,STAR1_W=50;
 // Theater difficulty, tuned on the campaign progression model (.qa/cbot.py): each theater's enemies are sized to the R&D a player
 // realistically has on arrival (research is gated by theater, see RS_GATE), so every theater is a fair fresh-fort climb to wave 100.
 // Rows are [hpMul, dmgMul, rewMul] for theaters 2-8 (i = order index - 1).
-const MAP_DIFT=[null,[1.9,1.6,1.8],[3.6,2.6,3.2],[6.9,4.1,5.8],[13,6.6,10],[25,10.5,19],[47,16.8,34],[90,27,61]];
+const MAP_DIFT=[null,[9,4.58,4.58],[22,8.52,8.52],[130,29.2,29.2],[500,74.2,74.2],[4000,313,313],[5500,391,391],[20000,956,956]];
 const MAP_DIF=i=>{const d=MAP_DIFT[i];return{hpMul:d[0],dmgMul:d[1],rewMul:d[2]}};
 const MAPS=[
  {id:'desert',ord:1,name:'Desert Outpost',blurb:'A lone firebase at the edge of the sand sea. Every commander learns to hold here.',
@@ -1902,7 +1902,7 @@ function renderPicks(){const el=$('picks'),p=recommend(3);if(!p.length){el.hidde
         +`<div class="pdv"><span>${u.val(l)}</span><b>→ ${u.val(l+1)}</b></div><button class="btn${ok?' pos':''}" data-buy="${u.id}"${ok?'':' disabled'}><span>${ok?'<span class="nc">$'+fmtN(c)+'</span> · BUY':'SAVE <span class="nc">$'+fmtN(c-S.bank)+'</span>'}</span></button></div>`}).join('')}
 function renderRdSum(){const rd=rsReady(),el=$('rdSum'),q=S.lab.q;if(!rd.length&&!q.length){el.innerHTML='';return}const n=rsAffordN(),cost=r=>r.t[rsOwned(r.id)+1].cost;
   el.innerHTML=`<div class="panel rdsum"><div class="sec-h"><div class="eyebrow">R&amp;D</div><button class="btn ghost sm" data-view-go="rd">OPEN R&amp;D<span class="chev">→</span></button></div>`
-    +(q.length?`<div class="lab" style="margin-bottom:12px">${q.map(j=>`<button class="labs on" data-rsgo="${j.id}"><span class="ico">${ic(RLINES[j.id].u,18)}</span><span class="lb"><span class="ln">${labName(j)}</span><span class="lpb"><i data-lpb="${j.id}" style="width:${(100*labPct(j)).toFixed(1)}%"></i></span></span><b data-left="${j.id}">${durTxt(labLeft(j))}</b></button>`).join('')}</div>`:'')
+    +(q.length?`<div class="lstrip" style="margin-bottom:12px">${q.map(j=>`<button class="labs on" data-rsgo="${j.id}"><span class="ico">${ic(RLINES[j.id].u,18)}</span><span class="lb"><span class="ln">${labName(j)}</span><span class="lpb"><i data-lpb="${j.id}" style="width:${(100*labPct(j)).toFixed(1)}%"></i></span></span><b data-left="${j.id}">${durTxt(labLeft(j))}</b></button>`).join('')}</div>`:'')
     +`<div class="rdl">${ic('research',18)}<b>${fmtN(S.rp)} RP</b>${n?`<span>· <em>enough for ${n} ${pl(n,'tier')}</em></span>`:''}</div><div class="rdc">`
     +rd.slice().sort((a,b)=>cost(a)-cost(b)).slice(0,3).map(r=>`<button class="chip-btn rd" data-rsgo="${r.id}">${ic(r.u,14)}${r.t[rsOwned(r.id)+1].n} · ${cost(r)} RP<span class="chev">→</span></button>`).join('')+'</div></div>'}
 // field manual (Base) and the How to play sheet share one builder
@@ -2021,7 +2021,7 @@ function paintThumb(cv){const[id,ks]=cv.dataset.th.split(':'),k=+ks,r=RLINES[id]
   c.stroke(new Path2D(IC[r.u]||IC.star));c.restore()}
 function rsStats(r,k){const t=r.t[k],d=t.mul/r.t[rsOwned(r.id)].mul;
   return`<div class="rts"><span>${r.id==='walls'?'WALL HP':'DMG'} <b>×${fxm(t.mul)}</b>${d>1.001?` <em>×${fxm(d)} vs now</em>`:''}</span>`
-    +(t.pen?`<span>AP <b>${pct(t.pen)}</b></span>`:'')+(t.hp&&t.hp!==1?`<span>HP <b>×${fxm(t.hp)}</b></span>`:'')+(k>rsOwned(r.id)&&t.ms?`<span class="tm">LAB <b>${durTxt(t.ms)}</b></span>`:'')+'</div>'}
+    +(t.pen?`<span>AP <b>${pct(t.pen)}</b></span>`:'')+(t.hp&&t.hp!==1?`<span>HP <b>×${fxm(t.hp)}</b></span>`:'')+(k>rsOwned(r.id)&&t.ms&&!labOf(r.id)?`<span class="tm">LAB <b>${durTxt(t.ms)}</b></span>`:'')+'</div>'}
 // the wave gate of a locked tier: progress on the theater that opens it (or which theater that is, while it is still closed)
 const rsGate=t=>{if(rsProg()>=t.gate||t.gate<=1)return'';const m=gateMap(t.gate),w=gateWave(t.gate),open=mapOpen(m.id),b=open?Math.min(mapBest(m.id),w):0;
   return`<div class="rgt">${ic('trophy',12)}${open?gateTxt(t.gate):'Opens in '+m.name+' (theater '+m.ord+')'}${open?`<em>best ${b}</em>`:''}<i style="width:${Math.round(100*b/w)}%"></i></div>`};
@@ -2041,7 +2041,7 @@ function labStrip(){const b=S.lab,rows=b.q.map(j=>`<button class="labs on" data-
     +`<span class="lpb"><i data-lpb="${j.id}" style="width:${(100*labPct(j)).toFixed(1)}%"></i></span></span><b data-left="${j.id}">${durTxt(labLeft(j))}</b></button>`);
   for(let i=b.q.length;i<b.slots;i++)rows.push(`<div class="labs idle">${ic('research',16)}<span>Lab idle${rsReady().length?' · start a tier below':''}</span></div>`);
   if(b.slots<LAB_SLOTS_MAX&&rsProg()>CLEAR_W)rows.push(`<button class="labs add" data-gems>${ic('lock',14)}<span>SECOND LAB SLOT</span><b>${ic('gem',13)}${fmtN(LAB_SLOT_GEMS)}</b></button>`);
-  return`<div class="lab"><div class="eyebrow">LAB · ${b.q.length} OF ${b.slots} ${pl(b.slots,'SLOT')} BUSY</div>${rows.join('')}</div>`}
+  return`<div class="lstrip"><div class="eyebrow">LAB · ${b.q.length} OF ${b.slots} ${pl(b.slots,'SLOT')} BUSY</div>${rows.join('')}</div>`}
 const rsSigHtml=t=>{const s=sigText(t.sig);return s?`<div class="rsg">${ic('star',14)}<span>${s}</span></div>`:''};
 // why the next tier is blocked, said once (the wave gate already has its own progress chip)
 function rsWhyHtml(r,k){const own=rsOwned(r.id),t=r.t[k];if(rsNF(r)||k<=own)return'';
@@ -2100,7 +2100,7 @@ function renderResearch(){const nar=rsNarrow(),vis=RLINES.lines.filter(rsVis),r0
     h+=rsHead(r,true)+'<div class="rtls">'+r.t.map((t,k)=>{if(k<own||k>own+1)return'';const st=rsStL(r,k),on=k===sel;
       return`<div class="rtr ${st}${on?' sel':''}" data-k="${k}" style="${rsEraVars(t)}"><button data-rst="${k}" aria-expanded="${on}"><span class="mth"><canvas data-th="${r.id}:${k}" width="92" height="92"></canvas></span>`
         +`<span class="rb"><span class="rtn">${t.n}</span><span class="rtl2">TIER ${rank(k+1)} <span class="badge ${RS_B[st]}">${RS_STL[st]}</span></span></span>`
-        +`<span class="rc">${st==='own'||st==='act'||st==='kit'?ic('star',16):st==='lab'?`<span data-left="${r.id}">${durTxt(labLeft(labOf(r.id)))}</span>`:t.cost+' RP'}</span></button>`
+        +`<span class="rc">${st==='own'||st==='act'||st==='kit'?ic('star',16):st==='lab'?(on?ic('research',16):`<span data-left="${r.id}">${durTxt(labLeft(labOf(r.id)))}</span>`):t.cost+' RP'}</span></button>`
         +(on?`<div class="rtx">${t.w?`<div class="rtw">${t.w}</div>`:''}${rsStats(r,k)}${rsSigHtml(t)}${st==='lab'?labBar(labOf(r.id)):''}${st==='lk'?rsGate(t)+rsWhyHtml(r,k):''}</div>`:'')+'</div>'}).join('')
       +(rsDone(r.id)?`<div class="rtr" data-k="rf" style="${rsEraVars(r.t[r.t.length-1])}"><button disabled><span class="mth">${ic('repair',22)}</span><span class="rb"><span class="rtn">Refit Mk ${rank(rsRefit(r).n+1)}</span><span class="rtl2">ENDLESS · +8% ${r.id==='walls'?'WALL HP':'DMG'} EACH</span></span><span class="rc">${rsRefit(r).c} RP</span></button></div>`:'')+'</div>';
     h+=rsCta(r)}
@@ -2191,12 +2191,12 @@ function skipClick(b){const id=b.dataset.rsskip,j=labOf(id);if(!j){renderHome();
 // header gem chip: count-up flash when gems move (gemAdd/gemSpend call this; safe before the header exists)
 function gemPop(n){const b=$('gemBank');if(!b)return;b.textContent=fmtN(S.gems|0);if(n>0){const c=$('gemChip');c.classList.remove('pop');void c.offsetWidth;c.classList.add('pop')}}
 // the gems sheet: balance, how to earn them, what they buy (the phase 4 shop hangs off this sheet)
-function gemHtml(){const sl=S.lab.slots<LAB_SLOTS_MAX,ok=(S.gems|0)>=LAB_SLOT_GEMS,eg=h=>fmtN(labSkipCost(h*3600e3));
+function gemHtml(){const sl=S.lab.slots<LAB_SLOTS_MAX,ok=(S.gems|0)>=LAB_SLOT_GEMS,eg=h=>ic('gem',11)+fmtN(labSkipCost(h*3600e3));
   return`<div class="gmh">${ic('gem',30)}<div><b>${fmtN(S.gems|0)}</b><small>GEMS</small></div></div>`
     +`<div class="eyebrow">EARN</div><ul class="gml"><li>${ic('map',18)}<span>First clear of a theater<small>Hold wave ${CLEAR_W} to clear it</small></span><b>+${GEM_FREE.clear(1)} to +${GEM_FREE.clear(MAPS.length)}</b></li>`
     +`<li>${ic('star',18)}<span>Theater stars<small>Wave ${STAR1_W} · wave ${CLEAR_W} · wave ${CLEAR_W} unbreached</small></span><b>+${GEM_FREE.star[1]} · +${GEM_FREE.star[2]} · +${GEM_FREE.star[3]}</b></li>`
     +`<li>${ic('medal',18)}<span>Medals<small>First award · each rank after</small></span><b>+${GEM_FREE.medal} · +${GEM_FREE.rank}</b></li></ul>`
-    +`<div class="eyebrow">SPEND</div><ul class="gml"><li>${ic('research',18)}<span>Finish research now<small>The price falls as the timer runs down: 10 min ${eg(1/6)} · 1 hour ${eg(1)} · 8 hours ${eg(8)}</small></span></li>`
+    +`<div class="eyebrow">SPEND</div><ul class="gml"><li>${ic('research',18)}<span>Finish research now<small>The price falls as the timer runs down: 10 min ${eg(1/6)} · 1 h ${eg(1)} · 8 h ${eg(8)}</small></span></li>`
     +(sl?`<li>${ic('research',18)}<span>Second lab slot<small>Research two tiers at once, for good</small></span><button class="btn sm gm${ok?'':' short'}" data-slot>${ic('gem',13)}${fmtN(LAB_SLOT_GEMS)}</button></li>`:'')+'</ul>'}
 let _gemFrom=null;
 function openGems(){fillIcons();$('gemBody').innerHTML=gemHtml();$('gemBody').scrollTop=0;_gemFrom=document.activeElement;$('gemSheet').classList.add('on');setTimeout(()=>$('gemClose').focus({preventScroll:true}),30)}
