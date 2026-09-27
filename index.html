@@ -1023,6 +1023,170 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
 }
 .panel.aar{border:1px solid rgba(227,181,60,.8)!important;background:linear-gradient(180deg,rgba(227,181,60,.2),rgba(227,181,60,.07)) ,var(--glass,#14180f)!important;box-shadow:0 0 0 1px rgba(227,181,60,.25),0 10px 34px rgba(227,181,60,.16)!important}
 .panel.aar .eyebrow,.panel.aar .sec-h .eyebrow{color:#ffcf5a!important}.panel.aar .tile b{color:#ffe08a}
+/* ---- phase 4: Daily Ops, daily challenge, login streak, Second Wind, simulated ads, gem shop. Daily Ops wears the gem violet (its
+   rewards are gems), the challenge wears ember orange (a combat event), the AAR stays gold (owner decision). ---- */
+.toast.gm .ic{color:var(--c-gem)}
+.ni .dot.vio{background:var(--c-gem);box-shadow:0 0 0 2px var(--c-bar),0 0 8px rgba(185,140,255,.85)}
+#daily:empty{display:none}#daily{display:flex;flex-direction:column;gap:inherit}
+.dops{display:flex;flex-direction:column;gap:12px;border-color:rgba(185,140,255,.3);background:linear-gradient(180deg,rgba(185,140,255,.09),rgba(185,140,255,0) 140px),var(--c-s1)}
+body.mobile #home .panel.dops{background:linear-gradient(180deg,rgba(185,140,255,.09),rgba(185,140,255,0) 140px),rgba(22,27,18,.8)}
+.dops>.sec-h{margin:0}.dops>.sec-h .eyebrow{color:var(--c-gem-hi)}.dops>.sec-h .eyebrow::before{background:var(--c-gem)}
+.dreset{display:inline-flex;align-items:center;gap:5px;font:600 12px var(--f-display);letter-spacing:.06em;color:var(--c-dim);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dreset .ic{color:var(--c-gem)}
+/* streak strip: 7 pips + label, opens the streak sheet */
+.dstk{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:6px 12px;border-radius:12px;cursor:pointer;touch-action:manipulation;text-align:left;font:inherit;color:var(--c-text);
+  background:rgba(0,0,0,.2);border:1px solid var(--c-line);transition:border-color var(--d-1),background var(--d-1)}
+.dstk .pips{display:flex;gap:4px;flex:none}.dstk .pips i{width:10px;height:10px;border-radius:3px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)}
+.dstk .pips i.on{background:var(--g-gem);border-color:transparent;box-shadow:0 0 6px rgba(185,140,255,.5)}.dstk .pips i.big{width:16px}
+.dstk .pips i.now{border-color:var(--c-gem-hi);animation:pipPulse 1.6s ease-in-out infinite}
+@keyframes pipPulse{50%{box-shadow:0 0 0 3px rgba(185,140,255,.25)}}body.rm .dstk .pips i.now{animation:none}
+.dstk .stx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.dstk .stx b{font:800 13px/1.2 var(--f-display);letter-spacing:.06em}
+.dstk .stx small{font:400 12px/1.3 var(--f-body);color:var(--c-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dstk.can{border-color:var(--b-gem);background:linear-gradient(90deg,rgba(185,140,255,.16),rgba(185,140,255,.04))}.dstk.can .stx small{color:var(--c-gem-hi)}
+@media (hover:hover){.dstk:hover{border-color:var(--c-gem)}}
+/* mission rows */
+.dql{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.dq{display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 8px 8px 10px;border-radius:12px;background:var(--g-card);border:1px solid var(--c-line)}
+.dq .dqi{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:10px;color:var(--c-gem-hi);background:var(--t-gem);border:1px solid rgba(185,140,255,.22)}
+.dq .dqb{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.dq .dqt{font:600 13px/1.3 var(--f-body);color:var(--c-text)}
+.dq .dqm{display:flex;align-items:center;gap:8px}.dq .dqm>span{flex:none;font:700 11px var(--f-display);letter-spacing:.04em;color:var(--c-dim);font-variant-numeric:tabular-nums}
+.dqbar{flex:1;display:block;height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
+.dqbar>i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#8f5cf2,#d2b2ff);transition:width var(--d-4) var(--e-out)}
+.dq .dqr{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:64px;font:700 12px/1 var(--f-display);color:var(--c-gem-hi);white-space:nowrap}
+.dq .dqr small{font:600 11px var(--f-display);color:var(--c-blue-hi)}.dq .dqr .ic{vertical-align:-2px;color:var(--c-gem)}
+.dq.done{border-color:var(--b-gem);background:linear-gradient(90deg,rgba(185,140,255,.14),rgba(185,140,255,.03))}.dq.done .dqbar>i{background:var(--g-gem);box-shadow:0 0 8px rgba(185,140,255,.6)}
+.dq.got{opacity:.62}.dq.got .dqi{color:var(--c-green);background:var(--t-green);border-color:rgba(127,211,90,.3)}.dq.got .dqt{text-decoration:line-through;text-decoration-color:rgba(230,234,217,.35)}
+.dq.got .dqr{color:var(--c-green)}
+.dqc{position:relative;flex:none;display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:80px;min-height:40px;padding:0 12px;border-radius:10px;border:0;cursor:pointer;touch-action:manipulation;
+  font:800 12px/1 var(--f-display);letter-spacing:.08em;color:var(--c-on-gem);background:var(--g-gem);box-shadow:0 6px 18px rgba(143,92,242,.35),inset 0 1px 0 rgba(255,255,255,.4);transition:filter var(--d-1),transform var(--d-1)}
+.dqc::after{content:"";position:absolute;inset:-4px -2px}.dqc:active{transform:scale(.96)}.dqc .ic{flex:none}
+@media (hover:hover){.dqc:hover{filter:brightness(1.08)}}
+/* all-three bonus */
+.dqx{display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 8px 8px 12px;border-radius:12px;border:1px dashed rgba(185,140,255,.35);color:var(--c-text-2);font:500 13px/1.35 var(--f-body)}
+.dqx>.ic{flex:none;color:var(--c-gem)}.dqx>span{flex:1;min-width:0}.dqx b{color:var(--c-text);font-weight:600}.dqx em{font-style:normal;color:var(--c-gem-hi);font-weight:600;white-space:nowrap}
+.dqx.can{border-style:solid;border-color:var(--c-gem);background:linear-gradient(90deg,rgba(185,140,255,.18),rgba(185,140,255,.04));color:var(--c-text)}
+.dqx.got{opacity:.6}.dqx.got>.ic{color:var(--c-green)}
+.dqx .dqn{flex:none;padding-right:6px;font:700 12px var(--f-display);color:var(--c-dim);letter-spacing:.06em}
+.dad{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--b-gem);background:transparent;color:var(--c-gem-hi);cursor:pointer;touch-action:manipulation;
+  font:700 12px var(--f-display);letter-spacing:.1em;text-transform:uppercase;text-align:left}
+.dad>span{flex:1}.dad b{display:inline-flex;align-items:center;gap:4px;color:var(--c-gem)}.dad .adp{flex:none;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--t-gem);color:var(--c-gem)}.dad .adp .ic{fill:currentColor}
+@media (hover:hover){.dad:hover{background:var(--t-gem)}}
+.dlock{display:flex;align-items:center;gap:8px;margin:0;font:400 12px/1.35 var(--f-body);color:var(--c-dim)}.dlock .ic{flex:none}
+/* daily challenge card */
+.dch{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:12px;border-color:rgba(255,122,74,.4);
+  background:linear-gradient(160deg,rgba(255,122,74,.14),rgba(255,122,74,.02) 55%),var(--c-s1)}
+body.mobile #home .panel.dch{background:linear-gradient(160deg,rgba(255,122,74,.14),rgba(255,122,74,.02) 55%),rgba(22,27,18,.8)}
+.dch::before{content:"";position:absolute;right:-8px;top:-8px;width:52%;height:150px;pointer-events:none;background:var(--thart) right top/auto 100% no-repeat;opacity:.13;
+  -webkit-mask-image:linear-gradient(200deg,#000 20%,transparent 75%);mask-image:linear-gradient(200deg,#000 20%,transparent 75%)}
+.dch>*{position:relative}
+.dch>.sec-h{margin:0}.dch>.sec-h .eyebrow{color:#ffb08f}.dch>.sec-h .eyebrow::before{background:var(--c-orange)}
+.dch .badge{color:#ffcab3;border-color:rgba(255,122,74,.45)}
+.dchh{display:flex;align-items:center;gap:12px}.dchh .the{width:48px;height:48px;border-radius:12px}.dchh>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.dchh .dcs{font:400 12px/1.35 var(--f-body);color:var(--c-text-2)}
+.dchc{display:flex;flex-wrap:wrap;gap:6px}
+.dchc>span{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:4px 10px;border-radius:var(--rad-pill);font:600 12px/1.2 var(--f-body);color:var(--c-text);background:rgba(0,0,0,.25);border:1px solid var(--c-line-2)}
+.dchc>span .ic{flex:none;color:var(--c-gold-hi)}.dchc>span.mod{border-color:rgba(255,122,74,.5);background:rgba(255,122,74,.12)}.dchc>span.mod .ic{color:var(--c-orange)}
+.dchc>span.kit .ic{color:var(--c-blue)}
+.dchr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:8px}
+.dchr .tile>span{font:600 11px var(--f-display);letter-spacing:.16em;color:var(--c-dim)}
+.dchr .tile b{display:block;margin-top:4px;font:800 18px/1.1 var(--f-display);color:var(--c-text)}.dchr .tile b .ic{vertical-align:-2px;color:var(--c-gem)}
+.dchr .tile small{display:block;margin-top:4px;font:400 11px/1.3 var(--f-body);color:var(--c-text-2)}
+.btn.dcgo{width:100%;min-height:52px;font-size:15px;letter-spacing:.14em;color:#210a02;border:0;background:linear-gradient(135deg,#ffb48f,#ff6a3a);box-shadow:0 10px 28px rgba(255,106,58,.3),inset 0 1px 0 rgba(255,255,255,.45)}
+.btn.dcgo .ic{fill:currentColor}
+@media (hover:hover){.btn.dcgo:hover{background:linear-gradient(135deg,#ffb48f,#ff6a3a);filter:brightness(1.07)}}
+/* AAR additions (the AAR itself stays gold): 2x payout, challenge result */
+.aar2x{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:6px 14px 6px 8px;border-radius:var(--rad-md);cursor:pointer;touch-action:manipulation;text-align:left;
+  font:500 13px/1.3 var(--f-body);color:var(--c-on-gold);background:var(--g-gold);border:0;box-shadow:0 8px 24px rgba(227,181,60,.28),inset 0 1px 0 rgba(255,255,255,.45);transition:filter var(--d-1),transform var(--d-1)}
+.aar2x:active{transform:scale(.98)}@media (hover:hover){.aar2x:hover{filter:brightness(1.06)}}
+.aar2x .adp{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:rgba(26,20,5,.14)}.aar2x .adp .ic{fill:currentColor}
+.aar2x>span{flex:1;min-width:0}.aar2x b{display:block;font:800 15px/1.15 var(--f-display);letter-spacing:.08em}.aar2x small{font:500 12px var(--f-body);opacity:.8}
+.aar2x>em{flex:none;font:800 18px var(--f-display);font-style:normal}
+.aar2x.done{cursor:default;background:rgba(227,181,60,.1);color:#ffe08a;box-shadow:none;border:1px solid rgba(227,181,60,.5)}.aar2x.done .adp{background:rgba(127,211,90,.15);color:var(--c-green)}.aar2x.done .adp .ic{fill:none}
+.aar2x.done:active{transform:none}
+.dcres{display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 12px;border-radius:var(--rad-md);background:rgba(0,0,0,.2);border:1px solid rgba(227,181,60,.35);font:500 13px/1.35 var(--f-body);color:var(--c-text-2)}
+.dcres>.ic{flex:none;color:var(--c-gem)}.dcres>span{flex:1;min-width:0}.dcres b{color:var(--c-text);font-weight:700}.dcres em{font-style:normal;color:var(--c-gem-hi);font-weight:700;white-space:nowrap}
+.aarb{display:flex;gap:8px}.aarb .btn{flex:1}
+/* login streak + Second Wind cards */
+#stWin>.panel,#swWin>.panel{max-width:460px;padding:24px 20px 20px;text-align:center}
+#stWin>.panel{border-color:rgba(185,140,255,.55);background:linear-gradient(180deg,rgba(185,140,255,.2),rgba(185,140,255,.03) 50%),var(--c-s4);box-shadow:0 0 0 1px rgba(185,140,255,.15),0 20px 60px rgba(0,0,0,.5),0 0 70px rgba(143,92,242,.18)}
+.stw-top .eyebrow,.sw-top .eyebrow{justify-content:center}.stw-top .eyebrow{color:var(--c-gem-hi)}.stw-top .eyebrow::before{background:var(--c-gem)}
+.stw-top h2,.sw-top h2{margin:10px 0 6px;font:800 26px/1.1 var(--f-display);letter-spacing:.08em;text-transform:uppercase}
+.stw-top p,.sw-top p{margin:0 auto;max-width:38ch;font:400 13px/1.45 var(--f-body);color:var(--c-text-2)}
+.stg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:18px 0 12px}
+.sti{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:84px;padding:8px 4px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--c-line-2)}
+.sti small{font:700 11px var(--f-display);letter-spacing:.14em;color:var(--c-dim)}.sti .ic{color:var(--c-gem)}.sti b{font:800 16px/1 var(--f-display);color:var(--c-text)}
+.sti.big{grid-column:span 2;background:linear-gradient(135deg,rgba(185,140,255,.2),rgba(255,207,90,.08));border-color:rgba(185,140,255,.5)}.sti.big b{font-size:20px}.sti.big i{font:600 11px var(--f-body);font-style:normal;color:var(--c-blue-hi)}
+.sti.done{border-color:rgba(127,211,90,.35);background:rgba(127,211,90,.06)}.sti.done .ic,.sti.done b{opacity:.5}
+.sti.done::after{content:"";position:absolute;top:6px;right:6px;width:16px;height:16px;border-radius:50%;background:var(--c-green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230b1a05' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5 9-10'/%3E%3C/svg%3E") center/11px no-repeat}
+.sti.now{border-color:var(--c-gem-hi);background:linear-gradient(180deg,rgba(185,140,255,.3),rgba(185,140,255,.08));box-shadow:0 0 0 1px rgba(220,198,255,.4),0 0 24px rgba(143,92,242,.35)}
+.sti.now small{color:var(--c-gem-hi)}
+#stWin.on .sti.now{animation:stiPop .5s var(--e-spring) .15s both}@keyframes stiPop{0%{transform:scale(.85)}60%{transform:scale(1.06)}100%{transform:none}}body.rm #stWin.on .sti.now{animation:none}
+.stgr{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 16px;font:500 12px/1.35 var(--f-body);color:var(--c-text-2)}.stgr .ic{flex:none;color:var(--c-green)}.stgr.used .ic{color:var(--c-dim)}
+.stw-b,.sw-b{display:flex;flex-direction:column;gap:8px}.stw-b .btn,.sw-b .btn{width:100%}.sw-b .btn .ic{flex:none}
+.btn.gm .ic{fill:none}
+#swWin{z-index:calc(var(--z-directive) + 1);background:rgba(20,4,2,.62)}
+#swWin>.panel{border-color:rgba(239,90,79,.55);background:linear-gradient(180deg,rgba(239,90,79,.2),rgba(239,90,79,.03) 45%),var(--c-s4);box-shadow:0 0 0 1px rgba(239,90,79,.2),0 20px 60px rgba(0,0,0,.55),0 0 80px rgba(239,90,79,.2)}
+.sw-top .eyebrow{color:var(--c-red-hi)}.sw-top .eyebrow::before{background:var(--c-red)}
+.sw-top h2{font-size:30px;background:linear-gradient(180deg,#fff,#dcc6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+#swWin .thw-rules{margin:16px 0 14px}#swWin .thw-rules .ic{color:var(--c-gem)}
+.swbar{height:4px;margin:0 0 16px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}.swbar>i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--c-red),var(--c-gem));transform-origin:left}
+#swWin.on .swbar>i{animation:swDrain var(--sw-t,10s) linear forwards}#swWin.hold .swbar>i{animation-play-state:paused}@keyframes swDrain{to{transform:scaleX(0)}}
+@media (max-height:500px) and (orientation:landscape){#stWin>.panel,#swWin>.panel{max-width:720px;padding:16px 20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:10px 20px;align-items:center;text-align:left}
+  .stw-top .eyebrow,.sw-top .eyebrow{justify-content:flex-start}.stw-top h2,.sw-top h2{font-size:22px;margin:6px 0 4px}.stw-top p,.sw-top p{margin:0;font-size:12px}
+  .stg{margin:0;grid-row:span 3;grid-column:2;grid-template-columns:repeat(4,minmax(0,1fr))}.sti{min-height:60px;gap:2px}.stgr{justify-content:flex-start;margin:0}.stw-b{grid-column:1}.stw-b .btn.lg{min-height:48px;font-size:14px}
+  #swWin .thw-rules{margin:0;grid-row:span 2;grid-column:2;gap:6px}.swbar{margin:0;grid-column:1}.sw-b{grid-column:1/-1;flex-direction:row}.sw-b .btn.lg{min-height:48px;font-size:14px}}
+/* simulated ad / purchase sheet (web dev builds only) */
+#adOv{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:calc(16px + var(--safe-t)) 16px calc(16px + var(--safe-b));background:rgba(3,3,6,.94)}
+#adOv.on{display:flex;animation:fade var(--d-2) var(--e-out)}
+.adb{position:relative;width:100%;max-width:420px;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:14px;padding:18px;border-radius:20px;background:#12101a;border:1px solid rgba(185,140,255,.3);box-shadow:0 30px 80px rgba(0,0,0,.6);text-align:center}
+.adh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.adtag{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:var(--rad-pill);font:700 11px var(--f-display);letter-spacing:.14em;color:#12101a;background:#ffcf5a}
+.adx{min-height:36px;padding:0 14px;border-radius:var(--rad-pill);border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#fff;font:700 12px var(--f-display);letter-spacing:.12em;cursor:pointer}
+.adc{position:relative;display:grid;place-items:center;aspect-ratio:16/10;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 30% 30%,#3c2a6b,#140f22 70%)}
+.adc::before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent,rgba(185,140,255,.25),transparent 30%);animation:adSpin 3s linear infinite}
+body.rm .adc::before{animation:none}@keyframes adSpin{to{transform:rotate(1turn)}}
+.adc>div{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;color:#fff}.adc b{font:800 24px var(--f-display);letter-spacing:.12em}.adc small{font:500 12px var(--f-body);color:#c9bde6}
+.adc .adn{position:absolute;right:12px;bottom:12px;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.5);font:800 15px var(--f-display);color:#fff;background:rgba(0,0,0,.35)}
+.adf{display:flex;flex-direction:column;gap:8px}.adf p{margin:0;font:400 12px/1.4 var(--f-body);color:#a79dbf}.adf .btn{width:100%}
+.adbuy{display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);text-align:left}
+.adbuy>div{min-width:0}.adbuy b{display:block;font:800 17px var(--f-display);letter-spacing:.06em;color:#fff}.adbuy small{display:block;margin-top:3px;font:400 12px/1.35 var(--f-body);color:#b9aed3}.adbuy em{margin-left:auto;font:800 18px var(--f-display);font-style:normal;color:#fff}
+@media (max-height:500px) and (orientation:landscape){.adb{max-width:560px;gap:10px;padding:14px}.adc{aspect-ratio:16/6}}
+/* gem shop (grows out of the phase 3 gems sheet) */
+.gshop>.eyebrow{margin:18px 0 8px}
+.gstart{position:relative;overflow:hidden;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;align-items:center;margin-top:4px;padding:16px;border-radius:var(--rad-lg);
+  border:1px solid rgba(255,207,90,.55);background:linear-gradient(135deg,rgba(255,207,90,.18),rgba(185,140,255,.16) 60%,rgba(185,140,255,.06));box-shadow:0 0 30px rgba(185,140,255,.12)}
+.gstart .gpk{grid-row:span 3}.gstart .gst{font:700 11px var(--f-display);letter-spacing:.16em;color:var(--c-gold-hi)}
+.gstart h3{margin:0;font:800 18px/1.15 var(--f-display);letter-spacing:.06em;text-transform:uppercase}
+.gstart ul{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:3px;font:500 12px/1.35 var(--f-body);color:var(--c-text-2)}.gstart li{display:flex;gap:6px;align-items:flex-start}.gstart li .ic{flex:none;margin-top:1px;color:var(--c-gem)}
+.gstart .gsf{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin-top:10px}.gstart .gsf small{flex:1;font:600 11px var(--f-display);letter-spacing:.08em;color:var(--c-amber)}
+.gstart .btn{min-width:120px}
+.gpk{position:relative;display:grid;place-items:center;width:56px;height:56px;border-radius:14px;background:radial-gradient(circle at 50% 40%,rgba(210,178,255,.45),rgba(143,92,242,.12) 70%);border:1px solid rgba(185,140,255,.4);flex:none}
+.gpk .ic{position:absolute;color:#e6d6ff;filter:drop-shadow(0 2px 6px rgba(143,92,242,.8))}.gpk .ic+.ic{transform:translate(-11px,9px) scale(.66);opacity:.85}.gpk .ic+.ic+.ic{transform:translate(11px,10px) scale(.58);opacity:.75}
+.ggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.gcard{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px 10px;border-radius:14px;background:var(--g-card);border:1px solid var(--c-line-2);cursor:pointer;touch-action:manipulation;font:inherit;color:var(--c-text);
+  transition:border-color var(--d-1),transform var(--d-1)}
+.gcard:active{transform:scale(.97)}@media (hover:hover){.gcard:hover{border-color:var(--c-gem)}}
+.gcard .gn{display:flex;align-items:center;gap:4px;font:800 20px/1 var(--f-display);color:var(--c-text);font-variant-numeric:tabular-nums}.gcard .gl{font:600 11px var(--f-display);letter-spacing:.14em;color:var(--c-dim);text-transform:uppercase}
+.gcard .gb{min-height:14px;font:700 11px var(--f-display);letter-spacing:.06em;color:var(--c-green)}
+.gcard .gp{display:flex;align-items:center;justify-content:center;width:100%;min-height:40px;border-radius:10px;font:800 14px var(--f-display);letter-spacing:.06em;color:var(--c-on-gem);background:var(--g-gem)}
+.gcard .ghot{position:absolute;top:-1px;left:50%;transform:translateX(-50%);padding:3px 8px;border-radius:0 0 8px 8px;font:800 11px/1 var(--f-display);letter-spacing:.1em;color:var(--c-on-gold);background:var(--c-gold-hi);white-space:nowrap}
+.gcard.hot{border-color:rgba(255,207,90,.6)}
+.gnote{display:flex;align-items:center;gap:10px;margin:14px 0 4px;padding:12px 14px;border-radius:12px;background:rgba(0,0,0,.2);border:1px dashed var(--c-line-2);font:400 12px/1.4 var(--f-body);color:var(--c-text-2)}.gnote .ic{flex:none;color:var(--c-gem)}
+.gml li>.btn{flex:none}.gml li.own>b{color:var(--c-green)}
+.gfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;font:400 11px/1.4 var(--f-body);color:var(--c-dim)}
+.gfoot button{min-height:40px;padding:0 4px;border:0;background:none;color:var(--c-gem-hi);font:600 12px var(--f-body);text-decoration:underline;text-underline-offset:3px;cursor:pointer;flex:none}
+/* pause menu: free supply drop; directive modal: reroll */
+.pad{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;margin-top:10px;padding:0 14px;border-radius:10px;border:1px solid rgba(127,211,90,.5);background:rgba(127,211,90,.08);color:#bdf0a4;cursor:pointer;touch-action:manipulation;
+  font:800 13px var(--f-display,Oxanium,sans-serif);letter-spacing:.1em;text-align:left}
+.pad>span{flex:1;min-width:0}.pad small{display:block;margin-top:2px;font:500 11px var(--f-body,Inter,sans-serif);letter-spacing:0;color:var(--c-text-2,#b9c1aa)}.pad .ic{flex:none}
+#pauseAd:empty{display:none}
+#perkRe{display:flex;justify-content:center;margin-top:14px}#perkRe:empty{display:none}
+.prr{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:var(--rad-pill,999px);border:1px solid rgba(185,140,255,.5);background:rgba(185,140,255,.08);color:#dcc6ff;cursor:pointer;
+  font:700 12px Oxanium,sans-serif;letter-spacing:.12em;touch-action:manipulation}
+.prr small{font:500 11px Inter,sans-serif;letter-spacing:0;color:#b9aed3}
+@media (hover:hover){.prr:hover{background:rgba(185,140,255,.16)}}
+@media (max-height:500px) and (orientation:landscape){#perkRe{margin-top:8px}}
 </style>
 </head>
 <body>
@@ -1051,6 +1215,7 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
     <div id="pauseStats"></div>
     <button class="btn pri lg" id="resumeBtn"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4l13 8-13 8z"/></svg>RESUME</button>
     <div class="prow"><button class="btn" id="pauseSetBtn"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1M12 12m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/></svg>SETTINGS</button><button class="btn" id="pauseHowBtn" aria-expanded="false"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.8M12 17.2h.01"/></svg>HOW TO PLAY</button></div>
+    <div id="pauseAd"></div>
     <button class="btn danger" id="abandonBtn"><span id="abandonTxt">RETREAT · END RUN</span><i class="anim-keep"></i></button>
     <div id="pauseHow"></div>
     <div class="peh" id="pausePerksH">ACTIVE DIRECTIVES</div>
@@ -1064,6 +1229,7 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
   <p class="psub" id="perkSub">Command authorises one directive for the rest of this run.</p>
   <div class="phold none" id="perkHold"><small>YOU HOLD</small><div class="pperks" id="perkHoldList"></div></div>
   <div class="pgrid" id="perkCards"></div>
+  <div id="perkRe"></div>
 </div></div>
 
 <div class="screen on" id="home" data-view="base">
@@ -1071,7 +1237,7 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
     <div class="hdr-in">
       <div class="logo"><button class="mark" data-ic="fort" data-s="22" data-view-go="base" aria-label="Base"></button><h1>THE FORT</h1></div>
       <nav class="nav" aria-label="Home sections">
-        <button class="nv" data-view="base" title="Base (1)"><span class="ni" data-ic="fort" data-s="18"></span>BASE</button>
+        <button class="nv" data-view="base" title="Base (1)"><span class="ni"><span data-ic="fort" data-s="18"></span><i class="dot vio" data-d="base"></i></span>BASE</button>
         <button class="nv" data-view="armory" title="Armory (2)"><span class="ni"><span data-ic="armory" data-s="18"></span><i class="dot" data-d="armory"></i></span>ARMORY</button>
         <button class="nv" data-view="rd" title="Research &amp; Development (3)"><span class="ni"><span data-ic="research" data-s="18"></span><i class="dot" data-d="rd"></i></span>R&amp;D</button>
         <button class="nv" data-view="medals" title="Medals (4)"><span class="ni"><span data-ic="medal" data-s="18"></span><i class="dot gold" data-d="medals"></i></span>MEDALS</button>
@@ -1101,6 +1267,7 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
       </div>
       <div class="bcol">
         <div id="lastRun"></div>
+        <div id="daily"></div>
         <div id="rdSum"></div>
         <details class="panel manual" id="manual"><summary><span class="eyebrow">FIELD MANUAL</span><span class="cv" data-ic="chevR" data-s="16"></span></summary><div id="manualBody"></div><div id="helpTxt" hidden></div></details>
       </div>
@@ -1115,7 +1282,7 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
   <section class="view" data-v="medals" aria-label="Medals"><div id="medals"></div></section>
 </div>
 <nav class="dock" id="dock" aria-label="Home sections">
-  <button class="dk" data-view="base"><span class="ni" data-ic="fort" data-s="22"></span>BASE</button>
+  <button class="dk" data-view="base"><span class="ni"><span data-ic="fort" data-s="22"></span><i class="dot vio" data-d="base"></i></span>BASE</button>
   <button class="dk" data-view="armory"><span class="ni"><span data-ic="armory" data-s="22"></span><i class="dot" data-d="armory"></i></span>ARMORY</button>
   <div class="dk-dep"><button id="dockDeploy" aria-label="Deploy"><span data-ic="play" data-s="26"></span><b class="cpb" id="dockCp" hidden></b></button><span class="dl" aria-hidden="true">DEPLOY</span></div>
   <button class="dk" data-view="rd"><span class="ni"><span data-ic="research" data-s="22"></span><i class="dot" data-d="rd"></i></span>R&amp;D</button>
@@ -1146,6 +1313,7 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
     <div class="set-sec eyebrow">HELP</div>
     <div class="set"><span class="st">How to play<small>Controls, the loop and battle tips</small></span><button class="btn sm" id="howBtn">OPEN</button></div>
     <div class="set"><span class="st">Replay tips<small>Show the one-time battle tips again</small></span><button class="btn sm" id="tipsBtn">RESET TIPS</button></div>
+    <label class="set" id="devRow" hidden><span class="st">Developer mode<small>Simulated ads and purchases on the web build (never pays real money)</small></span><input type="checkbox" class="sw" id="sDev"></label>
     <div class="set-sec eyebrow">DATA</div>
     <div class="set"><span class="st">Back up progress<small>Copies a save code: keep it somewhere safe in case the app's storage is cleared</small></span><button class="btn sm" id="bakBtn">COPY CODE</button></div>
     <div class="set"><span class="st">Restore progress<small>Paste a save code, then tap RESTORE twice</small><input id="bakIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="FORT1:..." style="margin-top:6px;width:100%;box-sizing:border-box;font:16px monospace;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:inherit"></span><button class="btn sm" id="bakRestore">RESTORE</button></div>
@@ -1170,6 +1338,9 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
   <div class="sh-foot"><button class="btn pri" id="gemDone">DONE</button></div>
 </div></div>
 <div class="modal" id="thWin" role="dialog" aria-modal="true" aria-labelledby="thWinT"><div class="panel ticks" id="thWinBody"></div></div>
+<div class="modal" id="stWin" role="dialog" aria-modal="true" aria-labelledby="stT"><div class="panel ticks" id="stBody"></div></div>
+<div class="modal" id="swWin" role="dialog" aria-modal="true" aria-labelledby="swT"><div class="panel ticks" id="swBody"></div></div>
+<div id="adOv" role="dialog" aria-modal="true" aria-label="Simulated ad"></div>
 
 <script>
 // on-screen crash reporter (helps diagnose device-only bugs)
@@ -1201,7 +1372,7 @@ const DEF_SET={vol:60,music:true,shake:true,dmgNums:true,callouts:true,ring:true
 let S;
 function loadSave(){try{S=JSON.parse(localStorage.getItem('theFortSave'))}catch(e){}
   if(!S||typeof S!=='object'||Array.isArray(S))S={};const num=v=>{v=+v;return isFinite(v)&&v>0?v:0};S.bank=num(S.bank);S.best=Math.floor(num(S.best));S.tkills=Math.floor(num(S.tkills));S.lv=S.lv&&typeof S.lv==='object'&&!Array.isArray(S.lv)?S.lv:{};for(const k in S.lv)S.lv[k]=Math.floor(num(S.lv[k]));S.seen=S.seen&&typeof S.seen==='object'?S.seen:{};S.set=Object.assign({},DEF_SET,S.set&&typeof S.set==='object'?S.set:{});if(+S.set.speed===0.5)S.set.speed=0.75;if(![0.75,1].includes(+S.set.speed))S.set.speed=1;S.set.speed=+S.set.speed;S.set.vol=Math.max(0,Math.min(100,+S.set.vol||0));if(!['high','medium','low'].includes(S.set.gfx))S.set.gfx=GFX_DEF;if(!['near','threat','tough'].includes(S.set.prio))S.set.prio='near';
-  const obj=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};S.rp=Math.max(0,Math.floor(+S.rp||0));S.rs=obj(S.rs);S.rf=obj(S.rf);if(!S.rsv)migrateRS();campInit();if(_econReady)econInit()}
+  const obj=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};S.rp=Math.max(0,Math.floor(+S.rp||0));S.rs=obj(S.rs);S.rf=obj(S.rf);if(S.dcHold)dcRestore();if(!S.rsv)migrateRS();campInit();if(_econReady)econInit()}
 // Research save migration (runs once per save): brand-new saves start on the pistol tier; veterans keep the rifle, keep the
 // artillery piece their Walls level already showed, and get a one-off Research Points back-pay so they can research at once.
 function migrateRS(){const lv=S.lv,W=lv.walls||0,existing=S.best>1||Object.keys(lv).length>0;
@@ -1710,15 +1881,15 @@ const labSkipCost=ms=>ms>0?Math.max(1,Math.ceil(GEM_PER_H*Math.pow(ms/3600e3,0.8
 function labTick(){const now=labNow(),out=[];let ch=false;
   for(const j of S.lab.q.slice()){const r=RLINES[j.id],bad=!r||(j.rf?!rsDone(j.id)||(S.rf[j.id]|0)>=j.k:j.k>=r.t.length||rsOwned(j.id)>=j.k);
     if(!bad&&j.end>now)continue;S.lab.q.splice(S.lab.q.indexOf(j),1);ch=true;if(bad)continue;
-    if(j.rf)S.rf[j.id]=j.k;else S.rs[j.id]=j.k;const n={id:j.id,k:j.k};if(j.rf)n.rf=1;S.lab.news.push(n);out.push(n)}
+    if(j.rf)S.rf[j.id]=j.k;else S.rs[j.id]=j.k;Plat.cancel('lab:'+j.id);const n={id:j.id,k:j.k};if(j.rf)n.rf=1;S.lab.news.push(n);out.push(n)}
   if(S.lab.news.length>8)S.lab.news.splice(0,S.lab.news.length-8);if(ch)save();return out}
 function labStart(id){const r=RLINES[id];if(!r||!S.lab)return false;labTick();if(labOf(id)||!labFree())return false;const now=labNow();
   if(rsDone(id)){const n=S.rf[id]|0,c=refitCost(n);if(S.rp<c)return false;S.rp-=c;S.lab.q.push({id,k:n+1,rf:1,t0:now,end:now+refitMs(n)})}
   else{const k=rsOwned(id)+1;if(rsWhy(id,k))return false;S.rp-=r.t[k].cost;S.lab.q.push({id,k,t0:now,end:now+r.t[k].ms})}
-  save();return true}
+  labNote(S.lab.q[S.lab.q.length-1]);dqAdd('research',1);save();return true}
 // finish a running job with gems now; false (nothing spent) when there is no such job or the gems fall short
-function labSkip(id){const j=labOf(id);if(!j)return false;const c=labSkipCost(labLeft(j));if(c&&!gemSpend(c,'skip'))return false;j.end=labNow();labTick();return true}
-function labBuySlot(){if(S.lab.slots>=LAB_SLOTS_MAX||!gemSpend(LAB_SLOT_GEMS,'slot'))return false;S.lab.slots++;save();return true}
+function labSkip(id){const j=labOf(id);if(!j)return false;const c=labSkipCost(labLeft(j));if(c&&!gemSpend(c,'skip'))return false;j.end=labNow();labTick();Plat.cancel('lab:'+id);return true}
+function labBuySlot(){if(S.lab.slots>=LAB_SLOTS_MAX||!gemSpend(labSlotCost(),'slot'))return false;S.lab.slots++;if(S.shop&&S.shop.voucher===1)S.shop.voucher=2;save();return true}   // Starter Pack voucher: this slot at half price
 // ================= GEMS =================
 // The premium currency, account-wide. One ledger: gemAdd(n, src) credits and gemSpend(n, why) debits (returning false and spending
 // nothing when the balance is short). Both floor n, ignore n <= 0 or non-finite, save, refresh the header chip, and keep lifetime
@@ -1735,28 +1906,237 @@ function gemInit(){S.gems=Math.max(0,Math.floor(+S.gems||0));const t=S.gemT&&typ
   if(S.gemv)return;S.gemv=1;let n=Object.keys(S.mg||{}).length*GEM_FREE.medal+Object.values(S.mt||{}).reduce((a,b)=>a+(b|0),0)*GEM_FREE.rank;
   for(const m of MAPS){const r=mapRec(m.id);for(let i=1;i<=r.stars;i++)n+=GEM_FREE.star[i];if(r.cleared)n+=GEM_FREE.clear(m.ord)}
   if(n>0){S.gems+=n;S.gemT.in.backpay=(S.gemT.in.backpay||0)+n}}
+// ================= PLATFORM (Plat) =================
+// The one seam between the game and the device. The web build (GitHub Pages, desktop, the home-screen web app) has no ad network and
+// no store, so rewarded-ad buttons and purchases are hidden there: the live site never hands out ad rewards. The dev flag (URL ?dev=1,
+// or the hidden Settings toggle: tap the SETTINGS title 7 times) swaps in a simulated ad / purchase sheet so every flow can be played
+// through on the web. In the iOS build (Capacitor) each call goes to its native plugin, when that plugin is installed:
+//   Plat.ad(kind) -> Promise<bool>    rewarded video, true only when the reward was earned. @capacitor-community/admob:
+//                                     AdMob.prepareRewardVideoAd({adId}) + showRewardVideoAd(); 'onRewardedVideoAdReward' marks it
+//                                     earned, 'onRewardedVideoAdDismissed' settles it (check the event names against the plugin version)
+//   Plat.interstitial() -> Promise    AdMob.prepareInterstitial({adId}) + showInterstitial(). Pacing lives in iaOk(), not here
+//   Plat.buy(sku) -> Promise<bool>    @revenuecat/purchases-capacitor: products from Purchases.getProducts (loaded by init), then
+//                                     Purchases.purchaseStoreProduct({product}); a cancel throws and reads as false. Grants: shopGrant()
+//   Plat.restore() -> Promise<[sku]>  Purchases.restorePurchases(): the non-consumables owned (noads, starter). App Store requires it
+//   Plat.notify(when,title,body,id)   @capacitor/local-notifications: LocalNotifications.schedule at wall-clock ms `when`; id is a
+//   Plat.cancel(id)                   stable string hashed to the plugin's int id, so scheduling the same id replaces it
+//   Plat.haptic(kind)                 @capacitor/haptics: Haptics.impact({style}) / Haptics.notification({type:'SUCCESS'})
+//   Plat.price(sku, usd)              the store's localized price string once RevenueCat has loaded, else the USD fallback
+// PLAT_IDS: Google's public iOS TEST ad units until release; swap in the real AdMob units and the RevenueCat public iOS key (rcKey,
+// empty = purchases off even in the app). Every native call is guarded: a missing or failing plugin reads as "no ad / not bought",
+// never as an error. QA hooks: Plat.auto = true/false settles simulated ads and purchases at once (no sheet); Plat.log keeps the
+// last notifications scheduled; Plat.adSecs is the simulated ad's length.
+const PLAT_IDS={rewarded:'ca-app-pub-3940256099942544/1712485313',interstitial:'ca-app-pub-3940256099942544/4411468910',rcKey:''};
+const Plat=(()=>{let ready=null,perm=null,busy=false;const px={};
+  const plug=n=>{const c=window.Capacitor;return c&&c.isNativePlatform&&c.isNativePlatform()&&c.Plugins&&c.Plugins[n]||null};
+  const dev=()=>/[?&]dev=1(&|$)/.test(location.search)||!!(S&&S.set&&S.set.dev);
+  const nid=s=>{let h=7;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h)%2e9+1};
+  const iap=()=>!!plug('Purchases')&&!!PLAT_IDS.rcKey;
+  function init(){if(ready)return ready;ready=(async()=>{const A=plug('AdMob'),Pu=plug('Purchases');
+      try{if(A)await A.initialize({})}catch(e){}
+      try{if(Pu&&PLAT_IDS.rcKey){await Pu.configure({apiKey:PLAT_IDS.rcKey});const r=await Pu.getProducts({productIdentifiers:SHOP_SKUS(),type:'NON_SUBSCRIPTION'});for(const p of r&&r.products||[])px[p.identifier]=p}}catch(e){}})();return ready}
+  // native AdMob: resolves true once a rewarded ad has granted its reward and closed (interstitial: once it closed)
+  function nativeAd(A,inter){return new Promise(res=>{let got=false,done=false;const hs=[],fin=v=>{if(done)return;done=true;for(const h of hs)try{h.remove()}catch(e){}res(v)};
+    const on=(ev,f)=>{try{const h=A.addListener(ev,f);if(h&&h.then)h.then(x=>hs.push(x),()=>{});else if(h)hs.push(h)}catch(e){}};
+    if(inter){on('interstitialAdDismissed',()=>fin(true));on('interstitialAdFailedToShow',()=>fin(false));on('interstitialAdFailedToLoad',()=>fin(false));
+      A.prepareInterstitial({adId:PLAT_IDS.interstitial}).then(()=>A.showInterstitial()).catch(()=>fin(false))}
+    else{on('onRewardedVideoAdReward',()=>{got=true});on('onRewardedVideoAdDismissed',()=>fin(got));on('onRewardedVideoAdFailedToShow',()=>fin(false));on('onRewardedVideoAdFailedToLoad',()=>fin(false));
+      A.prepareRewardVideoAd({adId:PLAT_IDS.rewarded}).then(()=>A.showRewardVideoAd()).then(r=>{if(r)got=true}).catch(()=>fin(false))}
+    setTimeout(()=>fin(got),120e3)})}
+  const sim=(mode,item)=>P.auto!=null?Promise.resolve(!!P.auto):new Promise(res=>simSheet(mode,item,res));
+  const P={auto:null,log:[],adSecs:5,dev,init,busy:()=>busy,
+    adsOn:()=>!!plug('AdMob')||dev(),
+    iapOn:()=>iap()||dev(),
+    price:(sku,usd)=>px[sku]&&px[sku].priceString||'$'+usd.toFixed(2),
+    async ad(kind){if(busy||!P.adsOn())return false;busy=true;try{const A=plug('AdMob');if(A){await init();return await nativeAd(A,false)}return await sim('ad',kind)}catch(e){return false}finally{busy=false}},
+    async interstitial(){if(busy||!P.adsOn())return false;busy=true;try{const A=plug('AdMob');if(A){await init();return await nativeAd(A,true)}return await sim('ia')}catch(e){return false}finally{busy=false}},
+    async buy(sku){if(busy||!P.iapOn())return false;busy=true;try{if(iap()){await init();const p=px[sku];if(!p)return false;await plug('Purchases').purchaseStoreProduct({product:p});return true}return await sim('buy',sku)}catch(e){return false}finally{busy=false}},
+    async restore(){try{if(iap()){await init();const r=await plug('Purchases').restorePurchases(),ci=r&&r.customerInfo||{};return(ci.nonSubscriptionTransactions||[]).map(t=>t.productIdentifier)}}catch(e){}return[]},
+    notify(when,title,body,id){P.log.push({when,title,body,id});if(P.log.length>20)P.log.shift();const N=plug('LocalNotifications');if(!N||!(when>Date.now()))return;
+      (async()=>{try{if(perm==null){const r=await N.requestPermissions();perm=!!r&&r.display==='granted'}if(!perm)return;const k=nid(id);
+        await N.cancel({notifications:[{id:k}]});await N.schedule({notifications:[{id:k,title,body,schedule:{at:new Date(when)}}]})}catch(e){}})()},
+    cancel(id){P.log=P.log.filter(n=>n.id!==id);const N=plug('LocalNotifications');if(N)try{N.cancel({notifications:[{id:nid(id)}]}).catch(()=>{})}catch(e){}},
+    haptic(kind){try{const H=plug('Haptics');if(H){if(kind==='success')H.notification({type:'SUCCESS'});else H.impact({style:kind==='heavy'?'HEAVY':kind==='medium'?'MEDIUM':'LIGHT'})}
+      else if(navigator.vibrate&&S.set.shake)navigator.vibrate(kind==='success'?[12,40,18]:10)}catch(e){}}};
+  return P})();
+// ================= DAILIES (phase 4: missions, streak, daily challenge, ad caps, Second Wind, shop) =================
+// The loop this serves: play -> die -> a little RP -> research timer -> come back tomorrow. Everything keys on the local calendar day
+// of the lab clock (today(): labNow never runs backwards, so setting the device clock back never re-opens a day, re-arms a reward or
+// resets a cap; setting it forward only pulls days early, and they are spent: the lab clock stays ahead from then on).
+// Save: S.dy = {seed (per save: mission rolls), d (day of m), m: [{id, n goal, p progress, c claimed}], b (all-3 bonus claimed),
+//   st: {n streak day 0-7 claimed, last day claimed, gr grace used this cycle}, pop (day the streak popup showed), seen (day the Base
+//   screen was last looked at: the BASE nav dot), ads: {d, x2, sw, drop, reroll, gems} rewarded ads watched that day, dc: {d, best
+//   wave reached, g gems + u RP units paid for it, n attempts} the daily challenge, rem (day the reminder was scheduled), hi (unlocked)}
+// S.runs = runs ended (old saves: 10 from a best of 10); S.born = lab-clock time the save first met this code; S.shop = {noAds, starter,
+// voucher (1 unused, 2 spent), stT (starter window start), buys: {sku: n}}; S.ia = {n runs since the last interstitial, t its time,
+// rw time of the last rewarded ad}. RESET keeps S.shop, like gems: it may hold purchases.
+// Roll-out (owner: slow, never overwhelming): missions, streak and rewarded ads open after DY_RUNS runs with a best of DY_BEST; the daily
+// challenge once Desert Outpost has held wave DC_W; interstitials never before IA_RUNS runs and IA_DAYS days of play.
+// Economy: mission and challenge RP is paid in units of rpU() = 2% of the tier price at the player's campaign progress (5 RP in the
+// Desert, ~40 at the Capital), so a full day of dailies is ~15% of one research tier. See handoff "Phase 4" for the campaign impact.
+const DAY_MS=86400e3,DY_RUNS=3,DY_BEST=6,DC_W=25,IA_RUNS=12,IA_DAYS=2,IA_EVERY=3,IA_GAP=4*60e3,IA_RW=3*60e3;
+const DQ_GEM=3,DQ_BONUS_GEM=5,DQ_BONUS_U=2,STREAK=[3,3,5,3,5,8,25],STREAK_U7=2;
+const AD_CAP={x2:3,sw:2,drop:2,reroll:3,gems:1},AD_GEMS=10;
+const SW_GEMS=25,SW_W=6,SW_HP=0.5,SW_WALL=0.5,SW_SHIELD=5,SW_RAPID=8,SW_ASK=10;
+// local calendar day number of a lab-clock time, the current one, and what is left of it
+const dayOf=t=>Math.floor((t-new Date(t).getTimezoneOffset()*60e3)/DAY_MS),today=()=>dayOf(labNow());
+const dayLeft=()=>{const t=labNow();return Math.max(0,(dayOf(t)+1)*DAY_MS+new Date(t).getTimezoneOffset()*60e3-t)};
+// seeded helpers (never Math.random: rolls must not move a seeded battle's random stream)
+const dyHash=(...a)=>{let h=2166136261;for(const v of a){const s=String(v)+'|';for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}}return h>>>0};
+const dyRng=seed=>{let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}};
+const rpU=()=>Math.max(5,Math.round(0.02*rsCostAt(rsProg())/5)*5);
+const dyOn=()=>(S.runs|0)>=DY_RUNS&&careerBest()>=DY_BEST;
+const dcOn=()=>dyOn()&&(!!mapRec(MAPS[0].id).cleared||mapBest(MAPS[0].id)>DC_W);
+function dyInit(){const o=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},int=v=>Math.max(0,Math.floor(+v||0)),y=S.dy=o(S.dy);
+  y.seed=int(y.seed)||dyHash(Date.now(),performance.now(),S.tkills)||1;y.d=int(y.d);
+  y.m=Array.isArray(y.m)?y.m.filter(q=>q&&DQB[q.id]).slice(0,3).map(q=>({id:q.id,n:Math.max(1,int(q.n)),p:int(q.p),c:q.c?1:0})):[];y.b=y.b?1:0;
+  const s=y.st=o(y.st);s.n=Math.min(7,int(s.n));s.last=int(s.last);s.gr=s.gr?1:0;y.pop=int(y.pop);y.seen=int(y.seen);y.rem=int(y.rem);y.hi=y.hi?1:0;
+  y.ads=o(y.ads);y.ads.d=int(y.ads.d);const c=y.dc=o(y.dc);for(const k of['d','best','g','u','n'])c[k]=int(c[k]);
+  if(S.runs==null)S.runs=careerBest()>=10?10:careerBest()>0?1:0;S.runs=int(S.runs);if(!(+S.born>0))S.born=labNow();
+  S.shop=o(S.shop);S.shop.buys=o(S.shop.buys);S.ia=o(S.ia);dqSync()}
+// ---- daily missions: 3 a day, one per category, drawn for the active theater and progress (c = dqCtx()); s = the stat that counts,
+// mx = the stat is a best-of (hold a wave) rather than a tally, w = draw weight (a function of c for theater-flavoured ones)
+const clampR=(v,a,b,s=1)=>Math.max(a,Math.min(b,Math.round(v/s)*s));
+const DQ=[
+ {id:'inf',cat:0,s:'inf',ic:'dmg',w:2,t:n=>`Kill ${fmtN(n)} infantry`,ok:()=>1,g:c=>clampR(c.b*5,40,300,10)},
+ {id:'veh',cat:0,s:'veh',ic:'tank',w:1.5,t:n=>`Destroy ${n} enemy vehicles`,ok:c=>c.b>=10,g:c=>clampR(c.b/4,4,30)},
+ {id:'air',cat:0,s:'air',ic:'aagun',t:n=>`Shoot down ${n} aircraft`,ok:c=>c.b>=14,g:c=>clampR(c.b/5,4,25)},
+ {id:'mbt',cat:0,s:'mbt',ic:'tank',t:n=>n>1?`Destroy ${n} enemy tanks`:'Destroy an enemy tank',ok:c=>c.b>=21,g:c=>c.b>=60?3:c.b>=40?2:1},
+ {id:'mortar',cat:0,s:'mortar',ic:'arty',w:c=>c.tw==='ridges'?3:1,t:n=>`Take out ${n} mortar teams`,ok:c=>c.b>=15,g:c=>clampR(c.b/6,3,15)},
+ {id:'chute',cat:0,s:'chute',ic:'chute',w:c=>c.tw==='nightops'?3:1,t:n=>`Shoot ${n} paratroopers before they land`,ok:c=>c.b>=12,g:c=>clampR(c.b/3,8,40)},
+ {id:'lc',cat:0,s:'lc',ic:'truck',w:3,t:n=>`Sink ${n} landing craft`,ok:c=>c.tw==='landing',g:c=>clampR(c.b/5,5,15)},
+ {id:'vbied',cat:0,s:'vbied',ic:'truck',w:c=>c.tw==='urban'||c.tw==='capital'||c.tw==='nightops'?2.5:1,t:n=>`Stop ${n} car bombs`,ok:c=>c.b>=20,g:c=>clampR(c.b/12,2,8)},
+ {id:'mech',cat:0,s:'mech',ic:'repair',w:c=>c.tw==='urban'?2:1,t:n=>`Take out ${n} combat mechanics`,ok:c=>c.b>=24,g:c=>clampR(c.b/8,3,12)},
+ {id:'drone',cat:0,s:'drone',ic:'uav',w:c=>c.tw==='canopy'?3:0.6,t:n=>`Down ${n} drones`,ok:c=>c.b>=14,g:c=>clampR(c.b/3,6,30)},
+ {id:'hold',cat:1,s:'hold',mx:1,ic:'walls',w:1.5,t:n=>`Hold wave ${n} in one run`,ok:c=>c.b>=8,g:c=>Math.min(CLEAR_W,Math.max(5,Math.floor(c.b*0.8/5)*5))},
+ {id:'waves',cat:1,s:'waves',ic:'fort',t:n=>`Clear ${n} waves`,ok:()=>1,g:c=>clampR(c.b*0.6,10,60,5)},
+ {id:'clean',cat:1,s:'clean',mx:1,ic:'armor',t:n=>`Hold wave ${n} with the walls never breached`,ok:c=>c.walls&&c.b>=10,g:c=>Math.max(5,Math.floor(c.b*0.5/5)*5)},
+ {id:'cp',cat:1,s:'cp',ic:'play',t:()=>`Deploy at a checkpoint and hold ${CP_HOLD} waves`,ok:c=>c.cp,g:()=>1},
+ {id:'strike',cat:2,s:'strike',ic:'air',t:n=>`Call ${n} airstrikes`,ok:c=>c.air,g:c=>clampR(c.b/6,3,12)},
+ {id:'nade',cat:2,s:'nade',ic:'nade',t:n=>`Throw ${n} grenades`,ok:()=>1,g:c=>clampR(c.b/2,10,40,5)},
+ {id:'crate',cat:2,s:'crate',ic:'scav',t:n=>`Grab ${n} supply crates`,ok:()=>1,g:c=>clampR(c.b/4,5,20)},
+ {id:'event',cat:2,s:'event',ic:'threat',t:n=>`Clear ${n} battlefield events`,ok:c=>c.b>=8,g:c=>clampR(c.b/12,2,6)},
+ {id:'dir',cat:2,s:'dir',ic:'star',t:n=>`Take ${n} directives`,ok:c=>c.b>=6,g:c=>clampR(c.b/6,3,10)},
+ {id:'research',cat:2,s:'research',ic:'research',w:1.5,t:()=>'Start a research project',ok:c=>c.rs,g:()=>1},
+ {id:'streak',cat:2,s:'streak',mx:1,ic:'crit',t:n=>`Chain a ${n}-kill aimed streak`,ok:c=>c.b>=5,g:()=>8}];
+const DQB=Object.fromEntries(DQ.map(q=>[q.id,q]));
+const dqCtx=()=>({b:Math.max(5,S.best),tw:mapTwist(),air:L('air')>0,walls:L('walls')>0,cp:checkpoints().length>1,rs:RLINES.lines.some(r=>!labOf(r.id)&&rsOpenNext(r))});
+function dqRoll(d){const c=dqCtx(),r=dyRng(dyHash(S.dy.seed,d)),wt=q=>typeof q.w==='function'?q.w(c):q.w||1,out=[];
+  for(let cat=0;cat<3;cat++){const p=DQ.filter(q=>q.cat===cat&&q.ok(c));if(!p.length)continue;let t=p.reduce((a,q)=>a+wt(q),0)*r(),pick=p[p.length-1];
+    for(const q of p)if((t-=wt(q))<=0){pick=q;break}out.push({id:pick.id,n:pick.g(c),p:0,c:0})}
+  return out}
+// new day: bank yesterday's finished-but-unclaimed rewards (never lost), roll fresh missions, reset the ad caps and the challenge
+function dyTick(){const y=S.dy;if(!y||!S.lab)return;const d=today();if(y.ads.d!==d)y.ads={d};
+  if(y.dc.d!==d&&!(running&&G&&G.dc)){dcPay();y.dc={d,best:0,g:0,u:0,n:0}}
+  if(!dyOn()||y.d===d)return;let g=0,u=0;
+  if(y.d){for(const q of y.m)if(!q.c&&q.p>=q.n){q.c=1;g+=DQ_GEM;u++}if(!y.b&&y.m.length&&y.m.every(q=>q.p>=q.n)){y.b=1;g+=DQ_BONUS_GEM;u+=DQ_BONUS_U}}
+  if(!y.hi){y.hi=1;setTimeout(()=>toast('Daily Ops unlocked · missions and a login streak on the Base screen','star','gm'),600)}
+  y.d=d;y.m=dqRoll(d);y.b=0;dqSync();if(g){gemAdd(g,'daily');S.rp+=u*rpU();toast(`Yesterday's missions banked · +${g} gems`,'gem','gm')}save()}
+// live tracking: _dqK = stats one of today's open missions still counts (null = nothing to count, so the battle hooks return at once)
+let _dqK=null;
+function dqSync(){_dqK=null;const y=S.dy;if(!y||!y.m.length||y.d!==today()||!dyOn())return;for(const q of y.m)if(q.p<q.n)(_dqK||(_dqK={}))[DQB[q.id].s]=1}
+function dqAdd(s,v){if(!_dqK||!_dqK[s])return;let hit=false;
+  for(const q of S.dy.m){const D=DQB[q.id];if(D.s!==s||q.p>=q.n)continue;const p=Math.min(q.n,D.mx?Math.max(q.p,v):q.p+v);if(p===q.p)continue;q.p=p;if(p>=q.n){hit=true;dqDone(q)}}
+  if(hit)dqSync()}
+function dqDone(q){const t=DQB[q.id].t(q.n);Plat.haptic('success');
+  if(running&&G){feed('DAILY MISSION COMPLETE · '+t.toUpperCase(),'205,176,255','star','MISSION DONE');tone(1046,0.09,'sine',0,0.035);setTimeout(()=>tone(1568,0.16,'sine',0,0.03),110)}
+  else toast('Mission complete: '+t,'star','gm');save()}
+function dqKill(e){if(e.air){dqAdd('air',1);if(e.type==='drone')dqAdd('drone',1);return}
+  if(e.veh||e.boss){dqAdd('veh',1);if(e.boss)dqAdd('mbt',1);if(e.vbied)dqAdd('vbied',1);if(e.lc)dqAdd('lc',1);return}
+  dqAdd('inf',1);if(e.chute>0)dqAdd('chute',1);if(e.type==='mortar')dqAdd('mortar',1);if(e.mech)dqAdd('mech',1)}
+function dqWave(w){if(G.dc){const c=S.dy.dc;if(c.d===G.dc.d)c.best=Math.max(c.best,w)}if(!_dqK)return;dqAdd('waves',1);dqAdd('hold',w);if(!G.lastStand&&L('walls'))dqAdd('clean',w)}
+const dqAll=()=>S.dy.m.length>0&&S.dy.m.every(q=>q.p>=q.n);
+function dqClaim(i){const q=S.dy.m[i];if(!q||q.c||q.p<q.n)return 0;q.c=1;const rp=rpU();gemAdd(DQ_GEM,'daily');S.rp+=rp;save();return rp}
+function dqBonus(){const y=S.dy;if(y.b||!dqAll())return 0;y.b=1;const rp=DQ_BONUS_U*rpU();gemAdd(DQ_BONUS_GEM,'daily');S.rp+=rp;save();return rp}
+// ---- login streak: 7 days (day 7 is the supply cache), one grace day per cycle, a missed day beyond that restarts at day 1
+function stNext(){const s=S.dy.st,d=today(),gap=s.last?d-s.last:99;
+  if(gap<=0)return{can:false,day:s.n,d};if(!s.n||s.n>=7)return{can:true,day:1,d};
+  if(gap===1)return{can:true,day:s.n+1,d};if(gap===2&&!s.gr)return{can:true,day:s.n+1,d,grace:true};return{can:true,day:1,d,reset:true}}
+function stClaim(){const n=stNext();if(!n.can||!dyOn())return null;const s=S.dy.st;if(n.day===1)s.gr=0;if(n.grace)s.gr=1;s.n=n.day;s.last=n.d;
+  const g=STREAK[n.day-1],rp=n.day===7?STREAK_U7*rpU():0;gemAdd(g,'streak');if(rp)S.rp+=rp;save();return{g,rp,day:n.day,grace:!!n.grace}}
+// ---- rewarded ads: capped per day (AD_CAP); every watch also holds interstitials off for IA_RW
+const adLeft=k=>dyOn()&&Plat.adsOn()?Math.max(0,AD_CAP[k]-(S.dy.ads.d===today()?S.dy.ads[k]|0:0)):0;
+function adUse(k){const y=S.dy,d=today();if(y.ads.d!==d)y.ads={d};y.ads[k]=(y.ads[k]|0)+1;S.ia.rw=labNow();save()}
+async function adWatch(k){if(adLeft(k)<=0||Plat.busy())return false;const ok=await Plat.ad(k);if(ok)adUse(k);return ok}
+async function adGems(){if(!(await adWatch('gems')))return false;gemAdd(AD_GEMS,'ad');return true}
+// ---- interstitials: at most every IA_EVERY-th run end, IA_GAP apart, never in the first IA_RUNS runs / IA_DAYS days, never within
+// IA_RW of a rewarded ad, never with Remove Ads, never over a theater-cleared debrief
+function iaOk(){const n=labNow();return Plat.adsOn()&&!S.shop.noAds&&(S.runs|0)>=IA_RUNS&&n-(+S.born||n)>=IA_DAYS*DAY_MS&&(S.ia.n|0)>=IA_EVERY&&n-(+S.ia.t||0)>=IA_GAP&&n-(+S.ia.rw||0)>=IA_RW&&!Plat.busy()&&!S.campWin}
+function iaAfterRun(){S.ia.n=(S.ia.n|0)+1;if(!iaOk())return;setTimeout(()=>{if(running||!iaOk())return;Plat.interstitial().then(()=>{S.ia.n=0;S.ia.t=labNow();save()})},900)}
+// ---- Second Wind: once a run the fallen fort can rally (rewarded ad, or SW_GEMS gems): health and walls back to half, the EM screen
+// for SW_SHIELD s, rapid fire, and everything at the walls shoved back. Never in the daily challenge, never before wave SW_W.
+const swCan=()=>!!G&&!G.dc&&!G.swUsed&&dyOn()&&G.wave>=SW_W&&(adLeft('sw')>0||(S.gems|0)>=SW_GEMS);
+function swRevive(){const g=G;g.swUsed=1;g.swAsk=0;g.over=false;running=true;paused=false;mouse.down=false;
+  g.hp=Math.max(g.hp,g.maxHp*SW_HP);if(g.wallMax)g.wallHp=Math.max(g.wallHp,g.wallMax*SW_WALL);g.shT=Math.max(g.shT||0,SW_SHIELD);g.rapidT=Math.max(g.rapidT,SW_RAPID);g.eshots.length=0;
+  const min=blockHalf()+70;for(const e of g.enemies)if(!e.dead&&!e.air){const d=hyp(e.x,e.y)||1;if(d<min){e.x*=min/d;e.y*=min/d;e.atk=Math.max(e.atk,1.5)}}
+  banner('SECOND WIND','Walls and health back to half · EM screen up','205,176,255');sfx('emp',0,0);shake(6);Plat.haptic('heavy');last=performance.now()}
+// ---- daily challenge: one seeded run a day. Same theater (drawn from the ones you have opened), modifier and two starting directives
+// for the day; a STANDARD KIT instead of your Armory levels in that theater (DC_KIT: a share of that theater's caps, so the challenge
+// measures play and research, not how much cash one fort has soaked up), your own research. Sandboxed: the theater's cash, Armory
+// levels, best wave, checkpoint and stars are parked in S.dcHold for the run and put back after (loadSave puts them back too if the app
+// dies mid-run); in-run RP, medal awards, stars and wave medals are held off (medals earned on the way are awarded back at base).
+// Reward: the day's best wave pays DC_TIERS once in total (a better run tops it up). Unlimited attempts.
+const DC_MODS=[{id:'hazard',ic:'skull',name:'Hazard Pay',d:'Enemies 25% tougher · everything pays 40% more'},{id:'hot',ic:'threat',name:'Hot Zone',d:'Battlefield events on most waves'},
+  {id:'armor',ic:'tank',name:'Armored Push',d:'50% more enemy vehicles'},{id:'lean',ic:'scav',name:'Short Supply',d:'Supply crates drop half as often'}];
+const DC_MB=Object.fromEntries(DC_MODS.map(m=>[m.id,m])),DC_DIRS=['hollow','drill','overwatch','eagle','tungsten','antiarmor','medevac','masons'];
+const DC_KIT={dmg:.45,rate:12,crit:.4,frag:2,nade:8,auto:3,vision:10,walls:.45,armor:5,repair:6,wire:3,hp:.45,medic:.4,squad:.5,arty:.4,mines:.4,air:.3,turret:.4,aagun:.35,truck:.3,scav:.4};
+const DC_TIERS=[[5,3,1],[10,5,1],[20,8,2],[30,10,2],[40,12,3],[50,15,3]];   // [wave reached, gems, RP units] for the day's best run
+function dcToday(){const d=today(),open=mapsOpen(),r=dyRng(dyHash('dc',d)),m=open[Math.floor(r()*open.length)]||MAPS[0],mod=DC_MODS[Math.floor(r()*DC_MODS.length)],ds=DC_DIRS.slice(),dirs=[];
+  for(let i=0;i<2;i++)dirs.push(ds.splice(Math.floor(r()*ds.length),1)[0]);return{d,map:m.id,mod:mod.id,dirs,seed:dyHash('dcs',d)}}
+function dcKit(id){const o=mapOf(id).ord,lv={};for(const k in DC_KIT){const v=DC_KIT[k],mx=CAPS[k]?capAt(k,o):UB[k].max;lv[k]=Math.max(1,Math.min(mx,v<1?Math.round(v*mx):v))}return lv}
+const dcReward=w=>{let g=0,u=0;for(const[t,gg,uu]of DC_TIERS)if(w>=t){g=gg;u=uu}return{g,u}};
+function dcEnter(c){const r=mapRec(c.map);S.dcHold={map:S.map,lv:S.lv,bank:S.bank,best:S.best,sw:S.set.startWave||1,cm:c.map,rec:{stars:r.stars,cleared:r.cleared,visited:r.visited}};
+  S.map=c.map;S.lv=dcKit(c.map);S.bank=0;S.best=S.dy.dc.d===c.d?S.dy.dc.best:0;S.set.startWave=1;mapSync();_armFreeze=null;_fpW=-1;save()}
+// put the parked theater back (also run by loadSave, before campInit, when the app died mid-challenge)
+function dcRestore(){const h=S.dcHold;delete S.dcHold;if(!h||typeof h!=='object')return false;if(MAPB[h.map])S.map=h.map;
+  S.lv=h.lv&&typeof h.lv==='object'?h.lv:{};S.bank=+h.bank||0;S.best=+h.best||0;S.set.startWave=+h.sw||1;const r=S.maps&&S.maps[h.cm];if(r&&h.rec)Object.assign(r,h.rec);return true}
+function dcLeave(){if(dcRestore()){mapSync();_armFreeze=null;_fpW=-1;save()}}
+let _dcRnd=null;   // the real Math.random while a seeded challenge run is live
+function dcStart(){if(running||!dcOn())return false;dyTick();const c=dcToday();dcEnter(c);S.dy.dc.n++;_dcRnd=Math.random;Math.random=dyRng(c.seed);
+  startRun();G.dc=c;if(c.mod==='hazard')G.pk.hazard=(G.pk.hazard||0)+1;else if(c.mod==='hot')G.dcEv=2.5;else if(c.mod==='armor')G.dcVeh=1.5;else if(c.mod==='lean')G.dcCr=2;
+  for(const id of c.dirs){const p=PERKS.find(q=>q.id===id);if(p&&(!p.ok||p.ok())){G.pk[id]=(G.pk[id]||0)+1;if(p.go)p.go()}}syncDirBtn();return true}
+function dcPay(){const c=S.dy.dc,due=dcReward(c.best),g=due.g-c.g,u=due.u-c.u;if(g<=0&&u<=0)return{g:0,rp:0};const rp=Math.max(0,u)*rpU();
+  if(g>0)gemAdd(g,'challenge');if(rp)S.rp+=rp;c.g=Math.max(c.g,due.g);c.u=Math.max(c.u,due.u);save();return{g:Math.max(0,g),rp}}
+function dcEnd(){if(_dcRnd){Math.random=_dcRnd;_dcRnd=null}const c=S.dy.dc,w=G.wave;if(c.d!==G.dc.d)Object.assign(c,{d:G.dc.d,best:0,g:0,u:0,n:1});
+  const prev=c.best;c.best=Math.max(c.best,w);dcLeave();const got=dcPay();medalSync();return{prev,best:c.best,got}}
+// ---- notifications: research timers ping when they land; one daily reminder, scheduled for tomorrow evening on each day's first visit
+function labNote(j){if(j)Plat.notify(Date.now()+Math.max(0,j.end-labNow()),j.rf?'Refit complete':'Research complete',labName(j)+' is ready. It deploys with your next run.','lab:'+j.id)}
+function dyRemind(){const y=S.dy;if(!y||!dyOn()||y.rem===today())return;y.rem=today();const t=new Date();t.setDate(t.getDate()+1);t.setHours(19,0,0,0);
+  Plat.notify(t.getTime(),'Daily Ops','New missions are up and your streak reward is waiting.','daily');save()}
+// ---- shop: gem packs (consumable), the one-time Starter Pack (first SHOP_ONE.starter.hrs after Daily Ops opens) and Remove Ads
+const SHOP_PACKS=[{sku:'gems_80',n:80,usd:0.99,name:'Pouch'},{sku:'gems_500',n:500,usd:4.99,name:'Satchel'},{sku:'gems_1200',n:1200,usd:9.99,name:'Crate',hot:'POPULAR'},
+  {sku:'gems_2600',n:2600,usd:19.99,name:'Pallet'},{sku:'gems_7000',n:7000,usd:49.99,name:'Convoy',hot:'BEST VALUE'}];
+const SHOP_ONE={starter:{sku:'starter',usd:2.99,name:'Starter Pack',gems:400,hrs:72},noads:{sku:'noads',usd:3.99,name:'Remove Ads'}};
+const SHOP_SKUS=()=>[...SHOP_PACKS.map(p=>p.sku),'starter','noads'],shopItem=sku=>SHOP_PACKS.find(p=>p.sku===sku)||SHOP_ONE[sku]||null;
+const packBonus=p=>Math.round(100*((p.n/p.usd)/(SHOP_PACKS[0].n/SHOP_PACKS[0].usd)-1));
+const labSlotCost=()=>S.shop&&S.shop.voucher===1?LAB_SLOT_GEMS/2:LAB_SLOT_GEMS;
+function spLeft(){if(S.shop.starter||!dyOn()||!Plat.iapOn())return 0;const n=labNow();if(!S.shop.stT){S.shop.stT=n;save()}return Math.max(0,SHOP_ONE.starter.hrs*3600e3-(n-S.shop.stT))}
+function shopGrant(sku){const it=shopItem(sku);if(!it)return false;S.shop.buys[sku]=(S.shop.buys[sku]|0)+1;
+  if(it.n)gemAdd(it.n,'iap:'+sku);else if(sku==='starter'){S.shop.starter=1;if(!S.shop.voucher)S.shop.voucher=1;gemAdd(it.gems,'iap:starter')}else if(sku==='noads')S.shop.noAds=1;save();return true}
+async function shopBuy(sku){if(!Plat.iapOn()||!shopItem(sku)||sku==='starter'&&S.shop.starter||sku==='noads'&&S.shop.noAds)return false;return(await Plat.buy(sku))?shopGrant(sku):false}
+async function shopRestore(){let n=0;for(const s of await Plat.restore()){if(s==='noads'&&!S.shop.noAds){S.shop.noAds=1;n++}if(s==='starter'&&!S.shop.starter){S.shop.starter=1;if(!S.shop.voucher)S.shop.voucher=1;n++}}if(n)save();return n}
 // Command Tempo (the old cash upgrade for battle speed) is retired: speed is account-wide now. Each theater gets back what it paid.
 function tempoRefund(){const pay=(lv,mul)=>{let c=0;for(let l=0;l<(lv|0);l++)c+=Math.round(150*Math.pow(2.3,l))*mul;return Math.round(c)};
   if('speed' in S.lv){S.bank+=pay(S.lv.speed,MAPM.cost);delete S.lv.speed}
   for(const m of MAPS){const r=mapRec(m.id);if(r.lv&&'speed' in r.lv){r.bank=(r.bank||0)+pay(r.lv.speed,m.rewMul);delete r.lv.speed}}}
 // runs at the end of every loadSave() (the first one, before this code exists, is caught up here)
-function econInit(){labInit();gemInit();tempoRefund()}
+function econInit(){labInit();gemInit();tempoRefund();dyInit()}
 _econReady=true;econInit();
 // ---- Research Points ----
 // Per wave held: see rpWave; +1 per wave beyond the theater's previous best (from wave 10); +3 per medal. A checkpoint start pays
 // CP_PAY of the cash and RP of the waves it skipped (cpBackPay), once the run holds CP_HOLD waves.
 // no RP before wave 10; +1 per wave from 10, +2 from 20, ... ; armor (every 10th) waves pay +2 more rising with depth
 const rpWave=w=>w<10?0:Math.floor(w/10)+(w%10===0?2+Math.floor(w/20):0);
-function rpGain(n){S.rp+=n;if(G&&!G.over)G.rp=(G.rp||0)+n}   // G.over: the run's tally is closed (set in endRun)
+function rpGain(n){if(G&&G.dc&&!G.over)return;S.rp+=n;if(G&&!G.over)G.rp=(G.rp||0)+n}   // G.over: the run's tally is closed (set in endRun); G.dc: the daily challenge pays its own reward
 function rpClear(w){G.cleared=(G.cleared||0)+1;if((G.nightK||0)>0.5)medalBump('night');if(L('walls')&&G.wallHp<=0){G.brHeld=(G.brHeld||0)+1;medalMax('holdout',G.brHeld)}   // waves cleared behind breached walls this run
-  const n=rpWave(w)+(w>G.startBest&&w>=10?1:0);rpGain(n);if(G.cleared===CP_HOLD)cpBackPay();return n}
+  const n=G.dc?0:rpWave(w)+(w>G.startBest&&w>=10?1:0);rpGain(n);if(G.cleared===CP_HOLD)cpBackPay();return n}
 // Checkpoint back-pay: a run that deploys at a checkpoint and holds CP_HOLD waves is paid CP_PAY of what the skipped waves would have
 // paid: their RP, plus their wave-clear bonuses times CP_KILLX (measured on bot runs: kills, crates and events pay about 14x the raw clear bonus).
 const CP_W=[25,50,75],CP_HOLD=5,CP_PAY=0.5,CP_KILLX=14;
 const cpBase=w0=>{let c=0;for(let w=1;w<w0;w++)c+=8*w*waveRew(w);return c*CP_KILLX*CP_PAY};
 const cpCash=w0=>Math.round(cpBase(w0)*(1+0.15*L('bounty'))*medalMul());   // the Base preview: War Bonds + medals, no run directives
 const cpRp=w0=>{let n=0;for(let w=1;w<w0;w++)n+=rpWave(w);return Math.floor(n*CP_PAY)};
-function cpBackPay(){const w0=G.startWave||1;if(w0<=1||G.cpPaid)return;G.cpPaid=1;const c=money(cpBase(w0)),n=cpRp(w0);S.bank+=c;G.earned+=c;if(n)rpGain(n);
+function cpBackPay(){const w0=G.startWave||1;if(w0<=1||G.cpPaid)return;G.cpPaid=1;dqAdd('cp',1);const c=money(cpBase(w0)),n=cpRp(w0);S.bank+=c;G.earned+=c;if(n)rpGain(n);
   feed('CHECKPOINT BACK-PAY · +$'+f1(c)+(n?' · +'+n+' RP':''),'255,207,90','coin','BACK-PAY +$'+f1(c)+(n?' +'+n+' RP':''))}
 // Plain-language signature lines for the research cards
 const ORD=n=>n+(n%100>10&&n%100<14?'th':['th','st','nd','rd'][n%10]||'th');
@@ -2271,21 +2651,145 @@ function skipClick(b){const id=b.dataset.rsskip,j=labOf(id);if(!j){renderHome();
   const c2=$('rd').querySelector(j.rf?'[data-k="rf"]':`[data-k="${j.k}"]`);if(c2)flash(c2)}
 // header gem chip: count-up flash when gems move (gemAdd/gemSpend call this; safe before the header exists)
 function gemPop(n){const b=$('gemBank');if(!b)return;b.textContent=fmtN(S.gems|0);if(n>0){const c=$('gemChip');c.classList.remove('pop');void c.offsetWidth;c.classList.add('pop')}}
-// the gems sheet: balance, how to earn them, what they buy (the phase 4 shop hangs off this sheet)
-function gemHtml(){const sl=S.lab.slots<LAB_SLOTS_MAX,ok=(S.gems|0)>=LAB_SLOT_GEMS,eg=h=>ic('gem',11)+fmtN(labSkipCost(h*3600e3));
-  return`<div class="gmh">${ic('gem',30)}<div><b>${fmtN(S.gems|0)}</b><small>GEMS</small></div></div>`
-    +`<div class="eyebrow">EARN</div><ul class="gml"><li>${ic('map',18)}<span>First clear of a theater<small>Hold wave ${CLEAR_W} to clear it</small></span><b>+${GEM_FREE.clear(1)} to +${GEM_FREE.clear(MAPS.length)}</b></li>`
+// the gem shop (grows out of the phase 3 gems sheet): balance, the Starter Pack while its window is open, gem packs and Remove Ads
+// (only where purchases exist: the iOS app, or the web with the dev flag), free gems, and what gems buy. Gems never buy battle speed.
+const gemPk=(s=26)=>`<span class="gpk" aria-hidden="true">${ic('gem',s)}${ic('gem',s)}${ic('gem',s)}</span>`;
+function gemHtml(){const sl=S.lab.slots<LAB_SLOTS_MAX,sc=labSlotCost(),ok=(S.gems|0)>=sc,eg=h=>ic('gem',11)+fmtN(labSkipCost(h*3600e3)),iap=Plat.iapOn(),sp=spLeft(),ag=adLeft('gems');
+  let h=`<div class="gshop"><div class="gmh">${ic('gem',30)}<div><b>${fmtN(S.gems|0)}</b><small>GEMS</small></div></div>`;
+  if(sp>0)h+=`<div class="gstart">${gemPk(24)}<span class="gst">ONE-TIME OFFER</span><h3>${SHOP_ONE.starter.name}</h3><ul><li>${ic('gem',12)}<span>${SHOP_ONE.starter.gems} gems</span></li>`
+    +`<li>${ic('research',12)}<span>Second lab slot at half price (${fmtN(LAB_SLOT_GEMS/2)} gems)</span></li></ul><div class="gsf"><small>ENDS IN ${durTxt(sp).toUpperCase()}</small><button class="btn pri" data-sku="starter">${Plat.price('starter',SHOP_ONE.starter.usd)}</button></div></div>`;
+  if(iap)h+=`<div class="eyebrow">GEM PACKS</div><div class="ggrid">${SHOP_PACKS.map(p=>{const b=packBonus(p);return`<button class="gcard${p.hot?' hot':''}" data-sku="${p.sku}" aria-label="${fmtN(p.n)} gems for ${Plat.price(p.sku,p.usd)}">`
+      +`${p.hot?`<span class="ghot">${p.hot}</span>`:''}${gemPk(22)}<span class="gn">${fmtN(p.n)}</span><span class="gl">${p.name}</span><span class="gb">${b>0?'+'+b+'% more gems':''}</span><span class="gp">${Plat.price(p.sku,p.usd)}</span></button>`}).join('')}</div>`
+    +`<ul class="gml" style="margin-top:8px"><li class="${S.shop.noAds?'own':''}">${ic('close',18)}<span>${SHOP_ONE.noads.name}<small>No more ads between runs. Rewarded ads stay optional.</small></span>`
+    +(S.shop.noAds?'<b>OWNED</b>':`<button class="btn sm" data-sku="noads">${Plat.price('noads',SHOP_ONE.noads.usd)}</button>`)+'</li></ul>';
+  else h+=`<p class="gnote">${ic('gem',16)}<span>Gem packs and offers are sold in the iOS app. Everything gems buy can also be earned by playing.</span></p>`;
+  h+=`<div class="eyebrow">FREE GEMS</div><ul class="gml">`
+    +(dyOn()&&Plat.adsOn()?`<li>${ic('play',18)}<span>Watch an ad<small>${ag?'Once a day':'Back tomorrow'}</small></span>${ag?`<button class="btn sm gm" data-adgems>${ic('gem',13)}+${AD_GEMS}</button>`:`<b>+${AD_GEMS}</b>`}</li>`:'')
+    +(dyOn()?`<li>${ic('flag',18)}<span>Daily missions<small>+${DQ_GEM} each, +${DQ_BONUS_GEM} for all three</small></span><b>+${3*DQ_GEM+DQ_BONUS_GEM} a day</b></li>`
+      +`<li>${ic('cal',18)}<span>Login streak<small>Day 7 is the supply cache: +${STREAK[6]}</small></span><b>+${STREAK.reduce((a,b)=>a+b,0)} a week</b></li>`:'')
+    +(dcOn()?`<li>${ic('threat',18)}<span>Daily challenge<small>Scaled by the wave you reach</small></span><b>up to +${DC_TIERS[DC_TIERS.length-1][1]}</b></li>`:'')
+    +`<li>${ic('map',18)}<span>First clear of a theater<small>Hold wave ${CLEAR_W} to clear it</small></span><b>+${GEM_FREE.clear(1)} to +${GEM_FREE.clear(MAPS.length)}</b></li>`
     +`<li>${ic('star',18)}<span>Theater stars<small>Wave ${STAR1_W} · wave ${CLEAR_W} · wave ${CLEAR_W} unbreached</small></span><b>+${GEM_FREE.star[1]} · +${GEM_FREE.star[2]} · +${GEM_FREE.star[3]}</b></li>`
     +`<li>${ic('medal',18)}<span>Medals<small>First award · each rank after</small></span><b>+${GEM_FREE.medal} · +${GEM_FREE.rank}</b></li></ul>`
-    +`<div class="eyebrow">SPEND</div><ul class="gml"><li>${ic('research',18)}<span>Finish research now<small>The price falls as the timer runs down: 10 min ${eg(1/6)} · 1 h ${eg(1)} · 8 h ${eg(8)}</small></span></li>`
-    +(sl?`<li>${ic('research',18)}<span>Second lab slot<small>Research two tiers at once, for good</small></span><button class="btn sm gm${ok?'':' short'}" data-slot>${ic('gem',13)}${fmtN(LAB_SLOT_GEMS)}</button></li>`:'')+'</ul>'}
+    +`<div class="eyebrow">WHAT GEMS BUY</div><ul class="gml"><li>${ic('research',18)}<span>Finish research now<small>The price falls as the timer runs down: 10 min ${eg(1/6)} · 1 h ${eg(1)} · 8 h ${eg(8)}</small></span></li>`
+    +(sl?`<li>${ic('research',18)}<span>Second lab slot<small>Research two tiers at once, for good${sc<LAB_SLOT_GEMS?' · voucher: half price':''}</small></span><button class="btn sm gm${ok?'':' short'}" data-slot>${ic('gem',13)}${fmtN(sc)}</button></li>`:'')
+    +(dyOn()?`<li>${ic('hp',18)}<span>Second Wind<small>Revive a fallen fort once a run (or watch an ad)</small></span><b>${ic('gem',12)} ${SW_GEMS}</b></li>`:'')
+    +`<li>${ic('fort',18)}<span>Fort cosmetics<small>Coming soon</small></span><b>SOON</b></li></ul>`
+    +`<p class="gnote" style="margin-top:0">${ic('speed',16)}<span>Gems never buy battle speed or anything you can't earn by playing.</span></p>`
+    +(iap?`<div class="gfoot"><span>Prices in USD. The App Store shows your local price.</span><button data-restore>Restore purchases</button></div>`:'')+'</div>';
+  return h}
 let _gemFrom=null;
 function openGems(){fillIcons();$('gemBody').innerHTML=gemHtml();$('gemBody').scrollTop=0;_gemFrom=document.activeElement;$('gemSheet').classList.add('on');setTimeout(()=>$('gemClose').focus({preventScroll:true}),30)}
 function closeGems(){$('gemSheet').classList.remove('on');const f=_gemFrom;_gemFrom=null;if(f&&f.focus&&document.contains(f)&&f.offsetParent)f.focus({preventScroll:true})}
+// re-render the open shop in place (keeps its scroll) and the home screen behind it
+function gemRefresh(){const b=$('gemBody');if($('gemSheet').classList.contains('on')){const y=b.scrollTop;b.innerHTML=gemHtml();b.scrollTop=y}if(!running&&$('home').classList.contains('on'))renderHome()}
 $('gemClose').onclick=$('gemDone').onclick=closeGems;$('gemSheet').addEventListener('mousedown',e=>{if(e.target.id==='gemSheet')closeGems()});sheetDrag('gemSheet',closeGems);
-$('gemBody').addEventListener('click',e=>{const b=e.target.closest('[data-slot]');if(!b)return;if((S.gems|0)<LAB_SLOT_GEMS){sfx('deny');return}
+$('gemBody').addEventListener('click',e=>{let b;
+  if(b=e.target.closest('[data-sku]')){const sku=b.dataset.sku;b.disabled=true;
+    shopBuy(sku).then(ok=>{if(ok){const it=shopItem(sku);sfx('buy');Plat.haptic('success');toast(sku==='noads'?'Ads removed · thank you':sku==='starter'?'Starter Pack unlocked':'+'+fmtN(it.n)+' gems','gem','gm')}gemRefresh()});return}
+  if(e.target.closest('[data-restore]')){shopRestore().then(n=>{toast(n?'Purchases restored':'No purchases to restore','gem','gm');gemRefresh()});return}
+  if(b=e.target.closest('[data-adgems]')){b.disabled=true;adGems().then(ok=>{if(ok){toast('+'+AD_GEMS+' gems','gem','gm');Plat.haptic('success')}gemRefresh()});return}
+  if(!(b=e.target.closest('[data-slot]')))return;if((S.gems|0)<labSlotCost()){sfx('deny');return}
   if(!b.dataset.arm){b.dataset.arm=1;b.classList.add('arm');b.textContent='TAP TO CONFIRM';clearTimeout(b._t);b._t=setTimeout(()=>{if($('gemSheet').classList.contains('on'))$('gemBody').innerHTML=gemHtml()},3000);return}
   clearTimeout(b._t);if(labBuySlot()){sfx('buy');toast('Second lab slot open','research','rd');$('gemBody').innerHTML=gemHtml();renderHome()}});
+// ---------------- Daily Ops (Base), daily challenge card, streak sheet, AAR extras, Second Wind, simulated ads (phase 4) ----------------
+Object.assign(IC,{clock:'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0M12 7v5l3 2',check:'M5 12l5 5 9-10',cal:'M4 5h16v16H4zM4 10h16M9 3v4M15 3v4M8 14h2M14 14h2M8 17h2',
+  flag:'M5 21V4M5 4h11l-2 4 2 4H5',gift:'M3 8h18v4H3zM5 12v9h14v-9M12 8v13M12 8C10 4 6.5 4 7 6.5 7.4 8 12 8 12 8zM12 8c2-4 5.5-4 5-1.5C16.6 8 12 8 12 8z'});
+// Base nav dot: something to claim (a finished mission, the all-three bonus, today's streak supply) or a new day not yet looked at
+function dyDot(){const y=S.dy;if(!y||!dyOn())return false;return y.m.some(q=>q.p>=q.n&&!q.c)||!y.b&&dqAll()||stNext().can||y.seen!==today()}
+function dailyHtml(){const y=S.dy,u=rpU(),st=stNext(),s=y.st,cyc=st.can?st.day-1:s.n,done=y.m.filter(q=>q.p>=q.n).length,all=dqAll(),ag=adLeft('gems');
+  const pips=[1,2,3,4,5,6,7].map(i=>`<i class="${i<=cyc?'on':''}${st.can&&i===st.day?' now':''}${i===7?' big':''}"></i>`).join('');
+  let h=`<div class="panel dops"><div class="sec-h"><div class="eyebrow">DAILY OPS</div><span class="dreset" data-dyleft>${ic('clock',13)}New in ${durTxt(dayLeft())}</span></div>`
+    +`<button class="dstk${st.can?' can':''}" data-streak aria-label="Login streak"><span class="pips" aria-hidden="true">${pips}</span><span class="stx"><b>${st.can?'DAY '+st.day+' SUPPLY READY':'STREAK · DAY '+s.n+' OF 7'}</b>`
+    +`<small>${st.can?(st.reset?'Streak restarted · ':'')+'Claim +'+STREAK[st.day-1]+' gems'+(st.grace?' · grace day used':''):'Next supply tomorrow · day 7 pays +'+STREAK[6]}</small></span><span class="chev">→</span></button>`
+    +`<ul class="dql">`+y.m.map((q,i)=>{const D=DQB[q.id],ok=q.p>=q.n;
+      return`<li class="dq${q.c?' got':ok?' done':''}"><span class="dqi">${ic(q.c?'check':D.ic,18)}</span><span class="dqb"><span class="dqt">${D.t(q.n)}</span><span class="dqm"><span class="dqbar"><i style="width:${Math.min(100,100*q.p/q.n).toFixed(1)}%"></i></span><span>${fmtN(q.p)}/${fmtN(q.n)}</span></span></span>`
+        +(ok&&!q.c?`<button class="dqc" data-dq="${i}" aria-label="Claim ${DQ_GEM} gems and ${u} RP">${ic('gem',14)}CLAIM</button>`:`<span class="dqr">${q.c?'CLAIMED':`<span>${ic('gem',12)} +${DQ_GEM}</span><small>+${u} RP</small>`}</span>`)+'</li>'}).join('')+'</ul>'
+    +`<div class="dqx${y.b?' got':all?' can':''}">${ic(y.b?'check':'gift',20)}<span><b>All three</b> · <em>+${DQ_BONUS_GEM} gems · +${DQ_BONUS_U*u} RP</em></span>`
+    +(y.b?'<span class="dqn">CLAIMED</span>':all?`<button class="dqc" data-dqb>${ic('gem',14)}CLAIM</button>`:`<span class="dqn">${done}/3</span>`)+'</div>';
+  if(ag)h+=`<button class="dad" data-adgems><span class="adp">${ic('play',12)}</span><span>Watch an ad for free gems</span><b>+${AD_GEMS} ${ic('gem',14)}</b></button>`;
+  if(!dcOn())h+=`<p class="dlock">${ic('lock',12)}Daily Challenge opens once Desert Outpost holds wave ${DC_W}</p>`;
+  return h+'</div>'}
+function dchHtml(){if(!dcOn())return'';const c=dcToday(),m=mapOf(c.map),md=DC_MB[c.mod],dc=S.dy.dc,best=dc.d===c.d?dc.best:0,rw=dcReward(best),u=rpU(),nx=DC_TIERS.find(t=>t[0]>best),top=DC_TIERS[DC_TIERS.length-1];
+  const date=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}).toUpperCase();
+  return`<div class="panel dch" style="--thart:${thArt(m.id).replace(/"/g,"'")}"><div class="sec-h"><div class="eyebrow">DAILY CHALLENGE</div><span class="badge">${date}</span></div>`
+    +`<div class="dchh">${thEmb(m)}<div><span class="thn">${m.name}</span><span class="dcs">One seeded run, the same for every commander today. Your own fort there is not touched.</span></div></div>`
+    +`<div class="dchc"><span class="mod">${ic(md.ic,14)}${md.name} · ${md.d}</span>${c.dirs.map(id=>{const p=PERKS.find(q=>q.id===id);return p?`<span>${ic(p.ic,14)}${p.name}</span>`:''}).join('')}<span class="kit">${ic('research',14)}Standard kit + your R&amp;D</span></div>`
+    +`<div class="dchr"><div class="tile"><span>TODAY'S BEST</span><b>${best?'Wave '+best:'None yet'}</b><small>${dc.n?dc.n+' '+pl(dc.n,'attempt'):'Unlimited attempts'}</small></div>`
+    +`<div class="tile"><span>${best&&rw.g?'EARNED TODAY':'REWARD'}</span><b>${best&&rw.g?`${ic('gem',15)} ${rw.g} · ${rw.u*u} RP`:`Up to ${ic('gem',15)} ${top[1]} · ${top[2]*u} RP`}</b>`
+    +`<small>${nx?`Wave ${nx[0]}: ${nx[1]} gems · ${nx[2]*u} RP in total`:'Top reward earned today'}</small></div></div>`
+    +`<button class="btn dcgo" data-dcgo>${ic('play',18)}${dc.n&&dc.d===c.d?'TRY AGAIN':'PLAY CHALLENGE'}</button></div>`}
+// Base: the Daily Ops + challenge panels, the "seen today" mark for the nav dot, and the streak sheet on the day's first visit
+function renderDaily(){const el=$('daily');dyTick();if(!dyOn()){el.innerHTML='';return}el.innerHTML=dailyHtml()+dchHtml();const d=today();
+  if(homeView==='base'&&S.dy.seen!==d){S.dy.seen=d;save()}dyRemind();
+  if(S.dy.pop!==d&&stNext().can&&!running&&!_thWin&&!S.campWin&&!document.querySelector('.modal.on')){S.dy.pop=d;save();setTimeout(()=>{if(!running&&!document.querySelector('.modal.on'))openStreak()},450)}}
+function claimFx(){sfx('buy');Plat.haptic('success');setTimeout(()=>tone(1568,0.12,'square',0,0.04),100)}
+function dcGo(){if(running||!dcOn())return;closeGems();if(!dcStart())sfx('deny')}
+$('daily').addEventListener('click',e=>{const q=s=>e.target.closest(s);let b;
+  if(b=q('[data-dq]')){const rp=dqClaim(+b.dataset.dq);if(rp){claimFx();toast(`Mission reward · +${DQ_GEM} gems · +${rp} RP`,'gem','gm');renderHome()}return}
+  if(q('[data-dqb]')){const rp=dqBonus();if(rp){claimFx();toast(`All three · +${DQ_BONUS_GEM} gems · +${rp} RP`,'gem','gm');renderHome()}return}
+  if(q('[data-streak]')){openStreak();return}
+  if(b=q('[data-adgems]')){b.disabled=true;adGems().then(ok=>{if(ok){claimFx();toast(`+${AD_GEMS} gems`,'gem','gm')}renderHome()});return}
+  if(q('[data-dcgo]'))dcGo()});
+// Daily Ops countdown; a new day re-renders the Base (fresh missions, streak, challenge)
+setInterval(()=>{if(running||!S.dy||!$('home').classList.contains('on')||!dyOn())return;if(S.dy.d&&S.dy.d!==today()){renderHome();return}
+  const e=document.querySelector('#home [data-dyleft]');if(e){const t=ic('clock',13)+'New in '+durTxt(dayLeft());if(e._t!==t){e._t=t;e.innerHTML=t}}},1000);
+// ---- login streak sheet
+function stHtml(){const n=stNext(),s=S.dy.st,cyc=n.can?n.day-1:s.n,u=rpU();
+  const tiles=STREAK.map((g,i)=>{const d=i+1;return`<div class="sti${d<=cyc?' done':''}${n.can&&d===n.day?' now':''}${d===7?' big':''}"><small>DAY ${d}</small>${ic('gem',d===7?26:20)}<b>+${g}</b>${d===7?`<i>+${STREAK_U7*u} RP · supply cache</i>`:''}</div>`}).join('');
+  return`<div class="stw-top"><div class="eyebrow">DAILY SUPPLY</div><h2 id="stT">${n.can?'Day '+n.day+' of 7':'Day '+s.n+' claimed'}</h2><p>${n.reset?'Your streak lapsed and starts again. ':''}A supply drop for every day you report in; day 7 is the big one. Miss a day and the streak restarts, but one grace day a week keeps it alive.</p></div>`
+    +`<div class="stg">${tiles}</div><div class="stgr${s.gr&&!n.grace?' used':''}">${ic('armor',14)}${n.grace?'Grace day used: your streak survived a missed day':s.gr&&n.day!==1?'Grace day already used this week':'Grace day ready: one missed day is forgiven'}</div>`
+    +`<div class="stw-b">${n.can?`<button class="btn pri lg" data-stclaim>CLAIM +${STREAK[n.day-1]} GEMS${n.day===7?' · +'+STREAK_U7*u+' RP':''}</button>`:`<button class="btn lg" disabled>NEXT SUPPLY IN ${durTxt(dayLeft()).toUpperCase()}</button>`}<button class="btn ghost" data-stx>${n.can?'LATER':'CLOSE'}</button></div>`}
+let _stFrom=null;
+function openStreak(){if(!dyOn())return;fillIcons();$('stBody').innerHTML=stHtml();_stFrom=document.activeElement;$('stWin').classList.add('on');setTimeout(()=>{const b=$('stBody').querySelector('.btn:not([disabled])');if(b)b.focus({preventScroll:true})},30)}
+function closeStreak(){if(!$('stWin').classList.contains('on'))return;$('stWin').classList.remove('on');const f=_stFrom;_stFrom=null;if(f&&f.focus&&document.contains(f)&&f.offsetParent)f.focus({preventScroll:true});if(!running)renderHome()}
+$('stWin').addEventListener('mousedown',e=>{if(e.target.id==='stWin')closeStreak()});
+$('stWin').addEventListener('click',e=>{if(e.target.closest('[data-stx]')){closeStreak();return}if(!e.target.closest('[data-stclaim]'))return;const r=stClaim();if(!r)return;
+  sfx('buy');Plat.haptic('success');[784,988,1319].forEach((f,i)=>setTimeout(()=>tone(f,i<2?0.08:0.2,'square',0,0.04),i*100));
+  toast(`Day ${r.day} supply · +${r.g} gems${r.rp?' · +'+r.rp+' RP':''}`,'gem','gm');$('stBody').innerHTML=stHtml();setTimeout(closeStreak,1100)});
+// ---- after-action extras: 2x payout (rewarded ad) on campaign runs; the daily challenge's result and reward
+const x2Html=a=>a.x2?`<div class="aar2x done"><span class="adp">${ic('check',20)}</span><span><b>PAYOUT DOUBLED</b><small>Added to the ${mapCur().name} war chest</small></span><em>+$${fmtN(a.earned)}</em></div>`
+  :!a.dc&&a.map===S.map&&a.earned>0&&adLeft('x2')>0?`<button class="aar2x" data-x2><span class="adp">${ic('play',18)}</span><span><b>DOUBLE THE PAYOUT</b><small>Watch an ad · ${adLeft('x2')} left today</small></span><em>+$${fmtN(a.earned)}</em></button>`:'';
+function dcResHtml(a){const d=a.dc,g=d.got||{g:0,rp:0},nx=DC_TIERS.find(t=>t[0]>d.best);
+  return`<div class="dcres">${ic('gem',20)}<span>${g.g||g.rp?`<b>Challenge reward</b> · <em>+${g.g} gems${g.rp?' · +'+g.rp+' RP':''}</em>`:`<b>Today's best: wave ${d.best}</b> · ${nx?'reach wave '+nx[0]+' for more':'top reward earned'}`}</span></div>`
+    +(dcOn()?`<div class="aarb"><button class="btn" data-dcgo>${ic('play',16)}TRY AGAIN</button></div>`:'')}
+$('lastRun').addEventListener('click',e=>{let b;if(e.target.closest('[data-dcgo]')){dcGo();return}if(!(b=e.target.closest('[data-x2]')))return;b.disabled=true;
+  adWatch('x2').then(ok=>{const a=lastAAR;if(ok&&a&&!a.x2&&a.map===S.map){a.x2=1;const from=S.bank;S.bank+=a.earned;save();tweenBank(from,S.bank);claimFx();toast('Payout doubled · +$'+fmtN(a.earned),'coin')}renderHome()})});
+// ---- Second Wind: the fallen fort's revive offer (the run is frozen as G.over until the player decides or SW_ASK runs out)
+let _swT=0;
+function swOpen(){const g=G;g.swAsk=1;g.over=true;running=false;paused=false;mouse.down=false;closePerks();g.choosing=null;sfx('die');Plat.haptic('heavy');const ad=adLeft('sw')>0,gm=(S.gems|0)>=SW_GEMS;fillIcons();
+  $('swBody').innerHTML=`<div class="sw-top"><div class="eyebrow">THE FORT HAS FALLEN · WAVE ${g.wave}</div><h2 id="swT">Second Wind</h2><p>Rally the garrison for one more stand. Once a run.</p></div>`
+    +`<ul class="thw-rules"><li>${ic('hp',16)}<span>Health and walls back to half</span></li><li>${ic('armor',16)}<span>An EM screen stops every hit for ${SW_SHIELD}s</span></li><li>${ic('rate',16)}<span>Rapid fire, and the enemy at the walls is thrown back</span></li></ul><div class="swbar"><i></i></div>`
+    +`<div class="sw-b">${ad?`<button class="btn pri lg" data-swad>${ic('play',18)}WATCH AD · REVIVE</button>`:''}${gm?`<button class="btn gm lg" data-swgem>REVIVE · ${ic('gem',16)}${SW_GEMS}</button>`:''}<button class="btn ghost" data-swno>END RUN</button></div>`;
+  const m=$('swWin');m.style.setProperty('--sw-t',SW_ASK+'s');m.classList.remove('hold');m.classList.add('on');clearTimeout(_swT);_swT=setTimeout(()=>{if(G===g&&g.swAsk&&!Plat.busy())swDecline()},SW_ASK*1000);
+  setTimeout(()=>{const b=$('swBody').querySelector('.btn');if(b&&G===g&&g.swAsk)b.focus({preventScroll:true})},30)}
+function swClose(){clearTimeout(_swT);$('swWin').classList.remove('on','hold')}
+function swDecline(){const g=G;if(!g||!g.swAsk)return;swClose();g.swAsk=0;g.swNo=1;g.over=false;endRun()}
+$('swWin').addEventListener('click',e=>{const g=G,q=s=>e.target.closest(s);if(!g||!g.swAsk)return;
+  if(q('[data-swno]')){swDecline();return}
+  if(q('[data-swgem]')){if(!gemSpend(SW_GEMS,'revive')){sfx('deny');return}swClose();swRevive();return}
+  if(q('[data-swad]')){$('swWin').classList.add('hold');clearTimeout(_swT);adWatch('sw').then(ok=>{if(G!==g||!g.swAsk)return;if(ok){swClose();swRevive()}})}});   // a failed or skipped ad leaves the choice (and the paused timer) with the player
+// ---- in battle: the free supply drop (pause menu) and the directive reroll (directive modal), both rewarded ads, never in the challenge
+const dropCan=()=>running&&!!G&&!G.dc&&!G.dropUsed&&G.wave>=3&&adLeft('drop')>0;
+function dropUi(){$('pauseAd').innerHTML=dropCan()?`<button class="pad">${ic('play',16)}<span>FREE SUPPLY DROP<small>Watch an ad: munitions, repairs and an air strike land now · ${adLeft('drop')} left today</small></span>${ic('scav',20)}</button>`:''}
+$('pauseAd').addEventListener('click',e=>{if(!e.target.closest('.pad')||!dropCan())return;const g=G;
+  adWatch('drop').then(ok=>{if(!ok||G!==g||!running){dropUi();return}g.dropUsed=1;$('pauseAd').innerHTML='';setPause(false);for(const k of['ammo','fix',g.wave>=8?'strike':'cash'])dropCrate(k);
+    feed('SUPPLY DROP INBOUND · GRAB THE CRATES','140,220,150','scav','SUPPLY DROP');Plat.haptic('medium')})});
+function perkReUi(){const el=$('perkRe'),n=G&&G.choosing&&G.rrOk&&!G.dc?adLeft('reroll'):0;el.innerHTML=n?`<button class="prr" data-rr>${ic('play',14)}NEW OPTIONS <small>watch an ad · ${n} left today</small></button>`:''}
+$('perkRe').addEventListener('click',e=>{if(!e.target.closest('[data-rr]')||!G||!G.choosing)return;const g=G,cur=g.choosing;$('perkRe').innerHTML='';
+  adWatch('reroll').then(ok=>{if(G!==g||g.choosing!==cur)return;if(ok)offerPerks(cur.map(p=>p.id));else perkReUi()})});
+// ---- simulated ad / purchase sheet (web dev builds only; the App Store build shows AdMob / StoreKit instead). res(true) = rewarded / bought
+function simSheet(mode,sku,res){const o=$('adOv'),buy=mode==='buy',ia=mode==='ia',it=buy?shopItem(sku):null;let n=Math.max(0,Plat.adSecs|0),iv=0;
+  const done=v=>{clearInterval(iv);o.classList.remove('on');o.innerHTML='';o.onclick=null;res(v)};
+  if(buy)o.innerHTML=`<div class="adb"><div class="adh"><span class="adtag">SIMULATED PURCHASE</span></div><div class="adbuy">${gemPk(24)}<div><b>${it.name}</b><small>${it.n?fmtN(it.n)+' gems':sku==='starter'?SHOP_ONE.starter.gems+' gems + lab slot voucher':'No more ads between runs'}</small></div><em>${Plat.price(sku,it.usd)}</em></div>`
+    +`<div class="adf"><p>Dev build: nothing is charged. The App Store build shows the StoreKit sheet here (RevenueCat).</p><button class="btn pri lg" data-ok>CONFIRM</button><button class="btn ghost" data-no>CANCEL</button></div></div>`;
+  else{o.innerHTML=`<div class="adb"><div class="adh"><span class="adtag">${ia?'SIMULATED AD':'SIMULATED REWARDED AD'}</span><button class="adx" data-no${ia?' hidden':''}>${ia?'CLOSE':'SKIP'}</button></div>`
+      +`<div class="adc"><div>${ic('fort',40)}<b>YOUR AD HERE</b><small>Dev build placeholder · AdMob in the App Store build</small></div><span class="adn" data-n>${n}</span></div>`
+      +`<div class="adf"><p data-p>${ia?'Closes in a moment.':'Watch to the end for the reward. Skipping forfeits it.'}</p><button class="btn pri lg" data-ok hidden>${ia?'CONTINUE':'COLLECT REWARD'}</button></div></div>`;
+    const tick=()=>{const c=o.querySelector('[data-n]');if(c)c.textContent=Math.max(0,n);if(n<=0){clearInterval(iv);const b=o.querySelector('[data-ok]'),x=o.querySelector('[data-no]'),p=o.querySelector('[data-p]');
+      if(ia&&x)x.hidden=false;if(b){b.hidden=false;b.focus({preventScroll:true})}if(p)p.textContent=ia?'Thanks for watching.':'Reward earned.'}n--};tick();if(n>0)iv=setInterval(tick,1000)}
+  o.onclick=e=>{if(e.target.closest('[data-ok]'))done(true);else if(e.target.closest('[data-no]'))done(ia)};o.classList.add('on');
+  if(buy)setTimeout(()=>{const b=o.querySelector('[data-ok]');if(b)b.focus({preventScroll:true})},30)}
 // ---------------- settings + how to play sheets ----------------
 let _setFrom=null;
 function openSettings(){syncSettings();fillIcons();_setFrom=document.activeElement;$('settings').classList.add('on');$('settings').querySelector('.sh-body').scrollTop=0;setTimeout(()=>$('setClose').focus({preventScroll:true}),30)}
@@ -2661,7 +3165,7 @@ const VEH_WAVE={technical:6,apc:12,ifv:18,mlrs:22,mbt:25},VEH_COST={technical:2,
 function vehBase(t,w){const x=w-VEH_WAVE[t];if(x<0)return 0;
   return t==='technical'?Math.min(5,1+x/6):t==='apc'?Math.min(5,1+x/5):t==='ifv'?Math.min(5,1+x/6):t==='mlrs'?Math.min(2,0.5+x/12):Math.min(4,0.8+x/7)}
 function vehWave(){const w=G.wave,q=[],f=w%10===0?0.5:1;   // MBT (boss) waves bring half the usual escort so the tank stays the headline
-  for(const t in VEH_WAVE){let n=Math.floor(vehBase(t,w)*f*(tw().veh[t]||1)+Math.random()*0.6);if(G.ev==='armor'&&(t==='apc'||t==='ifv')&&w>=VEH_WAVE[t])n++;for(let i=0;i<n;i++)q.push(t)}
+  for(const t in VEH_WAVE){let n=Math.floor(vehBase(t,w)*f*(tw().veh[t]||1)*(G.dcVeh||1)+Math.random()*0.6);if(G.ev==='armor'&&(t==='apc'||t==='ifv')&&w>=VEH_WAVE[t])n++;for(let i=0;i<n;i++)q.push(t)}
   for(let i=q.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[q[i],q[j]]=[q[j],q[i]]}
   const inf=G.spawnLeft,cost=q.reduce((s,t)=>s+VEH_COST[t]-1,0);
   G.spawnLeft=Math.max(q.length+Math.ceil(inf*0.5),inf-cost);G.waveTotal+=G.spawnLeft-inf;G.vq=q}
@@ -2688,7 +3192,7 @@ function crateKind(){if(G.wave<3)return'cash';const r=Math.random(),hurt=G.hp<G.
 function dropCrate(kind){const a=Math.random()*7,r=fortHalf()+wallThick()+wireOut()+18+Math.random()*Math.max(20,sight()-fortHalf()-wireOut()-40),k=kind||crateKind();
   G.crates.push(pfSnap(landPt({x:Math.cos(a)*r,y:Math.sin(a)*r,life:12,k,val:k==='cash'?crateVal(G.wave,L('scav')):money(crateVal(G.wave,L('scav'))*0.4)})));
   if(k!=='cash'&&!seen()['crate_'+k])spotted('crate_'+k)}   // first special crate ever: a SUPPLY DROP briefing card (seen once shown)
-function grabCrate(c){c.life=0;fxCrate(c);S.bank+=c.val;G.earned+=c.val;sfx('cash');if(c.k&&c.k!=='cash')medalBump('crates');
+function grabCrate(c){c.life=0;fxCrate(c);dqAdd('crate',1);S.bank+=c.val;G.earned+=c.val;sfx('cash');if(c.k&&c.k!=='cash')medalBump('crates');
   if(c.k==='ammo'){G.nadeT=0;G.rapidT=RAPID_T;syncNadeBtn(true);float(c.x,c.y-10,'RAPID FIRE · GRENADE READY','#ff9d7a',13);setTimeout(()=>tone(990,0.1,'square',0,0.05),90)}
   else if(c.k==='fix'){const w=G.wallMax&&G.wallHp<G.wallMax,was=G.wallHp<=0;if(w)G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.25);G.hp=Math.min(G.maxHp,G.hp+G.maxHp*0.15);
     float(c.x,c.y-10,w?(was?'WALLS REBUILT':'WALLS +25%'):'FIELD DRESSING +15%','#8fe08a',13);sfx('wall')}
@@ -2732,7 +3236,7 @@ function hurtEnemy(e,d,crit){if(e.dead)return;d*=(1+0.2*pk('overwatch'))*(e.veh|
 // each link adds +3% to ALL kill bounties (max +30% at 11), and the chain drops if the rifle goes quiet.
 const STREAK_T=3,STREAK_MAX=0.3,streakMul=()=>G.stk>1?1+Math.min(STREAK_MAX,0.03*(G.stk-1)):1;
 let _aimed=false;
-function streakKill(){G.stk=(G.stk||0)+1;G.stkT=STREAK_T;G.stkPop=1;medalMax('streak',G.stk);if(G.stk>1&&G.stk<=11)tone(520+G.stk*60,0.07,'square',40,0.03)}
+function streakKill(){G.stk=(G.stk||0)+1;G.stkT=STREAK_T;G.stkPop=1;medalMax('streak',G.stk);if(_dqK)dqAdd('streak',G.stk);if(G.stk>1&&G.stk<=11)tone(520+G.stk*60,0.07,'square',40,0.03)}
 // armored hulls that count toward Tank Hunter (technicals are soft-skinned pickups)
 const ARMOR_KILL={boss:1,mbt:1,ifv:1,apc:1,mlrs:1};
 // Stragglers: once the wave has fully spawned and at most 3 hostiles (ground + air) are left with no kill for STRAG_T seconds, they are
@@ -2741,7 +3245,7 @@ const STRAG_T=15;
 function stragglers(){if(G.spawnLeft>0||G.vq&&G.vq.length||G.time-(G.lkT??G.time)<STRAG_T)return;let n=0;for(const e of G.enemies)if(!e.dead&&++n>3)return;for(const e of G.sky)if(!e.dead&&++n>3)return;if(!n)return;
   for(const e of G.enemies)if(!e.dead){e.rev=Math.max(e.rev||0,1);if(e.stand)e.fwd=1}for(const e of G.sky)if(!e.dead)e.rev=Math.max(e.rev||0,1)
   if(G.stragW!==G.wave&&S.set.callouts!==false){G.stragW=G.wave;feed('STRAGGLERS MARKED','255,207,90','threat')}}
-function kill(e){e.dead=true;G.lkT=G.time;if(e.mech)medalBump('mech');if(e.vbied){e.vbied=0;medalBump('vbied');explode(e.x,e.y,44,e.dmg*0.4);light(e.x,e.y,90,'255,150,60',0.4)}if(_mainHit&&_aimed)streakKill();
+function kill(e){e.dead=true;G.lkT=G.time;if(_dqK)dqKill(e);if(e.mech)medalBump('mech');if(e.vbied){e.vbied=0;medalBump('vbied');explode(e.x,e.y,44,e.dmg*0.4);light(e.x,e.y,90,'255,150,60',0.4)}if(_mainHit&&_aimed)streakKill();
   const bonus=e.load>0?money(e.rew*0.15*e.load):0,r=Math.round(money(e.rew)*streakMul())+bonus;S.bank+=r;G.earned+=r;G.kills++;S.tkills++;(e.air?airDown:fxKill)(e);
   if(e.chute>0)medalBump('chute');if(_nadeK)medalBump('nade');if(ARMOR_KILL[e.type]&&!e.air)medalBump('tank');if(e.type==='manpads')medalBump('manpads');if(S.tkills%25===0)medalCheck('kills');
   if((e.lc||e.amph)&&seaIn(e.x,e.y)>-6)lcSink(e);else if(S.set.gfx==='high'&&!e.air)corpse(e);else if(e.veh)G.vwrecks.push({type:e.type,x:e.x,y:e.y,r:e.r,a:eHd(e,e.x,e.y),t0:G.time});
@@ -2954,7 +3458,7 @@ function update(dt){
   // waves
   if(G.spawnLeft>0){G.spawnT-=dt;if(G.spawnT<=0){spawn(nextType());G.spawnLeft--;G.spawnT=G.spawnInt*(0.6+Math.random()*0.8)}}
   else if(G.enemies.length===0&&!G.sky.length&&!G.drops.length&&!(G.uavT>0)){
-    if(G.breakT<=0){if(G.wave>0){medalMax('wave',G.wave);campHold(G.wave);if(G.wave>=15&&!G.wHit)medalMax('flawless',1);let b=money(8*G.wave*waveRew(G.wave));if(G.ev)b+=evClear(b);S.bank+=b;G.earned+=b;{const rp=rpClear(G.wave),pay=' · +$'+f1(b)+(rp>0?' · +'+rp+' RP':'');feed('WAVE '+G.wave+' CLEAR'+pay,'255,207,90','coin','W'+G.wave+' CLEAR'+pay)}sfx('cash');setTimeout(()=>{tone(784,0.1,'square',0,0.04);setTimeout(()=>tone(1175,0.18,'square',0,0.04),90)},140);save();if(perkWave(G.wave))G.perkAt=G.time+0.9}G.breakT=G.breakMax=G.wave<10?3:2}
+    if(G.breakT<=0){if(G.wave>0){if(!G.dc)medalMax('wave',G.wave);campHold(G.wave);dqWave(G.wave);if(G.wave>=15&&!G.wHit)medalMax('flawless',1);let b=money(8*G.wave*waveRew(G.wave));if(G.ev)b+=evClear(b);S.bank+=b;G.earned+=b;{const rp=rpClear(G.wave),pay=' · +$'+f1(b)+(rp>0?' · +'+rp+' RP':'');feed('WAVE '+G.wave+' CLEAR'+pay,'255,207,90','coin','W'+G.wave+' CLEAR'+pay)}sfx('cash');setTimeout(()=>{tone(784,0.1,'square',0,0.04);setTimeout(()=>tone(1175,0.18,'square',0,0.04),90)},140);save();if(perkWave(G.wave))G.perkAt=G.time+0.9}G.breakT=G.breakMax=G.wave<10?3:2}
     G.breakT-=dt;if(G.breakT<=0)startWave();}
   if(G.perkAt&&G.time>=G.perkAt){G.perkAt=0;offerPerks()}
   // regen
@@ -3022,7 +3526,7 @@ function update(dt){
   for(const p of G.planes)p.t+=dt;keepT(G.planes,3.5);
   for(const b of G.bombs){b.t-=dt;if(b.t<=0){b.done=true;sigBomb(b)}}keepUndone(G.bombs);
   // crates
-  G.crateT-=dt;if(G.crateT<=0){G.crateT=crateEvery(L('scav'))/(1+0.4*pk('supply'))*(0.7+Math.random()*0.6);dropCrate()}
+  G.crateT-=dt;if(G.crateT<=0){G.crateT=crateEvery(L('scav'))/(1+0.4*pk('supply'))*(0.7+Math.random()*0.6)*(G.dcCr||1);dropCrate()}
   for(const c of G.crates)c.life-=dt;keepLive(G.crates);
   // fx
   fxUpdate(dt);for(const f of G.fx)f.life-=dt;keepLive(G.fx);
@@ -3201,7 +3705,7 @@ function throwNade(x,y){if(!running||paused||G.choosing)return;if(G.nadeT>0){sfx
   const m=G.sold[0],l=L('nade'),r=nadeR(l),n=nadeNow(),dmg=nadeDmg(l);[x,y]=nadeClamp(x,y);m.ang=Math.atan2(y-m.y,x-m.x);
   for(let i=0;i<n;i++){const a=Math.random()*TAU,o=i?r*(0.55+Math.random()*0.45):0,[tx,ty]=nadeClamp(x+Math.cos(a)*o,y+Math.sin(a)*o),d=Math.hypot(tx-m.x,ty-m.y);
     G.nades.push(sgNade({sx:m.x,sy:m.y,x:tx,y:ty,t:-i*0.14,dur:0.4+d/560,h:Math.min(110,18+d*0.3),r,dmg,spin:(Math.random()<.5?-1:1)*(9+Math.random()*5)}))}
-  G.nadeT=nadeCdNow();G.nadeArmed=false;if(!seen().nade){seen().nade=1;save()}syncNadeBtn(true);sfx('toss',m.x,m.y)}
+  G.nadeT=nadeCdNow();G.nadeArmed=false;dqAdd('nade',1);if(!seen().nade){seen().nade=1;save()}syncNadeBtn(true);sfx('toss',m.x,m.y)}
 let _nadeK=false;   // set while a grenade bursts, so kill() can credit Demolitions
 function updateNades(dt){if(G.nadeT>0)G.nadeT=Math.max(0,G.nadeT-dt);if(!G.nades.length)return;
   for(const g of G.nades){g.t+=dt;if(g.tg&&g.t>0)sgHome(g,dt);if(g.t<g.dur)continue;g.done=true;const{x,y,r}=g;
@@ -4878,7 +5382,7 @@ const glowSprite=c=>_spr['l'+c]||tintOf(radialSprite('l'+c,[[0,`rgba(${c},1)`],[
 const fireSprite=()=>_spr.fire||radialSprite('fire',[[0,'rgba(255,255,235,1)'],[0.25,'rgba(255,215,110,.95)'],[0.6,'rgba(255,110,30,.6)'],[1,'rgba(160,30,0,0)']]);
 const scorchSprite=()=>radialSprite('scorch',[[0,'rgba(8,6,4,.6)'],[0.6,'rgba(20,15,10,.35)'],[1,'rgba(20,15,10,0)']]);
 function blit(img,x,y,r,a){if(a<=0||r<=0)return;ctx.globalAlpha=Math.min(1,a);ctx.drawImage(img,x-r,y-r,r*2,r*2)}
-const R=Math.random;
+const R=()=>Math.random();   // read at call time: the daily challenge swaps in a seeded Math.random for its run
 // Every G.parts entry uses one field layout {x,y,vx,vy,life,max,c,sz,glow,rot,spin} (fields it doesn't use are undefined, exactly
 // what an absent field reads as), so the per-frame particle loops see a single hidden class.
 function spark(x,y,n,spd,cols,life=0.5,sz=1.6){if(AQ.lv)n=Math.ceil(n*AQ.q);for(let i=0;i<n&&G.parts.length<FXCAP.parts;i++){const a=R()*6.283,s=spd*(0.3+R()*0.9);G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:life*(0.5+R()*0.7),max:life,c:cols[i%cols.length],sz,glow:1,rot:undefined,spin:undefined})}}
@@ -7361,7 +7865,8 @@ const PERKS=[
   go:()=>{for(const u of G.units)if(u.fuel!=null){u.fuel=1;if(u.fs==='dry')u.fs='patrol'}for(const j of G.fleet)j.fuel=1}}];
 const ROMAN=['','I','II','III','IV','V','VI','VII','VIII','IX','X'],rank=n=>ROMAN[n]||String(n);
 let perkOpenT=0,perkReadyAt=Infinity,perkDownT=0;
-function offerPerks(){if(!running)return;const pool=PERKS.filter(p=>!p.ok||p.ok()),pick=[];
+function offerPerks(ex){if(!running)return;let pool=PERKS.filter(p=>!p.ok||p.ok());const pick=[];G.rrOk=!ex;   // ex: the options a reroll replaces (kept only if too few others)
+  if(ex&&pool.filter(p=>!ex.includes(p.id)).length>=3)pool=pool.filter(p=>!ex.includes(p.id));
   while(pick.length<3&&pool.length)pick.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
   if(tw().night&&pick.length){const il=pool.find(p=>p.id==='illum');if(il&&Math.random()<0.5)pick[pick.length-1]=il}   // Island: command pushes Illumination Rounds (never night-free there)
   G.choosing=pick;mouse.down=false;G.airArmed=false;G.airAim=null;G.nadeArmed=false;perkOpenT=performance.now();
@@ -7375,7 +7880,7 @@ function offerPerks(){if(!running)return;const pool=PERKS.filter(p=>!p.ok||p.ok(
   const m=$('perkModal');m.classList.remove('ready');m.classList.add('on');perkReadyAt=Infinity;dirPop(false);setTimeout(()=>{if(G&&G.choosing===pick){m.classList.add('ready');perkReadyAt=performance.now()}},650);   // brief lockout so taps meant for the battlefield can't pick by accident
   sfx('wave')}
 function pickPerk(i){const p=G&&G.choosing&&G.choosing[i];if(!p||performance.now()-perkOpenT<650)return;
-  G.pk[p.id]=(G.pk[p.id]||0)+1;if(p.go)p.go();G.choosing=null;medalMax('dirs',Object.values(G.pk).reduce((a,b)=>a+b,0));
+  G.pk[p.id]=(G.pk[p.id]||0)+1;if(p.go)p.go();G.choosing=null;dqAdd('dir',1);medalMax('dirs',Object.values(G.pk).reduce((a,b)=>a+b,0));
   const pc=$('perkCards').querySelector('[data-i="'+i+'"]');if(pc)pc.classList.add('picked');$('perkModal').classList.remove('ready');setTimeout(()=>{if(!G||!G.choosing)$('perkModal').classList.remove('on')},160);syncDirBtn();
   if(G.breakT>0)G.breakT=G.breakMax=Math.max(G.breakT,1.6);   // a beat for the directive banner before the next wave's
   if(G.cp&&G.cp.i<G.cp.n&&++G.cp.i<G.cp.n)G.perkAt=G.time+0.3;
@@ -7459,7 +7964,7 @@ Object.assign(INTEL,{
  ev_barrage:['Artillery Barrage',3,'Mortar teams set up in the fog and keep shelling the fort, with marksmen covering them. Each launch gives a team away for a moment: lock on, or let artillery and TARGET: THREATS hunt them. Clearing the wave pays +60%.']});
 const CHUTE_T=2.1,LAND_T=0.7,TRANS_V=150,TRANS_ALT=90;
 function rollEvent(w){if(w<5||w%10===0||(w>=SKY_WAVE.airboss&&w%10===5)||w-G.evLast<2)return null;
-  if(Math.random()>(G.evN?0.3:0.6))return null;
+  if(Math.random()>(G.evN?0.3:0.6)*(G.dcEv||1))return null;
   const ok=Object.keys(EVENTS).filter(k=>w>=EVENTS[k].from&&k!==G.evPrev),W=mapCur().ev;if(!ok.length)return null;if(!W)return ok[Math.random()*ok.length|0];
   let t=ok.reduce((a,k)=>a+(W[k]??1),0)*Math.random();for(const k of ok)if((t-=W[k]??1)<=0)return k;return ok[ok.length-1]}   // theater event weights (unlisted = 1)
 function evStart(){const w=G.wave,k=rollEvent(w);G.ev=k;if(!k)return;const E=EVENTS[k];G.evLast=w;G.evPrev=k;G.evN++;
@@ -7478,7 +7983,7 @@ function evWeights(p){const k=G&&G.ev;if(k!=='blitz'&&k!=='armor'&&k!=='barrage'
   if(k==='swarm'){for(const q of p)q[1]*=q[0]==='drone'?4:q[0]==='runner'?0.6:1;return}
   if(k==='barrage'){for(const q of p)q[1]*=q[0]==='mortar'?4:q[0]==='shooter'?1.6:q[0]==='runner'?0.6:1;return}
   for(const q of p)q[1]*=k==='blitz'?(q[0]==='runner'?3:q[0]==='grunt'?0.7:q[0]==='brute'?0.3:1):(q[0]==='brute'?3:q[0]==='runner'?0.5:1)}
-function evClear(b){const E=EVENTS[G.ev],x=Math.round(b*E.bonus);medalBump(G.ev);(G.evDone||(G.evDone=[])).push(G.ev);G.ev=null;feed(E.name+(E.good?' COMPLETE':' REPELLED')+' · +$'+f1(x),E.col,'star');
+function evClear(b){const E=EVENTS[G.ev],x=Math.round(b*E.bonus);medalBump(G.ev);dqAdd('event',1);(G.evDone||(G.evDone=[])).push(G.ev);G.ev=null;feed(E.name+(E.good?' COMPLETE':' REPELLED')+' · +$'+f1(x),E.col,'star');
   setTimeout(()=>tone(660,0.08,'square',0,0.04),120);setTimeout(()=>tone(990,0.14,'square',0,0.04),230);return x}
 function evSting(k){
   if(k==='storm'){const v=voice(3.2,1,null,null,true);if(v){lNoise(v,'bandpass',260,700,0.7,0.26,1.1,2);lNoise(v,'highpass',2600,4200,0.5,0.07,1.4,1.6,0.4)}}
@@ -9485,7 +9990,7 @@ function drawHud(){let o=HL;const lefty=document.body.classList.contains('lefty'
   drawLane(o,laneY);
   hudDomSync(o,now);if(HUDGRID)hudGrid()}
 // theater caption: map glyph + name in small dim caps, with a dark underlay so it reads over any ground
-function hudTheater(x,y){const m=mapCur(),t=m.name.toUpperCase();ctx.font='700 10px Oxanium,sans-serif';ctx.letterSpacing='1.6px';ctx.textAlign='left';
+function hudTheater(x,y){const m=mapCur(),t=(G&&G.dc?'DAILY CHALLENGE · ':'')+m.name.toUpperCase();ctx.font='700 10px Oxanium,sans-serif';ctx.letterSpacing='1.6px';ctx.textAlign='left';
   cIcon('map',x,y-9,11,'rgba(0,0,0,.6)',2.4);cIcon('map',x,y-9.5,11,'rgba(227,181,60,.8)',2);ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillText(t,x+16,y+0.8);ctx.fillStyle='rgba(214,222,196,.72)';ctx.fillText(t,x+16,y);ctx.letterSpacing='0px'}
 function hudDomVar(k,v,el){v=Math.round(v);const d=HL.dom;if(d[k]!=null&&Math.abs(d[k]-v)<=1)return;d[k]=v;el.style.setProperty(k,v+'px')}
 // ---- status: desk card
@@ -9744,7 +10249,7 @@ const TIER_CASH=[1,3,8],medalRank=m=>MG()[m.id]==null?0:1+(MT()[m.id]|0),medalGo
   medalPts=()=>Object.keys(MG()).length+Object.values(MT()).reduce((a,b)=>a+(b|0),0),medalMore=m=>MG()[m.id]!=null&&m.tiers&&(MT()[m.id]|0)<m.tiers.length;
 let _mN=0;const medalMul=()=>1+0.01*_mN;
 const medalVal=m=>m.st==='kills'?S.tkills:MS()[m.st]||0,medalCash=m=>Math.round(m.cash*waveRew(Math.max(5,S.best)));
-function medalCheck(st){for(const m of MEDALS)if(m.st===st){if(MG()[m.id]==null&&medalVal(m)>=m.goal)award(m);while(medalMore(m)&&medalVal(m)>=medalGoal(m))awardRank(m)}}
+function medalCheck(st){if(S.dcHold)return;for(const m of MEDALS)if(m.st===st){if(MG()[m.id]==null&&medalVal(m)>=m.goal)award(m);while(medalMore(m)&&medalVal(m)>=medalGoal(m))awardRank(m)}}
 function awardRank(m){const r=(MT()[m.id]|0)+1,c=Math.round(medalCash(m)*TIER_CASH[r]);MT()[m.id]=r;_mN=medalPts();S.bank+=c;gemAdd(GEM_FREE.rank,'medal');if(running&&G)(G.medals||(G.medals=[])).push(m.id);save();medalToast(m,c,r+1)}
 function medalBump(st,n=1){MS()[st]=(MS()[st]||0)+n;medalCheck(st)}
 function medalMax(st,v){if(v>(MS()[st]||0)){MS()[st]=v;medalCheck(st)}}
@@ -9765,7 +10270,7 @@ function medalToastNext(){const el=$('medalToast');clearTimeout(_mtW);if(!_mtQ.l
 // (the wave-clear code saves right after). A star rides the medal toast lane; the first clear of a theater also gets a battle
 // banner and fanfare, and S.campWin holds the cleared theater's id until the Base screen has shown its debrief (openThWin).
 const starTxt=n=>'★'.repeat(n)+'☆'.repeat(3-n);
-function campHold(w){if(!G)return;const m=mapCur(),r=mapRec(m.id),was=r.stars;let gm=0;
+function campHold(w){if(!G||G.dc)return;const m=mapCur(),r=mapRec(m.id),was=r.stars;let gm=0;
   if(w>=STAR1_W&&r.stars<1)r.stars=1;
   if(w>=CLEAR_W){r.stars=Math.max(r.stars,2);if(!G.lastStand&&G.wallMax>0&&(G.startWave||1)<CLEAR_W)r.stars=3;
     if(!r.cleared){r.cleared=true;S.campWin=m.id;gm+=GEM_FREE.clear(m.ord);const nx=mapNext(m.id);banner('THEATER CLEARED',nx?nx.name.toUpperCase()+' UNLOCKED':'EVERY THEATER HELD','255,207,90');
@@ -9788,7 +10293,7 @@ cv.addEventListener('mousedown',e=>{if(!running||paused||e.button!==0)return;toW
   for(const c of G.crates)if(Math.hypot(c.x-mouse.wx,c.y-mouse.wy)<Math.max(14,(MOBILE?30:16)/sc)){grabCrate(c);return}
   const t=enemyAt(mouse.wx,mouse.wy,Math.max(24,(MOBILE?36:18)/sc));if(t)G.sold[0].tgt=t});
 function airRelease(){if(!G||!G.airAim)return;const a=G.airAim,dx=mouse.wx-a.x,dy=mouse.wy-a.y;G.airAim=null;
-  callAir(a.x,a.y,Math.hypot(dx,dy)*sc>14?Math.atan2(dy,dx):undefined)}
+  callAir(a.x,a.y,Math.hypot(dx,dy)*sc>14?Math.atan2(dy,dx):undefined);dqAdd('strike',1)}
 addEventListener('mouseup',()=>{mouse.down=false;airRelease()});
 function nadeRelease(){if(G&&G.nadeArmed&&running&&!paused)throwNade(mouse.wx,mouse.wy)}
 const tm=(type,t)=>new MouseEvent(type,{clientX:t.clientX,clientY:t.clientY,button:0});
