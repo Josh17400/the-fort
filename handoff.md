@@ -18,7 +18,7 @@ Top-down modern-military roguelite fort defense. Tap/click enemies to shoot them
    - R&D shows **only lines whose next tier is open** (`rsVis`), and only the **current + next tier** for each line.
    - The goal is a **slow, non-overwhelming roll-out** of progression.
 3. Research Points should be **hard to earn** (the owner complained about 29 RP by wave 6).
-4. Weapons shouldn't feel like "needles". Upgrades are endless (`max: Infinity`) where it makes sense.
+4. Weapons shouldn't feel like "needles". Since phase 3 every Armory line is capped per theater (`CAPS`, see "R&D economy"): the caps grow a few levels per theater instead of being endless.
 
 ---
 
@@ -29,8 +29,9 @@ Top-down modern-military roguelite fort defense. Tap/click enemies to shoot them
 | Save (localStorage) | `S`. `S.lv` = upgrade levels, `S.rs` = research tiers, `S.rp` = Research Points, `S.set` = settings (gfx, dayNight, startWave, speed…), `S.mg`/`S.ms` = medals. `S.map`/`S.maps` = campaign theaters (see "Campaign core"): `S.lv`, `S.bank`, `S.best`, `S.set.startWave` are the ACTIVE theater's |
 | Campaign | `MAPS`, `switchMap(id)`, `campInit`, `campHold`, `mapCur()`, `MAPM`, `careerBest()`, `rsBest()`, `mapHooks`. UI: `renderTheater`, `openTheaters`, `openThWin` |
 | Upgrades | table `U` (`id, need, wave, max, cost, g, cat`). Helpers: `L(id)`, `lockWhy(u)`, `costOf(u,l)` |
-| Research | `RLINES`, `rTier(id)`, `rMult`, `rSig`, `rsOwned`, `rsWhy`, `rsDone`, `rsReady` |
-| RP economy | `rpWave(w)` (0 before wave 10, then +1 per 10 waves, bonus on multiples of 10). `RP_COST=[0,10,25,50,90,150,240,380,580,850]`. Record bonus +1 only when w>=10. Medals give `rpGain(3)`. Veteran back-pay `min(150,best+3*medals)` |
+| Research | `RLINES`, `rTier(id)`, `rMult`, `rSig`, `rsOwned`, `rsWhy`, `rsDone`, `rsReady`, `rsOpenNext`. Gates `RS_GATE` + `rsProg()`; prices `RS_RP`/`rsCostAt`; lab times `RS_MIN`/`rsMinAt` |
+| Lab + gems | `S.lab`, `labStart`, `labTick`/`labLand`, `labLeft`, `labSkip`, `labSkipCost`, `labBuySlot`, `labUi` (1s ticker). `S.gems`, `gemAdd(n,src)`, `gemSpend(n,why)`, `GEM_FREE`, `openGems()` |
+| RP economy | `rpWave(w)` (0 before wave 10, then +1 per 10 waves, bonus on multiples of 10). Tier prices follow the tier's campaign gate (`rsCostAt`). Record bonus +1 only when w>=10. Medals give `rpGain(3)`. Checkpoint back-pay `cpBackPay` (cash + RP, after 5 held waves). Veteran back-pay `min(150,best+3*medals)` |
 | Graphics | presets via `S.set.gfx`, `GFX`, `hiGfx()`. Baked sprite cache: `hqBake`/`hqDraw` (tier keys end in `_tN`) |
 | Day/night + shadows | `G.todT`, `SH` (len/alpha), `hqShadow`. Vehicles have headlights at night |
 | Renderer | ChaosGL: instanced WebGL with a Canvas2D fallback |
@@ -237,7 +238,7 @@ Refuses while `running`, for unknown/locked ids and for the active id. Otherwise
 ### Account-wide vs per-theater reads of "best"
 - Per theater (`S.best`): Armory `u.wave` gates, checkpoints, NEW RECORD, RP record bonus (+1 past the theater's best), medal cash scale, pause BEST, Base BEST tile.
 - Career (`careerBest()` = max over theaters): medal roll-out `from`, wave-medal sync, Field Manual tips/open state, first-deployment card, RP hint, service record, backup tip.
-- R&D wave gates read `rsBest()` (currently `careerBest()`).
+- R&D gates read `rsProg()` (campaign progress, phase 3; `rsBest()` is gone).
 
 ### Hooks for the next phases
 - **Phase 2 (theming):** fill each theater's `ground/lo/seed/twist/mix/ev` (all read live, keyed by `S.map`). Implement twists by switching on `mapTwist()` (spawn, sight, events, HUD). Tuft/prop colours in `terrainBake`/`tuftSprites` are still global; key any new baked sprite on `mapCur().id`. Use `mapHooks.push(id=>...)` for anything that must be re-derived on a switch.
