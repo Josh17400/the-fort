@@ -8006,7 +8006,7 @@ const tKeep=()=>{const wl=L('walls'),wi=L('wire'),fh=wl?wallHalfAt(wl)+wallThick
 // outer helipads, motor pool, hangar - from the upgrade levels with the formulas initLogi/mkSite place them by. Solid structures are
 // laid out clear of it (an intact building there is rubble instead), so no base structure sits in a building or gets walled in.
 function baseFoot(){const H=laneOuter(),ph=wallHalfAt(L('walls')),air=L('airstrip')&&L('walls'),f=[],P=16,box=(x0,y0,x1,y1)=>f.push([x0-P,y0-P,x1+P,y1+P]);
-  if(L('truck')||L('apc')||L('tank')){box(-H-14,-H-14,H+14,H+laneSouth()+14);box(H+10,H*0.25-36,H+92,H*0.25+36)}
+  if(L('truck')||L('apc')||L('tank')){box(-H-4,-H-4,H+4,H+laneSouth()+4);box(H+10,H*0.25-36,H+92,H*0.25+36)}
   if(L('depot')){const x=H+64,y=-H*0.2;box(x-62,y-80,x+74,y+80)}
   if(L('heli')&&ph<60)box(-H-62,-52,-H-18,48);
   if(air){const g=rwyGeo();box(g.x0-8,g.y-6,g.x1+8,g.ay+APRON_H+6)}
@@ -8339,8 +8339,8 @@ const TLOOK={
     // base's lanes/runway/yards cover that spot, out on the first diagonal boulevard crossing that is clear of them (a roundabout)
     C.mon=[];const mk=['obelisk','statue','fountain','statue'],mr=[14.4,17.6,22.4,17.6];
     for(let i=0;i<4;i++){const sx=i===0||i===3?1:-1,sy=i<2?1:-1;let x=sx*(keep*1.42+30)/Math.SQRT2,y=sy*(keep*1.42+30)/Math.SQRT2;
-      for(let k=1;footHit(C.foot,x,y,mr[i]+10)&&k<5;k++){x=sx*k*B;y=sy*k*B}
-      if(footHit(C.foot,x,y,mr[i]+10)||Math.hypot(x,y)>C.V*0.9)continue;C.mon.push([x,y,mk[i]]);if(i)sDisc(C,x,y,mr[i]);else sRect(C,x,y,mr[i],mr[i])}},
+      for(let k=1;footHit(C.foot,x,y,mr[i]+4)&&k<6;k++){x=sx*k*B;y=sy*k*B}
+      if(footHit(C.foot,x,y,mr[i]+4)||Math.hypot(x,y)>C.R-40)continue;C.mon.push([x,y,mk[i]]);if(i)sDisc(C,x,y,mr[i]);else sRect(C,x,y,mr[i],mr[i])}},
   macro(C){return(wx,wy,q,c)=>{if(q<4)return;const r=Math.hypot(wx,wy),d=C.street(wx,wy);
     if(r<C.p1){const t=0.9+0.12*vnoise(wx/6,wy/6);for(let i=0;i<3;i++)c[i]=[140,134,122][i]*t;c[3]=1;return}
     if(d<C.bw){const med=Math.abs(wx)<6||Math.abs(wy)<6;if(med&&Math.max(Math.abs(wx),Math.abs(wy))>C.p1){for(let i=0;i<3;i++)c[i]=[64,92,50][i];c[3]=0.2;return}
