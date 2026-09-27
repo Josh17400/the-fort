@@ -650,6 +650,59 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
 .cp .cpx{grid-column:2;margin:0;font:400 12px/1.4 var(--f-body);color:var(--c-text-2)}
 .cp.one{display:block}.cp-none{display:flex;align-items:center;gap:6px;margin:0;font:400 12px var(--f-body);color:var(--c-dim)}
 #deployBtn{width:100%}#deployBtn .ic{margin-right:2px}
+/* theaters (campaign): Mission Briefing bar, list sheet, cleared debrief. .the = theater emblem tinted by its ground palette (--t1..3) */
+.stars{display:inline-flex;gap:2px;flex:none}
+.stars svg{display:block;fill:none;stroke:rgba(255,207,90,.42);stroke-width:1.7;stroke-linejoin:round}
+.stars svg.on{fill:var(--c-gold-hi);stroke:var(--c-gold-hi);filter:drop-shadow(0 0 3px rgba(255,207,90,.4))}
+.the{position:relative;flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:10px;overflow:hidden;
+  background:linear-gradient(135deg,var(--t1) 0%,var(--t2) 58%,var(--t3) 100%);border:1px solid rgba(255,255,255,.16);box-shadow:inset 0 -10px 18px rgba(0,0,0,.3)}
+.the::after{content:"";position:absolute;inset:0;background:repeating-radial-gradient(circle at 28% 72%,transparent 0 5px,rgba(10,12,8,.16) 5px 6px)}   /* contour lines */
+.the>b,.the>.ic{position:relative;z-index:1;font:800 17px/1 var(--f-display);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.the.lk{filter:grayscale(.9) brightness(.5)}.the.lk>.ic{color:#e6ead9}
+.thn{min-width:0;font:800 15px/1.15 var(--f-display);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thb{display:flex;align-items:center;gap:12px;width:calc(100% + 8px);min-height:56px;margin:0 -4px;padding:8px 12px 8px 8px;border-radius:12px;cursor:pointer;touch-action:manipulation;
+  text-align:left;font:inherit;color:var(--c-text);background:linear-gradient(90deg,rgba(227,181,60,.08),transparent 75%);border:1px solid var(--c-line);transition:border-color var(--d-1),background var(--d-1)}
+.thb-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.ths{font:400 12px/1.3 var(--f-body);color:var(--c-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thb-go{position:relative;display:inline-flex;align-items:center;gap:4px;flex:none;font:600 12px var(--f-display);letter-spacing:.12em;color:var(--c-dim)}
+.thb-go .ndot{position:static;display:inline-block;margin-right:4px}
+.thb.one{min-height:44px;padding:6px 12px;gap:10px;background:transparent}
+.thb.one>.ic{flex:none;color:var(--c-gold)}.thb.one .thn{flex:1;font-size:13px;letter-spacing:.14em;color:var(--c-text-2)}
+@media (hover:hover){.thb:hover{border-color:var(--b-gold)}.thb:hover .chev{color:var(--c-gold-hi);transform:translateX(2px)}}
+@media (max-width:419px){.thb-go .tx{display:none}}
+#thList>.panel{max-width:560px}
+.thi{margin:10px 0 14px;font:400 13px/1.45 var(--f-body);color:var(--c-text-2)}.thi b{color:var(--c-text);font-weight:600}
+.thl{display:flex;flex-direction:column;gap:8px}
+.thc{display:flex;align-items:center;gap:12px;width:100%;padding:12px;border-radius:var(--rad-lg);text-align:left;font:inherit;color:var(--c-text);background:var(--g-card);border:1px solid var(--c-line)}
+button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(--d-1),background var(--d-1)}
+@media (hover:hover){button.thc:hover{border-color:var(--c-line-3)}button.thc.on:hover{border-color:var(--c-gold)}}
+.thc .the{width:52px;height:52px;border-radius:12px}.thc .the>b{font-size:21px}
+.thc.on{border-color:var(--b-gold);background:linear-gradient(90deg,rgba(227,181,60,.13),rgba(227,181,60,.03)),var(--g-card)}
+.thc-b{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.thc-h{display:flex;align-items:center;gap:8px;max-width:100%}
+.thc-d{font:400 12px/1.4 var(--f-body);color:var(--c-text-2)}
+.thc-m{display:flex;align-items:center;gap:10px;font:600 12px var(--f-display);letter-spacing:.06em;color:var(--c-dim)}
+.b-clr{color:var(--c-green);border-color:var(--b-green)}
+.thc.lock{background:rgba(255,255,255,.02);border-style:dashed;border-color:var(--c-line-2)}.thc.lock .thn{color:var(--c-text-2)}.thc.lock .wreq{margin-top:2px}
+.thc.far{padding:6px 12px;background:transparent;border-color:transparent}.thc.far .the{width:36px;height:36px;border-radius:9px}
+.thc.far .thn{font-size:13px;color:var(--c-dim)}.thc.far .thc-d{font-size:11px;color:var(--c-dim)}
+#thWin>.panel{max-width:440px;padding:24px 20px 20px;text-align:center;border-color:rgba(227,181,60,.7);
+  background:linear-gradient(180deg,rgba(227,181,60,.2),rgba(227,181,60,.04) 50%),var(--c-s4);box-shadow:0 0 0 1px rgba(227,181,60,.2),0 20px 60px rgba(0,0,0,.5),0 0 70px rgba(227,181,60,.16)}
+.thw-top .eyebrow{justify-content:center;color:var(--c-gold-hi)}
+.thw-top .stars{margin:16px 0 4px;gap:8px}
+.thw-top h2{margin:8px 0;font:800 26px/1.1 var(--f-display);letter-spacing:.08em;text-transform:uppercase}
+.thw-top p{margin:0 auto;max-width:36ch;font:400 14px/1.45 var(--f-body);color:var(--c-text-2)}.thw-top p b{color:var(--c-text);font-weight:600}
+.thw-nx{display:flex;align-items:center;gap:12px;margin:18px 0 12px;padding:12px;text-align:left;border-radius:var(--rad-lg);background:var(--c-inset);border:1px solid var(--c-line-2)}
+.thw-nx .the{width:52px;height:52px;border-radius:12px}.thw-nx .the>b{font-size:21px}.thw-nx>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.thw-nx .eyebrow{color:var(--c-green)}.thw-nx .eyebrow::before{background:var(--c-green)}
+.thw-rules{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:8px;text-align:left;font:400 13px/1.35 var(--f-body);color:var(--c-text-2)}
+.thw-rules li{display:flex;align-items:flex-start;gap:10px}.thw-rules .ic{flex:none;margin-top:1px;color:var(--c-gold-hi)}
+.thw-b{display:flex;flex-direction:column;gap:8px}.thw-b .btn{width:100%;line-height:1.2;padding:10px 16px}
+@keyframes starPop{0%{transform:scale(.2) rotate(-40deg);opacity:0}65%{transform:scale(1.3)}100%{transform:none;opacity:1}}
+#thWin.on .stars svg{animation:starPop .55s var(--e-spring) both}#thWin.on .stars svg:nth-child(2){animation-delay:.16s}#thWin.on .stars svg:nth-child(3){animation-delay:.32s}
+@media (max-height:500px) and (orientation:landscape){#thWin>.panel{max-width:760px;padding:18px 20px;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:20px;align-items:center}
+  .thw-top .stars{margin:10px 0 2px}.thw-top h2{font-size:22px;margin:4px 0 6px}.thw-top p{font-size:13px}
+  .thw-nx{margin:0 0 10px;padding:10px}.thw-nx .the{width:44px;height:44px}.thw-rules{margin-bottom:12px;gap:5px;font-size:12px}.thw-b .btn.lg{min-height:48px;font-size:14px}}
 /* after-action + first deployment */
 .aar{display:flex;flex-direction:column;gap:12px}
 .aar .sec-h{margin:0}
@@ -984,6 +1037,7 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
       <div class="bcol">
         <div class="panel deploy ticks" id="mission">
           <div><div class="eyebrow">MISSION BRIEFING</div><h2>READY TO DEPLOY</h2><p class="mdesc">Hold the line. Every kill pays; spend it in the Armory when the fort falls.</p></div>
+          <button class="thb" id="theater" type="button"></button>
           <div class="mkit" id="kit"></div>
           <div class="tiles" id="loadout"></div>
           <div class="cp" id="startSel"></div>
@@ -1042,7 +1096,7 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
     <div class="set-sec eyebrow">DATA</div>
     <div class="set"><span class="st">Back up progress<small>Copies a save code: keep it somewhere safe in case the app's storage is cleared</small></span><button class="btn sm" id="bakBtn">COPY CODE</button></div>
     <div class="set"><span class="st">Restore progress<small>Paste a save code, then tap RESTORE twice</small><input id="bakIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="FORT1:..." style="margin-top:6px;width:100%;box-sizing:border-box;font:16px monospace;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:inherit"></span><button class="btn sm" id="bakRestore">RESTORE</button></div>
-    <div class="set"><span class="st">Reset progress<small>Wipes money, upgrades, research and medals</small></span><button class="btn danger sm" id="resetBtn">RESET</button></div>
+    <div class="set"><span class="st">Reset progress<small>Wipes money, upgrades, research, medals and theaters</small></span><button class="btn danger sm" id="resetBtn">RESET</button></div>
   </div>
   <div class="sh-foot"><button class="btn pri" id="backBtn">DONE</button></div>
 </div></div>
@@ -1051,6 +1105,13 @@ body.mobile #home .panel{backdrop-filter:none;-webkit-backdrop-filter:none;backg
   <div class="sh-body" id="howBody"></div>
   <div class="sh-foot"><button class="btn pri" id="howDone">GOT IT</button></div>
 </div></div>
+
+<div class="modal sheet-b" id="thList" role="dialog" aria-modal="true" aria-labelledby="thTitle"><div class="panel">
+  <div class="sh-head"><h2 id="thTitle">THEATERS</h2><button class="icon-btn" id="thClose" aria-label="Close theaters"><span data-ic="close" data-s="20"></span></button></div>
+  <div class="sh-body" id="thBody"></div>
+  <div class="sh-foot"><button class="btn pri" id="thDone">DONE</button></div>
+</div></div>
+<div class="modal" id="thWin" role="dialog" aria-modal="true" aria-labelledby="thWinT"><div class="panel ticks" id="thWinBody"></div></div>
 
 <script>
 // on-screen crash reporter (helps diagnose device-only bugs)
@@ -1069,6 +1130,7 @@ IC.ddef='M3 20h18M5 20v-3h14v3M8 17v-3h8v3M12 14V9l7-4M9 9h.01';
 IC.feff='M4 18a8 8 0 1 1 16 0M12 18l4-6M7 14h.01M17 14h.01M12 10h.01';
 IC.rfac='M3 21V10l9-6 9 6v11M6.5 21v-6.5h11V21M9.5 17.5h5M14.5 9.2a2.2 2.2 0 0 0 2.6 2.6l-3 3';
 IC.hangar='M2 20v-6a10 7.5 0 0 1 20 0v6zM2 20h20M7.5 20v-4.5h9V20M6 11.5l2 1.2M18 11.5l-2 1.2M12 9v1.5';
+IC.map='M3 6.5l6-3 6 3 6-3v14l-6 3-6-3-6 3zM9 3.5v14M15 6.5v14';
 IC.research='M9 3h6M10 3v6.2L4.6 18.4A1.8 1.8 0 0 0 6.2 21h11.6a1.8 1.8 0 0 0 1.6-2.6L14 9.2V3M7 15h10';
 function ic(n,s=20){return`<svg class="ic" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[n]}"/></svg>`}
 IC.threat='M12 3L2 20h20zM12 9.5v4.5M12 17h.01';
@@ -1080,7 +1142,7 @@ const DEF_SET={vol:60,music:true,shake:true,dmgNums:true,callouts:true,ring:true
 let S;
 function loadSave(){try{S=JSON.parse(localStorage.getItem('theFortSave'))}catch(e){}
   if(!S||typeof S!=='object'||Array.isArray(S))S={};const num=v=>{v=+v;return isFinite(v)&&v>0?v:0};S.bank=num(S.bank);S.best=Math.floor(num(S.best));S.tkills=Math.floor(num(S.tkills));S.lv=S.lv&&typeof S.lv==='object'&&!Array.isArray(S.lv)?S.lv:{};for(const k in S.lv)S.lv[k]=Math.floor(num(S.lv[k]));S.seen=S.seen&&typeof S.seen==='object'?S.seen:{};S.set=Object.assign({},DEF_SET,S.set&&typeof S.set==='object'?S.set:{});if(![0.5,0.75,1].includes(+S.set.speed))S.set.speed=1;S.set.speed=+S.set.speed;S.set.vol=Math.max(0,Math.min(100,+S.set.vol||0));if(!['high','medium','low'].includes(S.set.gfx))S.set.gfx=GFX_DEF;if(!['near','threat','tough'].includes(S.set.prio))S.set.prio='near';
-  const obj=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};S.rp=Math.max(0,Math.floor(+S.rp||0));S.rs=obj(S.rs);S.rf=obj(S.rf);if(!S.rsv)migrateRS()}
+  const obj=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};S.rp=Math.max(0,Math.floor(+S.rp||0));S.rs=obj(S.rs);S.rf=obj(S.rf);if(!S.rsv)migrateRS();campInit()}
 // Research save migration (runs once per save): brand-new saves start on the pistol tier; veterans keep the rifle, keep the
 // artillery piece their Walls level already showed, and get a one-off Research Points back-pay so they can research at once.
 function migrateRS(){const lv=S.lv,W=lv.walls||0,existing=S.best>1||Object.keys(lv).length>0;
@@ -1088,6 +1150,72 @@ function migrateRS(){const lv=S.lv,W=lv.walls||0,existing=S.best>1||Object.keys(
   if(existing){S.rs.arty=Math.max(S.rs.arty||0,W>=8&&S.best>=25?2:W>=5&&S.best>=15?1:0);S.rp+=Math.min(150,S.best+3*Object.keys(S.mg||{}).length)}
   S.rsv=1;save()}
 function save(){try{localStorage.setItem('theFortSave',JSON.stringify(S))}catch(e){}}
+// ================= CAMPAIGN =================
+// Eight theaters, played in order. Holding wave CLEAR_W clears a theater and opens the next; a cleared theater stays playable
+// forever. Every theater is its own fort build: cash (S.bank), Armory levels (S.lv), best wave (S.best) and the checkpoint start
+// (S.set.startWave) belong to the ACTIVE theater and sit on S exactly where the rest of the code reads them; switchMap() swaps
+// them in and out of S.maps. R&D (S.rs/S.rf/S.rp), medals (S.mg/S.ms/S.mt), settings and lifetime stats are account-wide.
+// Save: S.map = active theater id. S.maps[id] = {stars 0-3, cleared, visited} for every theater, plus {lv, bank, best, startWave}
+// while that theater is NOT the active one. Stars count waves HELD (cleared), like the wave medals: 1 = wave 50, 2 = wave 100
+// (theater cleared, next one opens), 3 = wave 100 in a run that deployed below wave 100 and never had its walls breached.
+// Theme fields, filled in by the theming phase: ground = terrain macro palette (terrainBake), lo = Medium/Low ground colours
+// [fill, decal A, decal B], seed = terrain layout seed, twist = theater mechanic id (mapTwist(); nothing consumes it yet), mix =
+// enemy weight multipliers applied in pickType (mapMix), ev = battle-event weights for rollEvent (null = uniform pick),
+// hpMul/dmgMul/rewMul = multipliers on waveHp/waveDmg/waveRew. Desert Outpost is the original game: multipliers 1, original terrain.
+const CLEAR_W=100,STAR1_W=50;
+// TODO-tune (economy phase): placeholder difficulty curve for theaters 2-8 (i = order index - 1)
+const MAP_DIF=i=>({hpMul:Math.pow(1.9,i),dmgMul:Math.pow(1.6,i),rewMul:Math.pow(1.8,i)});
+const MAPS=[
+ {id:'desert',ord:1,name:'Desert Outpost',blurb:'A lone firebase at the edge of the sand sea. Every commander learns to hold here.',
+  ground:{lush:[54,66,38],dry:[96,90,58],dirt:[98,82,60],mud:[56,47,36],scorch:[34,30,25]},lo:['#252b1d','#2a3120','#1f2518'],seed:20240,twist:null,mix:null,ev:null,hpMul:1,dmgMul:1,rewMul:1},
+ // TODO-theme (theming phase): palettes, twists, mixes and event weights below are placeholders
+ {id:'mountain',ord:2,name:'Mountain Pass',blurb:'Hold the only road through the range while guns on the ridges find their range.',
+  ground:{lush:[62,68,50],dry:[104,100,86],dirt:[92,86,76],mud:[58,54,50],scorch:[34,32,30]},lo:['#262a22','#2d3128','#1f231b'],seed:31337,twist:'ridges',mix:{mortar:1.5,shooter:1.3},ev:{barrage:2,armor:1.5},...MAP_DIF(1)},
+ {id:'coastal',ord:3,name:'Coastal Base',blurb:'A beachhead with the sea at your back. The landings never stop, and neither does the air.',
+  ground:{lush:[70,80,50],dry:[150,136,98],dirt:[138,120,88],mud:[72,66,52],scorch:[40,36,30]},lo:['#2b2c20','#333325','#24251b'],seed:40961,twist:'landing',mix:{runner:1.2},ev:{para:2,swarm:1.5},...MAP_DIF(2)},
+ {id:'city',ord:4,name:'City Ruins',blurb:'Street by street through a broken city. Contacts close in from cover, fast.',
+  ground:{lush:[68,70,62],dry:[98,96,90],dirt:[88,82,74],mud:[52,50,48],scorch:[30,29,28]},lo:['#27282a','#2e2f30','#1f2021'],seed:52711,twist:'urban',mix:{shooter:1.4,rpg:1.4},ev:{ambush:2.5,convoy:1.5},...MAP_DIF(3)},
+ {id:'arctic',ord:5,name:'Arctic Station',blurb:'A research post on the ice. Whiteouts, long nights and heavy armor on the tundra.',
+  ground:{lush:[118,126,122],dry:[168,174,176],dirt:[112,112,108],mud:[80,84,88],scorch:[50,52,56]},lo:['#343a3c','#3d4447','#2b3033'],seed:61519,twist:'whiteout',mix:{brute:1.4},ev:{storm:2,armor:1.5},...MAP_DIF(4)},
+ {id:'jungle',ord:6,name:'Jungle Airstrip',blurb:'A strip cut into the canopy. Ambushes out of the green and drones overhead.',
+  ground:{lush:[34,58,28],dry:[58,78,36],dirt:[84,66,44],mud:[52,42,30],scorch:[28,26,20]},lo:['#1a2414','#1f2b18','#151d10'],seed:72911,twist:'canopy',mix:{runner:1.3,bomber:1.3},ev:{ambush:2,swarm:2},...MAP_DIF(5)},
+ {id:'island',ord:7,name:'Island Night-Ops',blurb:'Night raids on an island garrison. Fight by searchlight and flare.',
+  ground:{lush:[48,62,44],dry:[120,110,82],dirt:[104,92,70],mud:[50,46,38],scorch:[30,28,24]},lo:['#1e241b','#252c21','#181d15'],seed:83093,twist:'nightops',mix:{manpads:1.4},ev:{para:1.5,swarm:1.5},...MAP_DIF(6)},
+ {id:'capital',ord:8,name:'Capital Defense',blurb:'The last line. Everything the enemy has left, thrown at the capital.',
+  ground:{lush:[60,68,48],dry:[110,106,92],dirt:[100,92,80],mud:[56,52,46],scorch:[32,30,28]},lo:['#25271f','#2c2e25','#1e2019'],seed:90217,twist:'capital',mix:{brute:1.3,rpg:1.3},ev:{armor:2,convoy:1.5,barrage:1.5},...MAP_DIF(7)}];
+const MAPB={};for(const m of MAPS)MAPB[m.id]=m;
+const MAP_KEYS=['lv','bank','best'];   // per-theater fields that live on S while their theater is active (plus S.set.startWave)
+const mapOf=id=>MAPB[id]||MAPS[0],mapCur=()=>mapOf(S&&S.map),mapTwist=()=>mapCur().twist;
+let MAPM={hp:1,dmg:1,rew:1};   // the active theater's multipliers, refreshed by mapSync()
+const mapSync=()=>{const m=mapCur();MAPM={hp:m.hpMul,dmg:m.dmgMul,rew:m.rewMul}};
+const mapRec=id=>(S.maps||(S.maps={}))[id]||(S.maps[id]={stars:0,cleared:false});
+const mapOpen=id=>{const i=mapOf(id).ord-1;return i<=0||!!mapRec(MAPS[i-1].id).cleared};   // theater 1 always; k once k-1 is cleared
+const mapBest=id=>id===S.map?S.best:mapRec(id).best||0,careerBest=()=>MAPS.reduce((b,m)=>Math.max(b,mapBest(m.id)),0);
+const mapsOpen=()=>MAPS.filter(m=>mapOpen(m.id)),mapNext=id=>MAPS[mapOf(id).ord]||null;
+// R&D wave gates read rsBest() (career best across theaters). The R&D gating phase swaps this for per-theater gates in one place.
+const rsBest=()=>careerBest();
+const heldStars=b=>b>CLEAR_W?2:b>STAR1_W?1:0;   // b = best wave REACHED, so b-1 waves were held
+// Normalise S.map/S.maps (runs in loadSave). A pre-campaign save becomes Desert Outpost with its current fort, cash and best;
+// stars it has already earned are credited from its best (3 stars need a tracked run, so old saves top out at 2).
+function campInit(){const obj=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},num=v=>{v=+v;return isFinite(v)&&v>0?v:0};
+  if(!MAPB[S.map])S.map=MAPS[0].id;S.maps=obj(S.maps);
+  for(const m of MAPS){const r=S.maps[m.id]=obj(S.maps[m.id]);r.stars=Math.max(0,Math.min(3,Math.floor(+r.stars||0)));r.cleared=!!r.cleared;
+    if(m.id===S.map){for(const k of MAP_KEYS)delete r[k];delete r.startWave;r.visited=1}
+    else{r.lv=obj(r.lv);for(const k in r.lv)r.lv[k]=Math.floor(num(r.lv[k]));r.bank=num(r.bank);r.best=Math.floor(num(r.best));r.startWave=Math.floor(num(r.startWave))||1}
+    const b=mapBest(m.id);if(b>CLEAR_W)r.cleared=true;r.stars=Math.max(r.stars,heldStars(b),r.cleared?2:0)}
+  mapSync()}
+// Later phases register re-derivations here (research timers, theater twists...): each runs as f(id) after a swap, before the save.
+const mapHooks=[];
+// The one place a theater changes: bank the active theater's fort into S.maps, swap the target's in, re-derive everything cached
+// off the old one and save. Terrain needs no reset: terrainBake's key includes S.map, and idleBake() rebakes it off the frame loop.
+function switchMap(id){if(running||!MAPB[id]||id===S.map||!mapOpen(id))return false;
+  const out=mapRec(S.map),inn=mapRec(id);save();
+  for(const k of MAP_KEYS)out[k]=S[k];out.startWave=S.set.startWave||1;
+  S.lv=inn.lv||{};S.bank=inn.bank||0;S.best=inn.best||0;S.set.startWave=inn.startWave||1;
+  for(const k of MAP_KEYS)delete inn[k];delete inn.startWave;inn.visited=1;S.map=id;mapSync();
+  _armFreeze=null;_fpW=-1;_manSet=false;lastRunMsg='';lastCause=null;lastAAR=null;
+  for(const f of mapHooks)f(id);
+  save();idleBake();if($('home').classList.contains('on'))renderHome();return true}
 loadSave();
 const L=id=>S.lv[id]||0;
 
@@ -1208,12 +1336,12 @@ function afterAction(){if(!lastCause)return'';const u=counterPick(),c=u&&costOf(
 // armor broke the fort and the rifle still can't pierce it: point at the next commander tier with armor-piercing rounds
 function rsCounter(){if(!lastCause.top.some(t=>ARMOR_KILL[t]||t==='technical')||rPen('dmg')>=0.4)return'';const t=RLINES.dmg.t.find(x=>x.i>rsOwned('dmg')&&x.pen>rPen('dmg'));if(!t)return'';
   const w=t.i===rsOwned('dmg')+1?rsWhy('dmg',t.i):'Research '+RLINES.dmg.t[rsOwned('dmg')+1].n+' first';
-  return`<button class="aarfix rd${w?'':' can'}" data-rsgo="dmg"><span class="ico">${ic('research',18)}</span><span class="ft">Research <b>${t.n}</b>: AP rounds ignore ${pct(t.pen)} of armor</span><i>${w?(S.best<t.g?'wave '+t.g:t.cost+' RP'):t.cost+' RP →'}</i></button>`}
+  return`<button class="aarfix rd${w?'':' can'}" data-rsgo="dmg"><span class="ico">${ic('research',18)}</span><span class="ft">Research <b>${t.n}</b>: AP rounds ignore ${pct(t.pen)} of armor</span><i>${w?(rsBest()<t.g?'wave '+t.g:t.cost+' RP'):t.cost+' RP →'}</i></button>`}
 
 // ================= RESEARCH =================
 // Research Points (RP, S.rp) are earned by holding waves and buy unit tiers: new weapons, a cumulative damage multiplier (mul,
 // vs the line's first tier), armor penetration (pen) and one signature mechanic (sig) each. Tiers are researched on the home
-// screen, need S.best >= gate, and only take effect at the next deployment: startRun() snapshots S.rs/S.rf into G.
+// screen, need rsBest() >= gate, and only take effect at the next deployment: startRun() snapshots S.rs/S.rf into G.
 // S.rs[line] = the tier index owned (0-based; dmg/squad tier 0 is the pistol start). S.rf[line] = Refits bought after the last tier.
 const RP_COST=[0,10,25,50,90,150,240,380,580,850],REFIT_MUL=1.08,refitCost=n=>Math.round(300*Math.pow(1.15,n));
 const RLINES={currency:'RP',rpCost:RP_COST,refit:{mul:REFIT_MUL,cost:'300*1.15^n'},lines:[
@@ -1396,7 +1524,7 @@ const rsOwned=id=>S.rs[id]|0;
 function rsWhy(id,k){const r=RLINES[id],t=r&&r.t[k];if(!t)return'No such tier';const own=rsOwned(id),u=UB[r.u];
   if(k<=own)return'Researched';if(k>own+1)return'Research '+r.t[k-1].n+' first';
   const lw=lockWhy(u);if(lw)return lw;if(L(u.id)<1)return'Field '+u.name+' first (buy Lv 1)';
-  if(S.best<t.g)return'Reach wave '+t.g;if(S.rp<t.cost)return'Need '+(t.cost-S.rp)+' more RP';return''}
+  if(rsBest()<t.g)return'Reach wave '+t.g;if(S.rp<t.cost)return'Need '+(t.cost-S.rp)+' more RP';return''}
 const rsDone=id=>rsOwned(id)>=RLINES[id].t.length-1;
 // tiers that are new since the last deployment (for the run-start banner); the first deployment after migration only records
 function rsFieldNew(){const prev=S.rsF;S.rsF=Object.assign({},S.rs);save();if(!prev)return'';
@@ -1544,9 +1672,50 @@ function renderStartSel(){const c=checkpoints(),el=$('startSel');
     +c.map(w=>`<button data-start="${w}" aria-pressed="${w===cur}">${ph||c.length>5?'W':'WAVE '}${w}</button>`).join('')+'</div>'
     +`<p class="cpx">${cpText(cur)}</p>`}
 const cpText=w=>{const n=Math.min(8,Math.floor(w/10));return w<=1?'Full run from the first wave.':`Skips ${w-1} waves · ${n} directive ${pl(n,'pick')} · RP back-pay after you hold 5 waves`};
-function renderBase(){renderStartSel();renderMission();renderAAR();$('picks').hidden=true;$('picks').innerHTML='';renderRdSum();$('nextUnl').hidden=true;$('nextUnl').innerHTML='';renderManual();
+function renderBase(){renderTheater();renderStartSel();renderMission();renderAAR();$('picks').hidden=true;$('picks').innerHTML='';renderRdSum();$('nextUnl').hidden=true;$('nextUnl').innerHTML='';renderManual();
   // desktop balance: next unlocks sit under the picks while the After-Action card fills the right column, else on the right
-  const nu=$('nextUnl'),aar=!!(lastAAR&&lastRunMsg),col=aar?$('picks').parentNode:$('rdSum').parentNode;if(nu.parentNode!==col)col.insertBefore(nu,aar?null:$('manual'))}
+  const nu=$('nextUnl'),aar=!!(lastAAR&&lastRunMsg),col=aar?$('picks').parentNode:$('rdSum').parentNode;if(nu.parentNode!==col)col.insertBefore(nu,aar?null:$('manual'));
+  if(S.campWin&&!_thWin&&!running)openThWin()}
+// ---------------- THEATERS ----------------
+// Mission Briefing bar: while only the first theater is open it is just the theater name and its stars (slow roll-out); once a
+// second theater opens it grows into a selector (emblem, theater n of 8, best wave, CHANGE). The list sheet shows every open
+// theater, the next locked one with its unlock progress, and the rest as one-line teasers.
+const thVars=m=>{const g=m.ground,c=a=>rgb(a,1.6);return`--t1:${c(g.lush)};--t2:${c(g.dry)};--t3:${c(g.dirt)}`};
+const thEmb=(m,lk)=>`<span class="the${lk?' lk':''}" style="${thVars(m)}" aria-hidden="true">${lk?ic('lock',16):'<b>'+m.ord+'</b>'}</span>`;
+const starsHtml=(n,s=14)=>`<span class="stars" role="img" aria-label="${n} of 3 stars">${[0,1,2].map(i=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}"${i<n?' class="on"':''}><path d="${IC.star}"/></svg>`).join('')}</span>`;
+const thNew=()=>MAPS.some(m=>mapOpen(m.id)&&!mapRec(m.id).visited);
+function renderTheater(){const el=$('theater'),m=mapCur(),r=mapRec(m.id),one=mapsOpen().length<2;el.classList.toggle('one',one);
+  el.setAttribute('aria-label',`Theater: ${m.name}, ${r.stars} of 3 stars. Open the theater list`);
+  el.innerHTML=one?`${ic('map',16)}<span class="thn">${m.name}</span>${starsHtml(r.stars)}<span class="chev">→</span>`
+    :`${thEmb(m)}<span class="thb-t"><span class="thn">${m.name}</span><span class="ths">Theater ${m.ord} of ${MAPS.length} · best wave ${fmtN(S.best)}</span></span>${starsHtml(r.stars)}`
+      +`<span class="thb-go">${thNew()?'<i class="ndot on"></i>':''}<span class="tx">CHANGE</span><span class="chev">→</span></span>`}
+function thListHtml(){let nextLock=true;
+  return`<p class="thi">Hold wave ${CLEAR_W} to clear a theater and open the next. Each theater is its own fort: <b>cash, Armory upgrades and checkpoints stay there</b>. R&amp;D, RP and medals go everywhere.</p><div class="thl">`
+    +MAPS.map(m=>{const r=mapRec(m.id),prev=MAPS[m.ord-2];
+      if(mapOpen(m.id)){const on=m.id===S.map,b=mapBest(m.id),tag=on?'<span class="badge b-act">DEPLOYED</span>':r.cleared?'<span class="badge b-clr">CLEARED</span>':r.visited?'':'<span class="badge b-new">NEW</span>';
+        return`<button class="thc${on?' on':''}" data-map="${m.id}"${on?' aria-current="true"':''}>${thEmb(m)}<span class="thc-b"><span class="thc-h"><span class="thn">${m.name}</span>${tag}</span>`
+          +`<span class="thc-d">${m.blurb}</span><span class="thc-m">${starsHtml(r.stars)}<span>${b?'Best wave '+fmtN(b):'Fresh fort · not yet deployed'}</span></span></span>${on?'':'<span class="chev">→</span>'}</button>`}
+      const need=`Clear wave ${CLEAR_W} on ${prev.name} to unlock`;
+      if(nextLock){nextLock=false;const pb=Math.min(mapBest(prev.id),CLEAR_W);
+        return`<div class="thc lock">${thEmb(m,1)}<span class="thc-b"><span class="thn">${m.name}</span><span class="thc-d">${m.blurb}</span>`
+          +`<span class="wreq">${ic('lock',12)}${need}<i style="width:${Math.round(100*pb/CLEAR_W)}%"></i></span></span></div>`}
+      return`<div class="thc far">${thEmb(m,1)}<span class="thc-b"><span class="thn">${m.name}</span><span class="thc-d">${need}</span></span></div>`}).join('')+'</div>'}
+let _thFrom=null;
+function openTheaters(){fillIcons();$('thBody').innerHTML=thListHtml();$('thBody').scrollTop=0;_thFrom=document.activeElement;$('thList').classList.add('on');setTimeout(()=>$('thClose').focus({preventScroll:true}),30)}
+function closeTheaters(){$('thList').classList.remove('on');const f=_thFrom;_thFrom=null;if(f&&f.focus&&document.contains(f)&&f.offsetParent)f.focus({preventScroll:true})}
+function goTheater(id){if(id===S.map){closeTheaters();return}const m=mapOf(id);if(!switchMap(id))return;closeTheaters();$('home').scrollTop=0;sfx('buy');toast('Now defending '+m.name,'map')}
+// Theater cleared: the first clear of a theater (S.campWin, set mid-run by campHold) gets a debrief on the Base screen, over the
+// after-action report, with the choice to move out to the theater it opened.
+let _thWin=false;
+function openThWin(){const id=S.campWin;if(!MAPB[id]){delete S.campWin;return}const m=mapOf(id),r=mapRec(id),nx=mapNext(id);_thWin=true;
+  $('thWinBody').innerHTML=`<div class="thw-top"><div class="eyebrow">THEATER CLEARED</div>${starsHtml(r.stars,34)}<h2 id="thWinT">${m.name}</h2>`
+    +`<p>Wave ${CLEAR_W} held${r.stars>2?' without a single breach':''}. ${nx?`<b>${nx.name}</b> is open.`:'Every theater is held. The fight goes on as long as you do.'}</p></div>`
+    +`<div class="thw-r">`+(nx?`<div class="thw-nx">${thEmb(nx)}<div><div class="eyebrow">THEATER ${nx.ord} OF ${MAPS.length} · UNLOCKED</div><span class="thn">${nx.name}</span><span class="thc-d">${nx.blurb}</span></div></div>`
+      +`<ul class="thw-rules"><li>${ic('fort',16)}<span>A fresh fort there: its own cash, Armory upgrades and checkpoints</span></li><li>${ic('research',16)}<span>Your R&amp;D, RP and medals deploy with you</span></li><li>${ic('threat',16)}<span>Tougher enemies, bigger bounties</span></li></ul>`:'')
+    +`<div class="thw-b">${nx?`<button class="btn pri lg" data-thgo>MOVE OUT · ${nx.name}</button><button class="btn ghost" data-thstay>STAY AT ${m.name}</button>`:'<button class="btn pri lg" data-thstay>CARRY ON</button>'}</div></div>`;
+  $('thWin').classList.add('on');setTimeout(()=>{const b=$('thWinBody').querySelector('.btn');if(b)b.focus({preventScroll:true})},30)}
+function closeThWin(go){const nx=mapNext(S.campWin);$('thWin').classList.remove('on');_thWin=false;delete S.campWin;save();
+  if(go&&nx&&switchMap(nx.id)){sfx('buy');toast('Now defending '+nx.name,'map')}else renderHome()}
 function renderMission(){const r=RLINES.dmg,k=rTier('dmg'),t=r.t[k];
   $('kit').innerHTML=`<div class="por" style="${rsEraVars(t)}"><canvas data-th="dmg:${k}" width="192" height="192"></canvas></div>`
     +`<div class="kb"><div class="eyebrow">COMMANDER KIT</div><div class="kn">${t.n}</div><div class="kw">${t.w}</div><button class="chip-btn rd" data-rsgo="dmg">${ic('research',14)}Tier ${rank(k+1)} of ${r.t.length} · R&amp;D<span class="chev">→</span></button></div>`;
@@ -1555,11 +1724,11 @@ function renderMission(){const r=RLINES.dmg,k=rTier('dmg'),t=r.t[k];
     ['SQUAD','squad',1+Math.min(8,L('squad'))],['WALLS','walls',L('walls')?'Lv '+L('walls'):'Crate'],['BEST','trophy',S.best]]
     .map(([k,i,v])=>`<div class="tile"><span>${ic(i,13)}${k}</span><b>${v}</b></div>`).join('')}
 function renderAAR(){const el=$('lastRun'),a=lastAAR;
-  if(!a||!lastRunMsg){el.innerHTML=S.best<=1?firstDeployHtml():'';return}
+  if(!a||!lastRunMsg){el.innerHTML=careerBest()<=1?firstDeployHtml():'';return}
   const n=rsAffordN(),m=Math.floor(a.time/60),s=Math.floor(a.time%60),nm=a.medals.length,ne=(a.evs||[]).length;
   el.innerHTML=`<div class="panel aar ticks"><div class="sec-h"><div class="eyebrow">AFTER-ACTION · WAVE ${a.wave}</div>${a.rec?'<span class="badge b-new">NEW BEST</span>':''}</div>`
     +`<div class="tiles t4">${[['WAVE',a.wave],['KILLS',fmtN(a.kills)],['EARNED','$'+fmtN(a.earned)],['TIME',m+'<small>m</small> '+s+'<small>s</small>']].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join('')}</div>`
-    +`<button class="rprow" data-rsgo="">${ic('research',16)}<span>${a.rp||S.best>=10?`<b>+${fmtN(a.rp)} RP</b> · ${fmtN(S.rp)} banked`:'<b>RP starts at wave 10</b> · hold that far to fund R&amp;D'}${n?'<span class="hph"> · enough for '+n+' '+pl(n,'tier')+'</span>':''}</span><span class="chev">→</span></button>`
+    +`<button class="rprow" data-rsgo="">${ic('research',16)}<span>${a.rp||careerBest()>=10?`<b>+${fmtN(a.rp)} RP</b> · ${fmtN(S.rp)} banked`:'<b>RP starts at wave 10</b> · hold that far to fund R&amp;D'}${n?'<span class="hph"> · enough for '+n+' '+pl(n,'tier')+'</span>':''}</span><span class="chev">→</span></button>`
     +afterAction()
     +(a.perks||nm||ne?`<details class="rund"${narrow()?'':' open'}><summary>${ic('chevR',14)}Run details${a.nPerk?' · '+a.nPerk+' '+pl(a.nPerk,'directive'):''}${nm?' · '+nm+' '+pl(nm,'medal'):''}${ne?' · '+ne+' '+pl(ne,'event'):''}</summary><div class="rdx">`
       +(ne?`<div><div class="eyebrow">EVENTS CLEARED</div><div class="pperks">${a.evs.map(k=>EVENTS[k]?`<span>${ic('threat',14)}${EVENTS[k].name}</span>`:'').join('')}</div></div>`:'')
@@ -1596,7 +1765,7 @@ function manualHtml(full){const ctl=MOBILE?[['Tap','an enemy to lock on and fire
     'Walls only self-repair after <b>3s</b> without a hit: kill whatever is shooting them.',
     'From <b>wave 6</b> the enemy brings armor. Rifles barely scratch it: lean on mines, grenades, artillery and heavy guns. Green-cross mechanics repair it: kill them first.',
     'Upgrades unlock other upgrades, and deeper waves open new tech. Research tiers deploy with your next run.'];
-  const tipGate=[0,5,8,-1,6,0],tipsNow=tips.filter((t,i)=>tipGate[i]<0?L('repair')>0:S.best>=tipGate[i]);   // short manual rolls tips out with progress; the full guide keeps them all
+  const tipGate=[0,5,8,-1,6,0],tipsNow=tips.filter((t,i)=>tipGate[i]<0?L('repair')>0:careerBest()>=tipGate[i]);   // short manual rolls tips out with progress; the full guide keeps them all
   const c=`<div class="mgrid2">${ctl.map(([k,t])=>`<div class="krow"><kbd>${k}</kbd><span>${t}</span></div>`).join('')}</div>`;
   if(!full)return`<div class="subh">CONTROLS</div>${c}<div class="subh">BATTLE TIPS</div><ul class="mtips">${tipsNow.map(t=>`<li>${t}</li>`).join('')}</ul>`
     +`<button class="btn sm" data-howto>OPEN FULL GUIDE<span class="chev">→</span></button>`;
@@ -1605,7 +1774,7 @@ function manualHtml(full){const ctl=MOBILE?[['Tap','an enemy to lock on and fire
     +`<div class="hsec eyebrow">BATTLE TIPS</div><ul class="mtips">${tips.map(t=>`<li>${t}</li>`).join('')}</ul>`
     +`<div class="hsec eyebrow">BATTLE EVENTS</div><ul class="mtips">${Object.values(EVENTS).sort((a,b)=>a.from-b.from).map(E=>`<li><b>${E.name}</b> · wave ${E.from}+ · ${E.sub}</li>`).join('')}</ul>`}
 let _manSet=false;
-function renderManual(){const m=$('manual');if(!_manSet){_manSet=true;m.open=S.best<5}const mb=$('manualBody'),mh=manualHtml(false);if(mb._h!==mh){mb.innerHTML=mh;mb._h=mh}}   // rebuild when tips unlock
+function renderManual(){const m=$('manual');if(!_manSet){_manSet=true;m.open=careerBest()<5}const mb=$('manualBody'),mh=manualHtml(false);if(mb._h!==mh){mb.innerHTML=mh;mb._h=mh}}   // rebuild when tips unlock
 // ---------------- ARMORY ----------------
 // display categories (u.cat is only read by the UI): emplacements and vehicles replace HEAVY ARMOR
 const CAT_FIX={turret:'EMPLACEMENTS',sniper:'EMPLACEMENTS',flame:'EMPLACEMENTS',tesla:'EMPLACEMENTS',truck:'VEHICLES',apc:'VEHICLES',tank:'VEHICLES',heli:'VEHICLES'};
@@ -1703,12 +1872,12 @@ function paintThumb(cv){const[id,ks]=cv.dataset.th.split(':'),k=+ks,r=RLINES[id]
 function rsStats(r,k){const t=r.t[k],d=t.mul/r.t[rsOwned(r.id)].mul;
   return`<div class="rts"><span>${r.id==='walls'?'WALL HP':'DMG'} <b>×${fxm(t.mul)}</b>${d>1.001?` <em>×${fxm(d)} vs now</em>`:''}</span>`
     +(t.pen?`<span>AP <b>${pct(t.pen)}</b></span>`:'')+(t.hp&&t.hp!==1?`<span>HP <b>×${fxm(t.hp)}</b></span>`:'')+'</div>'}
-const rsGate=t=>S.best>=t.g||t.g<=1?'':`<div class="rgt">${ic('trophy',12)}Reach wave ${t.g}<em>best ${S.best}</em><i style="width:${Math.round(100*Math.min(1,S.best/t.g))}%"></i></div>`;
+const rsGate=t=>rsBest()>=t.g||t.g<=1?'':`<div class="rgt">${ic('trophy',12)}Reach wave ${t.g}<em>best ${rsBest()}</em><i style="width:${Math.round(100*Math.min(1,rsBest()/t.g))}%"></i></div>`;
 const rsSigHtml=t=>{const s=sigText(t.sig);return s?`<div class="rsg">${ic('star',14)}<span>${s}</span></div>`:''};
 // why the next tier is blocked, said once (the wave gate already has its own progress chip)
 function rsWhyHtml(r,k){const own=rsOwned(r.id),t=r.t[k];if(rsNF(r)||k<=own)return'';
   if(k>own+1)return`<div class="rwhy">${ic('lock',13)}<span>Research Tier ${rank(own+2)} first</span></div>`;
-  const w=rsWhy(r.id,k);return w&&S.best>=t.g?`<div class="rwhy">${ic('lock',13)}<span>${w}</span></div>`:''}
+  const w=rsWhy(r.id,k);return w&&rsBest()>=t.g?`<div class="rwhy">${ic('lock',13)}<span>${w}</span></div>`:''}
 function rsBtn(r,k){const st=rsStL(r,k),t=r.t[k];
   if(st==='act')return`<button class="rbt in" disabled>${ic('star',14)}IN SERVICE</button>`;
   if(st==='own')return'<button class="rbt gh" disabled>RESEARCHED</button>';
@@ -1741,7 +1910,7 @@ function rsCta(r){const own=rsOwned(r.id);
   if(rsDone(r.id)){const f=rsRefit(r);return`<button class="rsgo${f.ok?' rf':''}"${f.ok?` data-rsbuy="${r.id}"`:' disabled'}><span class="l1">REFIT MK ${rank(f.n+1)}</span><span class="l2">${f.ok?f.c+' RP':'NEED '+(f.c-S.rp)+' MORE RP'}</span></button>`}
   const k=own+1,t=r.t[k],w=rsWhy(r.id,k);
   if(!w)return`<button class="rsgo go" data-rsbuy="${r.id}" aria-label="Research ${t.n}, tier ${rank(k+1)}, ${t.cost} RP"><span class="l1"><span class="t">${t.n.toUpperCase()}</span></span><span class="l2">RESEARCH · TIER ${rank(k+1)} · ${t.cost} RP</span></button>`;
-  if(S.best>=t.g)return`<button class="rsgo" disabled><span class="l1"><span class="t">${t.n.toUpperCase()}</span></span><span class="l2">NEED ${t.cost-S.rp} MORE RP</span></button>`;
+  if(rsBest()>=t.g)return`<button class="rsgo" disabled><span class="l1"><span class="t">${t.n.toUpperCase()}</span></span><span class="l2">NEED ${t.cost-S.rp} MORE RP</span></button>`;
   return`<button class="rsgo" disabled><span class="l1">${ic('lock',14)}TIER ${rank(k+1)} LOCKED</span><span class="l2">${w.toUpperCase()}</span></button>`}
 const rsVis=q=>{if(rsDone(q.id))return false;const w=rsWhy(q.id,rsOwned(q.id)+1);return!w||w.startsWith('Need ')};
 function renderResearch(){const nar=rsNarrow(),vis=RLINES.lines.filter(rsVis),r0=rsLine(),r=vis.includes(r0)||!vis.length?r0:vis[0],el=$('rd');
@@ -1792,10 +1961,10 @@ function medalCard(m,got){const on=got[m.id]!=null,v=Math.min(m.goal,medalVal(m)
     +'</div></div>'}
 function renderMedals(){const got=MG(),n=Object.keys(got).length,prog=m=>Math.min(1,medalVal(m)/m.goal);
   // slow roll-out: an unearned medal only shows once your best wave reaches the content it is about (m.from)
-  const shown=m=>got[m.id]!=null||S.best>=(m.from||0),vis=MEDALS.filter(shown).length;
+  const shown=m=>got[m.id]!=null||careerBest()>=(m.from||0),vis=MEDALS.filter(shown).length;
   const un=MEDALS.filter(m=>got[m.id]==null&&shown(m)).sort((a,b)=>prog(b)-prog(a)),close=un.slice(0,3),rest=un.slice(3),won=MEDALS.filter(m=>got[m.id]!=null),dirs=MS().dirs;
   let h=`<div class="vhead"><div><h1 class="vt">DECORATIONS</h1><p class="vsub">Each medal pays out once and adds +1% cash to every run, for good.</p></div><div class="mhead"><span class="mcount">${n}<em> / ${vis}</em></span>${n?`<span class="mbon">+${medalPts()}% cash for good</span>`:''}</div></div>`
-    +`<div class="eyebrow msec">SERVICE RECORD</div><div class="srec"><span class="tag">${ic('trophy',14)}Best wave <b>${fmtN(S.best)}</b></span><span class="tag">${ic('skull',14)}Lifetime kills <b>${fmtN(S.tkills)}</b></span>`
+    +`<div class="eyebrow msec">SERVICE RECORD</div><div class="srec"><span class="tag">${ic('trophy',14)}Best wave <b>${fmtN(careerBest())}</b></span><span class="tag">${ic('skull',14)}Lifetime kills <b>${fmtN(S.tkills)}</b></span>`
     +(dirs?`<span class="tag">${ic('star',14)}Most directives in a run <b>${fmtN(dirs)}</b></span>`:'')+'</div>';
   if(close.length)h+=`<div class="eyebrow msec">CLOSEST TO EARN</div>${n?'':'<p class="mempty">No decorations yet. The closest three are below.</p>'}<div class="mgrid close">${close.map(m=>medalCard(m,got)).join('')}</div>`;
   if(rest.length)h+=`<div class="eyebrow msec">IN PROGRESS · ${rest.length}</div><div class="mgrid">${rest.map(m=>medalCard(m,got)).join('')}</div>`;
@@ -1868,17 +2037,24 @@ $('bakRestore').onclick=e=>{if(running)return;const b=e.currentTarget,raw=($('ba
   if(!b.dataset.arm){b.dataset.arm=1;b.textContent='TAP TO CONFIRM';clearTimeout(b._t);b._t=setTimeout(()=>{delete b.dataset.arm;b.textContent='RESTORE'},4000);return}
   clearTimeout(b._t);delete b.dataset.arm;b.textContent='RESTORE';d.set=Object.assign({},S.set,d.set||{});
   try{localStorage.setItem('theFortSave',JSON.stringify(d))}catch(err){}loadSave();medalSync();lastRunMsg='';lastCause=null;lastAAR=null;_armFreeze=null;_manSet=false;$('bakIn').value='';
-  toast('Progress restored · best wave '+S.best,'star');renderHome()};
+  toast('Progress restored · best wave '+careerBest(),'star');renderHome()};
 $('resetBtn').onclick=e=>{if(running)return;const b=e.currentTarget;
   if(!b.dataset.arm){b.dataset.arm=1;b.textContent='TAP AGAIN TO WIPE';clearTimeout(b._t);b._t=setTimeout(()=>{delete b.dataset.arm;b.textContent='RESET'},4000);return}
   clearTimeout(b._t);delete b.dataset.arm;b.textContent='RESET';
-  const set=S.set;S={bank:0,best:0,tkills:0,lv:{},set,rp:0,rs:{},rf:{}};migrateRS();medalSync();S.set.medalSeen=0;save();lastRunMsg='';lastCause=null;lastAAR=null;_armFreeze=null;_manSet=false;
+  const set=S.set;set.startWave=1;S={bank:0,best:0,tkills:0,lv:{},set,rp:0,rs:{},rf:{}};campInit();migrateRS();medalSync();S.set.medalSeen=0;save();lastRunMsg='';lastCause=null;lastAAR=null;_armFreeze=null;_manSet=false;
   toast('Progress wiped','close');renderHome()};
+// theaters sheet + cleared debrief
+$('theater').onclick=openTheaters;$('thClose').onclick=$('thDone').onclick=closeTheaters;
+$('thList').addEventListener('mousedown',e=>{if(e.target.id==='thList')closeTheaters()});sheetDrag('thList',closeTheaters);
+$('thBody').addEventListener('click',e=>{const b=e.target.closest('[data-map]');if(b)goTheater(b.dataset.map)});
+$('thWin').addEventListener('click',e=>{if(e.target.closest('[data-thgo]'))closeThWin(true);else if(e.target.closest('[data-thstay]'))closeThWin(false)});
 // home keys: 1-4 views, Enter deploys, ',' settings, Esc closes the top sheet (How to play also closes over the pause menu)
 addEventListener('keydown',e=>{const how=$('howto').classList.contains('on'),set=$('settings').classList.contains('on');
   if(e.code==='Escape'&&how){closeHowto();e.preventDefault();e.stopImmediatePropagation();return}
   if(running)return;
   if(set){if(e.code==='Escape'){closeSettings();e.preventDefault()}return}
+  if($('thWin').classList.contains('on')){if(e.code==='Escape'){closeThWin(false);e.preventDefault()}return}
+  if($('thList').classList.contains('on')){if(e.code==='Escape'){closeTheaters();e.preventDefault()}return}
   const t=e.target;if(e.repeat||e.metaKey||e.ctrlKey||e.altKey||(t&&/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)))return;
   if(/^Digit[1-4]$/.test(e.code)){setView(VIEWS[+e.code.slice(5)-1],true);return}
   if(e.code==='Enter'||e.code==='NumpadEnter'){if(t&&t.closest&&t.closest('button,a,summary,label'))return;e.preventDefault();$('deployBtn').onclick();return}
@@ -2076,7 +2252,7 @@ function resize(){dpr=Math.min(devicePixelRatio||1,aqDpr());VW=innerWidth;VH=inn
 addEventListener('resize',resize);resize();
 let _gnd=null;
 const groundPaths=()=>_gnd||(_gnd=decals.reduce((m,d)=>((m[d.c]||(m[d.c]=new Path2D())).rect(d.x,d.y,d.s,d.s*0.6),m),{}));
-const decals=Array.from({length:1400},()=>{const a=Math.random()*7,r=Math.sqrt(Math.random())*1500;return{x:Math.cos(a)*r,y:Math.sin(a)*r,s:2+Math.random()*9,c:Math.random()<.5?'#2a3120':'#1f2518'}});
+const decals=Array.from({length:1400},()=>{const a=Math.random()*7,r=Math.sqrt(Math.random())*1500;return{x:Math.cos(a)*r,y:Math.sin(a)*r,s:2+Math.random()*9,c:Math.random()<.5?1:2}});   // c: the theater's lo[] colour index
 
 // ================= GAME =================
 const ET={
@@ -2150,11 +2326,14 @@ function curve(w,d0,b,x0,ease,dL){const x=w-1;if(x<=x0)return d0*x+b*x*x;const d
 const HPC=[Math.log(1.14),Math.log(1.003),26,30,Math.log(1.11)],DMC=[Math.log(1.1),0,26,30,Math.log(1.075)],RWC=[Math.log(1.045),0,26,30,Math.log(1.075)];
 // late-game parity constants: 2.5 levels past a knee cost one late wave of income growth and add one late wave of HP growth
 const LATE_G=Math.exp(2.5*RWC[4]),LATE_M=Math.exp(2.5*HPC[4]);   // 1.1982 / 1.2981
-const waveHp=w=>Math.min(1e200,Math.exp(curve(w,...HPC))*EARLY(w)),waveDmg=w=>Math.min(1e200,Math.exp(curve(w,...DMC))*EARLY(w)),waveRew=w=>Math.min(1e200,Math.exp(curve(w,...RWC)));
+// the active theater scales all three (MAPM, see CAMPAIGN): Desert Outpost's multipliers are exactly 1, so its numbers are the original curves
+const waveHp=w=>Math.min(1e200,Math.exp(curve(w,...HPC))*EARLY(w))*MAPM.hp,waveDmg=w=>Math.min(1e200,Math.exp(curve(w,...DMC))*EARLY(w))*MAPM.dmg,waveRew=w=>Math.min(1e200,Math.exp(curve(w,...RWC)))*MAPM.rew;
 const waveCount=w=>Math.round((6+2.6*w)*(1+0.04*L('vision'))), waveWindow=w=>Math.max(6,Math.min(12,6+0.3*w)-Math.max(0,w-24)*0.3);
 const flyingCraft=()=>!!(G.fleet&&G.fleet.length||G.air&&G.air.some(u=>u.k==='gunship')||G.units&&G.units.some(u=>u.ck==='heli'));
+// theater enemy mix (MAPS[].mix): multiplies the spawn weights pickType built; null (Desert Outpost) leaves them untouched
+const mapMix=p=>{const m=mapCur().mix;if(m)for(const q of p)if(m[q[0]]!=null)q[1]*=m[q[0]]};
 function pickType(w){const p=[['grunt',10]];if(w>=3)p.push(['runner',4+w*.3]);if(w>=4)p.push(['shooter',2+w*.2]);if(w>=6)p.push(['brute',1+w*.15]);if(w>=8)p.push(['bomber',2+w*.15]);
-  if(w>=9)p.push(['rpg',Math.min(4,0.8+0.1*(w-9))]);if(w>=11)p.push(['mortar',Math.min(1.6,0.4+0.05*(w-11))]);if(w>=14&&flyingCraft())p.push(['manpads',Math.min(2.2,0.6+0.06*(w-14))]);skyWeights(w,p);evWeights(p);
+  if(w>=9)p.push(['rpg',Math.min(4,0.8+0.1*(w-9))]);if(w>=11)p.push(['mortar',Math.min(1.6,0.4+0.05*(w-11))]);if(w>=14&&flyingCraft())p.push(['manpads',Math.min(2.2,0.6+0.06*(w-14))]);skyWeights(w,p);evWeights(p);mapMix(p);
   let t=p.reduce((a,b)=>a+b[1],0)*Math.random();for(const[k,v]of p){if((t-=v)<=0)return k}return'grunt'}
 function spawn(type,at){if(SKY[type])return spawnSky(type);const d=ET[type],w=G.wave,a=Math.random()*Math.PI*2,hs=waveHp(w);
   G.enemies.push({type,x:at?at.x:Math.cos(a)*(vision()+80),y:at?at.y:Math.sin(a)*(vision()+80),hp:d.hp*hs*hazardHp()*(d.veh?Math.pow(VEH_THIN,Math.max(0,w-15)):1),max:d.hp*hs*hazardHp()*(d.veh?Math.pow(VEH_THIN,Math.max(0,w-15)):1),spd:d.spd*(1+Math.min(.7,w*.014))*(0.9+Math.random()*.2),
@@ -2460,7 +2639,7 @@ function endRun(retreat){if(G.over)return;   // several hits in one frame can ea
   lastCause=retreat||!top.length?null:{top,breachW:G.breachW&&!wallsUp()?G.breachW:0,doc:top.some(t=>STANDOFF.has(t))&&prio()!=='threat'?prioShown()?'threat':'lock':''};
   rpCheckpoint();S.rpLast=G.rp||0;G.over=true;
   const rec=G.wave>G.startBest&&G.startBest>0;if(G.wave>S.best)S.best=G.wave;
-  if(S.best>=15&&!S.set.bakTip){S.set.bakTip=1;setTimeout(()=>toast('Tip: back up your progress in Settings → Data','star'),2500)}   // once: point at the save-code backup
+  if(careerBest()>=15&&!S.set.bakTip){S.set.bakTip=1;setTimeout(()=>toast('Tip: back up your progress in Settings → Data','star'),2500)}   // once: point at the save-code backup
   save();
   lastRunMsg=[['Wave reached',G.wave+(rec?' <small style="font-size:11px;color:var(--good);letter-spacing:1px">NEW BEST</small>':'')],['Kills',G.kills],['Earned','$'+f1(G.earned)],['Survived',Math.floor(G.time/60)+'m '+Math.floor(G.time%60)+'s']].map(([k,v])=>`<div class="stat"><span>${k}</span><b>${v}</b></div>`).join('')
     +`<button class="stat rpst" data-rsgo style="grid-column:1/-1"><span>${ic('research',14)}RESEARCH POINTS</span><b>+${f1(S.rpLast)} RP</b><i>${f1(S.rp)} RP banked${rsReady().length?' · '+rsReady().length+' tier'+(rsReady().length>1?'s':'')+' ready':''}</i></button>`
@@ -2476,7 +2655,7 @@ function update(dt){
   // waves
   if(G.spawnLeft>0){G.spawnT-=dt;if(G.spawnT<=0){spawn(nextType());G.spawnLeft--;G.spawnT=G.spawnInt*(0.6+Math.random()*0.8)}}
   else if(G.enemies.length===0&&!G.sky.length&&!G.drops.length&&!(G.uavT>0)){
-    if(G.breakT<=0){if(G.wave>0){medalMax('wave',G.wave);if(G.wave>=15&&!G.wHit)medalMax('flawless',1);let b=money(8*G.wave*waveRew(G.wave));if(G.ev)b+=evClear(b);S.bank+=b;G.earned+=b;{const rp=rpClear(G.wave),pay=' · +$'+f1(b)+(rp>0?' · +'+rp+' RP':'');feed('WAVE '+G.wave+' CLEAR'+pay,'255,207,90','coin','W'+G.wave+' CLEAR'+pay)}sfx('cash');setTimeout(()=>{tone(784,0.1,'square',0,0.04);setTimeout(()=>tone(1175,0.18,'square',0,0.04),90)},140);save();if(perkWave(G.wave))G.perkAt=G.time+0.9}G.breakT=G.breakMax=G.wave<10?3:2}
+    if(G.breakT<=0){if(G.wave>0){medalMax('wave',G.wave);campHold(G.wave);if(G.wave>=15&&!G.wHit)medalMax('flawless',1);let b=money(8*G.wave*waveRew(G.wave));if(G.ev)b+=evClear(b);S.bank+=b;G.earned+=b;{const rp=rpClear(G.wave),pay=' · +$'+f1(b)+(rp>0?' · +'+rp+' RP':'');feed('WAVE '+G.wave+' CLEAR'+pay,'255,207,90','coin','W'+G.wave+' CLEAR'+pay)}sfx('cash');setTimeout(()=>{tone(784,0.1,'square',0,0.04);setTimeout(()=>tone(1175,0.18,'square',0,0.04),90)},140);save();if(perkWave(G.wave))G.perkAt=G.time+0.9}G.breakT=G.breakMax=G.wave<10?3:2}
     G.breakT-=dt;if(G.breakT<=0)startWave();}
   if(G.perkAt&&G.time>=G.perkAt){G.perkAt=0;offerPerks()}
   // regen
@@ -6882,7 +7061,8 @@ Object.assign(INTEL,{
 const CHUTE_T=2.1,LAND_T=0.7,TRANS_V=150,TRANS_ALT=90;
 function rollEvent(w){if(w<5||w%10===0||(w>=SKY_WAVE.airboss&&w%10===5)||w-G.evLast<2)return null;
   if(Math.random()>(G.evN?0.3:0.6))return null;
-  const ok=Object.keys(EVENTS).filter(k=>w>=EVENTS[k].from&&k!==G.evPrev);return ok.length?ok[Math.random()*ok.length|0]:null}
+  const ok=Object.keys(EVENTS).filter(k=>w>=EVENTS[k].from&&k!==G.evPrev),W=mapCur().ev;if(!ok.length)return null;if(!W)return ok[Math.random()*ok.length|0];
+  let t=ok.reduce((a,k)=>a+(W[k]??1),0)*Math.random();for(const k of ok)if((t-=W[k]??1)<=0)return k;return ok[ok.length-1]}   // theater event weights (unlisted = 1)
 function evStart(){const w=G.wave,k=rollEvent(w);G.ev=k;if(!k)return;const E=EVENTS[k];G.evLast=w;G.evPrev=k;G.evN++;
   if(k==='blitz'){const n=Math.round(G.spawnLeft*0.2);G.spawnLeft+=n;G.waveTotal+=n;G.spawnInt=Math.max(0.05,waveWindow(w)*0.8/G.spawnLeft)}
   else if(k==='armor'){const t=spawn('boss');t.hp=t.max*=Math.min(0.55,0.4+0.015*(w-13));G.waveTotal++}
@@ -7443,12 +7623,11 @@ function grainCv(){if(_grain)return _grain;const[k,x]=mkCv(256,256),im=x.createI
   for(let i=0;i<d.length;i+=4){const v=r()*255|0;d[i]=d[i+1]=d[i+2]=v;d[i+3]=255}x.putImageData(im,0,0);return _grain=k}
 
 // ---- terrain -------------------------------------------------------------------------------------------------
-const GR={lush:[54,66,38],dry:[96,90,58],dirt:[98,82,60],mud:[56,47,36],scorch:[34,30,25]};
 let _ter=null;
 const roadX=(y,fh)=>Math.sin(y*0.009+0.4)*22*Math.min(1,Math.max(0,y-fh)/90);
 function terrainBake(){
-  const V=vision(),wl=L('walls'),wi=L('wire'),key=V+'|'+wl+'|'+wi;if(_ter&&_ter.key===key)return _ter;
-  const R=V*1.18+30,ppu=Math.min(7,2560/(2*R)),N=Math.ceil(2*R*ppu),[c,x]=mkCv(N,N),rn=rng(20240),fh=wl?wallHalfAt(wl)+wallThickAt(wl)/2:PLAT,
+  const V=vision(),wl=L('walls'),wi=L('wire'),th=mapCur(),key=V+'|'+wl+'|'+wi+'|'+th.id;if(_ter&&_ter.key===key)return _ter;   // the theater sets palette + layout seed
+  const GR=th.ground,R=V*1.18+30,ppu=Math.min(7,2560/(2*R)),N=Math.ceil(2*R*ppu),[c,x]=mkCv(N,N),rn=rng(th.seed),fh=wl?wallHalfAt(wl)+wallThickAt(wl)/2:PLAT,
     wr=wi?fortHalf()+wallThick()/2+wireOut():0,keep=Math.max(fh+12,wr+10);
   // 1. macro colour field: grass / dry grass / bare dirt / mud, a trampled apron and scorch around the fort
   const M=Math.min(440,Math.ceil(N/4)),[mc,mx]=mkCv(M,M),im=mx.createImageData(M,M),d=im.data,wpp=2*R/M,dm=new Float32Array(M*M);
@@ -7798,11 +7977,12 @@ function drawFog(V){
   ctx.save();ctx.rotate(G.time*0.004);ctx.drawImage(cc,-R,-R,2*R,2*R);ctx.restore();
   const rr=R*0.97;ctx.fillStyle=FOG_CSS;ctx.beginPath();ctx.rect(-ext,-ext,ext*2,ext*2);ctx.moveTo(rr,0);ctx.arc(0,0,rr,0,TAU,true);ctx.fill()}
 // Bake High-preset art during idle time on the home screen (the layout is already fixed by the upgrade levels), so DEPLOY never hitches.
-setInterval(()=>{if(running||!hiGfx()||document.hidden)return;(window.requestIdleCallback||setTimeout)(()=>{if(running)return;const k=_ter&&_ter.key;terrainBake();fogBake(vision());fortBake(fortHalf(),L('walls'),true);if(_ter.key!==k)rasterNow(_ter.c)})},2000);
+function idleBake(){if(running||!hiGfx()||document.hidden)return;(window.requestIdleCallback||setTimeout)(()=>{if(running)return;const k=_ter&&_ter.key;terrainBake();fogBake(vision());fortBake(fortHalf(),L('walls'),true);if(_ter.key!==k)rasterNow(_ter.c)})}
+setInterval(idleBake,2000);   // switchMap() also calls it so a new theater's ground is ready before DEPLOY
 // Canvas 2D records draw calls lazily; pulling one pixel through a 1x1 sink forces the recorded bake to rasterise now, not on the first game frame.
 let _sink=null;function rasterNow(c){if(!_sink)_sink=mkCv(1,1)[1];_sink.drawImage(c,0,0,1,1);_sink.getImageData(0,0,1,1)}
 function drawTerrain(){
-  if(!hiGfx()){ctx.fillStyle='#252b1d';ctx.fillRect(-3000,-3000,6000,6000);const gp=groundPaths();for(const c in gp){ctx.fillStyle=c;ctx.fill(gp[c])}return}
+  if(!hiGfx()){const lo=mapCur().lo;ctx.fillStyle=lo[0];ctx.fillRect(-3000,-3000,6000,6000);const gp=groundPaths();for(const c in gp){ctx.fillStyle=lo[c];ctx.fill(gp[c])}return}
   const t=terrainBake();ctx.drawImage(t.c,-t.R,-t.R,2*t.R,2*t.R)}
 const WPAL={
   wood:{top:'#8b6a3e',side:'#4a3620',line:'#2a1d10',hi:'#b08a55',floor:'#6b5a3a',floorLine:'#54462c'},
@@ -8668,18 +8848,29 @@ function awardRank(m){const r=(MT()[m.id]|0)+1,c=Math.round(medalCash(m)*TIER_CA
 function medalBump(st,n=1){MS()[st]=(MS()[st]||0)+n;medalCheck(st)}
 function medalMax(st,v){if(v>(MS()[st]||0)){MS()[st]=v;medalCheck(st)}}
 function award(m){const c=medalCash(m);MG()[m.id]=c;_mN=medalPts();S.bank+=c;rpGain(3);if(running&&G)(G.medals||(G.medals=[])).push(m.id);save();medalToast(m,c)}
-function medalSync(){const s=MS();s.wave=Math.max(s.wave||0,S.best-1);_mN=medalPts();for(const st of new Set(MEDALS.map(m=>m.st)))medalCheck(st)}
+function medalSync(){const s=MS();s.wave=Math.max(s.wave||0,careerBest()-1);_mN=medalPts();for(const st of new Set(MEDALS.map(m=>m.st)))medalCheck(st)}
 // toast: one at a time, non-blocking (pointer-events none), above the bars on desktop and clear of the thumb buttons on phones
 const _mtQ=[];let _mtOn=false,_mtCur=null,_mtHide=0,_mtW=0;
 function medalToast(m,c,r){_mtQ.push([m,c,r]);if(!_mtOn)medalToastNext()}
 function medalToastNext(){const el=$('medalToast');clearTimeout(_mtW);if(!_mtQ.length){_mtOn=false;_mtCur=null;return}_mtOn=true;
   if(running&&G&&HL.mode&&HL.mode!=='desk'&&(laneBusy()||intelCur)){_mtW=setTimeout(medalToastNext,300);return}   // phones: wait for the lane
   const n=_mtQ.shift(),[m,c,r]=n;_mtCur=n;
-  el.innerHTML=`<span class="mti">${ic(m.ic,22)}</span><span class="mtb"><span class="mtt">${ic('medal',12)}${r?'MEDAL RANK UP':'MEDAL EARNED'}</span><b>${m.name}${r?' '+'★'.repeat(r):''}</b><small><em>+$${hN(c)}</em>${r?'':' · <em class="rpc">+3 RP</em>'} · +1% cash for good</small></span>`;
+  el.innerHTML=m.html||`<span class="mti">${ic(m.ic,22)}</span><span class="mtb"><span class="mtt">${ic('medal',12)}${r?'MEDAL RANK UP':'MEDAL EARNED'}</span><b>${m.name}${r?' '+'★'.repeat(r):''}</b><small><em>+$${hN(c)}</em>${r?'':' · <em class="rpc">+3 RP</em>'} · +1% cash for good</small></span>`;
   el.classList.remove('on');void el.offsetWidth;el.classList.add('on');
   [784,988,1319].forEach((f,i)=>setTimeout(()=>tone(f,i<2?0.08:0.24,'square',0,0.045),i*110));
   clearTimeout(_mtHide);_mtHide=setTimeout(()=>{el.classList.remove('on');_mtCur=null;_mtW=setTimeout(medalToastNext,400)},3600);
   if(!running&&$('home').classList.contains('on'))renderHome()}
+// ---- theater stars (see CAMPAIGN). campHold() runs as each wave is held; stars and the theater clear are banked on the spot
+// (the wave-clear code saves right after). A star rides the medal toast lane; the first clear of a theater also gets a battle
+// banner and fanfare, and S.campWin holds the cleared theater's id until the Base screen has shown its debrief (openThWin).
+const starTxt=n=>'★'.repeat(n)+'☆'.repeat(3-n);
+function campHold(w){if(!G)return;const m=mapCur(),r=mapRec(m.id),was=r.stars;
+  if(w>=STAR1_W&&r.stars<1)r.stars=1;
+  if(w>=CLEAR_W){r.stars=Math.max(r.stars,2);if(!G.lastStand&&G.wallMax>0&&(G.startWave||1)<CLEAR_W)r.stars=3;
+    if(!r.cleared){r.cleared=true;S.campWin=m.id;const nx=mapNext(m.id);banner('THEATER CLEARED',nx?nx.name.toUpperCase()+' UNLOCKED':'EVERY THEATER HELD','255,207,90');
+      [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>tone(f,i<4?0.1:0.36,'square',0,0.05),300+i*130))}}
+  if(r.stars>was){const n=r.stars,why=n===3?(was<2?'Theater cleared · walls never breached':'Wave 100 with the walls never breached'):n===2?'Held wave 100 · theater cleared':'Held wave '+STAR1_W;
+    medalToast({html:`<span class="mti">${ic('star',22)}</span><span class="mtb"><span class="mtt">${ic('map',12)}THEATER STAR</span><b>${m.name} <span class="mts">${starTxt(n)}</span></b><small><em>${why}</em></small></span>`})}}
 // the MEDALS view is built by renderMedals() in the UI section (closest to earn, in progress, earned, service record)
 
 // ================= INPUT =================
