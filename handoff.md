@@ -277,6 +277,13 @@ The campaign loop is play → die → earn a little RP → start research → re
 - Command Tempo removed (each theater refunded what it paid, `tempoRefund`). `speedOpts()`: 1×/2× from the start, 3× once Desert Outpost is cleared (listed in its clear debrief); slow-motion assist 0.75× only (0.5× saves become 0.75×).
 - Checkpoints 25/50/75 per theater (`CP_W`), open once that theater has held the wave; `startWaveOk()` snaps an old pick to the deepest open checkpoint. `cpBackPay()` pays 50% of the skipped waves' RP and cash (clear bonus × 14, measured on bot runs) after 5 held waves, with a battle feed line; the Base preview shows the amounts.
 
+### Tuned numbers (model results, bot = weaker than a human: no grenades/airstrikes, nearest-target aim)
+- `MAP_DIFT` late hpMul: Mountain 9, Coastal 38, City 140, Arctic 550, Jungle 2500, Island 7000, Capital 15000 (early hp0 2/6/30/60/80/90/100; dmg = 1.075^(ln hp / ln 1.11)).
+- Free player, 4 sessions/day (~1.2 h play/day), days per theater: Desert 2.6 · Mountain 3.6 · Coastal 1.4 · City 4.6 · Arctic 2.6 · Jungle 10.2 · Island 8.6 · Capital 9.2 → about 43 days (6.1 weeks), ~620 runs, ~51 h of play. Per-theater variance is large (a clear needs one lucky wave-75→100 run once the fort is capped): the same theater from the same arrival ranged 2.6-7.2 days across players.
+- Armory caps run out at wave ~94-99 in every theater; after that the push to 100 is R&D-paced (lab timers).
+- R&D owned at each clear: 16 · 29 · 34 · 46 · 50 · 75 · 88 · 97 of 107 (the last ~10 tiers finish in the lab about a week after the Capital clear).
+- +100 gems/day player (buys the 2nd slot, skips long jobs): Jungle 8.6, Island 5.4, Capital 6.8 days (−16…−37% vs free); campaign ≈ 40 days. Free gems earned by the end ≈ 800.
+
 ### Progression model and tests (`.qa/` in the worktree, gitignored)
 - `cbot.py`/`cbot.js`: campaign bot on a simulated clock (Date.now mocked). 4 sessions a day of 15 min (runs overflow the session, ~1.2 h/day of play), 2× in Desert Outpost then 3×, greedy cheapest Armory buys, research cheapest-first whenever a slot is free, deploys at the highest checkpoint, moves out on each clear. `--gems skip` spends gems on the longest job, `--gemday N` adds N gems a day. `cbrep.py <log>` = per-theater table. `probe.py` = capped-fort difficulty probes; `variants.py` = per-theater multiplier variants from a real arrival save.
 - Tests: `t_econ.js` (lab across close/reopen with mocked Date.now, clock rollback, gems ledger, gates, caps, prices, ramp, checkpoints/back-pay, speed, refund, reset, R&D UI) and `t_core.js` (campaign core, updated) via `python h.py dom <name> <file>`.
