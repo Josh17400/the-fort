@@ -2943,20 +2943,20 @@ function pfStep(e,spd,dt){if(!_pf)return false;const k=pfAt(e.x,e.y,e.veh||e.bos
     else if((e.pfT=(e.pfT||0)+dt)>PF_STUCK){e.pfN=PF_NUDGE;e.pfT=0;e.pfB=gv;_pfStuck++}}
   const l=hyp(dx,dy);if(l<0.5)return true;const s=Math.min(l,spd*dt);e.x+=dx/l*s;e.y+=dy/l*s;pfHead(e,dx,dy,dt);return true}
 // hull heading while the field steers (drawn instead of facing the fort; eases back once the enemy is on a straight line again)
-const PF_TURN=e=>e.veh||e.boss?2.6:9;
-function pfHead(e,dx,dy,dt){const h=e.hd??Math.atan2(-e.y,-e.x),w=PF_TURN(e)*dt;e.hd=h+Math.max(-w,Math.min(w,wrapA(Math.atan2(dy,dx)-h)));e.pfF=G.time}
+const pfTurn=e=>e.veh||e.boss?2.6:9;
+function pfHead(e,dx,dy,dt){const h=e.hd??Math.atan2(-e.y,-e.x),w=pfTurn(e)*dt;e.hd=h+Math.max(-w,Math.min(w,wrapA(Math.atan2(dy,dx)-h)));e.pfF=G.time}
 const eHd=(e,x,y)=>e.hd??Math.atan2(-y,-x);
 // after separation: anything shoved (or dropped) into a solid's clearance walks back out; headings ease back toward the fort
 function pfPush(dt){if(!_pf)return;const es=G.enemies,t=G.time;
   for(let i=0;i<es.length;i++){const e=es[i];if(e.dead||e.chute>0||e.lc)continue;
-    if(e.hd!==undefined&&e.pfF!==t){const d=wrapA(Math.atan2(-e.y,-e.x)-e.hd),w=PF_TURN(e)*dt;if(Math.abs(d)<=w)e.hd=undefined;else e.hd+=d>0?w:-w}
+    if(e.hd!==undefined&&e.pfF!==t){const d=wrapA(Math.atan2(-e.y,-e.x)-e.hd),w=pfTurn(e)*dt;if(Math.abs(d)<=w)e.hd=undefined;else e.hd+=d>0?w:-w}
     const k=pfAt(e.x,e.y,e.veh||e.boss);if(k<0)continue;const L=_pfL;if(L.st[k]!==2)continue;
     const dx=L.tx[k]-e.x,dy=L.ty[k]-e.y,l=hyp(dx,dy);if(l<0.5)continue;const s=Math.min(l,(L.blk[k]===2?150:50)*dt);e.x+=dx/l*s;e.y+=dy/l*s}}
 // spawn / drop snap: a point inside a solid's clearance (or a sealed pocket) moves to the nearest cell with a way to the fort
 function pfSnap(p,wide){if(!_pf)return p;const k=pfAt(p.x,p.y,wide);if(k>=0&&_pfL.st[k]===2){p.x=_pfL.tx[k];p.y=_pfL.ty[k]}return p}
-// is the straight line from e to (x,y) blocked for e's class? (depot / site / mechanic detours; a few samples per call)
 // waypoints from (x,y) along the vehicle field to the first cell in plain view of the fort ([] where there is no field or it already is)
 function pfTrail(x,y){const out=[];if(!_pf)return out;for(let i=0;i<400;i++){const k=pfAt(x,y,true);if(k<0||_pfL.st[k]===0)break;const tx=_pfL.tx[k],ty=_pfL.ty[k];if(Math.abs(tx-x)+Math.abs(ty-y)<0.5)break;x=tx;y=ty;out.push({x,y})}return out}
+// is the straight line from e to (x,y) blocked for e's class? (depot / site / mechanic detours; a few samples per call)
 function pfBlocked(e,x,y){const wide=e.veh||e.boss,dx=x-e.x,dy=y-e.y,m=Math.ceil(hyp(dx,dy)/PF_CS);for(let s=1;s<=m;s++){const k=pfAt(e.x+dx*s/m,e.y+dy*s/m,wide);if(k>=0&&_pfL.st[k]===2)return true}return false}
 function callAir(x,y,ang){
   const l=L('air'),n=Math.min(16,5+l),a=ang??Math.random()*Math.PI*2,dx=Math.cos(a),dy=Math.sin(a);
@@ -7335,7 +7335,7 @@ function lcPreview(){const c=$('intelCv'),W=c.width,main=ctx;ctx=c.getContext('2
 // FIELD REPORT art for a theater: its Medium/Low ground as a round mini-map around the fort, plus the twist (pass arrows, boats, snow...)
 function thPreview(id){const c=$('intelCv'),W=c.width,m=mapOf(id),T=TLOOK[id],V=vision(),main=ctx,g=tw().arc;ctx=c.getContext('2d');
   try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,W);ctx.save();ctx.beginPath();ctx.arc(W/2,W/2,W/2-2,0,TAU);ctx.clip();const f=W/2/(V*1.02);ctx.setTransform(f,0,0,f,W/2,W/2);
-    ctx.fillStyle=m.lo[0];ctx.fillRect(-V*2,-V*2,V*4,V*4);if(T&&T.lo)for(const[st,p,lw]of T.lo(tGeo(id,V,tKeep(),tFootK(id)))){if(lw){ctx.strokeStyle=st;ctx.lineWidth=lw;ctx.stroke(p)}else{ctx.fillStyle=st;ctx.fill(p)}}
+    ctx.fillStyle=m.lo[0];ctx.fillRect(-V*2,-V*2,V*4,V*4);if(T&&T.lo)loDraw(T.lo(tGeo(id,V,tKeep(),tFootK(id))),V*2,V*2);
     const ph=fortHalf();ctx.fillStyle='#8f958f';ctx.fillRect(-ph,-ph,2*ph,2*ph);ctx.fillStyle='#5a605a';ctx.fillRect(-ph*0.8,-ph*0.8,ph*1.6,ph*1.6);
     const arrow=(a,col)=>{const r=V*0.8,s=V*0.13;ctx.save();ctx.translate(Math.cos(a)*r,Math.sin(a)*r);ctx.rotate(a+Math.PI);ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(s,0);ctx.lineTo(-s*0.6,-s*0.7);ctx.lineTo(-s*0.2,0);ctx.lineTo(-s*0.6,s*0.7);ctx.closePath();ctx.fill();ctx.restore()};
     if(g&&g.pass)for(const a of g.pass)arrow(a,'#ff5a46');if(g&&g.amph)for(const d of[-0.35,0,0.35])arrow(g.sea+d,'#7fd0f0');
@@ -8237,8 +8237,8 @@ const TLOOK={
     for(let k=-2;k<=2;k++)for(const s of[-1,1]){const o=k*B;if(Math.abs(o)>keep+40)continue;const d=keep+34+rn()*20;propBarrier(x,ppu,o,s*d,0,3);propBarrier(x,ppu,s*d,o,Math.PI/2,3)}},
   lo(C){const st=new Path2D(),bl=new Path2D(),{R,B,keep}=C,w=C.sw;for(let k=-Math.ceil(R/B);k<=Math.ceil(R/B);k++){const o=k*B;st.rect(o-w/2,-R,w,R*2);st.rect(-R,o-w/2,R*2,w)}
     for(const[cx,cy,h]of C.blocks)bl.rect(cx-h+4,cy-h+4,2*h-8,2*h-8);
-    const sh=new Path2D(),rf=new Path2D();for(const[bx,by,bw,bh,k]of C.lots)if(k===1){sh.rect(bx-bw/2+5,by-bh/2+6,bw,bh);rf.rect(bx-bw/2,by-bh/2,bw,bh)}   // intact buildings stand out (they block movement)
-    return[['#3a3935',bl,0],['#1e1f20',st,0],['rgba(8,8,8,.45)',sh,0],['#686660',rf,0],['#85827a',rf,1.6]]}},
+    const up=C.lots.filter(l=>l[4]===1).map(([bx,by,bw,bh])=>[bx-bw/2,by-bh/2,bw,bh]);   // intact buildings stand out (they block movement)
+    return[['#3a3935',bl,0],['#1e1f20',st,0],['rgba(8,8,8,.45)',loRects(up,5,6),0],['#6e6c65',loRects(up),0]]}},
  arctic:{foot:1,tufts:[[118,114,94],[140,134,110],[160,154,128],[182,176,150]],grade:['rgba(236,244,255,.35)','rgba(60,92,160,.6)'],precip:{n:110,col:'250,252,255',v:34,wx:0.7,s:1.9,storm:3},cloud:'40,60,100',
   storm:['214,226,238','200,214,230','196,210,226','255,255,255'],
   geo(C){C.ice=(wx,wy)=>sstep(0.6,0.66,fbm(wx/150+7,wy/150-3,3));tSitesPick(C,[],0);
@@ -8365,10 +8365,10 @@ const TLOOK={
     for(let n=C.cnt(12000,40,4);n--;){const s=3+rn()*5,p=C.spot(s,onSt);if(p)propRubble(x,ppu,p[0],p[1],s,rn,false)}
     for(let n=C.cnt(20000,20,2);n--;){const rc=3+rn()**2*9,p=C.spot(rc*1.3,onSt);if(p)propCrater(x,p[0],p[1],rc,rn)}},
   lo(C){const bl=new Path2D(),bv=new Path2D(),pz=new Path2D(),pk=new Path2D(),{R,B}=C;for(let k=-Math.ceil(R/B);k<=Math.ceil(R/B);k++){const o=k*B;bv.rect(o-C.bw,-R*2,C.bw*2,R*4);bv.rect(-R*2,o-C.bw,R*4,C.bw*2)}
-    pz.arc(0,0,C.p1,0,TAU);const sh=new Path2D(),rf=new Path2D(),mo=new Path2D();
-    for(const[cx,cy,h,kind,up]of C.blocks){(kind===0?pk:bl).rect(cx-h+4,cy-h+4,2*h-8,2*h-8);if(up){sh.rect(cx-h+10,cy-h+11,2*h-8,2*h-8);rf.rect(cx-h+4,cy-h+4,2*h-8,2*h-8)}}   // standing blocks read as solid
+    pz.arc(0,0,C.p1,0,TAU);const mo=new Path2D(),su=[];
+    for(const[cx,cy,h,kind,up]of C.blocks){(kind===0?pk:bl).rect(cx-h+4,cy-h+4,2*h-8,2*h-8);if(up)su.push([cx-h+4,cy-h+4,2*h-8,2*h-8])}   // standing blocks read as solid
     for(const[mx,my,kind]of C.mon){const r=kind==='fountain'?22:kind==='statue'?17:14;mo.moveTo(mx+r,my);mo.arc(mx,my,r,0,TAU)}
-    return[['#212223',bv,0],['#56534c',pz,0],['#474439',bl,0],['#26361f',pk,0],['rgba(8,8,8,.45)',sh,0],['#77736a',rf,0],['#95918a',rf,1.6],['#a19d90',mo,0]]}}};
+    return[['#212223',bv,0],['#56534c',pz,0],['#474439',bl,0],['#26361f',pk,0],['rgba(8,8,8,.45)',loRects(su,6,7),0],['#7c786e',loRects(su),0],['#a19d90',mo,0]]}}};
 // smoke sites: n picks from candidate points, seeded per theater (stable across the bake, Medium/Low and the plume pass)
 function tSitesPick(C,cands,n){const r=rng(C.seed+5),out=[];const c=cands.slice();for(let i=0;i<n&&c.length;i++){const k=r()*c.length|0,[x,y]=c.splice(k,1)[0];out.push({x,y,o:r(),v:i%4})}C.sites=out}
 function tProps(C){const{R,keep,rn}=C,pa=C.area-(2*keep)**2,H=new Map(),CS=40;let mr=0;const key=(i,j)=>(i+2048)*4096+(j+2048);
@@ -8380,8 +8380,11 @@ function tProps(C){const{R,keep,rn}=C,pa=C.area-(2*keep)**2,H=new Map(),CS=40;le
 // ---- per-frame theater passes ----
 // Medium/Low ground features, built once per (theater, vision, fort footprint)
 let _tLo=null;
-function drawLoFeatures(){const T=tLook();if(!T||!T.lo)return;const C=tGeoCur();if(!_tLo||_tLo.C!==C)_tLo={C,list:T.lo(C)};
-  for(const[st,p,lw]of _tLo.list){if(lw){ctx.strokeStyle=st;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke(p)}else{ctx.fillStyle=st;ctx.fill(p)}}}
+function drawLoFeatures(){const T=tLook();if(!T||!T.lo)return;const C=tGeoCur();if(!_tLo||_tLo.C!==C)_tLo={C,list:T.lo(C)};loDraw(_tLo.list,VW/2/sc+12,VH/2/sc+12)}
+// lo() entries: [style, Path2D, lineWidth (stroke) or 0 (fill)], or [style, loRects(...), 0]: many rects filled one by one, only those in view
+function loDraw(list,hw,hh){for(const[st,p,lw]of list){if(p instanceof Float32Array){ctx.fillStyle=st;for(let i=0;i<p.length;i+=4){const x=p[i],y=p[i+1];if(x<hw&&y<hh&&x+p[i+2]>-hw&&y+p[i+3]>-hh)ctx.fillRect(x,y,p[i+2],p[i+3])}}
+  else if(lw){ctx.strokeStyle=st;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke(p)}else{ctx.fillStyle=st;ctx.fill(p)}}}
+const loRects=(r,ox=0,oy=0)=>{const a=new Float32Array(r.length*4);r.forEach((q,i)=>{a[i*4]=q[0]+ox;a[i*4+1]=q[1]+oy;a[i*4+2]=q[2];a[i*4+3]=q[3]});return a};
 // surf: the baked foam line breathes in and out, plus a travelling swell line (one cached path, two strokes a frame)
 let _surf=null;
 function drawSurf(){const T=tLook();if(!T||!T.surf)return;const C=tGeoCur(),g=tw().arc;if(!_surf||_surf.C!==C)_surf={C,p:shorePath(C.R,0,8)};
