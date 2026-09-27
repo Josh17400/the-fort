@@ -704,7 +704,7 @@ body.rm .lpb>i{transition:none}
 .gc{display:inline-flex;align-items:center;gap:3px;font-variant-numeric:tabular-nums}
 .rbt.gm,.rsgo.gm,.btn.gm{background:var(--g-gem);color:var(--c-on-gem);border-color:transparent}
 .rbt.gm{display:flex;align-items:center;justify-content:center;gap:8px}
-.rbt.gm.short,.rsgo.gm.short,.btn.gm.short{background:transparent;color:var(--c-gem-hi);border:1px dashed var(--b-gem)}
+.rbt.gm.short,.rsgo.gm.short,.btn.gm.short{background:rgba(24,18,36,.94);color:var(--c-gem-hi);border:1px dashed var(--b-gem)}
 .rbt.gm.arm,.rsgo.gm.arm,.btn.gm.arm{background:var(--g-gold);color:var(--c-on-gold);animation:none}
 @media (hover:hover){.rbt.gm:not(.short):hover,.rsgo.gm:not(.short):hover,.btn.gm:not(.short):hover{filter:brightness(1.08)}}
 /* gems sheet */
@@ -1697,11 +1697,12 @@ function rpGain(n){S.rp+=n;if(G&&!G.over)G.rp=(G.rp||0)+n}   // G.over: the run'
 function rpClear(w){G.cleared=(G.cleared||0)+1;if((G.nightK||0)>0.5)medalBump('night');if(L('walls')&&G.wallHp<=0){G.brHeld=(G.brHeld||0)+1;medalMax('holdout',G.brHeld)}   // waves cleared behind breached walls this run
   const n=rpWave(w)+(w>G.startBest&&w>=10?1:0);rpGain(n);if(G.cleared===CP_HOLD)cpBackPay();return n}
 // Checkpoint back-pay: a run that deploys at a checkpoint and holds CP_HOLD waves is paid CP_PAY of what the skipped waves would have
-// paid: their RP, plus their wave-clear bonuses times CP_KILLX (kills and crates pay about that much again on top of the bonus).
-const CP_W=[25,50,75],CP_HOLD=5,CP_PAY=0.5,CP_KILLX=4;
-const cpCash=w0=>{let c=0;for(let w=1;w<w0;w++)c+=money(8*w*waveRew(w));return Math.round(c*CP_KILLX*CP_PAY)};
+// paid: their RP, plus their wave-clear bonuses times CP_KILLX (measured on bot runs: kills, crates and events pay about 14x the raw clear bonus).
+const CP_W=[25,50,75],CP_HOLD=5,CP_PAY=0.5,CP_KILLX=14;
+const cpBase=w0=>{let c=0;for(let w=1;w<w0;w++)c+=8*w*waveRew(w);return c*CP_KILLX*CP_PAY};
+const cpCash=w0=>Math.round(cpBase(w0)*(1+0.15*L('bounty'))*medalMul());   // the Base preview: War Bonds + medals, no run directives
 const cpRp=w0=>{let n=0;for(let w=1;w<w0;w++)n+=rpWave(w);return Math.floor(n*CP_PAY)};
-function cpBackPay(){const w0=G.startWave||1;if(w0<=1||G.cpPaid)return;G.cpPaid=1;const c=cpCash(w0),n=cpRp(w0);S.bank+=c;G.earned+=c;if(n)rpGain(n);
+function cpBackPay(){const w0=G.startWave||1;if(w0<=1||G.cpPaid)return;G.cpPaid=1;const c=money(cpBase(w0)),n=cpRp(w0);S.bank+=c;G.earned+=c;if(n)rpGain(n);
   feed('CHECKPOINT BACK-PAY · +$'+f1(c)+(n?' · +'+n+' RP':''),'255,207,90','coin','BACK-PAY +$'+f1(c)+(n?' +'+n+' RP':''))}
 // Plain-language signature lines for the research cards
 const ORD=n=>n+(n%100>10&&n%100<14?'th':['th','st','nd','rd'][n%10]||'th');
