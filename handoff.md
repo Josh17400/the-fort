@@ -324,3 +324,140 @@ The campaign loop is play → die → earn a little RP → start research → re
 ### Progression model and tests (`.qa/` in the worktree, gitignored)
 - `cbot.py`/`cbot.js`: campaign bot on a simulated clock (Date.now mocked). 4 sessions a day of 15 min (runs overflow the session, ~1.2 h/day of play), 2× in Desert Outpost then 3×, greedy cheapest Armory buys, research cheapest-first whenever a slot is free, deploys at the highest checkpoint, moves out on each clear. `--gems skip` spends gems on the longest job, `--gemday N` adds N gems a day. `cbrep.py <log>` = per-theater table. `probe.py` = capped-fort difficulty probes; `variants.py` = per-theater multiplier variants from a real arrival save.
 - Tests: `t_econ.js` (lab across close/reopen with mocked Date.now, clock rollback, gems ledger, gates, caps, prices, ramp, checkpoints/back-pay, speed, refund, reset, R&D UI) and `t_core.js` (campaign core, updated) via `python h.py dom <name> <file>`.
+
+## Phase 4: dailies, ads, shop (branch `dailies`)
+Code: `// ================= PLATFORM (Plat) =================` and `// ================= DAILIES ... =================` (after the GEMS section, before Command Tempo) hold the logic; the UI is `// ---------------- Daily Ops (Base), daily challenge card, ...`, right after the gem shop (`gemHtml`). CSS: the `/* ---- phase 4 ... */` block at the end of the style sheet. Owner decisions kept: gold AAR (the 2x button sits inside it), no #picks/#nextUnl, Armory/R&D untouched. Battle speed is never sold.
+
+**Machine rule (owner's PC crashed once):** run ONE headless Edge/node test at a time, never pools; `shots4.py`/`smoke.py` are sequential.
+
+### Platform layer `Plat` (Capacitor integration points)
+One seam between the game and the device. Every native call is guarded: a missing or failing plugin reads as "no ad / not bought", never as an error.
+
+| Call | Web build | iOS (Capacitor) plug-in point |
+|---|---|---|
+| `Plat.ad(kind) -> Promise<bool>` (rewarded) | hidden without the dev flag; simulated sheet with SKIP with it | `@capacitor-community/admob`: `prepareRewardVideoAd({adId})` + `showRewardVideoAd()`. The reward comes from `onRewardedVideoAdReward` and settles on `onRewardedVideoAdDismissed` (`nativeAd`). Check the event names against the plugin version |
+| `Plat.interstitial()` | never without the dev flag; simulated with it | AdMob `prepareInterstitial` + `showInterstitial`. Pacing lives in `iaOk()`, not in the plugin |
+| `Plat.buy(sku) -> Promise<bool>` | hidden; simulated confirm sheet with the dev flag | `@revenuecat/purchases-capacitor`: `configure({apiKey})` and `getProducts` (in `init`), then `purchaseStoreProduct({product})`. A cancel throws and reads as false. Grants happen in `shopGrant(sku)` |
+| `Plat.restore()` | `[]` | `Purchases.restorePurchases()` returns the owned non-consumables (noads, starter). The "Restore purchases" link in the shop footer covers the App Store requirement |
+| `Plat.notify(when,title,body,id)` / `Plat.cancel(id)` | logged only (`Plat.log`) | `@capacitor/local-notifications` `schedule`/`cancel`. The string `id` is hashed to the plugin's int id, so rescheduling an id replaces the old one |
+| `Plat.haptic(kind)` | `navigator.vibrate` while screen shake is on | `@capacitor/haptics` impact / notification |
+| `Plat.price(sku, usd)` | `$usd` | RevenueCat `priceString` (localized) |
+
+- `PLAT_IDS` holds Google's public iOS TEST ad unit ids and `rcKey:''` (empty = purchases off, even in the app). At release, swap in the real AdMob units and the RevenueCat public iOS key. Also add the AdMob app id, `SKAdNetworkItems` and the ATT prompt text to Info.plist (see the AdMob plugin docs).
+- Dev flag: URL `?dev=1`, or Settings → tap the SETTINGS title 7 times → "Developer mode" (`S.set.dev`). Without it the live GitHub Pages build shows no rewarded-ad button, no gem packs / Starter Pack / Remove Ads (the shop says they are sold in the iOS app), and never an interstitial. QA hooks: `Plat.auto=true/false` settles simulated ads and purchases at once; `Plat.adSecs` sets the simulated ad's length.
+- SKUs to create in App Store Connect + RevenueCat:
+  - consumables: `gems_80` $0.99, `gems_500` $4.99, `gems_1200` $9.99 (POPULAR), `gems_2600` $19.99, `gems_7000` $49.99 (BEST VALUE)
+  - non-consumables: `starter` $2.99, `noads` $3.99
+
+### Clock safety and roll-out
+- Every daily thing keys on `today()` = the local calendar day of `labNow()` (the phase 3 lab clock, which only moves forward with `Date.now()`).
+  - Setting the clock back never re-opens a day, re-arms a claim or resets an ad cap (tested).
+  - Setting it forward pulls days early, and they are spent: the lab clock stays ahead. A rollback followed by a return to the real time also advances the lab clock (phase 3 semantics). It gains nothing that setting the clock forward wouldn't. The game is offline-only with no trusted time; a server time check is the next step if abuse shows up.
+- Daily Ops (missions, streak, rewarded ads) opens after `DY_RUNS`=3 runs with a best of `DY_BEST`=6, with a one-time toast. Old saves get `S.runs`=10 if their best is 10 or more.
+- The daily challenge opens once Desert Outpost has held wave `DC_W`=25. Until then a locked line in Daily Ops says so.
+- Interstitials never show before `IA_RUNS`=12 runs and `IA_DAYS`=2 days of play.
+
+### Daily missions (`DQ`, `dqRoll`, `dyTick`, `dqAdd`)
+- 3 a day, one per category:
+  - kills: infantry, vehicles, aircraft, tanks, mortars, paratroopers, landing craft (Coastal only), car bombs, mechanics, drones
+  - holding: hold wave N, clear N waves, hold wave N unbreached, deploy at a checkpoint and hold 5
+  - actions: airstrikes, grenades, crates, events, directives, start a research, aimed streak
+- Goals scale with the theater's best wave. Theater twists weight the fitting missions up (mortars in the Mountain, drones in the Jungle, car bombs in City/Capital/Island).
+- Rolls are seeded per save (`S.dy.seed`) + day and never touch `Math.random`, so seeded battle parity is unchanged.
+- Live tracking: `_dqK` = the stats an open mission still counts; when it is null the battle hooks return at once.
+  - Hooks: `kill` (`dqKill`), wave clear (`dqWave`), `throwNade`, `grabCrate`, `evClear`, `pickPerk`, `airRelease` (player airstrikes only), `cpBackPay`, `labStart`, `streakKill`.
+  - Completion: a violet battle-feed line + chime + haptic in battle, a toast at the base.
+- Rewards: `DQ_GEM`=3 gems + 1 RP unit each; all three add `DQ_BONUS_GEM`=5 gems + 2 units. Finished missions left unclaimed are banked automatically the next day, never lost.
+- RP unit `rpU()` = 2% of the tier price at the player's campaign progress, minimum 5: 5 RP through the Desert, ~10 early in Mountain Pass, ~40 at the Capital.
+
+### Login streak (`stNext`, `stClaim`)
+- 7 days: 3, 3, 5, 3, 5, 8, 25 gems (52 a week). Day 7 also pays 2 RP units.
+- One grace day per 7-day cycle: a single missed day keeps the streak. A longer gap, or a second miss in the cycle, restarts at day 1.
+- The claim card (`#stWin`) opens on the first Base visit of the day (`S.dy.pop`), never over the theater-cleared debrief.
+
+### Rewarded ads (daily caps, `AD_CAP`) and interstitials
+- Placements:
+  - 2x payout on the AAR: 3/day, campaign runs only; adds the run's earnings to that theater's bank.
+  - Second Wind: 2/day.
+  - Free supply drop from the pause menu: 2/day, once a run, from wave 3; drops munitions, repair and air strike crates.
+  - Directive reroll on the commendation modal: 3/day, once per offer; the three cards shown are excluded.
+  - Free gems: 1/day, +10.
+- Never in the daily challenge. A skipped ad pays nothing and doesn't count against the cap.
+- Interstitial (`iaOk`) shows at most every `IA_EVERY`=3rd run end and `IA_GAP` 4 min apart. Never:
+  - within `IA_RW` 3 min of a rewarded ad
+  - with Remove Ads
+  - while the theater-cleared debrief is pending
+  - on the plain web build
+
+### Second Wind (`swCan`, `swOpen`, `swRevive`)
+- Once a run, from wave `SW_W`=6. Not in the challenge, not on retreat.
+- When the fort falls, `endRun` freezes the run (`G.over`, `running=false`) behind `#swWin` for `SW_ASK`=10 s (a timer bar, paused while an ad plays). Choices: WATCH AD, REVIVE · 25 gems, END RUN.
+- Revive:
+  - health and walls back to at least 50%
+  - EM screen for `SW_SHIELD` 5 s and rapid fire for 8 s
+  - hostiles at the walls pushed out 70 px, enemy shots in flight cleared
+
+### Daily challenge (`dcToday`, `dcStart`, `dcEnter`/`dcRestore`, `dcEnd`, `dcPay`)
+- One per day, the same for everyone:
+  - a theater drawn from the player's OPEN theaters
+  - one modifier: Hazard Pay, Hot Zone (events), Armored Push (+50% vehicles) or Short Supply (crates x0.5)
+  - two starting directives
+  - a seeded `Math.random` for the run. `_dcRnd` holds the real one, and `R` now reads `Math.random` at call time
+- Kit decision: a STANDARD KIT (`DC_KIT` = a share of that theater's Armory caps, e.g. dmg/walls/hp 45%, rate 12, squad 50%) plus the player's own research.
+  - Fair: the same fort for everyone, so per-theater cash farming doesn't decide it.
+  - Fun: R&D progress still shows, and a new theater's challenge is playable without a fort built there.
+  - It can't be used to test-drive or skip that theater's Armory.
+- Sandbox: `S.dcHold` parks the theater's lv/bank/best/startWave, its star record, the lifetime medal tallies (`S.ms`) and `S.tkills`.
+  - `dcRestore` puts them back at `endRun`, and in `loadSave` if the app died mid-run. Tested byte for byte.
+  - In-run RP, stars, medals, wave medals and Second Wind are off. Daily missions DO count.
+- Reward once a day, by the day's best wave (`DC_TIERS`):
+
+  | Best wave | 5 | 10 | 20 | 30 | 40 | 50 |
+  |---|---|---|---|---|---|---|
+  | Gems | 3 | 5 | 8 | 10 | 12 | 15 |
+  | RP units | 1 | 1 | 2 | 2 | 3 | 3 |
+
+  A later, deeper attempt is paid as a top-up; attempts are unlimited.
+- UI: the Base card shows today's best, attempts and the next tier; the gold AAR shows the challenge result + TRY AGAIN. `dcPay` settles a challenge the app died in on the next render.
+
+### Gem shop (`gemHtml`, `shopBuy`, `shopGrant`, `spLeft`)
+- Contents, top to bottom: balance, Starter Pack, gem packs (each shows its bonus % vs the $0.99 pouch), Remove Ads, free gem sources, what gems buy (finish research, second lab slot, Second Wind, cosmetics "coming soon"), a "never buys battle speed" note, the restore link.
+- Starter Pack: one-time, open for 72 h from when Daily Ops opens. 400 gems + a voucher that halves the second lab slot to 450 gems. No power.
+- Save: `S.shop = {noAds, starter, voucher (1 unused / 2 spent), stT, buys}`.
+- RESET keeps gems, `S.shop`, the daily calendar (`S.dy`) and `S.runs/born/ia`, so a reset can't re-claim today's rewards. Also fixed: the phase 3 reset line had a mid-line comment that swallowed `medalSync();save();...`.
+
+### Notifications
+- `labStart` schedules `Plat.notify` at the job's end ("Research complete · <tier> is ready"); `labSkip`/`labTick` cancel it.
+- `dyRemind()` schedules one "Daily Ops" reminder for 19:00 tomorrow on each day's first Base visit, replacing the previous one by id.
+
+### Base nav dot
+- `.dot.vio[data-d=base]` (violet) on BASE in the top nav and the dock. It shows for:
+  - a finished, unclaimed mission, or the all-three bonus
+  - today's streak supply
+  - a new day's Daily Ops not yet looked at (`S.dy.seen`)
+
+### Economy impact (RP must stay hard to earn)
+- RP from dailies at full completion: missions 5 units/day + streak 2 units a week + challenge 1-3 units ≈ 7 units a day ≈ 15% of ONE tier's price per day.
+  - Desert: ~36 RP/day against ~1,900 earned by play.
+  - Jungle: ~200 RP/day against ~3,100 (+6.5%).
+- Campaign length, from the phase 3 bot logs (`.qa/rpbound.py`; only time the lab sits idle for want of RP can shrink):
+  - free players: −0.6% (cb_F) to −2.5% (cb_G)
+  - the RP-bound gem-skipping log (cb_P): −14%
+- Free gems from dailies: ~14 (missions) + ~7.4 (streak) + ~8 (challenge) ≈ 30 a day, ≈ 40 with the ad. The phase 3 model's +100 gems/day player finished ~7% sooner, so these gems should cost roughly 2-3% more.
+- Overall estimate for a free player who plays every day: −3 to −5% campaign length (≈ 41-42 days instead of 43). Not re-simulated with the bot (hours of headless Edge); do that before release if the number matters.
+
+### QA
+- `.qa/t_daily.js` (108 checks), run with `python h.py dom daily t_daily.js`. Covers:
+  - roll-out gates
+  - mission roll: 3, one per category, deterministic, theater-aware
+  - live progress through the real hooks; claim, bonus, claim-once
+  - midnight banking + reroll; clock rollback (day, streak, ad caps)
+  - streak: grace, reset, day 7; the popup flag
+  - the web build hides ads, IAP and the 2x button; ad caps + skip; the AAR 2x pays and the AAR stays gold
+  - interstitial rules
+  - Second Wind: gems, ad, once a run, wave 6, decline, retreat
+  - challenge sandbox: byte-identical theater, medal tallies, no RP in the run, pays once by tier, top-up, crash recovery, a new challenge tomorrow
+  - reroll exclusion
+  - shop: packs, starter + voucher, starter once, Remove Ads, cancel; reset keeps purchases
+  - the Base dot
+- `.qa/shot4.js` + `shots4.py`: `HASH=#base|streak|aar|sw|shop|dch|dcres|web`, sizes p/l/s/d, strictly one Edge at a time.
