@@ -687,6 +687,8 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
 .thc-b{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
 .thc-h{display:flex;align-items:center;gap:8px;max-width:100%}
 .thc-d{font:400 12px/1.4 var(--f-body);color:var(--c-text-2)}
+.thc-t{display:inline-flex;align-items:center;gap:5px;font:600 11px/1.2 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--c-gold-hi)}.thc-t .ic{flex:none;opacity:.85}
+.thc.lock .thc-t{color:var(--c-dim)}
 .thc-m{display:flex;align-items:center;gap:10px;font:600 12px var(--f-display);letter-spacing:.06em;color:var(--c-dim)}
 .b-clr{color:var(--c-green);border-color:var(--b-green)}
 .thc.lock{background:rgba(255,255,255,.02);border-style:dashed;border-color:var(--c-line-2)}.thc.lock .thn{color:var(--c-text-2)}.thc.lock .wreq{margin-top:2px}
@@ -1746,6 +1748,10 @@ const TH_ART={
  jungle:'<path d="M0 36l48-6v18H0z" fill="#1d4a22"/><path d="M4 45l40-7 2 4-40 7z" fill="#6b6e66"/><path d="M12 43l5-1m6-1l5-1m6-1l5-1" stroke="#e6e6d8" stroke-width="1" opacity=".8"/><path d="M29 36c0-8 1-14 4-20" stroke="#4a3a24" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M33 16c-5-3-11-2-14 2 4-1 9-1 14-2zm0 0c3-5 9-6 13-4-4 1-9 2-13 4zm0 0c-3 2-5 7-4 11 2-4 3-7 4-11zm0 0c4 1 8 5 8 9-2-4-5-6-8-9zm0 0c-2-4-1-8 1-11 0 4 0 7-1 11z" fill="#12361a"/>',
  island:'<path d="M31 9a8 8 0 1 0 8 11 7 7 0 1 1-8-11z" fill="#f4f0dc"/><circle cx="12" cy="10" r=".8" fill="#fff"/><circle cx="20" cy="6" r=".6" fill="#fff"/><circle cx="7" cy="18" r=".6" fill="#fff"/><path d="M0 36h48v12H0z" fill="#0d1a38"/><path d="M33 38h8m-6 3h5m-4 3h3" stroke="#f4f0dc" stroke-width="1" opacity=".55"/><path d="M4 37q10-7 22 0z" fill="#050810"/><path d="M15 34c0-5 1-9 3-12" stroke="#050810" stroke-width="1.6" fill="none"/><path d="M18 22c-4-2-8-1-10 1 3 0 6 0 10-1zm0 0c2-3 6-4 9-3-3 1-6 1-9 3zm0 0c-2 2-3 5-2 8 1-3 2-5 2-8zm0 0c3 1 5 3 6 6-2-2-4-4-6-6z" fill="#050810"/>',
  capital:'<circle cx="24" cy="18" r="13" fill="#ffd9a0" opacity=".22"/><path d="M4 48V36h40v12z" fill="#241a1e"/><path d="M8 36h32v-3H8z" fill="#241a1e"/><path d="M11 33h2v-8h-2zm5 0h2v-8h-2zm5 0h2v-8h-2zm4 0h2v-8h-2zm5 0h2v-8h-2zm5 0h2v-8h-2z" fill="#241a1e"/><path d="M9 25h30l-2-2H11z" fill="#241a1e"/><path d="M15 23a9 9 0 0 1 18 0z" fill="#241a1e"/><path d="M23 14h2v-5h-2z" fill="#241a1e"/><path d="M25 9h5l-1.5 1.5L30 12h-5z" fill="#c8402e"/><circle cx="40" cy="12" r="4" fill="#3a2e2e" opacity=".5"/><circle cx="43" cy="7" r="3" fill="#3a2e2e" opacity=".35"/>'};
+// one-line twist tag on the open cards and the next locked one (the full story is the FIELD REPORT on first deploy)
+const TW_TAG={mountain:'Attacks via two passes',coastal:'Landing craft from the sea',city:'Rubble cuts sight · ambushes',arctic:'Blizzards · heavy armor',
+  jungle:'Canopy cuts sight · heavy air',island:'Permanent night · paradrops',capital:'Everything · two-tank waves'};
+const thTag=m=>TW_TAG[m.id]?`<span class="thc-t">${ic('threat',12)}${TW_TAG[m.id]}</span>`:'';
 const thVars=m=>{const k=TH_SKY[m.id]||['#6a7a5a','#3c4632','#20261a'];return`--t1:${k[0]};--t2:${k[1]};--t3:${k[2]}`};
 const thSvg=id=>`<svg viewBox="0 0 48 48" aria-hidden="true">${TH_ART[id]||''}</svg>`;
 const thArt=id=>`url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">'+(TH_ART[id]||'')+'</svg>')}")`;
@@ -1762,10 +1768,10 @@ function thListHtml(){let nextLock=true;
     +MAPS.map(m=>{const r=mapRec(m.id),prev=MAPS[m.ord-2];
       if(mapOpen(m.id)){const on=m.id===S.map,b=mapBest(m.id),tag=on?'<span class="badge b-act">DEPLOYED</span>':r.cleared?'<span class="badge b-clr">CLEARED</span>':r.visited?'':'<span class="badge b-new">NEW</span>';
         return`<button class="thc art${on?' on':''}" data-map="${m.id}" style="--thart:${thArt(m.id).replace(/"/g,"'")}"${on?' aria-current="true"':''}>${thEmb(m)}<span class="thc-b"><span class="thc-h"><span class="thn">${m.name}</span>${tag}</span>`
-          +`<span class="thc-d">${m.blurb}</span><span class="thc-m">${starsHtml(r.stars)}<span>${b?'Best wave '+fmtN(b):'Fresh fort · not yet deployed'}</span></span></span>${on?'':'<span class="chev">→</span>'}</button>`}
+          +`<span class="thc-d">${m.blurb}</span>${thTag(m)}<span class="thc-m">${starsHtml(r.stars)}<span>${b?'Best wave '+fmtN(b):'Fresh fort · not yet deployed'}</span></span></span>${on?'':'<span class="chev">→</span>'}</button>`}
       const need=`Clear wave ${CLEAR_W} on ${prev.name} to unlock`;
       if(nextLock){nextLock=false;const pb=Math.min(mapBest(prev.id),CLEAR_W);
-        return`<div class="thc lock">${thEmb(m,1)}<span class="thc-b"><span class="thn">${m.name}</span><span class="thc-d">${m.blurb}</span>`
+        return`<div class="thc lock">${thEmb(m,1)}<span class="thc-b"><span class="thn">${m.name}</span><span class="thc-d">${m.blurb}</span>${thTag(m)}`
           +`<span class="wreq">${ic('lock',12)}${need}<i style="width:${Math.round(100*pb/CLEAR_W)}%"></i></span></span></div>`}
       return`<div class="thc far">${thEmb(m,1)}<span class="thc-b"><span class="thn">${m.name}</span><span class="thc-d">${need}</span></span></div>`}).join('')+'</div>'}
 let _thFrom=null;
@@ -7036,6 +7042,7 @@ const ROMAN=['','I','II','III','IV','V','VI','VII','VIII','IX','X'],rank=n=>ROMA
 let perkOpenT=0,perkReadyAt=Infinity,perkDownT=0;
 function offerPerks(){if(!running)return;const pool=PERKS.filter(p=>!p.ok||p.ok()),pick=[];
   while(pick.length<3&&pool.length)pick.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+  if(tw().night&&pick.length){const il=pool.find(p=>p.id==='illum');if(il&&Math.random()<0.5)pick[pick.length-1]=il}   // Island: command pushes Illumination Rounds (never night-free there)
   G.choosing=pick;mouse.down=false;G.airArmed=false;G.airAim=null;G.nadeArmed=false;perkOpenT=performance.now();
   const cp=G.cp&&G.cp.i<G.cp.n?G.cp:null;   // checkpoint briefing: a short draft before the first wave, standing in for the commendations skipped
   $('perkTag').textContent=cp?'CHECKPOINT BRIEFING':'FIELD COMMENDATION';
@@ -7122,7 +7129,7 @@ Object.assign(INTEL,{
  ev_armor:['Armored Column',4,'An enemy tank leads a column of heavy troopers. Artillery, armor and airstrikes crack it open. Clearing the wave pays +60%.'],
  ev_mech:['Combat Mechanic',3,'A rifleman with a tool kit, marked by a green cross. He follows the armor and patches up one damaged vehicle nearby. Kill him first or your shells are wasted. TARGET: THREATS ranks him high.'],
  ev_vbied:['Car Bomb',4,'A technical packed with explosives, marked by a blinking red light. It races straight for your walls and blows a huge hole in them. Kill it early: it detonates where it dies and hurts hostiles around it.'],
- ev_night:['Nightfall',0,'After dark your sight line shrinks by 15% and hostiles are harder to spot. Tower searchlights reveal whatever they sweep across. The Illumination Rounds directive cancels the night penalty.'],
+ ev_night:['Nightfall',0,'After dark your sight line shrinks by 15% (22% on Island Night-Ops) and hostiles are harder to spot. Tower searchlights reveal whatever they sweep across. The Illumination Rounds directive cancels the night penalty.'],
  ev_wallhold:['Walls Under Fire',0,'Engineers cannot patch walls that are taking hits. Repairs restart 3s after the last hit, so clear the attackers to let the walls recover.'],
  ev_resupply:['Resupply Drop',0,'Command pushes a supply run through: three special crates land around the fort at the start of the wave. Tap them before they fade.'],
  ev_ambush:['Ambush',3,'Part of the wave has crept in unseen and opens up from one flank, already inside your sight line. Swing your fire to that side fast: auto-fire, frag rounds and MG nests help. Clearing the wave pays +50%.'],
@@ -7175,14 +7182,14 @@ const transPos=T=>{const s=-T.S0+TRANS_V*T.t,c=Math.cos(T.a),n=Math.sin(T.a);ret
 // One mechanic per theater (MAPS[].twist, knobs in TWS, art in THEATER THEMES). Each is explained once by a FIELD REPORT card
 // (ev_th_<id>) shortly after the first deployment to that theater. Desert Outpost has no twist: twTick returns at once.
 Object.assign(INTEL,{
- ev_th_mountain:['Mountain Pass',0,'Ridges wall in the valley: every ground attack comes down the north or south pass. Mortar crews and marksmen work from the heights, so hunt them with TARGET: THREATS.'],
- ev_th_coastal:['Coastal Base',0,'The sea guards your east flank, but landing craft run in from it to beach rifle squads, and amphibious carriers swim ashore. Sink a boat before it grounds and its squad dies with it.'],
- ev_th_city:['City Ruins',0,'Rubble and burnt-out blocks cut your sight line by 14%. Expect ambushes, more technicals and combat mechanics patching them up: kill the mechanics first.'],
- ev_th_arctic:['Arctic Station',0,'Blizzards roll in every minute or so: your sight line drops by a quarter while they slow every enemy on the ground. Armored columns run heavier here.'],
- ev_th_jungle:['Jungle Airstrip',0,'The canopy cuts your sight line by 18% and hides ambushes. Drones and attack helicopters come in heavy: AA guns, SAMs and TARGET: THREATS earn their keep.'],
- ev_th_island:['Island Night-Ops',0,'It is always night here, and the dark cuts your sight line by 22%. Paratroopers and car bombs come often. The Illumination Rounds directive cancels the night penalty.'],
- ev_th_capital:['Capital Defense',0,'Everything the enemy has left: more armored columns, a second tank with every tenth wave from wave 20, and heavy air raids. Bring anti-armor and AA.'],
- ev_lc:['Landing Craft',3,'A boat packed with riflemen running for the beach. Once it grounds the squad storms ashore and the boat backs off to sea. Sink it first: every trooper aboard goes down with it.']});
+ ev_th_mountain:['Mountain Pass',0,'Ground attacks only come down the north and south passes. Mortar crews and marksmen shell you from the ridges.'],
+ ev_th_coastal:['Coastal Base',0,'Landing craft beach rifle squads on the shore to the east. Sink a boat before it lands and its squad goes down too.'],
+ ev_th_city:['City Ruins',0,'Rubble cuts your sight line by 14%. Expect ambushes, more technicals, and mechanics repairing them: kill mechanics first.'],
+ ev_th_arctic:['Arctic Station',0,'Blizzards hit about once a minute: sight drops by a quarter and enemies on the ground slow down. Armor comes heavier.'],
+ ev_th_jungle:['Jungle Airstrip',0,'The canopy cuts your sight line by 18% and hides ambushes. Drones and attack helicopters come in heavy: build AA.'],
+ ev_th_island:['Island Night-Ops',0,'Always night: your sight line is 22% shorter. Paratroopers and car bombs are common. Illumination Rounds is offered more.'],
+ ev_th_capital:['Capital Defense',0,'Everything left, thrown at you: more armored columns, two tanks every tenth wave from 20, and heavy air raids.'],
+ ev_lc:['Landing Craft',3,'A boat full of riflemen heading for the beach. Sink it before it grounds and the whole squad goes down with it.']});
 function twTick(dt){const T=tw();if(T===TW0)return;
   if(!G.twCard&&G.time>1.5){G.twCard=1;const k='ev_th_'+mapCur().id;if(!seen()[k])spotted(k)}
   if(T.bliz)bzTick(dt)}
