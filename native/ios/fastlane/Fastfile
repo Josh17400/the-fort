@@ -104,20 +104,23 @@ platform :ios do
   lane :mint_cert do
     setup_ci
     api_key = asc_api_key
+    # Lane code runs inside fastlane/ while cert() resolves output_path from native/ios,
+    # so both use one absolute dir (native/ios/build, where the workflow picks it up).
+    out = File.expand_path("../build", __dir__)
     # cert()'s ".p12" is a bare PEM private key beside a separate .cer; combine them into a
     # real PKCS12 identity, or import_certificate yields a key with no cert.
     cert(
       api_key: api_key,
-      output_path: "build",
+      output_path: out,
       keychain_path: TMP_KEYCHAIN,
       keychain_password: ""
     )
-    key_file = Dir["build/*.p12"].reject { |f| f.end_with?("dist_full.p12") }.first
-    cer_file = Dir["build/*.cer"].first
-    UI.user_error!("cert() outputs not found in build/") unless key_file && cer_file
-    sh("openssl x509 -inform DER -in #{cer_file.shellescape} -out build/cert.pem")
+    key_file = Dir["#{out}/*.p12"].reject { |f| f.end_with?("dist_full.p12") }.first
+    cer_file = Dir["#{out}/*.cer"].first
+    UI.user_error!("cert() outputs not found in #{out}") unless key_file && cer_file
+    sh("openssl x509 -inform DER -in #{cer_file.shellescape} -out #{out.shellescape}/cert.pem")
     # -passout env keeps the password out of the logged command line; macOS LibreSSL
     # already exports a legacy-compatible p12.
-    sh("openssl pkcs12 -export -inkey #{key_file.shellescape} -in build/cert.pem -passout env:CERT_EXPORT_PASS -out build/dist_full.p12")
+    sh("openssl pkcs12 -export -inkey #{key_file.shellescape} -in #{out.shellescape}/cert.pem -passout env:CERT_EXPORT_PASS -out #{out.shellescape}/dist_full.p12")
   end
 end
