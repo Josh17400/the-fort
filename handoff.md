@@ -30,7 +30,7 @@ Top-down modern-military roguelite fort defense. Tap/click enemies to shoot them
 | Campaign | `MAPS`, `switchMap(id)`, `campInit`, `campHold`, `mapCur()`, `MAPM`, `careerBest()`, `rsBest()`, `mapHooks`. UI: `renderTheater`, `openTheaters`, `openThWin` |
 | Upgrades | table `U` (`id, need, wave, max, cost, g, cat`). Helpers: `L(id)`, `lockWhy(u)`, `costOf(u,l)` |
 | Research | `RLINES`, `rTier(id)`, `rMult`, `rSig`, `rsOwned`, `rsWhy`, `rsDone`, `rsReady`, `rsOpenNext`. Gates `RS_GATE` + `rsProg()`; prices `RS_RP`/`rsCostAt`; lab times `RS_MIN`/`rsMinAt` |
-| Lab + gems | `S.lab`, `labStart`, `labTick`/`labLand`, `labLeft`, `labSkip`, `labSkipCost`, `labBuySlot`, `labUi` (1s ticker). `S.gems`, `gemAdd(n,src)`, `gemSpend(n,why)`, `GEM_FREE`, `openGems()`. Shop markup `gemHtml()`, one click handler `shopClick` on `#gemBody` (sheet) and `#shop` (STORE view), repaint `gemRefresh()` |
+| Lab + gems | `S.lab`, `labStart`, `labTick`/`labLand`, `labLeft`, `labSkip`, `labSkipCost`, `labBuySlot`, `labUi` (1s ticker). Lab speed-up ad `labAd`/`labAdSt`/`labAdBtn` `S.gems`, `gemAdd(n,src)`, `gemSpend(n,why)`, `GEM_FREE`, `openGems()`. Shop markup `gemHtml()`, one click handler `shopClick` on `#gemBody` (sheet) and `#shop` (STORE view), repaint `gemRefresh()` |
 | RP economy | `rpWave(w)` (0 before wave 10, then +1 per 10 waves, bonus on multiples of 10). Tier prices follow the tier's campaign gate (`rsCostAt`). Record bonus +1 only when w>=10. Medals give `rpGain(3)`. Checkpoint back-pay `cpBackPay` (cash + RP, after 5 held waves). Veteran back-pay `min(150,best+3*medals)` |
 | Graphics | presets via `S.set.gfx`, `GFX`, `hiGfx()`. Baked sprite cache: `hqBake`/`hqDraw` (tier keys end in `_tN`) |
 | Day/night + shadows | `G.todT`, `SH` (len/alpha), `hqShadow`. Vehicles have headlights at night |
@@ -392,6 +392,7 @@ One seam between the game and the device. The web build has no ads or store; the
   - Free supply drop from the pause menu: 2/day, once a run, from wave 3; drops munitions, repair and air strike crates.
   - Directive reroll on the commendation modal: 3/day, once per offer; the three cards shown are excluded.
   - Free gems: 1/day, +10.
+  - Lab speed-up (R&D, `labAd`): 2/day shared by both lab slots, 1 h off a running research or Refit timer (finishes it with an hour or less left). See "Lab speed-up ad".
 - Never in the daily challenge. A skipped ad pays nothing and doesn't count against the cap.
 - Interstitial (`iaOk`) shows at most every `IA_EVERY`=3rd run end and `IA_GAP` 4 min apart. Never:
   - within `IA_RW` 3 min of a rewarded ad
@@ -437,7 +438,7 @@ One seam between the game and the device. The web build has no ads or store; the
 - RESET keeps gems, `S.shop`, the daily calendar (`S.dy`) and `S.runs/born/ia`, so a reset can't re-claim today's rewards. Also fixed: the phase 3 reset line had a mid-line comment that swallowed `medalSync();save();...`.
 
 ### Notifications
-- `labStart` schedules `Plat.notify` at the job's end ("Research complete · <tier> is ready"); `labSkip`/`labTick` cancel it.
+- `labStart` schedules `Plat.notify` at the job's end ("Research complete · <tier> is ready"); `labSkip`/`labTick` cancel it; the lab speed-up ad moves it to the new end (same id, so the shell replaces it) or cancels it when the ad finishes the job.
 - `dyRemind()` schedules one "Daily Ops" reminder for 19:00 tomorrow on each day's first Base visit, replacing the previous one by id.
 
 ### Base nav dot
@@ -494,3 +495,17 @@ Owner request: STORE replaces MEDALS in the nav; medals move onto Base as a coll
 - **Redirect:** `setView('medals')` → `openMedals()`: Base, tile open, seen, scroll into view (`scroll-margin-top` clears the sticky header) + flash. The AAR's MEDALS EARNED row links there (`data-view-go="medals"`). Medal toasts stay non-interactive (pointer-events none), as before.
 - **QA:** `.qa/t_store.js` (52 checks: nav, Digit4, web view contents, view = sheet markup, chip, STORE dot day cycle + starter, shared click path in both containers, tile collapse/expand/remember + medalSeen, redirect + AAR link); `own.js` also prints nav/dock order, `medTile` and the web Store; screenshots via `.qa/t_sh.js` + `shs.py` (`#base|store|gems ~dev~open~new~fresh~starter~aar~tile~scroll=N`, sequential).
 
+## Lab speed-up ad (branch `ad-lab`)
+Owner-approved: an optional rewarded ad that speeds up the running research timer, so ads feed the core loop (play → die → research → come back). Code: `AD_CAP.lab`, `AD_LAB_MS`, `AD_LAB_MIN`, `labAdSt`, `labAd` (DAILIES section, after `adGems`); UI `labAdBtn`, `labAdClick`, the `labUi` ticker check; CSS block `/* lab speed-up ad */` after the lab strip rules.
+- **Numbers:** `AD_LAB_MS` = 1 h off per ad, `AD_CAP.lab` = 2 a day, shared by both lab slots. One hour is exactly what the free-gem ad pays at FINISH NOW prices (`labSkipCost(1 h)` = 10 = `AD_GEMS`), so no placement is worth more than another. 30 min would be worth 6 gems (less than the gem ad) and is under 5% of a mid/late job (Mountain 45 min-2.5 h, City 5 h, Capital 15-18 h, Refits 4-24 h); it would read as a token.
+- **Rules:** hidden on the plain web build (`adLeft` = 0 without the dev flag or a native ad plugin), before Daily Ops opens, during a run, when the day's 2 are used, and with `AD_LAB_MIN` = 2 min or less left (the ad would outlast the wait). With an hour or less left the button reads FINISH and the ad lands the job. A skipped ad, a no-fill, or a job that landed (or ran out) while the ad played grants nothing and uses no cap slot.
+- **Clock safety:** the cut moves `j.end` back on the lab clock by `min(AD_LAB_MS, end − labNow())`: never below now, `t0` unchanged, so the bar jumps forward and a finished job lands through `labTick`/`labLand` (toast, R&D dot, flash) like any other. The day key is `today()` (lab clock): a device-clock rollback never re-arms the cap or stretches the job; rollback + return advances the lab clock (the documented phase 4 rule, same as a forward jump).
+- **Ledger / interstitials:** `adUse('lab')` counts it in `S.dy.ads.lab` (the per-day ledger every placement uses) and stamps `S.ia.rw`, so no interstitial shows within `IA_RW` of it.
+- **Notification:** a job still running gets `labNote(j)` again (same id `lab:<line>`, the shell cancels then reschedules); a finished one is cancelled.
+- **UI:** lab strip: a 60×48 pill (play disc + `−1H` / `FINISH`) beside the running job, the row wrapped in `.labx` (the `.labs.on` row markup is unchanged). Tier card: a secondary blue `.rbt.rad` under FINISH NOW on the desktop tier and Refit cards, and inside the expanded researching row on phones (above the sticky FINISH NOW). Blue = the lab's colour, green when it finishes the job; `wait` (disabled, dimmed) on every button of that job while the ad plays. `data-st` carries `labAdSt`, and `labUi` re-renders R&D only when it changes (cut → fin → gone at the thresholds, back on a new day). Toast after a cut: "Lab sped up: 1h off <tier> · <left> left". The Base R&D panel is unchanged (keeps Base uncluttered).
+- **Economy** (`.qa/adlab_model.py` over the phase 3 campaign-bot logs; a speed-up of a lab-hours a day shrinks a lab-paced stretch of T days to T·24/(24+a)): the free logs spend 49-58% of the campaign with the Armory capped and the lab busy (the stretch where the next wave waits on research) and 75-90% with the lab busy. Every daily ad = 2 lab-hours a day (~8% of a lab day; ~86 h of the ~787 lab-hours over a 43-day campaign):
+  - lab-paced estimate: −3.8% (cb_G) to −4.5% (cb_F) campaign length, ≈ 1.6-1.9 days of 43
+  - upper bound (every busy lab-hour critical): −5.8% to −6.9%
+  - the gem-skipping log (cb_P) barely waits on the lab: −0.1%
+  - For comparison 3 × 30 min would be −2.9…−3.4%, 3 × 1 h −5.4…−6.5%. With the phase 4 dailies (−3…−5%) a free player who watches everything finishes ≈ 7-9% sooner (~39-40 days instead of 43). RP is untouched (owner rule 3): the ad buys time, never RP. Not re-simulated with the bot.
+- **QA:** `.qa/t_adlab.js` (62 checks: numbers, web hidden, dev buttons in the strip and on the card, an hour off + ledger + notification + interstitial hold, cap across slots, rollback, next day, skipped / no-fill, finish-when-short + lands normally, 2 min threshold, hidden in a run, job landing mid-ad, Refit, ledger across reopen, click path with the simulated SKIP, ticker cut → fin → gone → new day). Screenshots: `.qa/t_adshot.js` (`HASH` contains `fin` / `refit` / `scroll`) via `python h.py shot <name> t_adshot.js WxH [phone]`.
