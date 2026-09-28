@@ -1,0 +1,50 @@
+# RENEWAL job: mint the team's single Apple Distribution certificate and export it as an
+# ENCRYPTED artifact. Download it, decrypt with CERT_EXPORT_PASS, and store the p12 (base64) as
+# the IOS_CERT_P12_B64 secret that every ios.yml build reuses.
+#
+# The Fort shares its Apple team with Euchre Unleashed, and a team has ONE distribution cert:
+# start by copying euchre-unleashed's IOS_CERT_P12_B64 + CERT_EXPORT_PASS (CI_SETUP.md). Run this
+# only when that cert has expired and been revoked, then put the new p12 in BOTH repos.
+#
+# Why one cert kept as a secret: GitHub runners are wiped after each run, so per-run cert creation
+# hits Apple's distribution-certificate cap after two builds.
+
+name: iOS mint signing cert (renewal)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mint:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mint Apple Distribution certificate
+        working-directory: native/ios
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          CERT_EXPORT_PASS: ${{ secrets.CERT_EXPORT_PASS }}
+          LC_ALL: en_US.UTF-8
+          LANG: en_US.UTF-8
+        run: fastlane ios mint_cert
+
+      - name: Encrypt the exported p12 (never leaves the runner in the clear)
+        env:
+          CERT_EXPORT_PASS: ${{ secrets.CERT_EXPORT_PASS }}
+        run: |
+          P12=native/ios/build/dist_full.p12
+          test -f "$P12"
+          openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:CERT_EXPORT_PASS -in "$P12" -out dist.p12.enc
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-cert
+          path: dist.p12.enc
+          retention-days: 1

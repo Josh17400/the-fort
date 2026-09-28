@@ -1,0 +1,28 @@
+{
+  "name": "the-fort-native",
+  "version": "1.0.0",
+  "description": "Capacitor iOS wrapper for The Fort",
+  "private": true,
+  "scripts": {
+    "build": "python build_www.py",
+    "test": "node test_shell.cjs && node check_www.cjs",
+    "sync": "python build_www.py && cap sync ios",
+    "capacitor:sync:after": "node fix_spm_paths.cjs"
+  },
+  "dependencies": {
+    "@capacitor-community/admob": "^8.0.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/haptics": "^8.0.0",
+    "@capacitor/ios": "^8.4.1",
+    "@capacitor/local-notifications": "^8.0.0",
+    "@capacitor/preferences": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.0",
+    "@revenuecat/purchases-capacitor": "^13.2.1",
+    "capacitor-gamekit": "file:plugins/capacitor-gamekit"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.4.1"
+  }
+}

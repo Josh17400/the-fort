@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>The Fort app art</title>
+<style>
+@font-face{font-family:Oxanium;font-weight:400 800;src:url(../fonts/oxanium-latin.woff2) format('woff2')}
+body{margin:0;background:#000}
+</style>
+</head>
+<body>
+<pre id="out"></pre>
+<script>
+// The Fort: app icon and launch splash, drawn on canvas in the game's palette (index.html :root).
+// render_art.py loads this page in headless Edge and saves each canvas as a PNG in this folder.
+// ?show=1 displays the canvases instead, for eyeballing in a browser.
+const C={bg:'#0b0d09',s2:'#161b12',s3:'#1c2317',gold:'#e3b53c',goldHi:'#ffd76a',goldLo:'#8a6a14',onGold:'#1a1405',
+  green:'#7fd35a',greenHi:'#9fe57a',greenLo:'#4fae34',onGreen:'#0b1a05',line:'rgba(190,210,150,'};
+const TAU=Math.PI*2,rad=d=>d*Math.PI/180;
+
+// Bastion trace (a star fort, trace italienne): a pentagon of curtain walls with an arrowhead bastion on every
+// corner. Each bastion: flank out from the curtain, face out to the salient (tip), and back. Unit radius at the tips.
+function trace(){const N=5,r0=0.74,f=0.2,flank=0.09,pts=[];
+  const V=k=>{const a=rad(-90+k*360/N);return[Math.cos(a)*r0,Math.sin(a)*r0]};
+  for(let k=0;k<N;k++){const a=rad(-90+k*360/N),[vx,vy]=V(k),prev=V(k-1),next=V(k+1);
+    const side=(o)=>{const dx=o[0]-vx,dy=o[1]-vy,l=Math.hypot(dx,dy),bx=vx+dx/l*f,by=vy+dy/l*f;   // flank base on that curtain
+      const nx=Math.cos(a),ny=Math.sin(a);return[[bx,by],[bx+nx*flank,by+ny*flank]]};                 // flank runs outward
+    const [b1,s1]=side(prev),[b2,s2]=side(next);pts.push(b1,s1,[Math.cos(a),Math.sin(a)],s2,b2)}
+  return pts}
+function path(ctx,pts,cx,cy,s){ctx.beginPath();pts.forEach(([x,y],i)=>i?ctx.lineTo(cx+x*s,cy+y*s):ctx.moveTo(cx+x*s,cy+y*s));ctx.closePath()}
+function star(ctx,cx,cy,r,ri){ctx.beginPath();for(let i=0;i<10;i++){const a=rad(-90+i*36),rr=i%2?ri:r;ctx.lineTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr)}ctx.closePath()}
+
+// The emblem: fort, turret, barrel, muzzle flash. (cx,cy) centre, R = bastion tip radius.
+function emblem(ctx,cx,cy,R){const u=R/410,T=trace();
+  // glacis: the earth slope and ditch around the walls
+  path(ctx,T,cx,cy,R*1.13);ctx.fillStyle='rgba(8,10,6,.45)';ctx.fill();ctx.lineWidth=4*u;ctx.strokeStyle=C.line+'.22)';ctx.stroke();
+  // ground shadow
+  ctx.save();ctx.shadowColor='rgba(0,0,0,.65)';ctx.shadowBlur=48*u;ctx.shadowOffsetY=22*u;path(ctx,T,cx,cy,R);ctx.fillStyle=C.bg;ctx.fill();ctx.restore();
+  // rampart: gold, lit from the top left
+  path(ctx,T,cx,cy,R);let g=ctx.createLinearGradient(cx-R,cy-R,cx+R,cy+R);g.addColorStop(0,C.goldHi);g.addColorStop(.5,C.gold);g.addColorStop(1,C.goldLo);
+  ctx.fillStyle=g;ctx.fill();ctx.lineJoin='round';ctx.lineWidth=12*u;ctx.strokeStyle=C.onGold;ctx.stroke();
+  // top-of-wall highlight
+  path(ctx,T,cx,cy,R*0.955);ctx.lineWidth=5*u;ctx.strokeStyle='rgba(255,244,205,.55)';ctx.stroke();
+  // parade ground inside the walls
+  path(ctx,T,cx,cy,R*0.76);g=ctx.createRadialGradient(cx,cy-R*.1,0,cx,cy,R*.8);g.addColorStop(0,'#2c3822');g.addColorStop(1,C.s2);
+  ctx.fillStyle=g;ctx.fill();ctx.lineWidth=10*u;ctx.strokeStyle=C.onGold;ctx.stroke();
+  // inner wall face shadow
+  ctx.save();path(ctx,T,cx,cy,R*0.76);ctx.clip();ctx.shadowColor='rgba(0,0,0,.7)';ctx.shadowBlur=30*u;ctx.shadowOffsetY=10*u;
+  ctx.lineWidth=22*u;ctx.strokeStyle='rgba(0,0,0,.35)';path(ctx,T,cx,cy,R*0.78);ctx.stroke();ctx.restore();
+  // barrel, aimed up and to the right
+  const ang=rad(-40),L=R*0.8,W=R*0.17;
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(ang);
+  ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=18*u;ctx.shadowOffsetY=10*u;
+  g=ctx.createLinearGradient(0,-W/2,0,W/2);g.addColorStop(0,'#5d8a3e');g.addColorStop(.4,'#2f5220');g.addColorStop(1,'#16270f');
+  ctx.fillStyle=g;ctx.strokeStyle=C.onGreen;ctx.lineWidth=9*u;
+  ctx.beginPath();ctx.roundRect(0,-W/2,L,W,W*0.2);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.roundRect(L-W*0.85,-W*0.66,W,W*1.32,W*0.16);ctx.fill();ctx.stroke();   // muzzle brake
+  ctx.restore();
+  // muzzle flash: a hot core, a forward cone and a soft bloom
+  const fx=cx+Math.cos(ang)*(L+W*0.2),fy=cy+Math.sin(ang)*(L+W*0.2);
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  g=ctx.createRadialGradient(fx,fy,0,fx,fy,R*0.4);g.addColorStop(0,'rgba(255,214,120,.9)');g.addColorStop(.4,'rgba(255,150,60,.35)');g.addColorStop(1,'rgba(255,122,74,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(fx,fy,R*0.4,0,TAU);ctx.fill();
+  ctx.translate(fx,fy);ctx.rotate(ang);
+  // spikes fanned forward, longest along the barrel
+  for(const [deg,len] of [[0,.3],[-24,.2],[24,.2],[-50,.15],[50,.15],[-78,.09],[78,.09]]){const l=R*len,w=R*.036;ctx.save();ctx.rotate(rad(deg));
+    g=ctx.createLinearGradient(0,0,l,0);g.addColorStop(0,'rgba(255,252,236,1)');g.addColorStop(.5,'rgba(255,207,90,.85)');g.addColorStop(1,'rgba(255,150,60,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(0,-w);ctx.lineTo(l,0);ctx.lineTo(0,w);ctx.closePath();ctx.fill();ctx.restore()}
+  g=ctx.createRadialGradient(0,0,0,0,0,R*.13);g.addColorStop(0,'rgba(255,255,245,1)');g.addColorStop(.45,'rgba(255,236,170,.9)');g.addColorStop(1,'rgba(255,207,90,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,R*.13,0,TAU);ctx.fill();
+  ctx.restore();
+  // turret
+  const tr=R*0.3;
+  ctx.save();ctx.shadowColor='rgba(0,0,0,.6)';ctx.shadowBlur=26*u;ctx.shadowOffsetY=12*u;
+  g=ctx.createRadialGradient(cx-tr*.35,cy-tr*.4,tr*.1,cx,cy,tr);g.addColorStop(0,C.greenHi);g.addColorStop(.55,C.greenLo);g.addColorStop(1,'#2d661c');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,tr,0,TAU);ctx.fill();ctx.restore();
+  ctx.lineWidth=11*u;ctx.strokeStyle=C.onGreen;ctx.beginPath();ctx.arc(cx,cy,tr,0,TAU);ctx.stroke();
+  ctx.lineWidth=6*u;ctx.strokeStyle='rgba(11,26,5,.45)';ctx.beginPath();ctx.arc(cx,cy,tr*0.74,0,TAU);ctx.stroke();
+  // insignia
+  star(ctx,cx,cy+tr*0.03,tr*0.56,tr*0.23);g=ctx.createLinearGradient(cx,cy-tr*.6,cx,cy+tr*.6);g.addColorStop(0,'#fff3c4');g.addColorStop(1,C.gold);
+  ctx.fillStyle=g;ctx.fill();ctx.lineJoin='round';ctx.lineWidth=7*u;ctx.strokeStyle=C.onGold;ctx.stroke()}
+
+// Ground: olive field, a faint tactical grid that fades out from the centre.
+function ground(ctx,W,H,cx,cy,span,grid){
+  let g=ctx.createRadialGradient(cx,cy,0,cx,cy,span);g.addColorStop(0,'#2b3620');g.addColorStop(.55,'#161c11');g.addColorStop(1,C.bg);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  if(grid){ctx.save();ctx.strokeStyle=C.line+'.07)';ctx.lineWidth=grid/28;
+    for(let x=cx%grid;x<W;x+=grid){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+    for(let y=cy%grid;y<H;y+=grid){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+    g=ctx.createRadialGradient(cx,cy,span*.2,cx,cy,span);g.addColorStop(0,'rgba(11,13,9,0)');g.addColorStop(1,'rgba(11,13,9,.92)');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.restore()}}
+
+function icon(){const S=1024,c=document.createElement('canvas');c.width=c.height=S;const ctx=c.getContext('2d');
+  ground(ctx,S,S,S/2,S/2,S*0.72,S/12);emblem(ctx,S/2,S*0.515,S*0.41);return c}
+
+function splash(){const S=2732,c=document.createElement('canvas');c.width=c.height=S;const ctx=c.getContext('2d');
+  // Aspect-filled on every phone: only the centre ~1260 px square is sure to show, so everything lives in it.
+  ground(ctx,S,S,S/2,S/2,S*0.42,S/24);
+  const R=250;emblem(ctx,S/2,S/2-150,R);
+  ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  ctx.font='800 118px Oxanium';ctx.letterSpacing='22px';
+  const ty=S/2+R+110,g=ctx.createLinearGradient(0,ty-100,0,ty);g.addColorStop(0,C.goldHi);g.addColorStop(1,C.gold);
+  ctx.shadowColor='rgba(0,0,0,.6)';ctx.shadowBlur=24;ctx.shadowOffsetY=8;ctx.fillStyle=g;ctx.fillText('THE FORT',S/2+11,ty);
+  ctx.shadowColor='transparent';ctx.font='600 34px Oxanium';ctx.letterSpacing='14px';ctx.fillStyle='rgba(185,193,170,.75)';ctx.fillText('HOLD THE LINE',S/2+7,ty+76);
+  return c}
+
+document.fonts.load('800 118px Oxanium').then(()=>document.fonts.load('600 34px Oxanium')).then(faces=>{
+  if(!faces.length)throw new Error('Oxanium did not load from ../fonts');
+  const out={icon:icon(),splash:splash()};
+  if(/show=1/.test(location.search)){for(const k in out){out[k].style.cssText='width:512px;height:512px;margin:8px';document.body.appendChild(out[k])}return}
+  document.getElementById('out').textContent=JSON.stringify(Object.fromEntries(Object.entries(out).map(([k,c])=>[k,c.toDataURL('image/png')])));
+  document.title='ART READY';
+}).catch(e=>{document.title='ART FAILED '+e});
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "appId": "com.thefort.game",
+  "appName": "The Fort",
+  "webDir": "www",
+  "zoomEnabled": false,
+  "backgroundColor": "#0b0d09",
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "allowsLinkPreview": false,
+    "preferredContentMode": "mobile",
+    "backgroundColor": "#0b0d09"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "launchFadeOutDuration": 250,
+      "backgroundColor": "#0b0d09",
+      "showSpinner": false
+    },
+    "LocalNotifications": {
+      "presentationOptions": []
+    }
+  }
+}
