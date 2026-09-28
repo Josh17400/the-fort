@@ -694,6 +694,17 @@ button.labs{cursor:pointer;touch-action:manipulation;transition:border-color var
 .labs.add{padding-left:12px;border-style:dashed;border-color:var(--b-gem);background:transparent;color:var(--c-gem-hi);font:600 12px var(--f-display);letter-spacing:.1em}
 .labs.add>span{flex:1}.labs.add>b{color:var(--c-gem);font-size:14px;display:inline-flex;align-items:center;gap:4px}
 @media (hover:hover){button.labs.on:hover{border-color:var(--c-blue)}.labs.add:hover{border-color:var(--c-gem)}}
+/* lab speed-up ad (labAdBtn): a pill beside the running job in the lab strip, a secondary button under FINISH NOW on the tier card */
+.labx{display:flex;gap:6px;align-items:stretch}.labx>.labs{flex:1;min-width:0}
+.lad{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:60px;min-height:48px;padding:4px 8px;border-radius:12px;cursor:pointer;touch-action:manipulation;
+  border:1px solid var(--b-blue);background:var(--t-blue);color:var(--c-blue-hi);font:800 12px/1 var(--f-display);letter-spacing:.06em;transition:border-color var(--d-1),transform var(--d-1)}
+.lad .adp,.rbt.rad .adp{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:rgba(110,195,255,.18)}.lad .adp .ic,.rbt.rad .adp .ic{fill:currentColor}
+.lad b{font:inherit;white-space:nowrap}
+.rbt.rad{margin-top:0;min-height:44px;gap:7px;padding:0 10px;background:var(--t-blue);border-color:var(--b-blue);color:var(--c-blue-hi);font-size:12px;letter-spacing:.06em}
+.rbt.rad .t{white-space:nowrap}.rbt.rad small{margin-left:auto;font:600 10px var(--f-display);letter-spacing:.1em;color:var(--c-text-2);white-space:nowrap}
+.lad[data-st=fin],.rbt.rad[data-st=fin]{border-color:rgba(127,211,90,.55);background:rgba(127,211,90,.1);color:#bdf0a4}.lad[data-st=fin] .adp,.rbt.rad[data-st=fin] .adp{background:rgba(127,211,90,.2)}
+.lad:active,.rbt.rad:active{transform:scale(.96)}.lad.wait,.rbt.rad.wait{opacity:.55;cursor:progress}.lad.wait:active,.rbt.rad.wait:active{transform:none}
+@media (hover:hover){.lad:not(.wait):hover,.rbt.rad:not(.wait):hover{border-color:var(--c-blue)}.lad[data-st=fin]:not(.wait):hover,.rbt.rad[data-st=fin]:not(.wait):hover{border-color:var(--c-green)}}
 .lpb{display:block;height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}
 .lpb>i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--c-blue-lo),var(--c-blue-hi));box-shadow:0 0 8px rgba(110,195,255,.5);transition:width 1s linear}
 body.rm .lpb>i{transition:none}
@@ -2027,7 +2038,7 @@ const Plat=(()=>{let busy=false,booted=null;
 // resets a cap; setting it forward only pulls days early, and they are spent: the lab clock stays ahead from then on).
 // Save: S.dy = {seed (per save: mission rolls), d (day of m), m: [{id, n goal, p progress, c claimed}], b (all-3 bonus claimed),
 //   st: {n streak day 0-7 claimed, last day claimed, gr grace used this cycle}, pop (day the streak popup showed), seen (day the Base
-//   screen was last looked at: the BASE nav dot), ads: {d, x2, sw, drop, reroll, gems} rewarded ads watched that day, dc: {d, best
+//   screen was last looked at: the BASE nav dot), ads: {d, x2, sw, drop, reroll, gems, lab} rewarded ads watched that day, dc: {d, best
 //   wave reached, g gems + u RP units paid for it, n attempts} the daily challenge, rem (day the reminder was scheduled), hi (unlocked)}
 // S.runs = runs ended (old saves: 10 from a best of 10); S.born = lab-clock time the save first met this code; S.shop = {noAds, starter,
 // voucher (1 unused, 2 spent), stT (starter window start), buys: {sku: n}}; S.ia = {n runs since the last interstitial, t its time,
@@ -2038,7 +2049,7 @@ const Plat=(()=>{let busy=false,booted=null;
 // Desert, ~40 at the Capital), so a full day of dailies is ~15% of one research tier. See handoff "Phase 4" for the campaign impact.
 const DAY_MS=86400e3,DY_RUNS=3,DY_BEST=6,DC_W=25,IA_RUNS=12,IA_DAYS=2,IA_EVERY=3,IA_GAP=4*60e3,IA_RW=3*60e3;
 const DQ_GEM=3,DQ_BONUS_GEM=5,DQ_BONUS_U=2,STREAK=[3,3,5,3,5,8,25],STREAK_U7=2;
-const AD_CAP={x2:3,sw:2,drop:2,reroll:3,gems:1},AD_GEMS=10;
+const AD_CAP={x2:3,sw:2,drop:2,reroll:3,gems:1,lab:2},AD_GEMS=10,AD_LAB_MS=60*60e3,AD_LAB_MIN=2*60e3;
 const SW_GEMS=25,SW_W=6,SW_HP=0.5,SW_WALL=0.5,SW_SHIELD=5,SW_RAPID=8,SW_ASK=10;
 // local calendar day number of a lab-clock time, the current one, and what is left of it
 const dayOf=t=>Math.floor((t-new Date(t).getTimezoneOffset()*60e3)/DAY_MS),today=()=>dayOf(labNow());
@@ -2121,6 +2132,15 @@ const adLeft=k=>dyOn()&&Plat.adsOn()?Math.max(0,AD_CAP[k]-(S.dy.ads.d===today()?
 function adUse(k){const y=S.dy,d=today();if(y.ads.d!==d)y.ads={d};y.ads[k]=(y.ads[k]|0)+1;S.ia.rw=labNow();save()}
 async function adWatch(k){if(adLeft(k)<=0||Plat.busy())return false;const ok=await Plat.ad(k);if(ok)adUse(k);return ok}
 async function adGems(){if(!(await adWatch('gems')))return false;gemAdd(AD_GEMS,'ad');return true}
+// ---- lab speed-up: a rewarded ad takes AD_LAB_MS off a running research or Refit timer (and finishes it when that much or less is
+// left), AD_CAP.lab a day shared by both slots. AD_LAB_MS = 1 h is worth labSkipCost(1 h) = 10 gems = AD_GEMS, so no placement pays
+// better than another. Hidden with AD_LAB_MIN or less left (the ad would outlast the wait). The job's end moves on the lab clock and
+// never below now; labTick/labLand land a finished job as usual, and the job's notification is moved to its new end.
+// labAdSt(j): '' (no button), 'cut' (an hour off) or 'fin' (the ad finishes it). labAd(id) -> ms taken off, 0 when nothing was granted
+// (skipped or failed ad, or the job landed while the ad played: no cap slot is used then).
+const labAdSt=j=>!j||running||adLeft('lab')<=0||labLeft(j)<=AD_LAB_MIN?'':labLeft(j)<=AD_LAB_MS?'fin':'cut';
+async function labAd(id){const j=labOf(id);if(!labAdSt(j)||Plat.busy())return 0;if(!(await Plat.ad('lab'))||!S.lab.q.includes(j))return 0;
+  const now=labNow(),cut=Math.min(AD_LAB_MS,j.end-now);if(!(cut>0))return 0;adUse('lab');j.end-=cut;if(j.end>now)labNote(j);else Plat.cancel('lab:'+id);save();return cut}
 // ---- interstitials: at most every IA_EVERY-th run end, IA_GAP apart, never in the first IA_RUNS runs / IA_DAYS days, never within
 // IA_RW of a rewarded ad, never with Remove Ads, never over a theater-cleared debrief
 function iaOk(){const n=labNow();return Plat.adsOn()&&!S.shop.noAds&&(S.runs|0)>=IA_RUNS&&n-(+S.born||n)>=IA_DAYS*DAY_MS&&(S.ia.n|0)>=IA_EVERY&&n-(+S.ia.t||0)>=IA_GAP&&n-(+S.ia.rw||0)>=IA_RW&&!Plat.busy()&&!S.campWin}
@@ -2564,10 +2584,16 @@ const skipTxt=c=>`<span class="gc" data-skipc>${ic('gem',13)}${fmtN(c)}</span>`;
 function skipBtn(j,cls){const c=labSkipCost(labLeft(j)),ok=(S.gems|0)>=c;
   if(cls==='rsgo')return`<button class="rsgo gm${ok?'':' short'}" data-rsskip="${j.id}" aria-label="Finish ${labName(j)} now for ${c} gems"><span class="l1"><span class="t">FINISH NOW</span>${skipTxt(c)}</span><span class="l2">RESEARCHING · <span data-left="${j.id}">${durTxt(labLeft(j))}</span> LEFT</span></button>`;
   return`<button class="rbt gm${ok?'':' short'}" data-rsskip="${j.id}" aria-label="Finish ${labName(j)} now for ${c} gems"><span class="t">FINISH NOW</span>${skipTxt(c)}</button>`}
+// the lab speed-up ad (labAd): a pill beside the job in the lab strip, or a full-width button under FINISH NOW on the tier card.
+// data-st carries labAdSt so the ticker can tell when it must change ('cut' -> 'fin' -> gone) or a new day brings the cap back.
+function labAdBtn(j,pill){const st=labAdSt(j);if(!st)return'';const n=adLeft('lab'),fin=st==='fin',cut='−'+durTxt(AD_LAB_MS).toUpperCase(),nm=labName(j);
+  const a=`data-labad="${j.id}" data-st="${st}" aria-label="Watch an ad to ${fin?'finish '+nm+' now':'take '+durTxt(AD_LAB_MS)+' off '+nm} (${n} left today)"`;
+  if(pill)return`<button class="lad" ${a}><span class="adp">${ic('play',11)}</span><b>${fin?'FINISH':cut}</b></button>`;
+  return`<button class="rbt rad" ${a}><span class="adp">${ic('play',11)}</span><span class="t">WATCH AD · ${fin?'FINISH':cut}</span><small>${n} LEFT</small></button>`}
 const labBusyTxt=()=>{const j=S.lab.q[0];return j?'LAB BUSY · '+durTxt(labLeft(j)):'LAB BUSY'};
 // the lab strip at the top of R&D: each running job (tap to open its line), idle slots, and (from Mountain Pass) the gem slot teaser
-function labStrip(){const b=S.lab,rows=b.q.map(j=>`<button class="labs on" data-rsl="${j.id}"><span class="ico">${ic(RLINES[j.id].u,18)}</span><span class="lb"><span class="ln">${labName(j)}</span>`
-    +`<span class="lpb"><i data-lpb="${j.id}" style="width:${(100*labPct(j)).toFixed(1)}%"></i></span></span><b data-left="${j.id}">${durTxt(labLeft(j))}</b></button>`);
+function labStrip(){const b=S.lab,rows=b.q.map(j=>{const ad=labAdBtn(j,true),row=`<button class="labs on" data-rsl="${j.id}"><span class="ico">${ic(RLINES[j.id].u,18)}</span><span class="lb"><span class="ln">${labName(j)}</span>`
+    +`<span class="lpb"><i data-lpb="${j.id}" style="width:${(100*labPct(j)).toFixed(1)}%"></i></span></span><b data-left="${j.id}">${durTxt(labLeft(j))}</b></button>`;return ad?`<div class="labx">${row}${ad}</div>`:row});
   for(let i=b.q.length;i<b.slots;i++)rows.push(`<div class="labs idle">${ic('research',16)}<span>Lab idle${rsReady().length?' · start a tier below':''}</span></div>`);
   if(b.slots<LAB_SLOTS_MAX&&rsProg()>CLEAR_W)rows.push(`<button class="labs add" data-gems>${ic('lock',14)}<span>SECOND LAB SLOT</span><b>${ic('gem',13)}${fmtN(LAB_SLOT_GEMS)}</b></button>`);
   return`<div class="lstrip"><div class="eyebrow">LAB · ${b.q.length} OF ${b.slots} ${pl(b.slots,'SLOT')} BUSY</div>${rows.join('')}</div>`}
@@ -2580,7 +2606,7 @@ function rsBtn(r,k){const st=rsStL(r,k),t=r.t[k];
   if(st==='act')return`<button class="rbt in" disabled>${ic('star',14)}IN SERVICE</button>`;
   if(st==='own')return'<button class="rbt gh" disabled>RESEARCHED</button>';
   if(st==='kit')return'';
-  if(st==='lab')return skipBtn(labOf(r.id),'rbt');
+  if(st==='lab'){const j=labOf(r.id);return skipBtn(j,'rbt')+labAdBtn(j)}
   if(st==='ok')return`<button class="rbt go" data-rsbuy="${r.id}">RESEARCH · ${t.cost} RP</button>`;
   if(k===rsOwned(r.id)+1&&rsWhy(r.id,k)==='Lab busy')return`<button class="rbt" disabled>${labBusyTxt()}</button>`;
   return k===rsOwned(r.id)+1||rsNF(r)?'<button class="rbt" disabled>LOCKED</button>':`<button class="rbt" disabled>${ic('lock',13)}${t.cost} RP</button>`}
@@ -2598,7 +2624,7 @@ function rsRefitCard(r){const{n,c,ok,tot}=rsRefit(r),t=r.t[r.t.length-1],j=labOf
   return`<div class="rtc rfc${j?' lab':''}" data-k="rf" style="${rsEraVars(t)}"><div class="rth"><canvas data-th="${r.id}:${r.t.length-1}" width="192" height="192"></canvas></div>`
     +`<div class="rtl2"><span>REFIT MK ${rank(j?j.k:n+1)}</span><span class="badge ${j?'b-lab':'b-own'}">${j?'RESEARCHING':'ENDLESS'}</span></div><div class="rtn">Field Refit</div><div class="rtw">Depot rebuild of every ${t.n}</div>`
     +`<div class="rts"><span>${r.id==='walls'?'WALL HP':'DMG'} <b>+8%</b></span><span>NOW <b>×${fxm(tot)}</b></span>${j?'':`<span class="tm">LAB <b>${durTxt(refitMs(n))}</b></span>`}</div>`
-    +(j?labBar(j)+skipBtn(j,'rbt'):busy?`<button class="rbt" disabled>${labBusyTxt()}</button>`:`<button class="rbt ${ok?'rf':''}" ${ok?`data-rsbuy="${r.id}"`:'disabled'}>${ok?'REFIT · '+c+' RP':'NEED '+(c-S.rp)+' MORE RP'}</button>`)+'</div>'}
+    +(j?labBar(j)+skipBtn(j,'rbt')+labAdBtn(j):busy?`<button class="rbt" disabled>${labBusyTxt()}</button>`:`<button class="rbt ${ok?'rf':''}" ${ok?`data-rsbuy="${r.id}"`:'disabled'}>${ok?'REFIT · '+c+' RP':'NEED '+(c-S.rp)+' MORE RP'}</button>`)+'</div>'}
 // in service vs the next tier (fills the space under the track on desktop)
 function rsCompare(r){if(rsNF(r)||rsDone(r.id))return'';const o=rsOwned(r.id),a=r.t[o],b=r.t[o+1],w=r.id==='walls'?'WALL HP':'DMG',x=b.mul/a.mul;
   const tl=(k,v)=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`,ar='<span class="ar">→</span>';
@@ -2630,7 +2656,7 @@ function renderResearch(){const nar=rsNarrow(),vis=RLINES.lines.filter(rsVis),r0
       return`<div class="rtr ${st}${on?' sel':''}" data-k="${k}" style="${rsEraVars(t)}"><button data-rst="${k}" aria-expanded="${on}"><span class="mth"><canvas data-th="${r.id}:${k}" width="92" height="92"></canvas></span>`
         +`<span class="rb"><span class="rtn">${t.n}</span><span class="rtl2">TIER ${rank(k+1)} <span class="badge ${RS_B[st]}">${RS_STL[st]}</span></span></span>`
         +`<span class="rc">${st==='own'||st==='act'||st==='kit'?ic('star',16):st==='lab'?(on?ic('research',16):`<span data-left="${r.id}">${durTxt(labLeft(labOf(r.id)))}</span>`):t.cost+' RP'}</span></button>`
-        +(on?`<div class="rtx">${t.w?`<div class="rtw">${t.w}</div>`:''}${rsStats(r,k)}${rsSigHtml(t)}${st==='lab'?labBar(labOf(r.id)):''}${st==='lk'?rsGate(t)+rsWhyHtml(r,k):''}</div>`:'')+'</div>'}).join('')
+        +(on?`<div class="rtx">${t.w?`<div class="rtw">${t.w}</div>`:''}${rsStats(r,k)}${rsSigHtml(t)}${st==='lab'?labBar(labOf(r.id))+labAdBtn(labOf(r.id)):''}${st==='lk'?rsGate(t)+rsWhyHtml(r,k):''}</div>`:'')+'</div>'}).join('')
       +(rsDone(r.id)?`<div class="rtr" data-k="rf" style="${rsEraVars(r.t[r.t.length-1])}"><button disabled><span class="mth">${ic('repair',22)}</span><span class="rb"><span class="rtn">Refit Mk ${rank(rsRefit(r).n+1)}</span><span class="rtl2">ENDLESS · +8% ${r.id==='walls'?'WALL HP':'DMG'} EACH</span></span><span class="rc">${rsRefit(r).c} RP</span></button></div>`:'')+'</div>';
     h+=rsCta(r)}
   else{h+='<div class="rsb"><nav class="rsl" aria-label="Research lines">'+(vis.length?'':`<div class="rsl-empty">${ic('lock',18)}<b>No lines open yet</b><span>Hold deeper waves and field new units in the Armory to open research lines.</span></div>`)+CATS.slice(1).filter(c=>vis.some(q=>UB[q.u].cat===c)).map(c=>`<h4>${c}</h4>`+vis.filter(q=>UB[q.u].cat===c).map(q=>{const lk=rsNF(q);
@@ -2651,6 +2677,7 @@ function trkUi(e){const t=e.target,x=t.scrollLeft,end=t.scrollWidth-t.clientWidt
 function trkWheel(e){const t=e.currentTarget;if(Math.abs(e.deltaY)>Math.abs(e.deltaX)&&t.scrollWidth>t.clientWidth){const x=t.scrollLeft;t.style.scrollBehavior='auto';t.scrollLeft+=e.deltaY;t.style.scrollBehavior='';if(t.scrollLeft!==x)e.preventDefault()}}
 $('rd').addEventListener('click',e=>{const q=s=>e.target.closest(s);let b;
   if(b=q('[data-rsskip]')){skipClick(b);return}
+  if(b=q('[data-labad]')){labAdClick(b);return}
   if(b=q('[data-gems]')){openGems();return}
   if(b=q('[data-rsbuy]')){const id=b.dataset.rsbuy,r=RLINES[id],k0=rsOwned(id),f0=S.rf[id]||0;if(buyResearch(id)){const k=rsOwned(id);renderHome();
       const j=labOf(id);toast((j&&j.rf?'Refit started: Mk '+rank(f0+1):'Research started: '+r.t[Math.min(k0+1,r.t.length-1)].n)+' · '+durTxt(j?labLeft(j):0),'research','rd');
@@ -2726,7 +2753,8 @@ function labUi(){if(running||!S.lab.q.length||!$('home').classList.contains('on'
     for(const e of document.querySelectorAll(`#home [data-left="${j.id}"]`))if(e.textContent!==l)e.textContent=l;
     for(const e of document.querySelectorAll(`#home [data-lpb="${j.id}"]`))e.style.width=w;
     for(const b of document.querySelectorAll(`#home [data-rsskip="${j.id}"]`)){const c=labSkipCost(labLeft(j)),g=b.querySelector('[data-skipc]');if(g&&!b.dataset.arm)g.innerHTML=ic('gem',13)+fmtN(c);b.classList.toggle('short',(S.gems|0)<c)}}
-  for(const e of document.querySelectorAll('#home .rbt[disabled],#home .rsgo[disabled] .l2'))if(/^LAB BUSY/.test(e.textContent))e.textContent=labBusyTxt()}
+  for(const e of document.querySelectorAll('#home .rbt[disabled],#home .rsgo[disabled] .l2'))if(/^LAB BUSY/.test(e.textContent))e.textContent=labBusyTxt();
+  if(homeView==='rd'&&!Plat.busy()&&S.lab.q.some(j=>{const e=$('rd').querySelector(`.lstrip [data-labad="${j.id}"]`);return(e?e.dataset.st:'')!==labAdSt(j)}))renderHome()}   // the lab ad button changes or goes
 setInterval(labUi,1000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!running&&S.lab.q.length&&labLand())renderHome()});   // back from the background: land what finished meanwhile
 // finish now: short on gems opens the gems sheet; otherwise the first tap arms (gold, 3s) and the second spends
@@ -2737,6 +2765,11 @@ function skipClick(b){const id=b.dataset.rsskip,j=labOf(id);if(!j){renderHome();
   clearTimeout(b._t);const nm=labName(j);if(!labSkip(id)){sfx('deny');renderHome();return}
   S.lab.news=S.lab.news.filter(n=>n.id!==id);save();toast((j.rf?'Refit complete: ':'Research complete: ')+nm,'research','rd');sfx('buy');setTimeout(()=>tone(1568,0.14,'square',0,0.045),110);renderHome();
   const c2=$('rd').querySelector(j.rf?'[data-k="rf"]':`[data-k="${j.k}"]`);if(c2)flash(c2)}
+// the lab speed-up ad: every button for the job waits while the ad plays; an hour off (toast) or a finished job (labLand's toast)
+async function labAdClick(b){const id=b.dataset.labad,j=labOf(id);if(!j){renderHome();return}const nm=labName(j),bs=document.querySelectorAll(`#home [data-labad="${id}"]`);
+  for(const e of bs){e.disabled=true;e.classList.add('wait')}const cut=await labAd(id);
+  if(cut){sfx('buy');Plat.haptic('success');if(S.lab.q.includes(j)&&labLeft(j)>0)toast(`Lab sped up: ${durTxt(cut)} off ${nm} · ${durTxt(labLeft(j))} left`,'research','rd');else setTimeout(()=>tone(1568,0.14,'square',0,0.045),110)}
+  labLand();renderHome();const c=cut&&$('rd').querySelector(`.lstrip [data-rsl="${id}"]`);if(c)flash(c)}
 // header gem chip: count-up flash when gems move (gemAdd/gemSpend call this; safe before the header exists)
 function gemPop(n){const b=$('gemBank');if(!b)return;b.textContent=fmtN(S.gems|0);if(n>0){const c=$('gemChip');c.classList.remove('pop');void c.offsetWidth;c.classList.add('pop')}}
 // the gem shop (grows out of the phase 3 gems sheet): balance, the Starter Pack while its window is open, gem packs and Remove Ads
