@@ -3678,7 +3678,7 @@ function pfStep(e,spd,dt){if(!_pf)return false;const k=pfAt(e.x,e.y,e.veh||e.bos
     if(e.pfN>0){e.pfN-=dt;const s=(e.wob*7|0)&1?1:-1,ux=dx,uy=dy;dx=ux*0.35-uy*s;dy=uy*0.35+ux*s}
     else if(!(gv>=(e.pfB??Infinity)-6)){e.pfB=gv;e.pfT=0}
     else if((e.pfT=(e.pfT||0)+dt)>PF_STUCK){e.pfN=PF_NUDGE;e.pfT=0;e.pfB=gv;_pfStuck++}}
-  const l=hyp(dx,dy);if(l<0.5)return true;const s=Math.min(l,spd*dt);e.x+=dx/l*s;e.y+=dy/l*s;pfHead(e,dx,dy,dt);return true}
+  const l=hyp(dx,dy);if(l<0.5)return false;const s=Math.min(l,spd*dt);e.x+=dx/l*s;e.y+=dy/l*s;pfHead(e,dx,dy,dt);return true}
 // hull heading while the field steers (drawn instead of facing the fort; eases back once the enemy is on a straight line again)
 const pfTurn=e=>e.veh||e.boss?2.6:9;
 function pfHead(e,dx,dy,dt){const h=e.hd??Math.atan2(-e.y,-e.x),w=pfTurn(e)*dt;e.hd=h+Math.max(-w,Math.min(w,wrapA(Math.atan2(dy,dx)-h)));e.pfF=G.time}
