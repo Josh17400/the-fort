@@ -1,0 +1,21 @@
+# deps
+node_modules/
+
+# generated web assets (build_www.py output)
+www/
+
+# ios build outputs / packages
+ios/App/Pods/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/build/
+ios/DerivedData/
+
+# ios archive / export outputs (fastlane)
+ios/build/
+
+# signing secrets - NEVER commit these
+*.p8
+*.p12
+*.p12.enc
+*.mobileprovision
+*.cer

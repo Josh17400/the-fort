@@ -206,6 +206,7 @@ kbd{font:600 12px var(--f-display);background:rgba(255,255,255,.08);border:1px s
 .set{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 16px;min-height:56px;padding:10px 0;border-bottom:1px solid var(--c-line);cursor:pointer}
 div.set{cursor:default}.set .st{font:500 14px/1.35 var(--f-body);color:var(--c-text)}
 .set small{display:block;margin-top:2px;font:400 12px/1.4 var(--f-body);color:var(--c-dim)}
+.set-ver{margin:var(--sp-4) 0 var(--sp-1);text-align:center;font:400 11px/1.4 var(--f-body);color:var(--c-dim);letter-spacing:.04em}
 .set .seg{min-width:228px}
 .set-sec{margin:18px 0 2px}
 .sh-body>.set-sec:first-child{margin-top:10px}
@@ -1318,6 +1319,7 @@ body.rm .adc::before{animation:none}@keyframes adSpin{to{transform:rotate(1turn)
     <div class="set"><span class="st">Back up progress<small>Copies a save code: keep it somewhere safe in case the app's storage is cleared</small></span><button class="btn sm" id="bakBtn">COPY CODE</button></div>
     <div class="set"><span class="st">Restore progress<small>Paste a save code, then tap RESTORE twice</small><input id="bakIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="FORT1:..." style="margin-top:6px;width:100%;box-sizing:border-box;font:16px monospace;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:inherit"></span><button class="btn sm" id="bakRestore">RESTORE</button></div>
     <div class="set"><span class="st">Reset progress<small>Wipes money, upgrades, research, medals and theaters (gems and purchases are kept)</small></span><button class="btn danger sm" id="resetBtn">RESET</button></div>
+    <p class="set-ver" id="verLine" hidden></p>
   </div>
   <div class="sh-foot"><button class="btn pri" id="backBtn">DONE</button></div>
 </div></div>
@@ -1370,7 +1372,13 @@ const _p2={};function cIcon(n,x,y,s,c,lw=2){const p=_p2[n]||(_p2[n]=new Path2D(I
 const PHONE=matchMedia('(pointer:coarse)').matches&&matchMedia('(hover:none)').matches,GFX_DEF=PHONE?'medium':'high';   // PHONE = MOBILE (defined later), usable at load
 const DEF_SET={vol:60,music:true,shake:true,dmgNums:true,callouts:true,ring:true,blurPause:true,dayNight:true,speed:1,prio:'near'};
 let S;
-function loadSave(){try{S=JSON.parse(localStorage.getItem('theFortSave'))}catch(e){}
+// Save storage seam: every write goes through saveWrite(). The web keeps the save in localStorage only. The iOS app also mirrors each
+// write to native storage (window.Shell.store: Capacitor Preferences), because iOS may purge a WKWebView's localStorage; at launch
+// saveBoot() puts the native copy back when localStorage lost it or holds an older one (the splash screen stays up until then).
+const SAVE_KEY='theFortSave';
+function saveWrite(json){try{localStorage.setItem(SAVE_KEY,json)}catch(e){}const n=window.Shell&&window.Shell.native&&window.Shell.store;if(n)n.put(SAVE_KEY,json)}
+function saveBoot(store){return store.hydrate(SAVE_KEY).then(json=>{if(!json)return false;loadSave();medalSync();applyUiPrefs();applyGfx();if(!running)renderHome();return true})}
+function loadSave(){try{S=JSON.parse(localStorage.getItem(SAVE_KEY))}catch(e){}
   if(!S||typeof S!=='object'||Array.isArray(S))S={};const num=v=>{v=+v;return isFinite(v)&&v>0?v:0};S.bank=num(S.bank);S.best=Math.floor(num(S.best));S.tkills=Math.floor(num(S.tkills));S.lv=S.lv&&typeof S.lv==='object'&&!Array.isArray(S.lv)?S.lv:{};for(const k in S.lv)S.lv[k]=Math.floor(num(S.lv[k]));S.seen=S.seen&&typeof S.seen==='object'?S.seen:{};S.set=Object.assign({},DEF_SET,S.set&&typeof S.set==='object'?S.set:{});if(+S.set.speed===0.5)S.set.speed=0.75;if(![0.75,1].includes(+S.set.speed))S.set.speed=1;S.set.speed=+S.set.speed;S.set.vol=Math.max(0,Math.min(100,+S.set.vol||0));if(!['high','medium','low'].includes(S.set.gfx))S.set.gfx=GFX_DEF;if(!['near','threat','tough'].includes(S.set.prio))S.set.prio='near';
   const obj=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};S.rp=Math.max(0,Math.floor(+S.rp||0));S.rs=obj(S.rs);S.rf=obj(S.rf);if(S.dcHold)dcRestore();if(!S.rsv)migrateRS();campInit();if(_econReady)econInit()}
 // Research save migration (runs once per save): brand-new saves start on the pistol tier; veterans keep the rifle, keep the
@@ -1379,7 +1387,7 @@ function migrateRS(){const lv=S.lv,W=lv.walls||0,existing=S.best>1||Object.keys(
   S.rs=Object.assign({dmg:existing?1:0,squad:existing?1:0},S.rs);
   if(existing){S.rs.arty=Math.max(S.rs.arty||0,W>=8&&S.best>=25?2:W>=5&&S.best>=15?1:0);S.rp+=Math.min(150,S.best+3*Object.keys(S.mg||{}).length)}
   S.rsv=1;save()}
-function save(){try{localStorage.setItem('theFortSave',JSON.stringify(S))}catch(e){}}
+function save(){let j;try{j=JSON.stringify(S)}catch(e){return}saveWrite(j)}
 // ================= CAMPAIGN =================
 // Eight theaters, played in order. Holding wave CLEAR_W clears a theater and opens the next; a cleared theater stays playable
 // forever. Every theater is its own fort build: cash (S.bank), Armory levels (S.lv), best wave (S.best) and the checkpoint start
@@ -1910,54 +1918,67 @@ function gemInit(){S.gems=Math.max(0,Math.floor(+S.gems||0));const t=S.gemT&&typ
 // The one seam between the game and the device. The web build (GitHub Pages, desktop, the home-screen web app) has no ad network and
 // no store, so rewarded-ad buttons and purchases are hidden there: the live site never hands out ad rewards. The dev flag (URL ?dev=1,
 // or the hidden Settings toggle: tap the SETTINGS title 7 times) swaps in a simulated ad / purchase sheet so every flow can be played
-// through on the web. In the iOS build (Capacitor) each call goes to its native plugin, when that plugin is installed:
-//   Plat.ad(kind) -> Promise<bool>    rewarded video, true only when the reward was earned. @capacitor-community/admob:
-//                                     AdMob.prepareRewardVideoAd({adId}) + showRewardVideoAd(); 'onRewardedVideoAdReward' marks it
-//                                     earned, 'onRewardedVideoAdDismissed' settles it (check the event names against the plugin version)
-//   Plat.interstitial() -> Promise    AdMob.prepareInterstitial({adId}) + showInterstitial(). Pacing lives in iaOk(), not here
-//   Plat.buy(sku) -> Promise<bool>    @revenuecat/purchases-capacitor: products from Purchases.getProducts (loaded by init), then
-//                                     Purchases.purchaseStoreProduct({product}); a cancel throws and reads as false. Grants: shopGrant()
-//   Plat.restore() -> Promise<[sku]>  Purchases.restorePurchases(): the non-consumables owned (noads, starter). App Store requires it
-//   Plat.notify(when,title,body,id)   @capacitor/local-notifications: LocalNotifications.schedule at wall-clock ms `when`; id is a
-//   Plat.cancel(id)                   stable string hashed to the plugin's int id, so scheduling the same id replaces it
-//   Plat.haptic(kind)                 @capacitor/haptics: Haptics.impact({style}) / Haptics.notification({type:'SUCCESS'})
-//   Plat.price(sku, usd)              the store's localized price string once RevenueCat has loaded, else the USD fallback
-// PLAT_IDS: Google's public iOS TEST ad units until release; swap in the real AdMob units and the RevenueCat public iOS key (rcKey,
-// empty = purchases off even in the app). Every native call is guarded: a missing or failing plugin reads as "no ad / not bought",
-// never as an error. QA hooks: Plat.auto = true/false settles simulated ads and purchases at once (no sheet); Plat.log keeps the
-// last notifications scheduled; Plat.adSecs is the simulated ad's length.
-const PLAT_IDS={rewarded:'ca-app-pub-3940256099942544/1712485313',interstitial:'ca-app-pub-3940256099942544/4411468910',rcKey:''};
-const Plat=(()=>{let ready=null,perm=null,busy=false;const px={};
-  const plug=n=>{const c=window.Capacitor;return c&&c.isNativePlatform&&c.isNativePlatform()&&c.Plugins&&c.Plugins[n]||null};
-  const dev=()=>/[?&]dev=1(&|$)/.test(location.search)||!!(S&&S.set&&S.set.dev);
-  const nid=s=>{let h=7;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h)%2e9+1};
-  const iap=()=>!!plug('Purchases')&&!!PLAT_IDS.rcKey;
-  function init(){if(ready)return ready;ready=(async()=>{const A=plug('AdMob'),Pu=plug('Purchases');
-      try{if(A)await A.initialize({})}catch(e){}
-      try{if(Pu&&PLAT_IDS.rcKey){await Pu.configure({apiKey:PLAT_IDS.rcKey});const r=await Pu.getProducts({productIdentifiers:SHOP_SKUS(),type:'NON_SUBSCRIPTION'});for(const p of r&&r.products||[])px[p.identifier]=p}}catch(e){}})();return ready}
-  // native AdMob: resolves true once a rewarded ad has granted its reward and closed (interstitial: once it closed)
-  function nativeAd(A,inter){return new Promise(res=>{let got=false,done=false;const hs=[],fin=v=>{if(done)return;done=true;for(const h of hs)try{h.remove()}catch(e){}res(v)};
-    const on=(ev,f)=>{try{const h=A.addListener(ev,f);if(h&&h.then)h.then(x=>hs.push(x),()=>{});else if(h)hs.push(h)}catch(e){}};
-    if(inter){on('interstitialAdDismissed',()=>fin(true));on('interstitialAdFailedToShow',()=>fin(false));on('interstitialAdFailedToLoad',()=>fin(false));
-      A.prepareInterstitial({adId:PLAT_IDS.interstitial}).then(()=>A.showInterstitial()).catch(()=>fin(false))}
-    else{on('onRewardedVideoAdReward',()=>{got=true});on('onRewardedVideoAdDismissed',()=>fin(got));on('onRewardedVideoAdFailedToShow',()=>fin(false));on('onRewardedVideoAdFailedToLoad',()=>fin(false));
-      A.prepareRewardVideoAd({adId:PLAT_IDS.rewarded}).then(()=>A.showRewardVideoAd()).then(r=>{if(r)got=true}).catch(()=>fin(false))}
-    setTimeout(()=>fin(got),120e3)})}
+// through on the web. The iOS app ignores the dev flag: it shows real (test until release) ads and never grants a free purchase.
+// The iOS app (native/, Capacitor 8) loads native/shell.js before this script. window.Shell is the device side, over the plugins
+// (@capacitor-community/admob, @revenuecat/purchases-capacitor, @capacitor/local-notifications, haptics, preferences, app, splash-screen
+// and the local capacitor-gamekit); Plat never talks to a plugin itself. See native/README.md.
+//   Plat.boot()                       once at startup: puts back the native copy of the save if iOS purged localStorage (saveBoot),
+//                                     hands PLAT_IDS to Shell.configure (ATT, consent, ad preloads, store), re-reads owned purchases,
+//                                     pauses + saves when the app is backgrounded, then lifts the launch splash
+//   Plat.ad(kind) -> Promise<bool>    rewarded video, true only when the reward was earned; settles once the ad is closed
+//   Plat.interstitial() -> Promise<bool>  an interstitial, true once one was shown. Pacing lives in iaOk(), not here
+//   Plat.buy(sku) -> Promise<bool>    a store purchase; a cancel or a store error reads as false. Grants: shopGrant()
+//   Plat.restore() -> Promise<[sku]>  the non-consumables owned (SHOP_ONE: Starter Pack, Remove Ads). Rejects with a message the shop
+//                                     can show when the store fails. App Store review requires the restore link
+//   Plat.notify(when,title,body,id)   a local notification at wall-clock ms `when`; `id` is a stable string, so scheduling it again
+//   Plat.cancel(id)                   replaces it
+//   Plat.haptic(kind)                 light / medium / heavy / success. The web uses navigator.vibrate while screen shake is on
+//   Plat.price(sku, usd)              the store's localized price once products have loaded, else the USD fallback
+//   Plat.score(board, n)              a Game Center score (board 'daily': the daily challenge's wave) when PLAT_IDS has its leaderboard
+// Every native call is guarded: a missing or failing plugin reads as "no ad / not bought", never as an error. QA hooks: Plat.auto =
+// true/false settles simulated ads and purchases at once (no sheet); Plat.log keeps the last notifications scheduled; Plat.adSecs is
+// the simulated ad's length.
+// PLAT_IDS: PLACEHOLDERS until release (native/README.md, "Release checklist"). Until the owner swaps them the app shows Google's test
+// ads, sells nothing and skips Game Center. The product ids themselves are SHOP_PACKS / SHOP_ONE (fort_*).
+const PLAT_IDS={
+  admobApp:'ca-app-pub-3940256099942544~1458002511',      // PLACEHOLDER Google's iOS test app id. Must equal GADApplicationIdentifier in
+                                                           //   native/ios/App/App/Info.plist: build_www.py refuses to build otherwise
+  rewarded:'ca-app-pub-3940256099942544/1712485313',       // PLACEHOLDER Google's iOS test rewarded unit
+  interstitial:'ca-app-pub-3940256099942544/4411468910',   // PLACEHOLDER Google's iOS test interstitial unit
+  rcKey:'',                                                // PLACEHOLDER RevenueCat public App Store SDK key (appl_...). Empty = no store
+  lbDaily:''                                               // PLACEHOLDER Game Center leaderboard id (recurring, daily). Empty = off
+};
+const Plat=(()=>{let busy=false,booted=null;
+  const sh=()=>window.Shell&&window.Shell.native?window.Shell:null;
+  const dev=()=>!sh()&&(/[?&]dev=1(&|$)/.test(location.search)||!!(S&&S.set&&S.set.dev));
+  const nAds=()=>{const s=sh();return!!s&&s.ads.available()},nIap=()=>{const s=sh();return!!s&&s.iap.available()};
+  // the game's audio goes quiet under a full-screen ad and comes back after it
+  const hush=on=>{const c=AU.ctx;if(!c)return;try{if(on)c.suspend().catch(()=>{});else if(AU.unlocked&&!document.hidden)c.resume().catch(()=>{})}catch(e){}};
+  async function full(show){hush(true);try{return await show()}finally{hush(false)}}
   const sim=(mode,item)=>P.auto!=null?Promise.resolve(!!P.auto):new Promise(res=>simSheet(mode,item,res));
-  const P={auto:null,log:[],adSecs:5,dev,init,busy:()=>busy,
-    adsOn:()=>!!plug('AdMob')||dev(),
-    iapOn:()=>iap()||dev(),
-    price:(sku,usd)=>px[sku]&&px[sku].priceString||'$'+usd.toFixed(2),
-    async ad(kind){if(busy||!P.adsOn())return false;busy=true;try{const A=plug('AdMob');if(A){await init();return await nativeAd(A,false)}return await sim('ad',kind)}catch(e){return false}finally{busy=false}},
-    async interstitial(){if(busy||!P.adsOn())return false;busy=true;try{const A=plug('AdMob');if(A){await init();return await nativeAd(A,true)}return await sim('ia')}catch(e){return false}finally{busy=false}},
-    async buy(sku){if(busy||!P.iapOn())return false;busy=true;try{if(iap()){await init();const p=px[sku];if(!p)return false;await plug('Purchases').purchaseStoreProduct({product:p});return true}return await sim('buy',sku)}catch(e){return false}finally{busy=false}},
-    async restore(){try{if(iap()){await init();const r=await plug('Purchases').restorePurchases(),ci=r&&r.customerInfo||{};return(ci.nonSubscriptionTransactions||[]).map(t=>t.productIdentifier)}}catch(e){}return[]},
-    notify(when,title,body,id){P.log.push({when,title,body,id});if(P.log.length>20)P.log.shift();const N=plug('LocalNotifications');if(!N||!(when>Date.now()))return;
-      (async()=>{try{if(perm==null){const r=await N.requestPermissions();perm=!!r&&r.display==='granted'}if(!perm)return;const k=nid(id);
-        await N.cancel({notifications:[{id:k}]});await N.schedule({notifications:[{id:k,title,body,schedule:{at:new Date(when)}}]})}catch(e){}})()},
-    cancel(id){P.log=P.log.filter(n=>n.id!==id);const N=plug('LocalNotifications');if(N)try{N.cancel({notifications:[{id:nid(id)}]}).catch(()=>{})}catch(e){}},
-    haptic(kind){try{const H=plug('Haptics');if(H){if(kind==='success')H.notification({type:'SUCCESS'});else H.impact({style:kind==='heavy'?'HEAVY':kind==='medium'?'MEDIUM':'LIGHT'})}
-      else if(navigator.vibrate&&S.set.shake)navigator.vibrate(kind==='success'?[12,40,18]:10)}catch(e){}}};
+  const P={auto:null,log:[],adSecs:5,dev,busy:()=>busy,native:()=>!!sh(),
+    adsOn:()=>nAds()||dev(),
+    iapOn:()=>nIap()||dev(),
+    price(sku,usd){const s=sh(),p=s&&s.iap.price(sku);return p||'$'+usd.toFixed(2)},
+    boot(){if(booted)return booted;const s=sh();if(!s)return booted=Promise.resolve();
+      s.app.onState(on=>{if(!on)bgPause()});
+      return booted=saveBoot(s.store).catch(()=>{}).then(()=>{
+        s.configure({rewarded:PLAT_IDS.rewarded,interstitial:PLAT_IDS.interstitial,rcKey:PLAT_IDS.rcKey,products:SHOP_SKUS(),
+          nonConsumables:[SHOP_ONE.starter.sku,SHOP_ONE.noads.sku],leaderboards:[PLAT_IDS.lbDaily],preloadInterstitial:!S.shop.noAds&&(S.runs|0)>=IA_RUNS});
+        if(s.iap.available())s.iap.owned().then(ids=>{if(shopOwn(ids))gemRefresh()}).catch(()=>{})}).finally(()=>s.ready())},
+    async ad(kind){if(busy||!P.adsOn())return false;busy=true;try{const s=sh();if(!s)return await sim('ad',kind);
+        const r=await full(()=>s.ads.showRewarded());if(r&&r.reason==='nofill')toast('No ad available right now · try again in a minute','play');return!!(r&&r.rewarded)}
+      catch(e){return false}finally{busy=false}},
+    async interstitial(){if(busy||!P.adsOn())return false;busy=true;try{const s=sh();if(!s)return await sim('ia');
+        const r=await full(()=>s.ads.showInterstitial());return!!(r&&r.shown)}catch(e){return false}finally{busy=false}},
+    async buy(sku){if(busy||!P.iapOn())return false;busy=true;try{const s=sh();if(!s)return await sim('buy',sku);
+        const r=await s.iap.purchase(sku);if(r&&!r.ok&&!r.cancelled)toast('Purchase failed · '+String(r.error||'try again later').slice(0,80),'close');return!!(r&&r.ok)}
+      catch(e){return false}finally{busy=false}},
+    async restore(){const s=sh();return s&&s.iap.available()?await s.iap.restore():[]},
+    notify(when,title,body,id){P.log.push({when,title,body,id});if(P.log.length>20)P.log.shift();const s=sh();if(s)s.notify.schedule({id,at:when,title,body})},
+    cancel(id){P.log=P.log.filter(n=>n.id!==id);const s=sh();if(s)s.notify.cancel(id)},
+    haptic(kind){try{const s=sh();if(s)s.haptic(kind);else if(navigator.vibrate&&S.set.shake)navigator.vibrate(kind==='success'?[12,40,18]:10)}catch(e){}},
+    score(board,n){const s=sh(),id=board==='daily'?PLAT_IDS.lbDaily:'';if(s&&id)s.gc.submitScore(id,n)}};
   return P})();
 // ================= DAILIES (phase 4: missions, streak, daily challenge, ad caps, Second Wind, shop) =================
 // The loop this serves: play -> die -> a little RP -> research timer -> come back tomorrow. Everything keys on the local calendar day
@@ -2062,7 +2083,7 @@ async function adGems(){if(!(await adWatch('gems')))return false;gemAdd(AD_GEMS,
 // ---- interstitials: at most every IA_EVERY-th run end, IA_GAP apart, never in the first IA_RUNS runs / IA_DAYS days, never within
 // IA_RW of a rewarded ad, never with Remove Ads, never over a theater-cleared debrief
 function iaOk(){const n=labNow();return Plat.adsOn()&&!S.shop.noAds&&(S.runs|0)>=IA_RUNS&&n-(+S.born||n)>=IA_DAYS*DAY_MS&&(S.ia.n|0)>=IA_EVERY&&n-(+S.ia.t||0)>=IA_GAP&&n-(+S.ia.rw||0)>=IA_RW&&!Plat.busy()&&!S.campWin}
-function iaAfterRun(){S.ia.n=(S.ia.n|0)+1;if(!iaOk())return;setTimeout(()=>{if(running||!iaOk())return;Plat.interstitial().then(()=>{S.ia.n=0;S.ia.t=labNow();save()})},900)}
+function iaAfterRun(){S.ia.n=(S.ia.n|0)+1;if(!iaOk())return;setTimeout(()=>{if(running||!iaOk())return;Plat.interstitial().then(ok=>{if(!ok)return;S.ia.n=0;S.ia.t=labNow();save()})},900)}
 // ---- Second Wind: once a run the fallen fort can rally (rewarded ad, or SW_GEMS gems): health and walls back to half, the EM screen
 // for SW_SHIELD s, rapid fire, and everything at the walls shoved back. Never in the daily challenge, never before wave SW_W.
 const swCan=()=>!!G&&!G.dc&&!G.swUsed&&dyOn()&&G.wave>=SW_W&&(adLeft('sw')>0||(S.gems|0)>=SW_GEMS);
@@ -2100,23 +2121,28 @@ function dcStart(){if(running||!dcOn())return false;dyTick();const c=dcToday();d
 function dcPay(){const c=S.dy.dc,due=dcReward(c.best),g=due.g-c.g,u=due.u-c.u;if(g<=0&&u<=0)return{g:0,rp:0};const rp=Math.max(0,u)*rpU();
   if(g>0)gemAdd(g,'challenge');if(rp)S.rp+=rp;c.g=Math.max(c.g,due.g);c.u=Math.max(c.u,due.u);save();return{g:Math.max(0,g),rp}}
 function dcEnd(){if(_dcRnd){Math.random=_dcRnd;_dcRnd=null}const c=S.dy.dc,w=G.wave;if(c.d!==G.dc.d)Object.assign(c,{d:G.dc.d,best:0,g:0,u:0,n:1});
-  const prev=c.best;c.best=Math.max(c.best,w);dcLeave();const got=dcPay();return{prev,best:c.best,got}}
+  const prev=c.best;c.best=Math.max(c.best,w);dcLeave();const got=dcPay();Plat.score('daily',w);return{prev,best:c.best,got}}
 // ---- notifications: research timers ping when they land; one daily reminder, scheduled for tomorrow evening on each day's first visit
 function labNote(j){if(j)Plat.notify(Date.now()+Math.max(0,j.end-labNow()),j.rf?'Refit complete':'Research complete',labName(j)+' is ready. It deploys with your next run.','lab:'+j.id)}
 function dyRemind(){const y=S.dy;if(!y||!dyOn()||y.rem===today())return;y.rem=today();const t=new Date();t.setDate(t.getDate()+1);t.setHours(19,0,0,0);
   Plat.notify(t.getTime(),'Daily Ops','New missions are up and your streak reward is waiting.','daily');save()}
 // ---- shop: gem packs (consumable), the one-time Starter Pack (first SHOP_ONE.starter.hrs after Daily Ops opens) and Remove Ads
-const SHOP_PACKS=[{sku:'gems_80',n:80,usd:0.99,name:'Pouch'},{sku:'gems_500',n:500,usd:4.99,name:'Satchel'},{sku:'gems_1200',n:1200,usd:9.99,name:'Crate',hot:'POPULAR'},
-  {sku:'gems_2600',n:2600,usd:19.99,name:'Pallet'},{sku:'gems_7000',n:7000,usd:49.99,name:'Convoy',hot:'BEST VALUE'}];
-const SHOP_ONE={starter:{sku:'starter',usd:2.99,name:'Starter Pack',gems:400,hrs:72},noads:{sku:'noads',usd:3.99,name:'Remove Ads'}};
-const SHOP_SKUS=()=>[...SHOP_PACKS.map(p=>p.sku),'starter','noads'],shopItem=sku=>SHOP_PACKS.find(p=>p.sku===sku)||SHOP_ONE[sku]||null;
+const SHOP_PACKS=[{sku:'fort_gems_80',n:80,usd:0.99,name:'Pouch'},{sku:'fort_gems_500',n:500,usd:4.99,name:'Satchel'},{sku:'fort_gems_1200',n:1200,usd:9.99,name:'Crate',hot:'POPULAR'},
+  {sku:'fort_gems_2600',n:2600,usd:19.99,name:'Pallet'},{sku:'fort_gems_7000',n:7000,usd:49.99,name:'Convoy',hot:'BEST VALUE'}];
+const SHOP_ONE={starter:{sku:'fort_starter',usd:2.99,name:'Starter Pack',gems:400,hrs:72},noads:{sku:'fort_noads',usd:3.99,name:'Remove Ads'}};
+const SHOP_SKUS=()=>[...SHOP_PACKS.map(p=>p.sku),SHOP_ONE.starter.sku,SHOP_ONE.noads.sku],
+  shopItem=sku=>SHOP_PACKS.find(p=>p.sku===sku)||Object.values(SHOP_ONE).find(o=>o.sku===sku)||null,isSku=(sku,k)=>sku===SHOP_ONE[k].sku;
 const packBonus=p=>Math.round(100*((p.n/p.usd)/(SHOP_PACKS[0].n/SHOP_PACKS[0].usd)-1));
 const labSlotCost=()=>S.shop&&S.shop.voucher===1?LAB_SLOT_GEMS/2:LAB_SLOT_GEMS;
 function spLeft(){if(S.shop.starter||!dyOn()||!Plat.iapOn())return 0;const n=labNow();if(!S.shop.stT){S.shop.stT=n;save()}return Math.max(0,SHOP_ONE.starter.hrs*3600e3-(n-S.shop.stT))}
 function shopGrant(sku){const it=shopItem(sku);if(!it)return false;S.shop.buys[sku]=(S.shop.buys[sku]|0)+1;
-  if(it.n)gemAdd(it.n,'iap:'+sku);else if(sku==='starter'){S.shop.starter=1;if(!S.shop.voucher)S.shop.voucher=1;gemAdd(it.gems,'iap:starter')}else if(sku==='noads')S.shop.noAds=1;save();return true}
-async function shopBuy(sku){if(!Plat.iapOn()||!shopItem(sku)||sku==='starter'&&S.shop.starter||sku==='noads'&&S.shop.noAds)return false;return(await Plat.buy(sku))?shopGrant(sku):false}
-async function shopRestore(){let n=0;for(const s of await Plat.restore()){if(s==='noads'&&!S.shop.noAds){S.shop.noAds=1;n++}if(s==='starter'&&!S.shop.starter){S.shop.starter=1;if(!S.shop.voucher)S.shop.voucher=1;n++}}if(n)save();return n}
+  if(it.n)gemAdd(it.n,'iap:'+sku);else if(isSku(sku,'starter')){S.shop.starter=1;if(!S.shop.voucher)S.shop.voucher=1;gemAdd(it.gems,'iap:'+sku)}else if(isSku(sku,'noads'))S.shop.noAds=1;save();return true}
+async function shopBuy(sku){if(!Plat.iapOn()||!shopItem(sku)||isSku(sku,'starter')&&S.shop.starter||isSku(sku,'noads')&&S.shop.noAds)return false;return(await Plat.buy(sku))?shopGrant(sku):false}
+// the non-consumables the store says this player owns: flags only (the Starter Pack's gems were paid out when it was bought).
+// Returns how many were new. Plat.boot runs it quietly at launch, so a reinstall or a purged save gets Remove Ads back unasked.
+function shopOwn(ids){let n=0;for(const s of ids||[]){if(isSku(s,'noads')&&!S.shop.noAds){S.shop.noAds=1;n++}
+  if(isSku(s,'starter')&&!S.shop.starter){S.shop.starter=1;if(!S.shop.voucher)S.shop.voucher=1;n++}}if(n)save();return n}
+async function shopRestore(){return shopOwn(await Plat.restore())}
 // Command Tempo (the old cash upgrade for battle speed) is retired: speed is account-wide now. Each theater gets back what it paid.
 function tempoRefund(){const pay=(lv,mul)=>{let c=0;for(let l=0;l<(lv|0);l++)c+=Math.round(150*Math.pow(2.3,l))*mul;return Math.round(c)};
   if('speed' in S.lv){S.bank+=pay(S.lv.speed,MAPM.cost);delete S.lv.speed}
@@ -2658,11 +2684,11 @@ const gemPk=(s=26)=>`<span class="gpk" aria-hidden="true">${ic('gem',s)}${ic('ge
 function gemHtml(){const sl=S.lab.slots<LAB_SLOTS_MAX,sc=labSlotCost(),ok=(S.gems|0)>=sc,eg=h=>ic('gem',11)+fmtN(labSkipCost(h*3600e3)),iap=Plat.iapOn(),sp=spLeft(),ag=adLeft('gems');
   let h=`<div class="gshop"><div class="gmh">${ic('gem',30)}<div><b>${fmtN(S.gems|0)}</b><small>GEMS</small></div></div>`;
   if(sp>0)h+=`<div class="gstart">${gemPk(24)}<span class="gst">ONE-TIME OFFER</span><h3>${SHOP_ONE.starter.name}</h3><ul><li>${ic('gem',12)}<span>${SHOP_ONE.starter.gems} gems</span></li>`
-    +`<li>${ic('research',12)}<span>Second lab slot at half price (${fmtN(LAB_SLOT_GEMS/2)} gems)</span></li></ul><div class="gsf"><small>ENDS IN ${durTxt(sp).toUpperCase()}</small><button class="btn pri" data-sku="starter">${Plat.price('starter',SHOP_ONE.starter.usd)}</button></div></div>`;
+    +`<li>${ic('research',12)}<span>Second lab slot at half price (${fmtN(LAB_SLOT_GEMS/2)} gems)</span></li></ul><div class="gsf"><small>ENDS IN ${durTxt(sp).toUpperCase()}</small><button class="btn pri" data-sku="${SHOP_ONE.starter.sku}">${Plat.price(SHOP_ONE.starter.sku,SHOP_ONE.starter.usd)}</button></div></div>`;
   if(iap)h+=`<div class="eyebrow">GEM PACKS</div><div class="ggrid">${SHOP_PACKS.map(p=>{const b=packBonus(p);return`<button class="gcard${p.hot?' hot':''}" data-sku="${p.sku}" aria-label="${fmtN(p.n)} gems for ${Plat.price(p.sku,p.usd)}">`
       +`${p.hot?`<span class="ghot">${p.hot}</span>`:''}${gemPk(22)}<span class="gn">${fmtN(p.n)}</span><span class="gl">${p.name}</span><span class="gb">${b>0?'+'+b+'% more gems':''}</span><span class="gp">${Plat.price(p.sku,p.usd)}</span></button>`}).join('')}</div>`
     +`<ul class="gml" style="margin-top:8px"><li class="${S.shop.noAds?'own':''}">${ic('close',18)}<span>${SHOP_ONE.noads.name}<small>No more ads between runs. Rewarded ads stay optional.</small></span>`
-    +(S.shop.noAds?'<b>OWNED</b>':`<button class="btn sm" data-sku="noads">${Plat.price('noads',SHOP_ONE.noads.usd)}</button>`)+'</li></ul>';
+    +(S.shop.noAds?'<b>OWNED</b>':`<button class="btn sm" data-sku="${SHOP_ONE.noads.sku}">${Plat.price(SHOP_ONE.noads.sku,SHOP_ONE.noads.usd)}</button>`)+'</li></ul>';
   else h+=`<p class="gnote">${ic('gem',16)}<span>Gem packs and offers are sold in the iOS app. Everything gems buy can also be earned by playing.</span></p>`;
   h+=`<div class="eyebrow">FREE GEMS</div><ul class="gml">`
     +(dyOn()&&Plat.adsOn()?`<li>${ic('play',18)}<span>Watch an ad<small>${ag?'Once a day':'Back tomorrow'}</small></span>${ag?`<button class="btn sm gm" data-adgems>${ic('gem',13)}+${AD_GEMS}</button>`:`<b>+${AD_GEMS}</b>`}</li>`:'')
@@ -2687,8 +2713,9 @@ function gemRefresh(){const b=$('gemBody');if($('gemSheet').classList.contains('
 $('gemClose').onclick=$('gemDone').onclick=closeGems;$('gemSheet').addEventListener('mousedown',e=>{if(e.target.id==='gemSheet')closeGems()});sheetDrag('gemSheet',closeGems);
 $('gemBody').addEventListener('click',e=>{let b;
   if(b=e.target.closest('[data-sku]')){const sku=b.dataset.sku;b.disabled=true;
-    shopBuy(sku).then(ok=>{if(ok){const it=shopItem(sku);sfx('buy');Plat.haptic('success');toast(sku==='noads'?'Ads removed · thank you':sku==='starter'?'Starter Pack unlocked':'+'+fmtN(it.n)+' gems','gem','gm')}gemRefresh()});return}
-  if(e.target.closest('[data-restore]')){shopRestore().then(n=>{toast(n?'Purchases restored':'No purchases to restore','gem','gm');gemRefresh()});return}
+    shopBuy(sku).then(ok=>{if(ok){const it=shopItem(sku);sfx('buy');Plat.haptic('success');toast(isSku(sku,'noads')?'Ads removed · thank you':isSku(sku,'starter')?'Starter Pack unlocked':'+'+fmtN(it.n)+' gems','gem','gm')}gemRefresh()});return}
+  if(e.target.closest('[data-restore]')){shopRestore().then(n=>toast(n?'Purchases restored':'No purchases to restore','gem','gm'),
+    err=>{if(!err||!err.cancelled)toast(String(err&&err.message||'Restore failed · try again later').slice(0,90),'close')}).then(gemRefresh);return}
   if(b=e.target.closest('[data-adgems]')){b.disabled=true;adGems().then(ok=>{if(ok){toast('+'+AD_GEMS+' gems','gem','gm');Plat.haptic('success')}gemRefresh()});return}
   if(!(b=e.target.closest('[data-slot]')))return;if((S.gems|0)<labSlotCost()){sfx('deny');return}
   if(!b.dataset.arm){b.dataset.arm=1;b.classList.add('arm');b.textContent='TAP TO CONFIRM';clearTimeout(b._t);b._t=setTimeout(()=>{if($('gemSheet').classList.contains('on'))$('gemBody').innerHTML=gemHtml()},3000);return}
@@ -2782,7 +2809,7 @@ $('perkRe').addEventListener('click',e=>{if(!e.target.closest('[data-rr]')||!G||
 // ---- simulated ad / purchase sheet (web dev builds only; the App Store build shows AdMob / StoreKit instead). res(true) = rewarded / bought
 function simSheet(mode,sku,res){const o=$('adOv'),buy=mode==='buy',ia=mode==='ia',it=buy?shopItem(sku):null;let n=Math.max(0,Plat.adSecs|0),iv=0;
   const done=v=>{clearInterval(iv);o.classList.remove('on');o.innerHTML='';o.onclick=null;res(v)};
-  if(buy)o.innerHTML=`<div class="adb"><div class="adh"><span class="adtag">SIMULATED PURCHASE</span></div><div class="adbuy">${gemPk(24)}<div><b>${it.name}</b><small>${it.n?fmtN(it.n)+' gems':sku==='starter'?SHOP_ONE.starter.gems+' gems + lab slot voucher':'No more ads between runs'}</small></div><em>${Plat.price(sku,it.usd)}</em></div>`
+  if(buy)o.innerHTML=`<div class="adb"><div class="adh"><span class="adtag">SIMULATED PURCHASE</span></div><div class="adbuy">${gemPk(24)}<div><b>${it.name}</b><small>${it.n?fmtN(it.n)+' gems':isSku(sku,'starter')?SHOP_ONE.starter.gems+' gems + lab slot voucher':'No more ads between runs'}</small></div><em>${Plat.price(sku,it.usd)}</em></div>`
     +`<div class="adf"><p>Dev build: nothing is charged. The App Store build shows the StoreKit sheet here (RevenueCat).</p><button class="btn pri lg" data-ok>CONFIRM</button><button class="btn ghost" data-no>CANCEL</button></div></div>`;
   else{o.innerHTML=`<div class="adb"><div class="adh"><span class="adtag">${ia?'SIMULATED AD':'SIMULATED REWARDED AD'}</span><button class="adx" data-no${ia?' hidden':''}>${ia?'CLOSE':'SKIP'}</button></div>`
       +`<div class="adc"><div>${ic('fort',40)}<b>YOUR AD HERE</b><small>Dev build placeholder · AdMob in the App Store build</small></div><span class="adn" data-n>${n}</span></div>`
@@ -2812,7 +2839,7 @@ sheetDrag('settings',closeSettings);sheetDrag('howto',closeHowto);
 $('howClose').onclick=$('howDone').onclick=closeHowto;$('howto').addEventListener('mousedown',e=>{if(e.target.id==='howto')closeHowto()});$('howBtn').onclick=openHowto;
 const segSync=(seg,v)=>{for(const b of $(seg).children)b.setAttribute('aria-pressed',b.dataset.v===String(v))};
 const volFill=()=>$('sVol').style.setProperty('--v',$('sVol').value+'%');
-function syncSettings(){$('devRow').hidden=!S.set.dev&&_devTap<7;$('sDev').checked=!!S.set.dev;$('sVol').value=S.set.vol;volFill();$('sMusic').checked=S.set.music;$('sShake').checked=S.set.shake;$('sDmg').checked=S.set.dmgNums;$('sCall').checked=S.set.callouts!==false;$('sRing').checked=S.set.ring;$('sDay').checked=S.set.dayNight;$('sBlur').checked=S.set.blurPause;
+function syncSettings(){$('devRow').hidden=Plat.native()||!S.set.dev&&_devTap<7;const vl=$('verLine');vl.hidden=!Plat.native();if(Plat.native())vl.textContent='The Fort for iOS · build '+(window.Shell.build||'dev');$('sDev').checked=!!S.set.dev;$('sVol').value=S.set.vol;volFill();$('sMusic').checked=S.set.music;$('sShake').checked=S.set.shake;$('sDmg').checked=S.set.dmgNums;$('sCall').checked=S.set.callouts!==false;$('sRing').checked=S.set.ring;$('sDay').checked=S.set.dayNight;$('sBlur').checked=S.set.blurPause;
   $('sSpeed').value=String(S.set.speed);$('sGfx').value=S.set.gfx;segSync('gfxSeg',S.set.gfx);segSync('spdSeg',S.set.speed);$('sRm').checked=!!S.set.reduceMotion;$('sLeft').checked=!!S.set.leftHand;
   const rb=$('resetBtn');rb.disabled=running;delete rb.dataset.arm;rb.textContent=running?'END RUN FIRST':'RESET'}
 for(const[seg,sel]of[['gfxSeg','sGfx'],['spdSeg','sSpeed']])$(seg).addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;e.preventDefault();const s=$(sel);if(s.value!==b.dataset.v){s.value=b.dataset.v;s.dispatchEvent(new Event('change'))}segSync(seg,b.dataset.v)});
@@ -2829,7 +2856,7 @@ $('sGfx').onchange=e=>{S.set.gfx=e.target.value;applyGfx();save()};
 $('sRm').onchange=e=>{S.set.reduceMotion=e.target.checked;applyUiPrefs();save()};
 $('sLeft').onchange=e=>{S.set.leftHand=e.target.checked;applyUiPrefs();save()};
 $('tipsBtn').onclick=()=>{S.set.tips={};save();toast('Tips will show again','star')};
-let _devTap=0;$('setTitle').addEventListener('click',()=>{if(++_devTap===7){$('devRow').hidden=false;toast('Developer options shown','gear')}});
+let _devTap=0;$('setTitle').addEventListener('click',()=>{if(++_devTap===7&&!Plat.native()){$('devRow').hidden=false;toast('Developer options shown','gear')}});
 $('sDev').onchange=e=>{S.set.dev=e.target.checked;save();toast(S.set.dev?'Simulated ads and purchases on':'Simulated ads and purchases off','gear');if(!running)renderHome()};
 // save backup: FORT1: + base64(JSON of S). Restore validates the shape, arms like RESET, and refuses mid-run.
 $('bakBtn').onclick=()=>{const code='FORT1:'+btoa(unescape(encodeURIComponent(JSON.stringify(S))));
@@ -2840,7 +2867,7 @@ $('bakRestore').onclick=e=>{if(running)return;const b=e.currentTarget,raw=($('ba
   if(!d||typeof d!=='object'||Array.isArray(d)||typeof d.lv!=='object'){toast('That is not a valid save code','close');return}
   if(!b.dataset.arm){b.dataset.arm=1;b.textContent='TAP TO CONFIRM';clearTimeout(b._t);b._t=setTimeout(()=>{delete b.dataset.arm;b.textContent='RESTORE'},4000);return}
   clearTimeout(b._t);delete b.dataset.arm;b.textContent='RESTORE';d.set=Object.assign({},S.set,d.set||{});
-  try{localStorage.setItem('theFortSave',JSON.stringify(d))}catch(err){}loadSave();medalSync();lastRunMsg='';lastCause=null;lastAAR=null;_armFreeze=null;_manSet=false;$('bakIn').value='';
+  saveWrite(JSON.stringify(d));loadSave();medalSync();lastRunMsg='';lastCause=null;lastAAR=null;_armFreeze=null;_manSet=false;$('bakIn').value='';
   toast('Progress restored · best wave '+careerBest(),'star');renderHome()};
 $('resetBtn').onclick=e=>{if(running)return;const b=e.currentTarget;
   if(!b.dataset.arm){b.dataset.arm=1;b.textContent='TAP AGAIN TO WIPE';clearTimeout(b._t);b._t=setTimeout(()=>{delete b.dataset.arm;b.textContent='RESET'},4000);return}
@@ -10347,7 +10374,8 @@ addEventListener('keydown',e=>{if(!running||e.repeat)return;
 addEventListener('blur',()=>{mouse.down=false;if(S.set.blurPause)setPause(true)});
 // persist mid-run earnings (phones kill backgrounded apps without warning)
 function persist(){if(G&&running&&G.wave>S.best)S.best=G.wave;save()}
-document.addEventListener('visibilitychange',()=>{if(document.hidden){persist();if(running&&S.set.blurPause)setPause(true)}});
+function bgPause(){persist();if(running&&S.set.blurPause)setPause(true)}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)bgPause()});
 addEventListener('pagehide',persist);
 setInterval(()=>{if(running&&!paused)persist()},10000);
 
@@ -10357,7 +10385,7 @@ function loop(now){acc+=Math.min((now-last)/1000,0.25)*S.set.speed*(G&&running?G
   if(running&&!paused&&!G.choosing){while(acc>=STEP&&running&&!G.choosing){update(STEP);acc-=STEP}}else acc=0;
   if(running)draw();else if(G&&G.over&&!G.srEnd){G.srEnd=1;srSay('Fort fell at wave '+G.wave)}try{audioFrame()}catch(err){if(!loop._aw){loop._aw=1;console.warn('audio',err)}}requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
-medalSync();renderHome();
+medalSync();renderHome();Plat.boot();
 </script>
 </body>
 </html>
