@@ -19,3 +19,6 @@ ios/build/
 *.p12.enc
 *.mobileprovision
 *.cer
+
+# python bytecode
+__pycache__/

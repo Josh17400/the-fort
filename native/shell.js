@@ -726,7 +726,8 @@
   window.Shell = {
     native: isNative,
     platform: platform,
-    build: String(window.FORT_BUILD || ''),
+    build: String(window.FORT_BUILD || ''),     // stamped by build_www.py: the TestFlight build number
+    version: String(window.FORT_VERSION || ''), // and MARKETING_VERSION from the Xcode project
     configure: configure,
     ready: ready,
     log: function () { return events.slice(); },

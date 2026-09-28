@@ -1,0 +1,78 @@
+# iOS build + TestFlight upload for The Fort (Capacitor 8 app in native/). Manual trigger only:
+# every run uploads a TestFlight build. See CI_SETUP.md.
+#
+# Repo secrets (Settings -> Secrets and variables -> Actions), the same values euchre-unleashed uses:
+#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (base64 .p8)   App Store Connect API key, App Manager
+#   APPLE_TEAM_ID                                        Apple Developer Team ID
+#   IOS_CERT_P12_B64, CERT_EXPORT_PASS                   the team's one Apple Distribution cert, as a
+#                                                        password-protected p12 (ios-mint-cert.yml)
+# Signing is manual with that cert and an App Store profile; see native/ios/fastlane/Fastfile.
+
+name: iOS TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "App Store candidate: fail if index.html PLAT_IDS still holds a placeholder (test ads, no RevenueCat key)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-upload:
+    runs-on: macos-26 # Xcode 26 image (Capacitor 8 requires Xcode 16.4+)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: native/package-lock.json
+
+      - name: Show toolchain versions (diagnostics)
+        run: |
+          xcodebuild -version
+          node --version
+          python3 --version
+          fastlane --version
+
+      - name: Install dependencies
+        working-directory: native
+        run: npm ci
+
+      - name: Test the native shell and check the game's scripts
+        run: node native/test_shell.cjs && node native/check_game.cjs
+
+      - name: Build web assets (index.html + capacitor.js + shell.js + fonts -> native/www)
+        working-directory: native
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: python3 build_www.py ${{ inputs.release && '--release' || '' }}
+
+      - name: Check the built web assets
+        working-directory: native
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: node check_www.cjs
+
+      - name: Capacitor sync (copies www/, resolves iOS SPM plugins)
+        working-directory: native
+        run: npx cap sync ios
+
+      - name: Build and upload to TestFlight (fastlane)
+        working-directory: native/ios
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          IOS_CERT_P12_B64: ${{ secrets.IOS_CERT_P12_B64 }}
+          CERT_EXPORT_PASS: ${{ secrets.CERT_EXPORT_PASS }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          LC_ALL: en_US.UTF-8
+          LANG: en_US.UTF-8
+        run: fastlane ios beta

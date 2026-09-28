@@ -5,8 +5,9 @@
   "private": true,
   "scripts": {
     "build": "python build_www.py",
-    "test": "node test_shell.cjs && node test_build.cjs",
-    "sync": "python build_www.py && cap sync ios"
+    "test": "node test_shell.cjs && node check_www.cjs",
+    "sync": "python build_www.py && cap sync ios",
+    "capacitor:sync:after": "node fix_spm_paths.cjs"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.0.0",
