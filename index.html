@@ -956,6 +956,9 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
 .rts{display:flex;flex-wrap:wrap;gap:5px}.rts span{padding:3px 8px;border-radius:7px;font:600 12px var(--f-display);letter-spacing:.02em;color:var(--c-dim);background:var(--c-inset);border:1px solid var(--c-line)}
 .rts span b{color:var(--c-text)}.rts span em{font-style:normal;color:var(--c-green)}
 .rsg{display:flex;gap:7px;align-items:flex-start;font:400 13px/1.45 var(--f-body);color:#cfe3f0}.rsg .ic{color:var(--c-blue);margin-top:1px}
+.rsq{display:flex;gap:7px;align-items:flex-start;padding:6px 8px;border-radius:8px;background:var(--c-inset);border:1px solid var(--c-line);font:400 12px/1.4 var(--f-body);color:var(--c-text-2)}
+.rsq .ic{flex:none;color:var(--c-dim);margin-top:1px}.rsq b{font:700 11px var(--f-display);letter-spacing:.1em;color:var(--c-dim);margin-right:6px}.rsq .n{color:var(--c-text);font-weight:600}
+.rsq small{display:block;margin-top:2px;font-size:12px;color:#cfe3f0}.rsq.new{border-color:rgba(152,210,110,.32)}.rsq.new b,.rsq.new .ic{color:var(--c-green)}
 .rgt{position:relative;overflow:hidden;display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:7px;font:600 12px var(--f-display);letter-spacing:.02em;color:var(--c-amber);border:1px dashed var(--c-line-2);background:var(--c-inset)}
 .rgt em{margin-left:auto;font-style:normal;color:var(--c-dim)}.rgt i{position:absolute;left:0;bottom:0;height:2px;background:var(--c-gold);opacity:.75}
 .rwhy{display:flex;gap:6px;align-items:flex-start;font:400 12px/1.4 var(--f-body);color:var(--c-amber)}.rwhy .ic{color:var(--c-gold-hi);margin-top:1px}
@@ -971,7 +974,7 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
 .rcmp .cg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}
 .rcmp .tile b{font-size:16px}.rcmp .tile b em{font-style:normal;color:var(--c-green);font-size:13px;margin-left:4px}
 .rcmp .tile b .ar{display:inline;font:600 14px/1 var(--f-body);letter-spacing:0;color:var(--c-dim);margin:0 6px}
-.rcmp .rsg{margin-top:10px}
+.rcmp .rsg{margin-top:10px}.rcmp .rsq{margin-top:8px}
 /* R&D phone: sticky line chips, vertical tier list, sticky CTA */
 .rsc{position:sticky;top:calc(var(--hdr-h) + var(--safe-t));z-index:4;display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;margin:0 calc(-1 * var(--gutter));padding:6px var(--gutter) 12px;
   background:linear-gradient(var(--c-bg) 75%,rgba(11,13,9,0));scrollbar-width:none}
@@ -1606,7 +1609,7 @@ const U=[
  {id:'wire',wave:5,need:[["walls", 3]],cat:'FORT',name:'Barbed Wire',max:8,cost:100,g:1.75,desc:'A wire ring that slows and cuts enemies near the fort.',val:l=>l?'-'+pct(Math.min(0.7,0.25+0.06*l))+' speed · '+2*l+' dps':'none'},
  {id:'hp',late:1,cat:'SQUAD',name:'Body Armor',max:0,cost:20,g:1.4,desc:'More soldier health.',val:l=>fmtN(hpAt(l))+' HP'},
  {id:'medic',wave:3,need:[["hp", 3]],cat:'SQUAD',name:'Field Medic',max:0,cost:60,g:1.6,desc:'Regenerate health over time.',val:l=>(0.4*l).toFixed(1)+' HP/s'},
- {id:'squad',wave:4,need:[["walls", 2]],cat:'SQUAD',name:'Squad',max:0,cost:200,g:1.85,desc:'Another soldier who fights on their own (70% dmg). Their weapon improves with Squad Kit research.',val:l=>Math.min(8,l)+' extra '+pl(Math.min(8,l),'soldier')+(l>8?' · +'+pct(0.12*(l-8))+' dmg':'')},
+ {id:'squad',wave:4,need:[["walls", 2]],cat:'SQUAD',name:'Squad',max:0,cost:200,g:1.85,desc:'Another soldier who fights on their own (70% dmg). Their weapon improves with Infantry Kit research.',val:l=>Math.min(8,l)+' extra '+pl(Math.min(8,l),'soldier')+(l>8?' · +'+pct(0.12*(l-8))+' dmg':'')},
  {id:'arty',late:1,wave:6,need:[["walls", 2], ["vision", 3]],cat:'SUPPORT',name:'Artillery',max:0,cost:250,g:1.55,desc:'A gun emplaced in your fort shells the biggest enemy cluster. Starts as a mortar pit; research the M777 Howitzer and HIMARS rocket salvos in R&D.',val:l=>l?f1(artyDmg(l))+' dmg / '+artyCd(l).toFixed(1)+'s':'none'},
  {id:'mines',late:1,wave:3,need:[["vision", 2]],cat:'SUPPORT',name:'Minefield',max:0,cost:120,g:1.55,desc:'Mines are laid at the start of each wave.',val:l=>l?Math.min(30,2*l)+' mines · '+f1(mineDmg(l))+' dmg':'none'},
  {id:'air',late:1,wave:10,need:[["vision", 4]],cat:'SUPPORT',name:'Air Support',max:0,cost:400,g:1.6,desc:'Call a bombing run anywhere (Q, then click).',val:l=>l?Math.min(16,5+l)+' bombs · '+f1(airDmg(l))+' dmg · '+Math.round(airCd(l))+'s cd':'none'},
@@ -1692,7 +1695,7 @@ function afterAction(){if(!lastCause)return'';const u=counterPick(),c=u&&costOf(
 // armor broke the fort and the rifle still can't pierce it: point at the next commander tier with armor-piercing rounds
 function rsCounter(){if(!lastCause.top.some(t=>ARMOR_KILL[t]||t==='technical')||rPen('dmg')>=0.4)return'';const t=RLINES.dmg.t.find(x=>x.i>rsOwned('dmg')&&x.pen>rPen('dmg'));if(!t)return'';
   const w=t.i===rsOwned('dmg')+1?rsWhy('dmg',t.i):'Research '+RLINES.dmg.t[rsOwned('dmg')+1].n+' first';
-  return`<button class="aarfix rd${w?'':' can'}" data-rsgo="dmg"><span class="ico">${ic('research',18)}</span><span class="ft">Research <b>${t.n}</b>: AP rounds ignore ${pct(t.pen)} of armor</span><i>${w?(rsProg()<t.gate?gateTxt(t.gate).replace(/^Reach /,''):w==='Lab busy'?'lab busy':t.cost+' RP'):t.cost+' RP →'}</i></button>`}
+  return`<button class="aarfix rd${w?'':' can'}" data-rsgo="dmg"><span class="ico">${ic('research',18)}</span><span class="ft">Research <b>${t.n}</b>: AP rounds ignore ${pct(t.pen)} of armor</span><i>${w?(rsProg()<t.gate?gateTxt(t.gate).replace(/^Reach /,''):w==='Lab busy'?'lab busy':rsCost('dmg',t.i)+' RP'):rsCost('dmg',t.i)+' RP →'}</i></button>`}
 
 // ================= RESEARCH =================
 // Research Points (RP, S.rp) are earned by holding waves and buy unit tiers: new weapons, a cumulative damage multiplier (mul,
@@ -1701,28 +1704,23 @@ function rsCounter(){if(!lastCause.top.some(t=>ARMOR_KILL[t]||t==='technical')||
 // take effect at the next deployment: startRun() snapshots S.rs/S.rf into G.
 // S.rs[line] = the tier index owned (0-based; dmg/squad tier 0 is the pistol start). S.rf[line] = Refits bought after the last tier.
 // t.g (the original wave gate) now only picks the tier's era tint; t.gate/t.cost/t.ms are filled in from RS_GATE below.
+// Infantry Kit (line 'dmg') equips the commander AND the squad: each tier's `sq` is the squad tier it brings (RLINES.ride.squad), paired
+// by era, so the squad keeps its own art, damage and signatures and every reader of rTier/rMult/sg('squad') works unchanged.
+// S.rs.squad stays the squad tier actually owned: a tier lands its `sq` (job.sq), and a save from before the merge keeps whatever
+// squad tier it had, ahead of or behind its commander (the next Infantry tier then bundles the squad tiers it still lacks: rsCost).
 const REFIT_MUL=1.08,refitCost=n=>Math.round(300*Math.pow(1.15,n)),refitMs=n=>Math.min(24,4*Math.pow(1.08,n))*3600e3;
 const RLINES={currency:'RP',rpCost:'rsCostAt(gate)',refit:{mul:REFIT_MUL,cost:'300*1.15^n',time:'4h*1.08^n (max 24h)'},lines:[
- {id:'dmg',label:'Commander Kit',u:'dmg',t:[
-  {n:'Recruit',w:'M17 sidearm',g:0,mul:0.6,hp:1,art:'era0 softcap noplate pistol'},
-  {n:'Rifleman',w:'M4A1 carbine',g:1,mul:1,hp:1,art:'era1 helmet plate carbine'},
-  {n:'Designated Marksman',w:'Mk 12 SPR, 4x optic',g:15,mul:1.25,hp:1.25,sig:{pierce:[1,0.5]},art:'era2 optic longbarrel'},
-  {n:'Squad Leader',w:'M7 6.8mm rifle, AP rounds',g:25,mul:3,pen:0.25,hp:2,sig:{pen:0.25},art:'era2 suppressor radio'},
-  {n:'Grenadier Sergeant',w:'M7 + M320 40mm airburst',g:35,mul:12.5,pen:0.4,hp:3.5,sig:{splash:[24,1],every:6},art:'era3 underbarrel nvg'},
-  {n:'Smart-Rifle Operator',w:'Fire-control rifle, programmable rounds',g:45,mul:25,pen:0.55,hp:6,sig:{mark:[0.25,3],lockCrit:1},art:'era3 fcs-optic irstrobe'},
-  {n:'Exoskeleton Trooper',w:'8mm gauss carbine',g:60,mul:30,pen:0.65,hp:8,sig:{pierce:[4,0.8]},art:'era4 exoframe coilbarrel'},
-  {n:'Coilgun Vanguard',w:'Coilgun, magnetic rounds',g:80,mul:33,pen:0.75,hp:10,sig:{chain:[1,0.5]},art:'era4 exoframe cyanrails'},
-  {n:'Directed-Energy Operator',w:'HEL carbine (pulsed laser)',g:110,mul:36,pen:0.85,hp:12,sig:{instant:1,burn:[0.2,2]},art:'era5 beam'},
-  {n:'Vanguard Commander',w:'Rail rifle + 2 escort drones',g:150,mul:40,pen:0.9,hp:14,sig:{drones:[2,0.25]},art:'era5 exo drones'}]},
- {id:'squad',label:'Squad Kit',u:'squad',t:[
-  {n:'Militia',w:'Pistols and pump shotguns',g:0,mul:0.6,art:'era0 mixed-kit'},
-  {n:'Rifle Squad',w:'M4A1s',g:1,mul:1,art:'era1'},
-  {n:'Fireteam',w:'M4A1 + M27 IAR',g:15,mul:1.25,sig:{salvo:2,every:8},art:'era2 iar'},
-  {n:'Infantry Squad (NGSW)',w:'M7 rifles + M250 LMG',g:25,mul:3,pen:0.25,art:'era2 lmg-bipod'},
-  {n:'Mechanized Dismounts',w:'M250 + Carl Gustaf M4',g:35,mul:12.5,pen:0.4,sig:{seek:1,splash:[18,0.6],every:10},art:'era3 recoilless'},
-  {n:'Drone-Teamed Squad',w:'Rifles + quadcopter each',g:45,mul:25,pen:0.55,sig:{drones:[1,0.2]},art:'era3 quad'},
-  {n:'Exo Squad',w:'Gauss carbines',g:60,mul:30,pen:0.65,sig:{pierce:[2,0.7]},art:'era4 exoframe'},
-  {n:'Directed-Energy Squad',w:'HEL carbines',g:110,mul:36,pen:0.85,sig:{instant:1},art:'era5 beam'}]},
+ {id:'dmg',label:'Infantry Kit',u:'dmg',ride:'squad',t:[
+  {n:'Recruit',w:'M17 sidearm',g:0,mul:0.6,hp:1,sq:0,art:'era0 softcap noplate pistol'},
+  {n:'Rifleman',w:'M4A1 carbine',g:1,mul:1,hp:1,sq:1,art:'era1 helmet plate carbine'},
+  {n:'Designated Marksman',w:'Mk 12 SPR, 4x optic',g:15,mul:1.25,hp:1.25,sq:2,sig:{pierce:[1,0.5]},art:'era2 optic longbarrel'},
+  {n:'Squad Leader',w:'M7 6.8mm rifle, AP rounds',g:25,mul:3,pen:0.25,hp:2,sq:3,sig:{pen:0.25},art:'era2 suppressor radio'},
+  {n:'Grenadier Sergeant',w:'M7 + M320 40mm airburst',g:35,mul:12.5,pen:0.4,hp:3.5,sq:4,sig:{splash:[24,1],every:6},art:'era3 underbarrel nvg'},
+  {n:'Smart-Rifle Operator',w:'Fire-control rifle, programmable rounds',g:45,mul:25,pen:0.55,hp:6,sq:5,sig:{mark:[0.25,3],lockCrit:1},art:'era3 fcs-optic irstrobe'},
+  {n:'Exoskeleton Trooper',w:'8mm gauss carbine',g:60,mul:30,pen:0.65,hp:8,sq:6,sig:{pierce:[4,0.8]},art:'era4 exoframe coilbarrel'},
+  {n:'Coilgun Vanguard',w:'Coilgun, magnetic rounds',g:80,mul:33,pen:0.75,hp:10,sq:6,sig:{chain:[1,0.5]},art:'era4 exoframe cyanrails'},
+  {n:'Directed-Energy Operator',w:'HEL carbine (pulsed laser)',g:110,mul:36,pen:0.85,hp:12,sq:7,sig:{instant:1,burn:[0.2,2]},art:'era5 beam'},
+  {n:'Vanguard Commander',w:'Rail rifle + 2 escort drones',g:150,mul:40,pen:0.9,hp:14,sq:7,sig:{drones:[2,0.25]},art:'era5 exo drones'}]},
  {id:'nade',label:'Hand Grenades',u:'nade',t:[
   {n:'M67 Frag',g:1,mul:1},
   {n:'Thermobaric Frag',g:15,mul:1.25,sig:{burn:[0.1,2]},art:'orange-band'},
@@ -1851,15 +1849,29 @@ const RLINES={currency:'RP',rpCost:'rsCostAt(gate)',refit:{mul:REFIT_MUL,cost:'3
   {n:'PrSM Increment 2 (multi-warhead)',g:45,mul:8,sig:{bomblets:3}},
   {n:'Dark Eagle Hypersonic',g:60,mul:30,sig:{instant:1}},
   {n:'Conventional Prompt Strike + EMP',g:80,mul:50,sig:{stun:[2]}},
-  {n:'Kinetic Bombardment (Tungsten Rod)',g:110,mul:60,pen:1,sig:{radius:2}}]}]};
-// Campaign gates (see rsProg): RS_GATE[line][tier] = the progress point that opens the tier, (theater-1)*100 + wave. Desert Outpost
-// carries 16 tiers (Rifleman and Rifle Squad at wave 1 for the tutorial), theaters 2-8 carry 13 each, spread over their waves in the
-// order the original wave gates rolled them out (.qa/gates.js). Vanguard Commander opens at Capital Defense wave 94, so R&D runs
-// out as the campaign ends. Tier 0 is the starting kit.
+  {n:'Kinetic Bombardment (Tungsten Rod)',g:110,mul:60,pen:1,sig:{radius:2}}]}],
+ // ride-along lines: never researched on their own; their tiers arrive with the host line's tiers (`on` = host id, host tier `sq`)
+ ride:[{id:'squad',label:'Squad',u:'squad',on:'dmg',t:[
+  {n:'Militia',w:'Pistols and pump shotguns',g:0,mul:0.6,art:'era0 mixed-kit'},
+  {n:'Rifle Squad',w:'M4A1s',g:1,mul:1,art:'era1'},
+  {n:'Fireteam',w:'M4A1 + M27 IAR',g:15,mul:1.25,sig:{salvo:2,every:8},art:'era2 iar'},
+  {n:'Infantry Squad (NGSW)',w:'M7 rifles + M250 LMG',g:25,mul:3,pen:0.25,art:'era2 lmg-bipod'},
+  {n:'Mechanized Dismounts',w:'M250 + Carl Gustaf M4',g:35,mul:12.5,pen:0.4,sig:{seek:1,splash:[18,0.6],every:10},art:'era3 recoilless'},
+  {n:'Drone-Teamed Squad',w:'Rifles + quadcopter each',g:45,mul:25,pen:0.55,sig:{drones:[1,0.2]},art:'era3 quad'},
+  {n:'Exo Squad',w:'Gauss carbines',g:60,mul:30,pen:0.65,sig:{pierce:[2,0.7]},art:'era4 exoframe'},
+  {n:'Directed-Energy Squad',w:'HEL carbines',g:110,mul:36,pen:0.85,sig:{instant:1},art:'era5 beam'}]}]};
+// Campaign gates (see rsProg): RS_GATE[line][tier] = the progress point that opens the tier, (theater-1)*100 + wave. 100 researchable
+// tiers: Desert Outpost 13 (Rifleman at wave 1 for the tutorial), Mountain 12, Coastal 12, City 13, Arctic 12, Jungle 13, Island 13,
+// Capital 12, spread over their waves in the order the original wave gates rolled them out (.qa/gates.js). Vanguard Commander opens at
+// Capital Defense wave 94, so R&D runs out as the campaign ends. Tier 0 is the starting kit.
+// RS_GATE.squad opens nothing: the squad's tiers open with Infantry Kit tiers; its entries are the price points (RP + lab time) each
+// squad tier adds to the Infantry tier that brings it, so the merged line costs what Commander Kit + Squad Kit cost (.qa/rdtot.js).
+// The merge moved Drone-Teamed Squad's price from City (323) into Coastal (Smart-Rifle Operator, 294); F-15EX took its old City slot
+// (286 -> 323) so each theater's RP and lab hours stay where the phase 3 pacing put them.
 const RS_GATE={dmg:[0,1,6,52,158,294,458,616,709,794],squad:[0,1,26,84,186,323,486,716],walls:[0,10,60,165,303,465,623],nade:[0,15,68,172,309,472],
   mines:[0,20,76,179,316,479],truck:[0,32,92,194,330,494,723],arty:[0,38,103,203,337,503,630],aagun:[0,45,109,209,351,509,637],turret:[0,116,216,358,516,651],
   sniper:[0,123,223,365,523,730],apc:[0,130,230,372,530,658],air:[0,137,237,379,537,737],tank:[0,151,251,386,551,751],flame:[0,258,394,558,665],
-  sam:[0,265,403,565,758],mlaunch:[0,272,409,572,672],heli:[0,279,416,579,765],fighter:[0,286,423,586,679],tesla:[0,430,594,686,772],
+  sam:[0,265,403,565,758],mlaunch:[0,272,409,572,672],heli:[0,279,416,579,765],fighter:[0,323,423,586,679],tesla:[0,430,594,686,772],
   silo:[0,437,603,694,779],gunship:[0,451,609,703,786]};
 // A tier's RP price and lab time both follow its gate: 20 RP and a minute in the Desert, over a thousand RP and most of a day at the
 // Capital. Anchors are the values at the start of each theater (and at the campaign's end), interpolated geometrically in between.
@@ -1871,8 +1883,13 @@ const gateLerp=(A,g)=>{const i=Math.min(A.length-2,Math.floor(g/CLEAR_W)),f=g/CL
 const rsCostAt=g=>nice(gateLerp(RS_RP,g));
 const rsMinAt=g=>{const m=gateLerp(RS_MIN,g);return m<10?Math.round(m):m<120?Math.round(m/5)*5:Math.round(m/15)*15};
 // Index by id (RLINES.tank) and give every tier its long-form fields: id, name, weapon, visual, mult, gate, cost, ms (lab time), sig, pen, i.
-for(const r of RLINES.lines){Object.defineProperty(RLINES,r.id,{value:r,enumerable:false});
-  r.t.forEach((t,i)=>{const g=i?RS_GATE[r.id][i]:0;Object.assign(t,{i,id:r.id+'_'+i,name:t.n,weapon:t.w||'',visual:t.art||'',mult:t.mul,gate:g,cost:i?rsCostAt(g):0,ms:i?rsMinAt(g)*60e3:0,sig:t.sig||null,pen:t.pen||0})})}
+// A ride line's tier keeps its own price (cost/ms at its RS_GATE price point) and opens with the first host tier that brings it. A host
+// tier's cost/ms = its own (cc/cm) + the ride tiers it adds over the tier before it: the price on a save that never predates the merge.
+for(const r of[...RLINES.lines,...RLINES.ride]){Object.defineProperty(RLINES,r.id,{value:r,enumerable:false});
+  r.t.forEach((t,i)=>{const p=i?RS_GATE[r.id][i]:0;Object.assign(t,{i,id:r.id+'_'+i,name:t.n,weapon:t.w||'',visual:t.art||'',mult:t.mul,gate:p,cost:i?rsCostAt(p):0,ms:i?rsMinAt(p)*60e3:0,sig:t.sig||null,pen:t.pen||0})})}
+for(const q of RLINES.ride){const h=RLINES[q.on];h.rides=q;
+  q.t.forEach(t=>{const k=h.t.findIndex(x=>x.sq>=t.i);t.gate=k>0?h.t[k].gate:0});
+  h.t.forEach((t,i)=>{t.cc=t.cost;t.cm=t.ms;if(i)for(let j=h.t[i-1].sq+1;j<=t.sq;j++){t.cost+=q.t[j].cost;t.ms+=q.t[j].ms}})}
 // sig keys that are plain numeric multipliers: folded into rMult() (cumulative over tiers) instead of being reported by rSig()
 const RS_MULKEYS=new Set(['rate','radius','cd','count']);
 const rsNow=()=>running&&G&&G.rs?G.rs:S.rs, rfNow=()=>running&&G&&G.rf?G.rf:S.rf;
@@ -1881,7 +1898,8 @@ const rsNow=()=>running&&G&&G.rs?G.rs:S.rs, rfNow=()=>running&&G&&G.rf?G.rf:S.rf
 function rTier(id){const r=RLINES[id];if(!r)return 0;return Math.max(0,Math.min(r.t.length-1,rsNow()[id]|0))}
 // rMult(line,key): cumulative multiplier at the active tier (1 when none). 'dmg' = damage (times Refits; walls have none),
 // 'hp' = HP (commander tier hp field for 'dmg', wall HP for 'walls'), 'rate'/'radius'/'cd'/'count' = product of those sig values.
-function rMult(id,key='dmg'){const r=RLINES[id];if(!r)return 1;const k=rTier(id),t=r.t[k],rf=Math.pow(REFIT_MUL,rfNow()[id]||0);
+// A ride line (the squad) also takes its host's Refits: an Infantry Kit Refit rebuilds the commander's kit and the squad's.
+function rMult(id,key='dmg'){const r=RLINES[id];if(!r)return 1;const k=rTier(id),t=r.t[k],rn=rfNow(),rf=Math.pow(REFIT_MUL,(rn[id]||0)+(r.on&&rn[r.on]||0));
   if(key==='dmg')return id==='walls'?1:t.mul*rf;
   if(key==='hp')return id==='walls'?t.mul*rf:t.hp||1;
   let m=1;if(RS_MULKEYS.has(key))for(let i=0;i<=k;i++){const s=r.t[i].sig;if(s&&typeof s[key]==='number')m*=s[key]}return m}
@@ -1896,21 +1914,31 @@ const rSigP=(id,key)=>{const s=rSigAt(id,key);return s?s[key]:null};
 const rPen=id=>{const r=RLINES[id];return r?r.t[rTier(id)].pen:0};
 // saved (home-screen) state: owned tier, Refits, what is fielded
 const rsOwned=id=>S.rs[id]|0;
+// the ride tier a save owns or already has in the lab (a squad job started before the merge): a host tier never charges for it twice
+const rsRideHave=h=>{const q=h.rides,j=labOf(q.id);return Math.max(rsOwned(q.id),j&&!j.rf?j.k:0)};
+// What tier k of a line costs (RP) and takes (lab ms) on this save, and the ride tier it lands (sq, 0 = none). A host tier buys the ride
+// tiers it brings that the save lacks: the next tier also catches up any a pre-merge save fell behind on, none it already owns is paid.
+function rsPrice(id,k){const r=RLINES[id],t=r&&r.t[k];if(!t)return{rp:0,ms:0,sq:0};if(!r.rides||!k)return{rp:t.cost,ms:t.ms,sq:0};
+  const q=r.rides,have=rsRideHave(r),lo=k===rsOwned(id)+1?have:Math.max(have,r.t[k-1].sq);let rp=t.cc,ms=t.cm;
+  for(let j=lo+1;j<=t.sq;j++){rp+=q.t[j].cost;ms+=q.t[j].ms}return{rp,ms,sq:t.sq>have?t.sq:0}}
+const rsCost=(id,k)=>rsPrice(id,k).rp,rsMs=(id,k)=>rsPrice(id,k).ms;
 // Lock reason for researching tier k of a line ('' = can research now), in lockWhy() style.
-function rsWhy(id,k){const r=RLINES[id],t=r&&r.t[k];if(!t)return'No such tier';const own=rsOwned(id),u=UB[r.u];
+function rsWhy(id,k){const r=RLINES[id],t=r&&r.t[k];if(!t)return'No such tier';if(r.on)return'Comes with '+RLINES[r.on].label;const own=rsOwned(id),u=UB[r.u];
   if(k<=own)return'Researched';if(k>own+1)return'Research '+r.t[k-1].n+' first';
   const lw=lockWhy(u);if(lw)return lw;if(L(u.id)<1)return'Field '+u.name+' first (buy Lv 1)';
-  if(rsProg()<t.gate)return gateTxt(t.gate);if(labOf(id))return'Researching';if(S.rp<t.cost)return'Need '+(t.cost-S.rp)+' more RP';
+  if(rsProg()<t.gate)return gateTxt(t.gate);if(labOf(id))return'Researching';const c=rsCost(id,k);if(S.rp<c)return'Need '+(c-S.rp)+' more RP';
   return labFree()?'':'Lab busy'}
 const rsDone=id=>rsOwned(id)>=RLINES[id].t.length-1;
 // tiers that are new since the last deployment (for the run-start banner); the first deployment after migration only records
-function rsFieldNew(){const prev=S.rsF;S.rsF=Object.assign({},S.rs);save();if(!prev)return'';
-  const n=RLINES.lines.filter(r=>(S.rs[r.id]|0)>(prev[r.id]|0)&&L(r.u)>0).map(r=>r.t[S.rs[r.id]|0].n);
+function rsFieldNew(){const prev=S.rsF;S.rsF=Object.assign({},S.rs);save();if(!prev)return'';const up=r=>(S.rs[r.id]|0)>(prev[r.id]|0)&&L(r.u)>0;   // a ride tier is named only when it landed on its own (a pre-merge squad job)
+  const n=[...RLINES.lines,...RLINES.ride].filter(r=>up(r)&&!(r.on&&up(RLINES[r.on]))).map(r=>r.t[S.rs[r.id]|0].n);
   return n.length>3?n.slice(0,3).join(' · ')+' +'+(n.length-3)+' more':n.join(' · ')}
 // first time a researched tier is ever fielded: a non-blocking briefing card through the intel pipeline (seen()['rs_'+line+'_'+tier])
 function rsBriefs(){let n=0;for(const r of RLINES.lines){if(n>=3)break;   // at most three a run so enemy contact cards are not held up
   const k=rTier(r.id);if(k<=rsDefTier(r.id)||L(r.u)<1)continue;const key='rs_'+r.id+'_'+k;if(seen()[key])continue;
-  const t=r.t[k],s=sigText(t.sig);INTEL[key]=[t.n,0,r.label+(t.w?': '+t.w:'')+'. '+(s||'DMG x'+fxm(t.mul)+(t.pen?', AP '+pct(t.pen):''))+'.'];spotted(key);n++}}
+  const t=r.t[k],s=sigText(t.sig),q=rsRideAt(r,k);INTEL[key]=[t.n,0,r.label+(t.w?': '+t.w:'')+'. '+(s||'DMG x'+fxm(t.mul)+(t.pen?', AP '+pct(t.pen):''))+'.'+(q&&q.fresh?' Squad: '+q.t.n+', '+q.t.w+'.':'')];spotted(key);n++}}
+// the ride tier (squad) that goes with host tier k: {t: its tier, fresh: this host tier is the one that brings it}; null for other lines
+const rsRideAt=(r,k)=>{const q=r.rides;if(!q)return null;const t=q.t[r.t[k].sq];return{t,fresh:k>0&&r.t[k].sq>r.t[k-1].sq}};
 const rsReady=()=>RLINES.lines.filter(r=>!rsDone(r.id)&&!rsWhy(r.id,rsOwned(r.id)+1));
 // lines whose next tier could start as soon as there is RP and a free lab slot (gate, fielding and the lab queue are clear)
 const rsOpenNext=r=>{if(rsDone(r.id))return false;const w=rsWhy(r.id,rsOwned(r.id)+1);return!w||w==='Lab busy'||w.startsWith('Need ')};
@@ -1938,11 +1966,13 @@ const labSkipCost=ms=>ms>0?Math.max(1,Math.ceil(GEM_PER_H*Math.pow(ms/3600e3,0.8
 function labTick(){const now=labNow(),out=[];let ch=false;
   for(const j of S.lab.q.slice()){const r=RLINES[j.id],bad=!r||(j.rf?!rsDone(j.id)||(S.rf[j.id]|0)>=j.k:j.k>=r.t.length||rsOwned(j.id)>=j.k);
     if(!bad&&j.end>now)continue;S.lab.q.splice(S.lab.q.indexOf(j),1);ch=true;if(bad)continue;
-    if(j.rf)S.rf[j.id]=j.k;else S.rs[j.id]=j.k;Plat.cancel('lab:'+j.id);const n={id:j.id,k:j.k};if(j.rf)n.rf=1;S.lab.news.push(n);out.push(n)}
+    if(j.rf)S.rf[j.id]=j.k;else{S.rs[j.id]=j.k;const q=r.rides;if(q&&j.sq>0)S.rs[q.id]=Math.max(rsOwned(q.id),Math.min(q.t.length-1,j.sq|0))}   // job.sq: the squad tier this Infantry tier paid for
+    Plat.cancel('lab:'+j.id);const n={id:j.id,k:j.k};if(j.rf)n.rf=1;S.lab.news.push(n);out.push(n)}
   if(S.lab.news.length>8)S.lab.news.splice(0,S.lab.news.length-8);if(ch)save();return out}
-function labStart(id){const r=RLINES[id];if(!r||!S.lab)return false;labTick();if(labOf(id)||!labFree())return false;const now=labNow();
+// A ride line (the squad) is never started on its own; a squad job from before the merge still finishes (labTick lands any line).
+function labStart(id){const r=RLINES[id];if(!r||r.on||!S.lab)return false;labTick();if(labOf(id)||!labFree())return false;const now=labNow();
   if(rsDone(id)){const n=S.rf[id]|0,c=refitCost(n);if(S.rp<c)return false;S.rp-=c;S.lab.q.push({id,k:n+1,rf:1,t0:now,end:now+refitMs(n)})}
-  else{const k=rsOwned(id)+1;if(rsWhy(id,k))return false;S.rp-=r.t[k].cost;S.lab.q.push({id,k,t0:now,end:now+r.t[k].ms})}
+  else{const k=rsOwned(id)+1;if(rsWhy(id,k))return false;const p=rsPrice(id,k),j={id,k,t0:now,end:now+p.ms};if(p.sq)j.sq=p.sq;S.rp-=p.rp;S.lab.q.push(j)}
   labNote(S.lab.q[S.lab.q.length-1]);dqAdd('research',1);save();return true}
 // finish a running job with gems now; false (nothing spent) when there is no such job or the gems fall short
 function labSkip(id){const j=labOf(id);if(!j)return false;const c=labSkipCost(labLeft(j));if(c&&!gemSpend(c,'skip'))return false;j.end=labNow();labTick();Plat.cancel('lab:'+id);return true}
@@ -2321,7 +2351,7 @@ function renderHome(){fillIcons();labLand();const h=$('home');if(h.dataset.view!
   renderHdr();({base:renderBase,armory:renderArmory,rd:renderResearch,store:renderStore})[homeView]();_nar=narrow()}
 const affordable=u=>{const l=L(u.id);return l<u.max&&!lockWhy(u)&&S.bank>=costOf(u,l)};
 // how many next tiers the banked RP covers together (cheapest first)
-function rsAffordN(){let rp=S.rp,n=0;for(const c of RLINES.lines.filter(r=>rsOpenNext(r)&&!labOf(r.id)).map(r=>r.t[rsOwned(r.id)+1].cost).sort((a,b)=>a-b)){if(c>rp)break;rp-=c;n++}return n}
+function rsAffordN(){let rp=S.rp,n=0;for(const c of RLINES.lines.filter(r=>rsOpenNext(r)&&!labOf(r.id)).map(r=>rsCost(r.id,rsOwned(r.id)+1)).sort((a,b)=>a-b)){if(c>rp)break;rp-=c;n++}return n}
 let _bankTw=0;
 function renderHdr(){if(!_bankTw)$('bank').textContent='$'+fmtN(S.bank);$('rpBank').textContent=fmtN(S.rp);$('gemBank').textContent=fmtN(S.gems|0);
   const aff=U.some(affordable),rd=S.lab.news.length>0||rsReady().length>0,med=medalPts()>(S.set.medalSeen|0),st=storeDot();   // R&D dot: research landed, or the lab is free and a tier is affordable
@@ -2340,7 +2370,7 @@ const flash=el=>{if(!el)return;el.classList.remove('flash');void el.offsetWidth;
 // ================= OWNER DECISIONS (do NOT revert in UI passes) =================
 // 1) After-action report (.panel.aar) is GOLD/yellow so it stands out from other panels.
 // 2) Base screen: Quartermaster's Picks (#picks) and Next Unlocks (#nextUnl) stay REMOVED - the Armory covers them.
-//    Keep: Mission Briefing (commander kit, stats, checkpoint, Deploy), after-action report, R&D summary, Field Manual.
+//    Keep: Mission Briefing (infantry kit, stats, checkpoint, Deploy), after-action report, R&D summary, Field Manual.
 // 3) Armory shows ONLY unlocked, not-maxed upgrades; no locked list; category tabs with nothing buyable are hidden.
 // 4) R&D shows ONLY lines whose next tier is open (an RP shortfall still shows) and only the current + next tier per line.
 // Goal: a slow, non-overwhelming roll-out of progression for new players.
@@ -2420,7 +2450,7 @@ function closeThWin(go){const nx=mapNext(S.campWin);$('thWin').classList.remove(
   if(go&&nx&&switchMap(nx.id)){sfx('buy');toast('Now defending '+nx.name,'map')}else renderHome()}
 function renderMission(){const r=RLINES.dmg,k=rTier('dmg'),t=r.t[k];
   $('kit').innerHTML=`<div class="por" style="${rsEraVars(t)}"><canvas data-th="dmg:${k}" width="192" height="192"></canvas></div>`
-    +`<div class="kb"><div class="eyebrow">COMMANDER KIT</div><div class="kn">${t.n}</div><div class="kw">${t.w}</div><button class="chip-btn rd" data-rsgo="dmg">${ic('research',14)}Tier ${rank(k+1)} of ${r.t.length} · R&amp;D<span class="chev">→</span></button></div>`;
+    +`<div class="kb"><div class="eyebrow">INFANTRY KIT</div><div class="kn">${t.n}</div><div class="kw">${t.w}${L('squad')?' · squad: '+r.rides.t[rTier('squad')].n:''}</div><button class="chip-btn rd" data-rsgo="dmg">${ic('research',14)}Tier ${rank(k+1)} of ${r.t.length} · R&amp;D<span class="chev">→</span></button></div>`;
   paintThumb($('kit').querySelector('canvas'));
   $('loadout').innerHTML=[['HP','hp',fmtN(hpAt(L('hp')))],['DMG','dmg',fmtN(dmgAt(L('dmg'))*rMult('dmg'))],['VISION','vision',Math.round(vision())+'m'],
     ['SQUAD','squad',1+Math.min(8,L('squad'))],['WALLS','walls',L('walls')?'Lv '+L('walls'):'Crate'],['BEST','trophy',S.best]]
@@ -2452,7 +2482,7 @@ function renderPicks(){const el=$('picks'),p=recommend(3);if(!p.length){el.hidde
     +p.map(({u,why})=>{const l=L(u.id),c=costOf(u,l),ok=S.bank>=c;
       return`<div class="pick-row"><button class="ico" data-goto="${u.id}" aria-label="Show ${u.name} in the Armory">${ic(u.id,20)}</button><div style="min-width:0"><div class="pn">${u.name} <em>→ Lv ${l+1}</em></div>${why?`<div class="pw">${why}</div>`:''}</div>`
         +`<div class="pdv"><span>${u.val(l)}</span><b>→ ${u.val(l+1)}</b></div><button class="btn${ok?' pos':''}" data-buy="${u.id}"${ok?'':' disabled'}><span>${ok?'<span class="nc">$'+fmtN(c)+'</span> · BUY':'SAVE <span class="nc">$'+fmtN(c-S.bank)+'</span>'}</span></button></div>`}).join('')}
-function renderRdSum(){const rd=rsReady(),el=$('rdSum'),q=S.lab.q;if(!rd.length&&!q.length){el.innerHTML='';return}const n=rsAffordN(),cost=r=>r.t[rsOwned(r.id)+1].cost;
+function renderRdSum(){const rd=rsReady(),el=$('rdSum'),q=S.lab.q;if(!rd.length&&!q.length){el.innerHTML='';return}const n=rsAffordN(),cost=r=>rsCost(r.id,rsOwned(r.id)+1);
   el.innerHTML=`<div class="panel rdsum"><div class="sec-h"><div class="eyebrow">R&amp;D</div><button class="btn ghost sm" data-view-go="rd">OPEN R&amp;D<span class="chev">→</span></button></div>`
     +(q.length?`<div class="lstrip" style="margin-bottom:12px">${q.map(j=>`<button class="labs on" data-rsgo="${j.id}"><span class="ico">${ic(RLINES[j.id].u,18)}</span><span class="lb"><span class="ln">${labName(j)}</span><span class="lpb"><i data-lpb="${j.id}" style="width:${(100*labPct(j)).toFixed(1)}%"></i></span></span><b data-left="${j.id}">${durTxt(labLeft(j))}</b></button>`).join('')}</div>`:'')
     +`<div class="rdl">${ic('research',18)}<b>${fmtN(S.rp)} RP</b>${n?`<span>· <em>enough for ${n} ${pl(n,'tier')}</em></span>`:''}</div><div class="rdc">`
@@ -2487,8 +2517,8 @@ let armCat='ALL',_armFreeze=null;const _open=new Set();
 if(S.set.affFirst==null)S.set.affFirst=true;
 function buyUpgrade(id){const u=UB[id];if(!u)return false;const l=L(id),c=costOf(u,l);
   if(l<u.max&&S.bank>=c&&!lockWhy(u)){S.bank-=c;S.lv[id]=l+1;save();sfx('buy');return true}sfx('deny');return false}
-function rdLink(id){const r=RLINES[id];if(!r)return'';const k=rTier(id);
-  return`<button class="chip-btn rd rdl2" data-rsgo="${id}">${ic('research',12)}${r.t[k].n} · T${k+1}/${r.t.length}<span class="chev">→</span></button>`}
+function rdLink(id){const r=RLINES[id];if(!r)return'';const k=rTier(id),h=r.on&&RLINES[r.on],hk=h&&rTier(h.id);   // the squad card points at the Infantry Kit that equips it
+  return`<button class="chip-btn rd rdl2" data-rsgo="${h?h.id:id}">${ic('research',12)}${r.t[k].n} · ${h?h.label+' T'+(hk+1)+'/'+h.t.length:'T'+(k+1)+'/'+r.t.length}<span class="chev">→</span></button>`}
 function cardHtml(u,rec){const l=L(u.id),c=costOf(u,l),mx=l>=u.max,ok=affordable(u),isRec=rec.has(u.id),why=rec.get(u.id)||'',fin=isFinite(u.max);
   const prog=!fin?'':u.max<=12?`<div class="pips">${Array.from({length:u.max},(_,i)=>`<span class="${i<l?'f':''}"></span>`).join('')}</div>`:`<div class="lvbar"><i style="width:${(100*l/u.max).toFixed(1)}%"></i></div>`;
   const deps=U.filter(x=>lockWhy(x)&&(x.need||[]).some(n=>n[0]===u.id)&&!(isRec&&why==='Unlocks '+x.name));
@@ -2551,7 +2581,7 @@ const rsEra=t=>{const m=/era(\d)/.exec(t.art||'');return m?+m[1]:t.g<1?0:t.g<15?
 const rsEraVars=t=>{const[b,a]=RS_ERA[rsEra(t)];return`--eb:${b};--ea:${a}`};
 const fxm=n=>String(+n.toFixed(n<10?2:n<100?1:0));
 const rsNarrow=()=>narrow();
-const rsLine=()=>RLINES[S.set.rsLine]||RLINES.dmg;
+const rsLine=()=>{const r=RLINES[S.set.rsLine];return r?r.on?RLINES[r.on]:r:RLINES.dmg};   // a ride line (a pre-merge squad job in the lab strip) opens its host
 const rsDefTier=id=>id==='dmg'||id==='squad'?1:0;
 const rsLineLock=r=>{const u=UB[r.u];return lockWhy(u)||(L(u.id)<1?'Field '+u.name+' first (buy Lv 1)':'')};
 const rsNF=r=>r.id!=='dmg'&&!!rsLineLock(r);
@@ -2573,7 +2603,7 @@ function paintThumb(cv){const[id,ks]=cv.dataset.th.split(':'),k=+ks,r=RLINES[id]
   c.stroke(new Path2D(IC[r.u]||IC.star));c.restore()}
 function rsStats(r,k){const t=r.t[k],d=t.mul/r.t[rsOwned(r.id)].mul;
   return`<div class="rts"><span>${r.id==='walls'?'WALL HP':'DMG'} <b>×${fxm(t.mul)}</b>${d>1.001?` <em>×${fxm(d)} vs now</em>`:''}</span>`
-    +(t.pen?`<span>AP <b>${pct(t.pen)}</b></span>`:'')+(t.hp&&t.hp!==1?`<span>HP <b>×${fxm(t.hp)}</b></span>`:'')+(k>rsOwned(r.id)&&t.ms&&!labOf(r.id)?`<span class="tm">LAB <b>${durTxt(t.ms)}</b></span>`:'')+'</div>'}
+    +(t.pen?`<span>AP <b>${pct(t.pen)}</b></span>`:'')+(t.hp&&t.hp!==1?`<span>HP <b>×${fxm(t.hp)}</b></span>`:'')+(k>rsOwned(r.id)&&t.ms&&!labOf(r.id)?`<span class="tm">LAB <b>${durTxt(rsMs(r.id,k))}</b></span>`:'')+'</div>'}
 // the wave gate of a locked tier: progress on the theater that opens it (or which theater that is, while it is still closed)
 const rsGate=t=>{if(rsProg()>=t.gate||t.gate<=1)return'';const m=gateMap(t.gate),w=gateWave(t.gate),open=mapOpen(m.id),b=open?Math.min(mapBest(m.id),w):0;
   return`<div class="rgt">${ic('trophy',12)}${open?gateTxt(t.gate):'Opens in '+m.name+' (theater '+m.ord+')'}${open?`<em>best ${b}</em>`:''}<i style="width:${Math.round(100*b/w)}%"></i></div>`};
@@ -2601,6 +2631,9 @@ function labStrip(){const b=S.lab,rows=b.q.map(j=>{const ad=labAdBtn(j,true),row
   if(b.slots<LAB_SLOTS_MAX&&rsProg()>CLEAR_W)rows.push(`<button class="labs add" data-gems>${ic('lock',14)}<span>SECOND LAB SLOT</span><b>${ic('gem',13)}${fmtN(LAB_SLOT_GEMS)}</b></button>`);
   return`<div class="lstrip"><div class="eyebrow">LAB · ${b.q.length} OF ${b.slots} ${pl(b.slots,'SLOT')} BUSY</div>${rows.join('')}</div>`}
 const rsSigHtml=t=>{const s=sigText(t.sig);return s?`<div class="rsg">${ic('star',14)}<span>${s}</span></div>`:''};
+// Infantry Kit cards: the squad kit that serves with this tier ("+ SQUAD" with its weapon and signature when this tier brings it)
+function rsRideHtml(r,k){const q=r.rides;if(!q)return'';const own=rsOwned(r.id),have=rsRideHave(r),nu=k>own&&r.t[k].sq>have,t=q.t[k>own?Math.max(have,r.t[k].sq):rsOwned(q.id)],s=nu?sigText(t.sig):'';
+  return`<div class="rsq${nu?' new':''}">${ic('squad',14)}<span><b>${nu?'+ SQUAD':'SQUAD'}</b><span class="n">${t.n}</span>${nu&&t.w?' · '+t.w:''}${s?`<small>${s}</small>`:''}</span></div>`}
 // why the next tier is blocked, said once (the wave gate already has its own progress chip)
 function rsWhyHtml(r,k){const own=rsOwned(r.id),t=r.t[k];if(rsNF(r)||k<=own)return'';
   if(k>own+1)return`<div class="rwhy">${ic('lock',13)}<span>Research Tier ${rank(own+2)} first</span></div>`;
@@ -2610,22 +2643,22 @@ function rsBtn(r,k){const st=rsStL(r,k),t=r.t[k];
   if(st==='own')return'<button class="rbt gh" disabled>RESEARCHED</button>';
   if(st==='kit')return'';
   if(st==='lab'){const j=labOf(r.id);return skipBtn(j,'rbt')+labAdBtn(j)}
-  if(st==='ok')return`<button class="rbt go" data-rsbuy="${r.id}">RESEARCH · ${t.cost} RP</button>`;
+  if(st==='ok')return`<button class="rbt go" data-rsbuy="${r.id}">RESEARCH · ${rsCost(r.id,k)} RP</button>`;
   if(k===rsOwned(r.id)+1&&rsWhy(r.id,k)==='Lab busy')return`<button class="rbt" disabled>${labBusyTxt()}</button>`;
-  return k===rsOwned(r.id)+1||rsNF(r)?'<button class="rbt" disabled>LOCKED</button>':`<button class="rbt" disabled>${ic('lock',13)}${t.cost} RP</button>`}
+  return k===rsOwned(r.id)+1||rsNF(r)?'<button class="rbt" disabled>LOCKED</button>':`<button class="rbt" disabled>${ic('lock',13)}${rsCost(r.id,k)} RP</button>`}
 function rsRefit(r){const n=S.rf[r.id]||0,c=refitCost(n),ok=S.rp>=c;return{n,c,ok,tot:Math.pow(REFIT_MUL,n)}}
 function rsHead(r,nar){const k=rsOwned(r.id),t=r.t[k],n=S.rf[r.id]||0,lock=rsLineLock(r),nf=rsNF(r),u=UB[r.u],lw=lockWhy(u);
   return`<div class="rsdh"><div class="hd"><div class="ico">${ic(r.u,26)}</div><div class="rb"><h3>${r.label}${n?`<span class="badge b-own">REFIT MK ${rank(n)}</span>`:''}${nf?'<span class="badge b-nf">NOT FIELDED</span>':''}</h3>`
-    +`<div class="rt">${nf?'Starting kit':'In service'}: <b>${t.n}</b>${t.w?' · '+t.w:''}</div></div></div>`
+    +`<div class="rt">${nf?'Starting kit':'In service'}: <b>${t.n}</b>${t.w?' · '+t.w:''}${r.rides?` · squad: <b>${r.rides.t[rsOwned(r.rides.id)].n}</b>`:''}</div></div></div>`
     +(nar?'':`<div class="stepper" role="group" aria-label="Tiers">${r.t.map((q,i)=>`<button class="stp ${rsStL(r,i)}"${i<k||i>k+1?' disabled':` data-stp="${i}"`} title="Tier ${rank(i+1)}: ${q.n} · ${RS_STL[rsStL(r,i)].toLowerCase()}">${rank(i+1)}</button>`).join('')}</div>`)
     +(lock?`<div class="callout c-lock">${ic('lock',16)}<span>${nf?`Not fielded: buy ${u.name} Lv 1 in the Armory${lw?' ('+lw.replace(/^Needs /,'needs ')+')':''}.`:`Buy ${u.name} Lv 1 in the Armory to start ${r.label} research.`}</span><button class="btn sm" data-goto="${r.u}">OPEN IN ARMORY →</button></div>`:'')+'</div>'}
 function rsCard(r,k){const t=r.t[k],st=rsStL(r,k);
   return`<div class="rtc ${st}" data-k="${k}" style="${rsEraVars(t)}"><div class="rth"><canvas data-th="${r.id}:${k}" width="192" height="192"></canvas></div>`
     +`<div class="rtl2"><span>TIER ${rank(k+1)}</span><span class="badge ${RS_B[st]}">${RS_STL[st]}</span></div><div class="rtn">${t.n}</div>${t.w?`<div class="rtw">${t.w}</div>`:''}`
-    +rsStats(r,k)+rsSigHtml(t)+(st==='lab'?labBar(labOf(r.id)):'')+(st==='lk'?rsGate(t)+rsWhyHtml(r,k):'')+rsBtn(r,k)+'</div>'}
+    +rsStats(r,k)+rsSigHtml(t)+rsRideHtml(r,k)+(st==='lab'?labBar(labOf(r.id)):'')+(st==='lk'?rsGate(t)+rsWhyHtml(r,k):'')+rsBtn(r,k)+'</div>'}
 function rsRefitCard(r){const{n,c,ok,tot}=rsRefit(r),t=r.t[r.t.length-1],j=labOf(r.id),busy=!j&&!labFree();
   return`<div class="rtc rfc${j?' lab':''}" data-k="rf" style="${rsEraVars(t)}"><div class="rth"><canvas data-th="${r.id}:${r.t.length-1}" width="192" height="192"></canvas></div>`
-    +`<div class="rtl2"><span>REFIT MK ${rank(j?j.k:n+1)}</span><span class="badge ${j?'b-lab':'b-own'}">${j?'RESEARCHING':'ENDLESS'}</span></div><div class="rtn">Field Refit</div><div class="rtw">Depot rebuild of every ${t.n}</div>`
+    +`<div class="rtl2"><span>REFIT MK ${rank(j?j.k:n+1)}</span><span class="badge ${j?'b-lab':'b-own'}">${j?'RESEARCHING':'ENDLESS'}</span></div><div class="rtn">Field Refit</div><div class="rtw">Depot rebuild of every ${t.n}${r.rides?' and '+r.rides.t[r.rides.t.length-1].n:''}</div>`
     +`<div class="rts"><span>${r.id==='walls'?'WALL HP':'DMG'} <b>+8%</b></span><span>NOW <b>×${fxm(tot)}</b></span>${j?'':`<span class="tm">LAB <b>${durTxt(refitMs(n))}</b></span>`}</div>`
     +(j?labBar(j)+skipBtn(j,'rbt')+labAdBtn(j):busy?`<button class="rbt" disabled>${labBusyTxt()}</button>`:`<button class="rbt ${ok?'rf':''}" ${ok?`data-rsbuy="${r.id}"`:'disabled'}>${ok?'REFIT · '+c+' RP':'NEED '+(c-S.rp)+' MORE RP'}</button>`)+'</div>'}
 // in service vs the next tier (fills the space under the track on desktop)
@@ -2633,16 +2666,18 @@ function rsCompare(r){if(rsNF(r)||rsDone(r.id))return'';const o=rsOwned(r.id),a=
   const tl=(k,v)=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`,ar='<span class="ar">→</span>';
   return`<div class="rcmp"><div class="eyebrow">COMPARE · IN SERVICE VS TIER ${rank(o+2)}</div><div class="cg">`
     +tl(w,`×${fxm(a.mul)}${ar}×${fxm(b.mul)}<em>×${fxm(x)}</em>`)+tl('ARMOR PIERCING',`${pct(a.pen||0)}${ar}${pct(b.pen||0)}`)
-    +(r.id==='dmg'?tl('HP',`×${fxm(a.hp||1)}${ar}×${fxm(b.hp||1)}`):'')+tl('COST',`${b.cost} RP`)+'</div>'+rsSigHtml(b)+'</div>'}
+    +(r.id==='dmg'?tl('HP',`×${fxm(a.hp||1)}${ar}×${fxm(b.hp||1)}`):'')
+    +(r.rides?(()=>{const q=r.rides.t,h=rsRideHave(r),qa=q[rsOwned(r.rides.id)].mul,qb=q[Math.max(h,b.sq)].mul;return tl('SQUAD DMG',`×${fxm(qa)}${ar}×${fxm(qb)}${qb>qa?`<em>×${fxm(qb/qa)}</em>`:''}`)})():'')
+    +tl('COST',`${rsCost(r.id,o+1)} RP`)+'</div>'+rsSigHtml(b)+rsRideHtml(r,o+1)+'</div>'}
 function rsCta(r){const own=rsOwned(r.id);
   if(rsLineLock(r)){const nf=rsNF(r);return`<button class="rsgo nf" data-goto="${r.u}"><span class="l1">${ic('lock',14)}${nf?'NOT FIELDED':'TIER '+rank(own+2)+' LOCKED'}</span><span class="l2">${nf?'OPEN ARMORY →':'BUY '+UB[r.u].name.toUpperCase()+' LV 1 IN THE ARMORY →'}</span></button>`}
   const j=labOf(r.id);if(j)return skipBtn(j,'rsgo');
   if(rsDone(r.id)){const f=rsRefit(r);if(!labFree())return`<button class="rsgo" disabled><span class="l1">REFIT MK ${rank(f.n+1)}</span><span class="l2">${labBusyTxt()}</span></button>`;
     return`<button class="rsgo${f.ok?' rf':''}"${f.ok?` data-rsbuy="${r.id}"`:' disabled'}><span class="l1">REFIT MK ${rank(f.n+1)}</span><span class="l2">${f.ok?f.c+' RP · '+durTxt(refitMs(f.n)).toUpperCase():'NEED '+(f.c-S.rp)+' MORE RP'}</span></button>`}
-  const k=own+1,t=r.t[k],w=rsWhy(r.id,k);
-  if(!w)return`<button class="rsgo go" data-rsbuy="${r.id}" aria-label="Research ${t.n}, tier ${rank(k+1)}, ${t.cost} RP, ${durTxt(t.ms)}"><span class="l1"><span class="t">${t.n.toUpperCase()}</span></span><span class="l2">RESEARCH · ${t.cost} RP · ${durTxt(t.ms).toUpperCase()}</span></button>`;
+  const k=own+1,t=r.t[k],w=rsWhy(r.id,k),p=rsPrice(r.id,k);
+  if(!w)return`<button class="rsgo go" data-rsbuy="${r.id}" aria-label="Research ${t.n}, tier ${rank(k+1)}, ${p.rp} RP, ${durTxt(p.ms)}"><span class="l1"><span class="t">${t.n.toUpperCase()}</span></span><span class="l2">RESEARCH · ${p.rp} RP · ${durTxt(p.ms).toUpperCase()}</span></button>`;
   if(w==='Lab busy')return`<button class="rsgo" disabled><span class="l1"><span class="t">${t.n.toUpperCase()}</span></span><span class="l2">${labBusyTxt()}</span></button>`;
-  if(rsProg()>=t.gate)return`<button class="rsgo" disabled><span class="l1"><span class="t">${t.n.toUpperCase()}</span></span><span class="l2">NEED ${t.cost-S.rp} MORE RP</span></button>`;
+  if(rsProg()>=t.gate)return`<button class="rsgo" disabled><span class="l1"><span class="t">${t.n.toUpperCase()}</span></span><span class="l2">NEED ${p.rp-S.rp} MORE RP</span></button>`;
   return`<button class="rsgo" disabled><span class="l1">${ic('lock',14)}TIER ${rank(k+1)} LOCKED</span><span class="l2">${w.toUpperCase()}</span></button>`}
 const rsVis=q=>!!labOf(q.id)||rsOpenNext(q);   // owner decision 4: open next tier (an RP shortfall or a busy lab still shows), or a job in the lab
 function renderResearch(){const nar=rsNarrow(),vis=RLINES.lines.filter(rsVis),r0=rsLine(),r=vis.includes(r0)||!vis.length?r0:vis[0],el=$('rd');
@@ -2658,8 +2693,8 @@ function renderResearch(){const nar=rsNarrow(),vis=RLINES.lines.filter(rsVis),r0
     h+=rsHead(r,true)+'<div class="rtls">'+r.t.map((t,k)=>{if(k<own||k>own+1)return'';const st=rsStL(r,k),on=k===sel;
       return`<div class="rtr ${st}${on?' sel':''}" data-k="${k}" style="${rsEraVars(t)}"><button data-rst="${k}" aria-expanded="${on}"><span class="mth"><canvas data-th="${r.id}:${k}" width="92" height="92"></canvas></span>`
         +`<span class="rb"><span class="rtn">${t.n}</span><span class="rtl2">TIER ${rank(k+1)} <span class="badge ${RS_B[st]}">${RS_STL[st]}</span></span></span>`
-        +`<span class="rc">${st==='own'||st==='act'||st==='kit'?ic('star',16):st==='lab'?(on?ic('research',16):`<span data-left="${r.id}">${durTxt(labLeft(labOf(r.id)))}</span>`):t.cost+' RP'}</span></button>`
-        +(on?`<div class="rtx">${t.w?`<div class="rtw">${t.w}</div>`:''}${rsStats(r,k)}${rsSigHtml(t)}${st==='lab'?labBar(labOf(r.id))+labAdBtn(labOf(r.id)):''}${st==='lk'?rsGate(t)+rsWhyHtml(r,k):''}</div>`:'')+'</div>'}).join('')
+        +`<span class="rc">${st==='own'||st==='act'||st==='kit'?ic('star',16):st==='lab'?(on?ic('research',16):`<span data-left="${r.id}">${durTxt(labLeft(labOf(r.id)))}</span>`):rsCost(r.id,k)+' RP'}</span></button>`
+        +(on?`<div class="rtx">${t.w?`<div class="rtw">${t.w}</div>`:''}${rsStats(r,k)}${rsSigHtml(t)}${rsRideHtml(r,k)}${st==='lab'?labBar(labOf(r.id))+labAdBtn(labOf(r.id)):''}${st==='lk'?rsGate(t)+rsWhyHtml(r,k):''}</div>`:'')+'</div>'}).join('')
       +(rsDone(r.id)?`<div class="rtr" data-k="rf" style="${rsEraVars(r.t[r.t.length-1])}"><button disabled><span class="mth">${ic('repair',22)}</span><span class="rb"><span class="rtn">Refit Mk ${rank(rsRefit(r).n+1)}</span><span class="rtl2">ENDLESS · +8% ${r.id==='walls'?'WALL HP':'DMG'} EACH</span></span><span class="rc">${rsRefit(r).c} RP</span></button></div>`:'')+'</div>';
     h+=rsCta(r)}
   else{h+='<div class="rsb"><nav class="rsl" aria-label="Research lines">'+(vis.length?'':`<div class="rsl-empty">${ic('lock',18)}<b>No lines open yet</b><span>Hold deeper waves and field new units in the Armory to open research lines.</span></div>`)+CATS.slice(1).filter(c=>vis.some(q=>UB[q.u].cat===c)).map(c=>`<h4>${c}</h4>`+vis.filter(q=>UB[q.u].cat===c).map(q=>{const lk=rsNF(q);
@@ -7789,8 +7824,7 @@ let _wallP=[null,null];
 const _thumbG={time:.35,units:[],air:[],aa:[],sold:[],fleet:[],missiles:[],nukes:[],jets:[],tshells:[],mines:[],nades:[],bombs:[],shells:[],gun:null,flashT:0,fighterT:0,wallHp:1,wallMax:1};
 // [world span across the square, x offset of the unit, painter]
 const THUMB={
-  dmg:[30,-3,t=>drawSoldierHQ({x:0,y:0,ang:0,main:true,alt:false})],
-  squad:[34,-3,t=>{if(KIT_ALT[t]){drawSoldierHQ({x:0,y:-7,ang:0,alt:false});drawSoldierHQ({x:-2,y:7,ang:0,alt:true})}else drawSoldierHQ({x:0,y:0,ang:0,alt:false})}],
+  dmg:[36,-2,t=>{drawSoldierHQ({x:-8,y:7,ang:0,alt:!!KIT_ALT[tierOf('squad')]});drawSoldierHQ({x:1,y:-3,ang:0,main:true,alt:false})}],   // Infantry Kit: the commander leads, a squad member at the matching tier behind
   turret:[40,-7,t=>drawMGNestHQ({x:0,y:0,ang:0},hqPx(),false)],
   tank:[70,-3,t=>{drawTankHQ(0,0,0,-.55,0,9,US.tank,hqPx(),tankOpt(t));if(t===5)drawDrones(0,0,2,5,26,.8)}],
   sniper:[40,-3,t=>drawSniperHQ({x:0,y:0,ang:-.3},hqPx(),false),1],
@@ -7813,7 +7847,7 @@ const THUMB={
     ctx.strokeStyle='rgba(0,0,0,.45)';ctx.lineWidth=.4;ctx.stroke();ell(0,0,i-1,i-1,'#4a4a3a');drawWallTier(ph,2)}]};
 function drawTierThumb(line,tier,c,size){const th=THUMB[line];if(!c||!th||!TIER_G[line])return;
   const t=Math.max(0,Math.min(TIER_G[line].length-1,tier|0)),m=ctx,g0=G,hq=HQ,ov=_tierOv;
-  ctx=c;G=_thumbG;HQ=true;_tierOv={[line]:t};c.save();c.beginPath();c.rect(0,0,size,size);c.clip();
+  ctx=c;G=_thumbG;HQ=true;const hr=RLINES[line];_tierOv={[line]:t};if(hr&&hr.rides)_tierOv[hr.rides.id]=hr.t[t].sq;c.save();c.beginPath();c.rect(0,0,size,size);c.clip();
   try{const k=size/(th[0]*(th[3]?bS():1));c.translate(size/2,size/2);c.scale(k,k);c.translate(th[1],0);th[2](t)}
   finally{c.restore();ctx=m;G=g0;HQ=hq;_tierOv=ov;_thumbG.units=[];_thumbG.air=[];_thumbG.aa=[];_thumbG.gun=null}}
 // ================= /HIGH-DETAIL SPRITES =================
