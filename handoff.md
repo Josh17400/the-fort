@@ -29,10 +29,10 @@ Top-down modern-military roguelite fort defense. Tap/click enemies to shoot them
 | Save (localStorage) | `S`. `S.lv` = upgrade levels, `S.rs` = research tiers, `S.rp` = Research Points, `S.set` = settings (gfx, dayNight, startWave, speed…), `S.mg`/`S.ms` = medals. `S.map`/`S.maps` = campaign theaters (see "Campaign core"): `S.lv`, `S.bank`, `S.best`, `S.set.startWave` are the ACTIVE theater's |
 | Campaign | `MAPS`, `switchMap(id)`, `campInit`, `campHold`, `mapCur()`, `MAPM`, `careerBest()`, `rsBest()`, `mapHooks`. UI: `renderTheater`, `openTheaters`, `openThWin` |
 | Upgrades | table `U` (`id, need, wave, max, cost, g, cat`). Helpers: `L(id)`, `lockWhy(u)`, `costOf(u,l)` |
-| Research | `RLINES`, `rTier(id)`, `rMult`, `rSig`, `rsOwned`, `rsWhy`, `rsDone`, `rsReady`, `rsOpenNext`. Gates `RS_GATE` + `rsProg()`; prices `RS_RP`/`rsCostAt`; lab times `RS_MIN`/`rsMinAt` |
+| Research | `RLINES` (`lines` + ride-along `ride`: the squad rides on Infantry Kit `dmg`), `rTier(id)`, `rMult`, `rSig`, `rsOwned`, `rsWhy`, `rsDone`, `rsReady`, `rsOpenNext`. Gates `RS_GATE` + `rsProg()`; prices `RS_RP`/`rsCostAt`; lab times `RS_MIN`/`rsMinAt`; what a tier costs on this save `rsPrice`/`rsCost`/`rsMs` |
 | Lab + gems | `S.lab`, `labStart`, `labTick`/`labLand`, `labLeft`, `labSkip`, `labSkipCost`, `labBuySlot`, `labUi` (1s ticker). Lab speed-up ad `labAd`/`labAdSt`/`labAdBtn` `S.gems`, `gemAdd(n,src)`, `gemSpend(n,why)`, `GEM_FREE`, `openGems()`. Shop markup `gemHtml()`, one click handler `shopClick` on `#gemBody` (sheet) and `#shop` (STORE view), repaint `gemRefresh()` |
 | RP economy | `rpWave(w)` (0 before wave 10, then +1 per 10 waves, bonus on multiples of 10). Tier prices follow the tier's campaign gate (`rsCostAt`). Record bonus +1 only when w>=10. Medals give `rpGain(3)`. Checkpoint back-pay `cpBackPay` (cash + RP, after 5 held waves). Veteran back-pay `min(150,best+3*medals)` |
-| Graphics | presets via `S.set.gfx`, `GFX`, `hiGfx()`. Baked sprite cache: `hqBake`/`hqDraw` (tier keys end in `_tN`) |
+| Graphics | presets via `S.set.gfx`, `GFX`, `hiGfx()`. Baked sprite cache: `hqBake`/`hqDraw` (tier keys end in `_tN`). Fort look = `fortDes()` (Fort Walls research) via `wallMat`/`wallRise`; Armory levels only size it |
 | Day/night + shadows | `G.todT`, `SH` (len/alpha), `hqShadow`. Vehicles have headlights at night |
 | Renderer | ChaosGL: instanced WebGL with a Canvas2D fallback |
 | Layout | `fortHalf`, `wallThick`, `wireOut`, `laneHalf(k)`, `driveLane`, `placeSquad`; scale table `US` |
@@ -287,7 +287,7 @@ The campaign loop is play → die → earn a little RP → start research → re
 
 ### R&D gated by theater (`RS_GATE`, `rsProg()`)
 - Campaign progress `rsProg()` = (theater order − 1) × 100 + that theater's best wave (a cleared theater counts 100; only open theaters count). A tier opens when `rsProg() >= t.gate`.
-- 107 researchable tiers (128 with the 21 starting kits): Desert Outpost 16 (Rifleman + Rifle Squad at wave 1 as the tutorial), theaters 2-8 13 each, spread over waves 3…94 in the order the old wave gates rolled them out (`.qa/gates.js` regenerates the table). Vanguard Commander is last, at Capital Defense wave 94.
+- 100 researchable tiers since the Infantry Kit merge (was 107; see "Infantry Kit and fort design"): Desert Outpost 13 (Rifleman at wave 1 as the tutorial), Mountain 12, Coastal 12, City 13, Arctic 12, Jungle 13, Island 13, Capital 12, spread over waves 3…94 in the order the old wave gates rolled them out (`.qa/gates.js` regenerates the table). Vanguard Commander is last, at Capital Defense wave 94.
 - `t.g` (old wave gate) now only picks the tier's era tint. `t.gate`, `t.cost` (RP, `RS_RP` anchors per theater, geometric in between) and `t.ms` (lab time, `RS_MIN` anchors) are filled in at load. `.qa/tiers.js` prints the per-theater table.
 - Lock text `gateTxt(g)` ("Reach wave 58 on Mountain Pass"); a tier in a theater not yet open reads "Opens in <theater>".
 
@@ -327,7 +327,7 @@ Phase 3 was tuned on a build without the twists and without obstacle pathfinding
 - `MAP_DIFT` late hpMul: Mountain 9.5, Coastal 38, City 140, Arctic 550, Jungle 2500, Island 7000, Capital 13500 (early hp0 2/6/30/60/80/90/100; dmg = rew = 1.075^(ln hp / ln 1.11)). Mountain was 9 and Capital 15000 before the twist retune below.
 - Free player, 4 sessions/day (~1.2 h play/day), days per theater: Desert 2.6 · Mountain 3.6 · Coastal 1.4 · City 4.6 · Arctic 2.6 · Jungle 10.2 · Island 8.6 · Capital 9.2 → about 43 days (6.1 weeks), ~620 runs, ~51 h of play. Per-theater variance is large (a clear needs one lucky wave-75→100 run once the fort is capped): the same theater from the same arrival ranged 2.6-7.2 days across players.
 - Armory caps run out at wave ~94-99 in every theater; after that the push to 100 is R&D-paced (lab timers).
-- R&D owned at each clear: 16 · 29 · 34 · 46 · 50 · 75 · 88 · 97 of 107 (the last ~10 tiers finish in the lab about a week after the Capital clear).
+- R&D owned at each clear: 16 · 29 · 34 · 46 · 50 · 75 · 88 · 97 of 107 (the last ~10 tiers finish in the lab about a week after the Capital clear). These are phase 3 bot numbers from before the Infantry Kit merge; the merge folds 7 squad tiers into Infantry tiers without changing RP or lab time per theater, so read them as the same progress on a 100-tier scale.
 - +100 gems/day player (buys the 2nd slot, skips long jobs): Jungle 8.6, Island 5.4, Capital 6.8 days (−16…−37% vs free); campaign ≈ 40 days. Free gems earned by the end ≈ 800.
 
 ### Progression model and tests (`.qa/` in the worktree, gitignored)
@@ -509,3 +509,40 @@ Owner-approved: an optional rewarded ad that speeds up the running research time
   - the gem-skipping log (cb_P) barely waits on the lab: −0.1%
   - For comparison 3 × 30 min would be −2.9…−3.4%, 3 × 1 h −5.4…−6.5%. With the phase 4 dailies (−3…−5%) a free player who watches everything finishes ≈ 7-9% sooner (~39-40 days instead of 43). RP is untouched (owner rule 3): the ad buys time, never RP. Not re-simulated with the bot.
 - **QA:** `.qa/t_adlab.js` (62 checks: numbers, web hidden, dev buttons in the strip and on the card, an hour off + ledger + notification + interstitial hold, cap across slots, rollback, next day, skipped / no-fill, finish-when-short + lands normally, 2 min threshold, hidden in a run, job landing mid-ad, Refit, ledger across reopen, click path with the simulated SKIP, ticker cut → fin → gone → new day). Screenshots: `.qa/t_adshot.js` (`HASH` contains `fin` / `refit` / `scroll`) via `python h.py shot <name> t_adshot.js WxH [phone]`.
+
+## Infantry Kit and fort design (branch `rd-fort`)
+Two owner requests: "the fort should look the same and only change in design until you finish an R&D project", and "tie the soldiers and commander R&D into one".
+
+### One Infantry Kit line (`RLINES.dmg`, label "Infantry Kit")
+- The Squad Kit is no longer a research line. It lives in `RLINES.ride` (`{id:'squad', on:'dmg'}`), indexed like any line (`RLINES.squad`, `RLINES.dmg.rides`), so `rTier/rMult/rSig/rPen/sg('squad',…)`, `KIT.squad`, `TIER_G.squad` and every weapon/art reader work unchanged. Each Infantry tier has `sq` = the squad tier it brings, paired by era: `[0,1,2,3,4,5,6,6,7,7]` (Coilgun Vanguard and Vanguard Commander bring no new squad kit).
+- `S.rs.squad` stays the squad tier actually owned. A tier lands its squad tier through the lab job (`job.sq`, set by `labStart`, applied in `labTick`). An Infantry Kit Refit also counts for the squad (`rMult` adds the host's Refits).
+- Prices: a host tier's `cost`/`ms` = its own (`cc`/`cm`, at the commander's gate) + the ride tiers it brings (each at its old `RS_GATE.squad` price point). `rsPrice(id,k)` is what the tier costs on THIS save: it also bundles squad tiers a pre-merge save fell behind on, and never charges for squad tiers already owned or still running in the lab. Every price reader uses `rsCost`/`rsMs` (`rsWhy`, `labStart`, `rsAffordN`, Base R&D summary, cards, CTA, compare, AAR counter).
+- Gates: Infantry tiers keep the commander's gates. The only squad price that changed theater was Drone-Teamed Squad (City 323 -> Coastal 294), so F-15EX moved 286 -> 323 (City wave 23) to keep each theater's RP and lab hours where phase 3 put them (`.qa/rdtot.js` prints the table).
+
+| Tier | Commander | Squad | Opens at | RP (cmd + squad) | Lab |
+|---|---|---|---|---|---|
+| 1 | Recruit | Militia | start | - | - |
+| 2 | Rifleman | Rifle Squad | 1 (Desert w1) | 40 (20 + 20) | 2m |
+| 3 | Designated Marksman | Fireteam | 6 (Desert w6) | 70 (25 + 45) | 4m |
+| 4 | Squad Leader | Infantry Squad (NGSW) | 52 (Desert w52) | 410 (110 + 300) | 32m |
+| 5 | Grenadier Sergeant | Mechanized Dismounts | 158 (Mountain w58) | 1140 (560 + 580) | 3h 30m |
+| 6 | Smart-Rifle Operator | Drone-Teamed Squad | 294 (Coastal w94) | 1540 (740 + 800) | 10h 15m |
+| 7 | Exoskeleton Trooper | Exo Squad | 458 (Arctic w58) | 2350 (1150 + 1200) | 18h 15m |
+| 8 | Coilgun Vanguard | keeps Exo Squad | 616 (Island w16) | 1550 | 12h 30m |
+| 9 | Directed-Energy Operator | Directed-Energy Squad | 709 (Capital w9) | 3700 (1850 + 1850) | 30h 45m |
+| 10 | Vanguard Commander | keeps Directed-Energy Squad | 794 (Capital w94) | 2100 | 17h 45m |
+
+- Totals: Commander Kit 8105 RP / 60.6 h + Squad Kit 4795 RP / 33.0 h = Infantry Kit 12900 RP / 93.6 h (identical). Whole tree 107520 -> 107590 RP (+70, the F-15EX move), 786.8 -> 787.8 lab hours; per-theater RP and lab hours unchanged except Coastal +70 RP / +1.0 h. Tiers per theater 16/13/13/13/13/13/13/13 -> 13/12/12/13/12/13/13/12.
+- Pre-merge saves (no migration step, nothing rewritten): both old tiers are kept as they are. Commander ahead of the squad (`rs {dmg:5, squad:2}`): the squad stays 2 (no free tiers) and the next Infantry tier bundles squad 3-6 at their prices. Squad ahead (`{dmg:2, squad:5}`): the squad keeps 5 and Infantry tiers 3-5 cost the commander part only. A running Squad Kit job keeps its slot and lands as a squad tier (its lab-strip row opens Infantry Kit; `labStart('squad')` is refused; `rsWhy('squad',…)` = "Comes with Infantry Kit"). A running Commander Kit job (no `sq`) lands the commander only. Old squad Refits stay on top of Infantry Refits.
+- UI: R&D shows one "Infantry Kit" line; each card has a SQUAD row (`rsRideHtml`: "+ SQUAD" with the squad weapon and signature when the tier brings one); the desktop compare adds SQUAD DMG; the header names the squad in service; the thumbnail paints the commander with a squad member (support weapon when the squad kit has one). Mission Briefing eyebrow "INFANTRY KIT" + squad name; the Armory Squad card's research chip opens Infantry Kit. Owner rules kept: only open lines, current + next tier.
+- Parity: `t_par` identical to main (curves -2048449059; midsim/freshsim unchanged, midsim's `rs {dmg:3, squad:2}` keeps its squad 2).
+
+### Fort design follows Fort Walls research (`fortDes`, right before `drawFloor`)
+- `fortDes()` = `tierOf('walls')` (the run's snapshot while deployed, the saved tier at the base). It picks the material `wallMat(d)` (T0 timber palisade, T1 precast blocks, T2+ poured concrete), the wall height `wallRise(d, lo)`, the bake seed, and the concertina (`bakeWire`: T0 one coil, T1 two, T2 16u pickets, T3+ triple stack). The tier overlays (`drawWallTier`) were already research-driven.
+- Armory levels only size things: `wallHalfAt`/`wallThickAt` (collision, placement), `wireOut` (ring distance, slow). The concrete yard fittings (pallets from ph 40, helipad from ph 60) appear when they fit: a size rule, not a design step. The commander's sandbag ring is on every walled fort (was Walls 2+).
+- Caches keyed on the design: `fortBake` (`[ph,wlv,d,up,ppu]`, stores `mat`), the Medium/Low `fortLo` sprite key, and the terrain key (the wire coils are baked into the ground: `…|<wi>d<tier>|…` when wire exists). Terrain parity: at T2 the coils are the old Wire-3 coils and the Desert terrain hash equals main (1443581287). `t_ter`'s seed (Walls 6 / Wire 3, no research = T0 coils) now prints -315567360 by design.
+- The moment: the first deployment after a new design (`S.fortSeen` = the last design deployed with walls standing; the very first deployment only records) sets `G.fortUp`; `fortSweep` (called from `drawWallTier`) sweeps a light band across the walls and towers for 2.6 s from 0.5 s and shows a "FORT UPGRADED / <tier>" pill over the north wall at a constant 14 px. A walls tier landing at the base toasts "Fort redesigned: <tier> · rebuilt for your next deployment". Each Fort Walls card shows a FORT DESIGN row (`t.look`, `rsLookHtml`), and its thumbnail is the real fort bake at that tier.
+
+### QA (`.qa/`, gitignored)
+- `t_merge.js` (45: data, totals, gates, fresh progression, commander-ahead / squad-ahead saves, running squad job in one and two slots, old commander job, old squad Refit, Refits reach the squad, UI) and `t_fort.js` (23: material and wall colour across Walls 2/6/12 at T0/T1/T2/T5, Walls 3→4→7 keeps the palisade, wire coils vs Wire level, terrain parity at T2, Low sprite key, mid-run freeze, the upgrade moment once, thumbnails, bag ring). Run: `python h.py dom merge t_merge.js`, `VT=40000 python h.py dom fort t_fort.js`.
+- Updated: `t_econ.js` ("two at once" uses walls; 100 gated tiers). `rdtot.js` = the before/after economy table. `fortshot.py` = WebKit iPhone shots (`walls:wire:tier:gfx:zoom`, `sweep:walls:wire:tier:secs`, `rd:<line>`).

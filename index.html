@@ -1710,7 +1710,7 @@ function rsCounter(){if(!lastCause.top.some(t=>ARMOR_KILL[t]||t==='technical')||
 // squad tier it had, ahead of or behind its commander (the next Infantry tier then bundles the squad tiers it still lacks: rsCost).
 const REFIT_MUL=1.08,refitCost=n=>Math.round(300*Math.pow(1.15,n)),refitMs=n=>Math.min(24,4*Math.pow(1.08,n))*3600e3;
 const RLINES={currency:'RP',rpCost:'rsCostAt(gate)',refit:{mul:REFIT_MUL,cost:'300*1.15^n',time:'4h*1.08^n (max 24h)'},lines:[
- {id:'dmg',label:'Infantry Kit',u:'dmg',ride:'squad',t:[
+ {id:'dmg',label:'Infantry Kit',u:'dmg',t:[
   {n:'Recruit',w:'M17 sidearm',g:0,mul:0.6,hp:1,sq:0,art:'era0 softcap noplate pistol'},
   {n:'Rifleman',w:'M4A1 carbine',g:1,mul:1,hp:1,sq:1,art:'era1 helmet plate carbine'},
   {n:'Designated Marksman',w:'Mk 12 SPR, 4x optic',g:15,mul:1.25,hp:1.25,sq:2,sig:{pierce:[1,0.5]},art:'era2 optic longbarrel'},
