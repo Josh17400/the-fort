@@ -119,8 +119,9 @@ platform :ios do
     cer_file = Dir["#{out}/*.cer"].first
     UI.user_error!("cert() outputs not found in #{out}") unless key_file && cer_file
     sh("openssl x509 -inform DER -in #{cer_file.shellescape} -out #{out.shellescape}/cert.pem")
-    # -passout env keeps the password out of the logged command line; macOS LibreSSL
-    # already exports a legacy-compatible p12.
-    sh("openssl pkcs12 -export -inkey #{key_file.shellescape} -in #{out.shellescape}/cert.pem -passout env:CERT_EXPORT_PASS -out #{out.shellescape}/dist_full.p12")
+    # -passout env keeps the password out of the logged command line. The runner's openssl
+    # can be OpenSSL 3 (AES/SHA-256 p12), which `security import` rejects with "MAC
+    # verification failed", so force the legacy 3DES + SHA-1 MAC that macOS reads.
+    sh("openssl pkcs12 -export -inkey #{key_file.shellescape} -in #{out.shellescape}/cert.pem -certpbe PBE-SHA1-3DES -keypbe PBE-SHA1-3DES -macalg sha1 -passout env:CERT_EXPORT_PASS -out #{out.shellescape}/dist_full.p12")
   end
 end
