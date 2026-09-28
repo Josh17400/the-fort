@@ -4109,7 +4109,7 @@ const combatOn=()=>G.spawnLeft>0||G.enemies.length>0||G.drops.length>0;
 const laneOuter=()=>laneHalf(L('apc')?2:L('tank')?1:0);
 const wrapA=a=>Math.atan2(Math.sin(a),Math.cos(a));
 const turnTo=(a,b,m)=>{const d=wrapA(b-a);return a+Math.max(-m,Math.min(m,d))};
-// runway geometry (must match drawAirGround) plus the jet apron south of it
+// runway geometry (must match drawRunway) plus the jet apron south of it
 function rwyGeo(){const ph=wallHalfAt(L('walls')),w=Math.max(ph*2.8,200),y=runwayY(),ay=y+RWY_H+4;return{w,x0:-w/2,x1:w/2,y,cy:y+RWY_H/2,ay,am:ay+APRON_H/2}}
 function lanePer(lane){const H=laneHalf(lane),B=H+laneSouth(),rad=18;return 2*(2*(H-rad))+2*(H+B-2*rad)+2*Math.PI*rad}
 // lane parameter closest to a fuel point's bays (cached per run)
@@ -4310,9 +4310,10 @@ function drawDepot(){const D=G.depot,dl=L('ddef'),dead=D.dead,t=G.time,m=ctx.get
   if(!dead)for(const gn of D.guns){const aa=gn.k==='aa';ctx.save();ctx.translate(gn.x,gn.y);if(!st)depotGunBase(gn,0,0);ctx.rotate(gn.ang);   // sandbag ring + base baked with the depot
     if(aa){box(-4,-4,8,8,'#4e5a3a');box(3,-2.6,14,1.4,'#1d2118');box(3,1.2,14,1.4,'#1d2118');ell(-1,0,2.4,2.4,'#56692e')}
     else{box(0,-1.2,4,2.4,'#2a2a2a');box(4,-0.5,8,1,'#111');ell(-1.5,0,2.3,2.3,'#56692e')}
-    if(G.time-(gn.fl||-9)<0.05)ell(aa?19:13,0,2.6,1.5,'#ffcf5a');ctx.restore()}
-  if(!dead&&D.hp<D.max){const px=1/sc,w=Math.max(70,60*px),h=Math.max(3,3*px),y=D.y-68-h;box(D.x-w/2,y,w,h,'rgba(0,0,0,.7)');
-    box(D.x-w/2,y,w*D.hp/D.max,h,D.hp/D.max>0.5?'#7fd35a':D.hp/D.max>0.25?'#e3b53c':'#ef5a4f')}}
+    if(G.time-(gn.fl||-9)<0.05)ell(aa?19:13,0,2.6,1.5,'#ffcf5a');ctx.restore()}}
+// depot HP bar: world UI (after the fog, beside the site bars), so hostiles standing on the fuel farm never cover it
+function drawDepotHp(){const D=G.depot;if(!D||D.dead||D.hp>=D.max)return;const px=1/sc,w=Math.max(70,60*px),h=Math.max(3,3*px),y=D.y-68-h;box(D.x-w/2,y,w,h,'rgba(0,0,0,.7)');
+  box(D.x-w/2,y,w*D.hp/D.max,h,D.hp/D.max>0.5?'#7fd35a':D.hp/D.max>0.25?'#e3b53c':'#ef5a4f')}
 function depotGunBase(gn,x,y){const aa=gn.k==='aa';ctx.save();ctx.translate(x,y);sandbags(aa?9:6.5,aa?12:9);ell(0,0,aa?7:4.6,aa?7:4.6,'#4a4331');ctx.restore()}
 // the depot's static art in its own frame (berm, apron, pumps, tanks, tanker, sandbags); hoses, lamps, fire and guns are live
 function depotArt(D,dl,dead){
@@ -4333,6 +4334,11 @@ function depotArt(D,dl,dead){
   if(dl){for(let x=-44;x<44;x+=6){box(x,-60,5.4,3.2,(x/6|0)%2?'#8a7650':'#7d6a46');box(x,57,5.4,3.2,(x/6|0)%2?'#7d6a46':'#8a7650')}   // sandbag walls, open to the lanes on the west
     for(let y=-56;y<57;y+=6)box(41,y,3.2,5.4,(y/6|0)%2?'#8a7650':'#7d6a46');for(const y0 of[-56,38])for(let y=y0;y<y0+18;y+=6)box(-44,y,3.2,5.4,'#7d6a46')}
   else{ctx.strokeStyle='rgba(170,175,160,.55)';ctx.lineWidth=.5;ctx.setLineDash([2,1.5]);ctx.strokeRect(-42,-58,84,116);ctx.setLineDash([])}}
+// Base ground pass (draw(): after the terrain, fort and cloud shadows, before crates and every ground unit). Flat or fixed base
+// structures only: runway + parked fighters, jet apron, helipads, fuel depot (or field dump), motor pool / hangar yards with
+// their wrecks and gantries, jets still on the ground. Hostiles, friendly vehicles, recovery crews and landed paratroopers
+// all cross these pads (pathing allows it), so they are drawn afterwards and walk over them instead of vanishing underneath.
+function drawBaseGround(){drawRunway();drawLogiGround()}
 function drawLogiGround(){if(!G.fleet)return;
   if(G.fleet.length)drawApron();drawHelipads();
   if(G.depot)drawDepot();else if(G.units.some(u=>u.fuel!=null&&u.k!=='heli'))drawFieldDump();
@@ -4637,7 +4643,7 @@ function destroySite(s){s.dead=true;s.hp=0;const air=s.air;
   for(const b of s.bays)b.w=null;s.crews.length=0;
   fcBlast(s.x,s.y,28);fireball(s.x,s.y+s.top*0.4,60,1.2);fireball(s.x,s.y+s.bot*0.4,60,1.1);ring(s.x,s.y,200,1,'255,200,140',6);puff(s.x,s.y,24,36,5,'28,24,20',50,0.7);decal(s.x,s.y,'scorch',110);shake(10);sfx('nuke',s.x,s.y);
   banner(air?'HANGAR DESTROYED':'MOTOR POOL DESTROYED',air?'No aircraft repairs for the rest of the run':'No vehicle repairs for the rest of the run','255,120,90')}
-// ---- drawing: sites, wrecks and recovery crews (ground pass, under the live units); bars and markers (world UI); falling aircraft
+// ---- drawing: sites and wrecks (base ground pass, under every unit), recovery crews (with the friendly units); bars and markers (world UI); falling aircraft
 // Wrecks are the real sprite painted once into a small canvas (the live painters run against a stand-in G, far from the fort so the
 // fort's own props stay off-canvas), charred for the hulk and clean for the rebuild cross-fade; cached per zoom bucket and preset.
 const FC_OFF=6000;
@@ -4745,11 +4751,14 @@ function drawSiteTop(s){if(s.dead)return;const t=G.time;
     if(G.time-(gn.fl||-9)<0.05)ell(13,0,2.6,1.5,'#ffcf5a');ctx.restore()}
   if(s.air){const wx=s.x+s.hw-6,wy=s.y+s.top+8,a=-0.5+Math.sin(t*0.8)*0.25;box(wx-.6,wy-.6,1.2,1.2,'#222');ctx.save();ctx.translate(wx,wy);ctx.rotate(a);   // windsock
     for(let i=0;i<4;i++)box(i*2.2,-1.1+i*.15,2.2,2.2-i*.3,i%2?'#e8e6de':'#e0602a');ctx.restore()}}
-function drawRepairGround(){if(!G.fw)return;const sites=[G.mp,G.hg].filter(Boolean);
-  for(const s of sites)drawSiteBase(s);
+// base ground pass: the yards, the wrecks waiting on the field or in a bay, and the gantries / truss / MG nests over the bays
+function drawRepairGround(){if(!G.fw)return;const mp=G.mp,hg=G.hg;
+  if(mp)drawSiteBase(mp);if(hg)drawSiteBase(hg);
   for(const w of G.fw)if(!w.svc&&w.st!=='tow')drawFcWreck(w);
-  for(const s of sites)drawSiteTop(s);
-  for(const s of sites)for(const c of s.crews){const w=c.w;
+  if(mp)drawSiteTop(mp);if(hg)drawSiteTop(hg)}
+// recovery trucks / tugs and the wreck on their hook: moving units, drawn with the friendly units above every ground structure
+function drawRepairCrews(){if(!G.fw)return;if(G.mp)drawSiteCrews(G.mp);if(G.hg)drawSiteCrews(G.hg)}
+function drawSiteCrews(s){for(const c of s.crews){const w=c.w;
     if(w&&(c.st==='back'||c.st==='hook')){const g=(s.air?9:24),rx=c.x-Math.cos(c.ang)*g,ry=c.y-Math.sin(c.ang)*g;if(w.st==='tow')drawFcWreck(w);
       ctx.strokeStyle='#161614';ctx.lineWidth=Math.max(0.6,0.9/sc);ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(w.x+Math.cos(w.a)*FC[w.k].span*0.3,w.y+Math.sin(w.a)*FC[w.k].span*0.3);ctx.stroke()}
     drawFcCrew(c,s.air)}}
@@ -4823,8 +4832,8 @@ function updateAir(dt,ph){
   updateJets(dt);
   if(G.flashT>0)G.flashT-=dt;
 }
-function drawAirGround(){
-  if(S.set.gfx==='high'){drawAirGroundHQ();return}
+// runway + the fighters parked on it: flat base scenery, drawn in the base ground pass (drawBaseGround) under every ground unit
+function drawRunway(){if(S.set.gfx==='high'){drawRunwayHQ();return}
   const ph=wallHalfAt(L('walls'));
   if(L('airstrip')&&L('walls')){const w=Math.max(ph*2.8,200),y=runwayY(),hgt=RWY_H,cy=y+hgt/2,P='#d8d4b0';
     box(-w/2-6,y-5,w+12,hgt+10,'#3b3f36');box(-w/2,y,w,hgt,'#2b2d2a');                            // shoulder + asphalt
@@ -4836,7 +4845,9 @@ function drawAirGround(){
     box(-w/2,y,3,hgt,'#c9a227');box(w/2-3,y,3,hgt,'#c9a227');
     if(G.fighterT>2&&L('fighter')){const n=Math.min(1+Math.floor(L('fighter')/2),Math.max(1,Math.floor((w-80)/70)));
       const ft=tierOf('fighter');for(let i=0;i<n;i++){const jx=-w/2+56+i*70;ctx.save();ctx.translate(jx+3,cy+4);ctx.fillStyle='rgba(0,0,0,.35)';drawJet(2.1);ctx.restore();
-        ctx.save();ctx.translate(jx,cy);ctx.scale(2.1,2.1);ctx.fillStyle=JET_LO[ft];drawJet();jetLoDetail(ft);ctx.restore()}}}
+        ctx.save();ctx.translate(jx,cy);ctx.scale(2.1,2.1);ctx.fillStyle=JET_LO[ft];drawJet();jetLoDetail(ft);ctx.restore()}}}}
+function drawAirGround(){
+  if(S.set.gfx==='high'){drawAirGroundHQ();return}
   for(const u of G.air){
     if(u.k==='silo'){const open=u.cd<3?Math.min(1,(3-u.cd)/1.5):0,s=US.silo*bS();ctx.save();ctx.translate(u.x,u.y);ctx.scale(s,s);
       box(-10,-10,21,21,'rgba(0,0,0,.3)');box(-10,-10,20,20,'#7a7c76');box(-10,-10,20,.8,'#9a9c95');ctx.strokeStyle='#3e403c';ctx.lineWidth=.5;ctx.strokeRect(-10,-10,20,20);   // hardened pad
@@ -6744,8 +6755,8 @@ function drawGunshipHQ(u,px){const k=US.gunship,gt=tierOf('gunship'),s=gt?hqBake
   if(gt<4)for(const y of[-24,-13,13,24]){ctx.save();ctx.translate(12,y);ctx.scale(.3,1);ctx.rotate(G.time*50+y);hqDraw(pr);ctx.restore()}
   gsGunFx(u,gt);l=hqLoc(-3,-3,u.ang,1);hqGlint(l[0],l[1],9,.18);ctx.restore()}
 // ---- airfield, silo, launcher, artillery ----
-function drawAirGroundHQ(){const px=hqPx(),ph=wallHalfAt(L('walls'));
-  if(L('airstrip')&&L('walls')&&G!==_thumbG){const w=Math.max(ph*2.8,200),y=runwayY(),hgt=RWY_H,cy=y+hgt/2,P='#d8d4b0';
+function drawRunwayHQ(){const px=hqPx(),ph=wallHalfAt(L('walls'));
+  if(L('airstrip')&&L('walls')){const w=Math.max(ph*2.8,200),y=runwayY(),hgt=RWY_H,cy=y+hgt/2,P='#d8d4b0';
     const rw=hqBake('rwy'+Math.round(w),Math.min(px,4),w+14,hgt+12,w/2+7,6,()=>{box(-w/2-6,-5,w+12,hgt+10,'#3b3f36');box(-w/2,0,w,hgt,'#2b2d2a');
       hqSpeckle(-w/2,0,w,hgt,w*3,'rgba(255,255,255,.05)',.6);hqSpeckle(-w/2,0,w,hgt,w*3,'rgba(0,0,0,.14)',.6);
       for(let k=0;k<w/5;k++){ctx.fillStyle=`rgba(8,8,8,${.12+sr()*.18})`;ctx.fillRect(-w/2+sr()*w,hgt*.3+sr()*hgt*.4,6+sr()*18,.5+sr()*.9)}                         // rubber deposits
@@ -6756,7 +6767,8 @@ function drawAirGroundHQ(){const px=hqPx(),ph=wallHalfAt(L('walls'));
     hqDraw(rw,0,y);const on=(G.time*1.4)%1<.5;ctx.globalCompositeOperation='lighter';const gl=hqGlow('rl',[[0,'rgba(255,240,190,1)'],[.3,'rgba(255,220,140,.5)'],[1,'rgba(255,200,100,0)']]);
     for(let x=-w/2+8;x<w/2;x+=16){ctx.globalAlpha=on?.55:.3;ctx.drawImage(gl,x-2.2,y-4.7,4.4,4.4);ctx.drawImage(gl,x-2.2,y+hgt+.3,4.4,4.4)}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
     if(G.fighterT>2&&L('fighter')){const n=Math.min(1+Math.floor(L('fighter')/2),Math.max(1,Math.floor((w-80)/70)));
-      for(let i=0;i<n;i++){const jx=-w/2+56+i*70;drawJetHQ(jx+2.5,cy+3,0,2.1,px,false,true);drawJetHQ(jx,cy,0,2.1,px,false,false)}}}
+      for(let i=0;i<n;i++){const jx=-w/2+56+i*70;drawJetHQ(jx+2.5,cy+3,0,2.1,px,false,true);drawJetHQ(jx,cy,0,2.1,px,false,false)}}}}
+function drawAirGroundHQ(){const px=hqPx();
   for(const u of G.air){
     if(u.k==='silo'){const open=u.cd<3?Math.min(1,(3-u.cd)/1.5):0,s=US.silo*bS(),st=tierOf('silo'),pad=hqBake('silo'+(st?'_t'+st:''),px*s,22,22,11,11,()=>{
         box(-10,-10,20,20,'#7a7c76');hqSpeckle(-10,-10,20,20,70,'rgba(40,40,36,.3)',.4);box(-10,-10,20,.9,'#a5a79f');box(-10,-10,.9,20,'#94968e');box(-10,9.1,20,.9,'#565852');box(9.1,-10,.9,20,'#5f615b');
@@ -9919,11 +9931,13 @@ function draw(){aqTick();
   const ph=wlv?wallHalfAt(wlv):PLAT;drawFloor(ph,wlv);
   if(wlv){drawWalls(ph,wlv);drawWallTier(ph,wlv)}
   drawAtmos();
+  // base structures (runway, apron, pads, depot, repair yards): under every unit and crate
+  drawBaseGround();
   drawCrates();
   // enemies
   drawEnemies();drawChutes();
   // soldiers
-  drawAirGround();drawLogiGround();drawUnits();drawArtyGun();drawSkyGround();
+  drawAirGround();drawRepairCrews();drawUnits();drawArtyGun();drawSkyGround();
   for(const s of G.sold)drawSoldier(s);
   // fx
   CGL.layer('fx',fxCount(),drawFxLayer);drawPlumes();
@@ -9954,7 +9968,7 @@ function draw(){aqTick();
       ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(7,-4);ctx.lineTo(7,4);ctx.fill();
       if(b.k===2){ctx.strokeStyle=`rgba(239,90,79,${rm?0.7:0.35+0.35*Math.sin(G.time*6)})`;ctx.lineWidth=2/s;ctx.beginPath();ctx.arc(3.5,0,9,0,TAU);ctx.stroke()}ctx.restore();
       if(b.n>=3){const lx=x-Math.cos(a)*14*ta,ly=y-Math.sin(a)*14*ta;ctx.font=`800 ${(11*ta).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillText(b.n,lx+ta,ly+4*ta+2*ta);ctx.fillStyle='#e6ead9';ctx.fillText(b.n,lx,ly+4*ta)}}}
-  drawUavMarks();drawFuelBars();drawRepairTop();
+  drawUavMarks();drawFuelBars();drawDepotHp();drawRepairTop();
   drawFloats();drawNadeAim();
   if(G.airArmed||G.airAim){const lw=Math.max(1.5,2/sc);ctx.strokeStyle='#ff6a3a';ctx.fillStyle='rgba(255,106,58,.25)';ctx.lineWidth=lw;
     if(G.airAim){const a=G.airAim,dx=mouse.wx-a.x,dy=mouse.wy-a.y,dd=Math.hypot(dx,dy),ok=dd*sc>14,ang=ok?Math.atan2(dy,dx):0,n=Math.min(16,5+L('air')),len=(n-1)*24;
