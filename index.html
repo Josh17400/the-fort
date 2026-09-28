@@ -63,7 +63,7 @@ body[data-gfx=low]{--blur:0px}
 :where(button,.btn,.tab,.buy,.chip,[tabindex]):focus-visible{outline:none;box-shadow:var(--focus)}
 @media (prefers-reduced-motion:reduce){*:not(.anim-keep),*:not(.anim-keep):before,*:not(.anim-keep):after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important;scroll-behavior:auto!important}}
 body.rm *:not(.anim-keep),body.rm *:not(.anim-keep):before,body.rm *:not(.anim-keep):after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}
-*{box-sizing:border-box}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;overflow:hidden;user-select:none}
 canvas{display:block;cursor:crosshair;touch-action:none;-webkit-touch-callout:none}
 html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none}
@@ -1027,6 +1027,9 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
 .toast.gm .ic{color:var(--c-gem)}
 .ni .dot.vio{background:var(--c-gem);box-shadow:0 0 0 2px var(--c-bar),0 0 8px rgba(185,140,255,.85)}
 #daily:empty{display:none}#daily{display:flex;flex-direction:column;gap:inherit}
+/* phones (iOS WKWebView): never let a Daily Ops / Challenge row widen the panel past the column */
+#daily{width:100%;min-width:0;max-width:100%}#daily>.panel{width:100%;min-width:0;max-width:100%}
+.dops>*,.dql,.dq,.dqx,.dad,.dstk,.dch>*{min-width:0;max-width:100%}.dops>.sec-h{flex-wrap:wrap;row-gap:4px}.dlock>span{min-width:0}
 .dops{display:flex;flex-direction:column;gap:12px;border-color:rgba(185,140,255,.3);background:linear-gradient(180deg,rgba(185,140,255,.09),rgba(185,140,255,0) 140px),var(--c-s1)}
 body.mobile #home .panel.dops{background:linear-gradient(180deg,rgba(185,140,255,.09),rgba(185,140,255,0) 140px),rgba(22,27,18,.8)}
 .dops>.sec-h{margin:0}.dops>.sec-h .eyebrow{color:var(--c-gem-hi)}.dops>.sec-h .eyebrow::before{background:var(--c-gem)}
@@ -2811,7 +2814,7 @@ function dailyHtml(){const y=S.dy,u=rpU(),st=stNext(),s=y.st,cyc=st.can?st.day-1
     +`<div class="dqx${y.b?' got':all?' can':''}">${ic(y.b?'check':'gift',20)}<span><b>All three</b> · <em>+${DQ_BONUS_GEM} gems · +${DQ_BONUS_U*u} RP</em></span>`
     +(y.b?'<span class="dqn">CLAIMED</span>':all?`<button class="dqc" data-dqb>${ic('gem',14)}CLAIM</button>`:`<span class="dqn">${done}/3</span>`)+'</div>';
   if(ag)h+=`<button class="dad" data-adgems><span class="adp">${ic('play',12)}</span><span>Watch an ad for free gems</span><b>+${AD_GEMS} ${ic('gem',14)}</b></button>`;
-  if(!dcOn())h+=`<p class="dlock">${ic('lock',12)}Daily Challenge opens once Desert Outpost holds wave ${DC_W}</p>`;
+  if(!dcOn())h+=`<p class="dlock">${ic('lock',12)}<span>Daily Challenge opens once Desert Outpost holds wave ${DC_W}</span></p>`;
   return h+'</div>'}
 function dchHtml(){if(!dcOn())return'';const c=dcToday(),m=mapOf(c.map),md=DC_MB[c.mod],dc=S.dy.dc,best=dc.d===c.d?dc.best:0,rw=dcReward(best),u=rpU(),nx=DC_TIERS.find(t=>t[0]>best),top=DC_TIERS[DC_TIERS.length-1];
   const date=new Date(labNow()).toLocaleDateString('en-US',{month:'short',day:'numeric'}).toUpperCase();
