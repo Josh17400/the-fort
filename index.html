@@ -1729,13 +1729,13 @@ const RLINES={currency:'RP',rpCost:'rsCostAt(gate)',refit:{mul:REFIT_MUL,cost:'3
   {n:'EMP Frag',g:45,mul:12.5,pen:0.5,sig:{stun:[1.5]},art:'cyan-ring'},
   {n:'Shaped-Charge Swarm',g:60,mul:15,pen:0.8,sig:{bomblets:6},art:'era4'}]},
  {id:'walls',label:'Fort Walls',u:'walls',t:[
-  {n:'Sandbag and HESCO',g:1,mul:1},
-  {n:'Concrete T-Walls',g:15,mul:1.3,art:'grey-slabs'},
-  {n:'Reinforced Bastion',g:25,mul:1.7,sig:{thorns:0},art:'rebar-caps'},
-  {n:'Ceramic Composite',g:35,mul:2.2,art:'tan-tiles'},
-  {n:'Active Protection Walls',g:45,mul:2.8,sig:{intercept:0.5},art:'aps-boxes'},
-  {n:'Self-Healing Nanocrete',g:60,mul:3.4,sig:{regen:0.01},art:'cyan-seams'},
-  {n:'EM Armor Screen',g:80,mul:4,sig:{breachShield:1},art:'era5 shimmer'}]},
+  {n:'Sandbag and HESCO',g:1,mul:1,look:'Timber palisade, sandbagged posts, single concertina'},
+  {n:'Concrete T-Walls',g:15,mul:1.3,art:'grey-slabs',look:'Precast block walls, round towers, T-wall joints, double concertina'},
+  {n:'Reinforced Bastion',g:25,mul:1.7,sig:{thorns:0},art:'rebar-caps',look:'Poured concrete walls, firing slits, bunker towers, rebar caps'},
+  {n:'Ceramic Composite',g:35,mul:2.2,art:'tan-tiles',look:'Ceramic armor tiles, triple-stacked concertina'},
+  {n:'Active Protection Walls',g:45,mul:2.8,sig:{intercept:0.5},art:'aps-boxes',look:'Active-protection launcher boxes along the walls'},
+  {n:'Self-Healing Nanocrete',g:60,mul:3.4,sig:{regen:0.01},art:'cyan-seams',look:'Glowing self-healing seams'},
+  {n:'EM Armor Screen',g:80,mul:4,sig:{breachShield:1},art:'era5 shimmer',look:'Shimmering EM screen over the walls'}]},
  {id:'mines',label:'Minefield',u:'mines',t:[
   {n:'M15/M16 Mixed Field',g:1,mul:1},
   {n:'M18 Claymores',g:15,mul:1.25,sig:{cone:1}},
@@ -2634,6 +2634,9 @@ const rsSigHtml=t=>{const s=sigText(t.sig);return s?`<div class="rsg">${ic('star
 // Infantry Kit cards: the squad kit that serves with this tier ("+ SQUAD" with its weapon and signature when this tier brings it)
 function rsRideHtml(r,k){const q=r.rides;if(!q)return'';const own=rsOwned(r.id),have=rsRideHave(r),nu=k>own&&r.t[k].sq>have,t=q.t[k>own?Math.max(have,r.t[k].sq):rsOwned(q.id)],s=nu?sigText(t.sig):'';
   return`<div class="rsq${nu?' new':''}">${ic('squad',14)}<span><b>${nu?'+ SQUAD':'SQUAD'}</b><span class="n">${t.n}</span>${nu&&t.w?' · '+t.w:''}${s?`<small>${s}</small>`:''}</span></div>`}
+// Fort Walls cards: the fort design a tier builds (the fort's look changes only with these tiers, never with Armory buys)
+function rsLookHtml(r,k){const t=r.t[k];if(!t.look)return'';const nu=k>rsOwned(r.id);
+  return`<div class="rsq${nu?' new':''}">${ic('walls',14)}<span><b>${nu?'+ FORT DESIGN':'FORT DESIGN'}</b>${t.look}</span></div>`}
 // why the next tier is blocked, said once (the wave gate already has its own progress chip)
 function rsWhyHtml(r,k){const own=rsOwned(r.id),t=r.t[k];if(rsNF(r)||k<=own)return'';
   if(k>own+1)return`<div class="rwhy">${ic('lock',13)}<span>Research Tier ${rank(own+2)} first</span></div>`;
@@ -2655,7 +2658,7 @@ function rsHead(r,nar){const k=rsOwned(r.id),t=r.t[k],n=S.rf[r.id]||0,lock=rsLin
 function rsCard(r,k){const t=r.t[k],st=rsStL(r,k);
   return`<div class="rtc ${st}" data-k="${k}" style="${rsEraVars(t)}"><div class="rth"><canvas data-th="${r.id}:${k}" width="192" height="192"></canvas></div>`
     +`<div class="rtl2"><span>TIER ${rank(k+1)}</span><span class="badge ${RS_B[st]}">${RS_STL[st]}</span></div><div class="rtn">${t.n}</div>${t.w?`<div class="rtw">${t.w}</div>`:''}`
-    +rsStats(r,k)+rsSigHtml(t)+rsRideHtml(r,k)+(st==='lab'?labBar(labOf(r.id)):'')+(st==='lk'?rsGate(t)+rsWhyHtml(r,k):'')+rsBtn(r,k)+'</div>'}
+    +rsStats(r,k)+rsSigHtml(t)+rsRideHtml(r,k)+rsLookHtml(r,k)+(st==='lab'?labBar(labOf(r.id)):'')+(st==='lk'?rsGate(t)+rsWhyHtml(r,k):'')+rsBtn(r,k)+'</div>'}
 function rsRefitCard(r){const{n,c,ok,tot}=rsRefit(r),t=r.t[r.t.length-1],j=labOf(r.id),busy=!j&&!labFree();
   return`<div class="rtc rfc${j?' lab':''}" data-k="rf" style="${rsEraVars(t)}"><div class="rth"><canvas data-th="${r.id}:${r.t.length-1}" width="192" height="192"></canvas></div>`
     +`<div class="rtl2"><span>REFIT MK ${rank(j?j.k:n+1)}</span><span class="badge ${j?'b-lab':'b-own'}">${j?'RESEARCHING':'ENDLESS'}</span></div><div class="rtn">Field Refit</div><div class="rtw">Depot rebuild of every ${t.n}${r.rides?' and '+r.rides.t[r.rides.t.length-1].n:''}</div>`
@@ -2668,7 +2671,7 @@ function rsCompare(r){if(rsNF(r)||rsDone(r.id))return'';const o=rsOwned(r.id),a=
     +tl(w,`×${fxm(a.mul)}${ar}×${fxm(b.mul)}<em>×${fxm(x)}</em>`)+tl('ARMOR PIERCING',`${pct(a.pen||0)}${ar}${pct(b.pen||0)}`)
     +(r.id==='dmg'?tl('HP',`×${fxm(a.hp||1)}${ar}×${fxm(b.hp||1)}`):'')
     +(r.rides?(()=>{const q=r.rides.t,h=rsRideHave(r),qa=q[rsOwned(r.rides.id)].mul,qb=q[Math.max(h,b.sq)].mul;return tl('SQUAD DMG',`×${fxm(qa)}${ar}×${fxm(qb)}${qb>qa?`<em>×${fxm(qb/qa)}</em>`:''}`)})():'')
-    +tl('COST',`${rsCost(r.id,o+1)} RP`)+'</div>'+rsSigHtml(b)+rsRideHtml(r,o+1)+'</div>'}
+    +tl('COST',`${rsCost(r.id,o+1)} RP`)+'</div>'+rsSigHtml(b)+rsRideHtml(r,o+1)+rsLookHtml(r,o+1)+'</div>'}
 function rsCta(r){const own=rsOwned(r.id);
   if(rsLineLock(r)){const nf=rsNF(r);return`<button class="rsgo nf" data-goto="${r.u}"><span class="l1">${ic('lock',14)}${nf?'NOT FIELDED':'TIER '+rank(own+2)+' LOCKED'}</span><span class="l2">${nf?'OPEN ARMORY →':'BUY '+UB[r.u].name.toUpperCase()+' LV 1 IN THE ARMORY →'}</span></button>`}
   const j=labOf(r.id);if(j)return skipBtn(j,'rsgo');
@@ -2694,7 +2697,7 @@ function renderResearch(){const nar=rsNarrow(),vis=RLINES.lines.filter(rsVis),r0
       return`<div class="rtr ${st}${on?' sel':''}" data-k="${k}" style="${rsEraVars(t)}"><button data-rst="${k}" aria-expanded="${on}"><span class="mth"><canvas data-th="${r.id}:${k}" width="92" height="92"></canvas></span>`
         +`<span class="rb"><span class="rtn">${t.n}</span><span class="rtl2">TIER ${rank(k+1)} <span class="badge ${RS_B[st]}">${RS_STL[st]}</span></span></span>`
         +`<span class="rc">${st==='own'||st==='act'||st==='kit'?ic('star',16):st==='lab'?(on?ic('research',16):`<span data-left="${r.id}">${durTxt(labLeft(labOf(r.id)))}</span>`):rsCost(r.id,k)+' RP'}</span></button>`
-        +(on?`<div class="rtx">${t.w?`<div class="rtw">${t.w}</div>`:''}${rsStats(r,k)}${rsSigHtml(t)}${rsRideHtml(r,k)}${st==='lab'?labBar(labOf(r.id))+labAdBtn(labOf(r.id)):''}${st==='lk'?rsGate(t)+rsWhyHtml(r,k):''}</div>`:'')+'</div>'}).join('')
+        +(on?`<div class="rtx">${t.w?`<div class="rtw">${t.w}</div>`:''}${rsStats(r,k)}${rsSigHtml(t)}${rsRideHtml(r,k)}${rsLookHtml(r,k)}${st==='lab'?labBar(labOf(r.id))+labAdBtn(labOf(r.id)):''}${st==='lk'?rsGate(t)+rsWhyHtml(r,k):''}</div>`:'')+'</div>'}).join('')
       +(rsDone(r.id)?`<div class="rtr" data-k="rf" style="${rsEraVars(r.t[r.t.length-1])}"><button disabled><span class="mth">${ic('repair',22)}</span><span class="rb"><span class="rtn">Refit Mk ${rank(rsRefit(r).n+1)}</span><span class="rtl2">ENDLESS · +8% ${r.id==='walls'?'WALL HP':'DMG'} EACH</span></span><span class="rc">${rsRefit(r).c} RP</span></button></div>`:'')+'</div>';
     h+=rsCta(r)}
   else{h+='<div class="rsb"><nav class="rsl" aria-label="Research lines">'+(vis.length?'':`<div class="rsl-empty">${ic('lock',18)}<b>No lines open yet</b><span>Hold deeper waves and field new units in the Armory to open research lines.</span></div>`)+CATS.slice(1).filter(c=>vis.some(q=>UB[q.u].cat===c)).map(c=>`<h4>${c}</h4>`+vis.filter(q=>UB[q.u].cat===c).map(q=>{const lk=rsNF(q);
@@ -2784,7 +2787,7 @@ if('IntersectionObserver' in window)new IntersectionObserver(es=>{for(const x of
 let _nar=narrow();addEventListener('resize',()=>{if(!$('home').classList.contains('on'))return;if(narrow()!==_nar){_nar=narrow();renderHome()}else if(homeView==='armory')catMask()});
 // ---------------- lab ticker, finish-now, gems sheet ----------------
 // land finished research with a toast (renderHome runs this first, so the Base/R&D screens never show a finished job as running)
-function labLand(){const got=labTick();for(const n of got)toast((n.rf?'Refit complete: ':'Research complete: ')+labName(n),'research','rd');return got.length}
+function labLand(){const got=labTick();for(const n of got)toast(n.id==='walls'&&!n.rf?'Fort redesigned: '+labName(n)+' · rebuilt for your next deployment':(n.rf?'Refit complete: ':'Research complete: ')+labName(n),'research','rd');return got.length}
 // every second on the home screen: land finished jobs (full re-render), else just move the countdowns, bars and gem prices
 function labUi(){if(running||!S.lab.q.length||!$('home').classList.contains('on'))return;if(labLand()){renderHome();return}
   for(const j of S.lab.q){const l=durTxt(labLeft(j)),w=(100*labPct(j)).toFixed(1)+'%';
@@ -3263,7 +3266,7 @@ function startRun(){
   G={wave:startWaveOk()-1,spawnLeft:0,spawnT:0,spawnInt:1,breakT:2,breakMax:2,enemies:[],fx:[],parts:[],floats:[],shells:[],bombs:[],planes:[],mines:[],crates:[],
     hp:hpAt(L('hp')),maxHp:hpAt(L('hp')),wallMax:wallMaxAt(L('walls')),wallHp:wallMaxAt(L('walls')),sold,kills:0,earned:0,time:0,shake:0,
     zoomV:vision()*0.3,artyT:3,airT:0,airArmed:false,nadeT:0,nadeArmed:false,nades:[],rapidT:0,crateT:10,banner:'',bannerT:0,hurtT:0,breached:false,pk:{},choosing:null,perkAt:0,startBest:S.best,threat:{},breachW:0,ev:null,evLast:0,evPrev:null,evN:0,fogK:0,drops:[],transports:[],vq:[],eshots:[],vwrecks:[]};
-  labTick();G.rs=Object.assign({},S.rs);G.rf=Object.assign({},S.rf);G.rp=0;G.cleared=0;G.rsNew=rsFieldNew();   // research is frozen for the whole run
+  labTick();G.rs=Object.assign({},S.rs);G.rf=Object.assign({},S.rf);G.rp=0;G.cleared=0;G.rsNew=rsFieldNew();fortUpInit();   // research is frozen for the whole run
   {const w0=startWaveOk();G.startWave=w0;if(w0>1){G.cp={i:0,n:Math.min(8,Math.floor(w0/10))};G.perkAt=0.5;medalMax('cp',1)}}
   G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=speedOpts().filter(v=>v<=(S.set.lastSpeed||1)).pop()||1;syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;initLogi();
   pfSync();skyInit();sigInit();fcInit();syncPrioBtn();syncNadeBtn(true);$('hud').classList.toggle('air',L('air')>0);
@@ -4073,7 +4076,7 @@ function drawCIWS(u,flash){if(tierOf('tesla')){ciwsLo(u,flash,tierOf('tesla'));r
 function drawUnits(){
   if(S.set.gfx==='high'){drawUnitsHQ();return}
   const ph=wallHalfAt(L('walls'));
-  if(L('walls')>=2)for(let k=0;k<14;k++){if(k===10||k===11)continue;const a=k/14*Math.PI*2,x=Math.cos(a)*11,y=Math.sin(a)*11;ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/2);box(-2.6,-1.8,5.2,3.6,'#8a7650');ctx.strokeStyle='#3a2f1c';ctx.lineWidth=.5;ctx.strokeRect(-2.6,-1.8,5.2,3.6);ctx.restore()}
+  if(L('walls'))for(let k=0;k<14;k++){if(k===10||k===11)continue;const a=k/14*Math.PI*2,x=Math.cos(a)*11,y=Math.sin(a)*11;ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/2);box(-2.6,-1.8,5.2,3.6,'#8a7650');ctx.strokeStyle='#3a2f1c';ctx.lineWidth=.5;ctx.strokeRect(-2.6,-1.8,5.2,3.6);ctx.restore()}
   if(L('flame')&&L('walls')&&tierOf('flame'))flameLo(ph,tierOf('flame'));
   else if(L('flame')&&L('walls'))for(const a of [-Math.PI/2,0,Math.PI]){const x=Math.cos(a)*ph,y=Math.sin(a)*ph;ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.scale(1.6,1.6);box(-4,-4.5,8,9,'#3b3e40');box(-4,-4.5,8,1,'#5a5e60');ell(-2,0,2.4,2.4,'#7a1f10');ell(-2.6,-0.6,.8,.8,'#c0503a');box(2,-1.2,6,2.4,'#222');box(7.5,-1.6,1.5,3.2,'#111');if(G.flameT>0.05&&Math.random()<.5)ell(10,0,2.4,1.5,'#ffb13b');ctx.restore()}
   for(const u of G.units){
@@ -6709,7 +6712,7 @@ const flmSpr0=px=>hqBake('flm',px*1.6,13,12,5,6,()=>{
     hqCyl(-4,-4.2,3,2.6,'#7a1f10');hqCyl(-4,1.6,3,2.6,'#7a1f10');box(-2.9,-4.2,.5,2.6,'#e0b030');box(-2.9,1.6,.5,2.6,'#e0b030');limb(-1,-2.9,1.6,-.6,.35,'#1a1a1a');limb(-1,2.9,1.6,.6,.35,'#1a1a1a');
     hqBar(1.8,-1.2,6,2.4,'#2a2a2a');hqCyl(4.2,-1.5,1.6,3,'#3a3a3a');box(7.4,-1.6,1.6,3.2,'#111');ell(8.6,0,.4,.4,'#ff8a2a')});
 function drawUnitsHQ(){const px=hqPx(),ph=wallHalfAt(L('walls'));
-  if(L('walls')>=2){const r=hqBake('cbag',px,28,28,14,14,()=>hqBagRing(11,14,3.4,k=>k===10||k===11));hqShadow(r,.8,1.1,.45);hqDraw(r)}
+  if(L('walls')){const r=hqBake('cbag',px,28,28,14,14,()=>hqBagRing(11,14,3.4,k=>k===10||k===11));hqShadow(r,.8,1.1,.45);hqDraw(r)}
   if(L('flame')&&L('walls'))drawFlameHQ(px);
   for(const u of G.units){const flash=G.time-(u.fl||-9)<0.05;
     if(u.k==='turret')drawMGNestHQ(u,px,flash);
@@ -7804,8 +7807,22 @@ function mineSpriteT(t){if(!t)return mineSprite();if(_mineT[t])return _mineT[t];
     else if(t===4){hqDome(0,0,3,3,'#2c3035',.3,-.5);ctx.strokeStyle=acc;ctx.lineWidth=.35;ctx.beginPath();ctx.arc(0,0,2.2,0,7);ctx.stroke();limb(0,0,2.6,-2.8,.22,'#15171a');ell(2.6,-2.8,.3,.3,acc)}
     else{for(const a of[.785,2.356,3.927,5.498]){limb(0,0,Math.cos(a)*3,Math.sin(a)*3,.5,'#2a2d31');ell(Math.cos(a)*3,Math.sin(a)*3,1.4,1.4,'rgba(60,66,72,.4)')}hqRR(-1.5,-1.1,3,2.2,.5,'#3b3f44');ell(1,0,.4,.4,acc)}}
   finally{ctx=m}return _mineT[t]=c}
+// "Fort upgraded": the first deployment after a Fort Walls tier landed (a new fort design, S.fortSeen = the last design deployed with
+// walls standing) sweeps a band of light across the rebuilt walls and towers and names the design over the north wall (G.fortUp).
+const FORT_UP_T0=0.5,FORT_UP_DUR=2.6;
+function fortUpInit(){G.fortUp=0;if(!L('walls'))return;const d=G.rs.walls|0,s=S.fortSeen;S.fortSeen=d;save();if(s!=null&&d>s)G.fortUp=G.time+FORT_UP_T0}
+function fortSweep(ph,wlv){const u=(G.time-G.fortUp)/FORT_UP_DUR;if(u<0)return;if(u>1||!G.wallHp){G.fortUp=0;return}
+  const T=wallThickAt(wlv),ts=T*1.05+2,o=ph+ts,e=Math.sin(Math.PI*u),rnd=wallMat(fortDes())==='stone',p=ringPath(ph+T/2,ph-T/2);   // clip = walls + towers (round on the block design)
+  for(const[cx,cy]of[[-ph,-ph],[ph,-ph],[ph,ph],[-ph,ph]]){p.moveTo(cx+ts,cy);if(rnd)p.arc(cx,cy,ts,0,TAU);else p.rect(cx-ts,cy-ts,2*ts,2*ts)}
+  const b=(-1.35+2.7*u)*o,g=ctx.createLinearGradient(b-o*.3,b-o*.3,b+o*.3,b+o*.3);g.addColorStop(0,'rgba(150,215,255,0)');g.addColorStop(.5,`rgba(215,242,255,${(.75*e).toFixed(3)})`);g.addColorStop(1,'rgba(150,215,255,0)');
+  ctx.save();ctx.clip(p);ctx.globalCompositeOperation='lighter';ctx.fillStyle=g;ctx.fillRect(-o,-o,2*o,2*o);ctx.fillStyle=`rgba(120,190,255,${(.12*e).toFixed(3)})`;ctx.fillRect(-o,-o,2*o,2*o);ctx.restore();
+  // the label: a dark pill over the north wall, constant screen size (14 px) at any zoom
+  const a=Math.min(1,e*2.4),f=14/sc,n=RLINES.walls.t[fortDes()].n.toUpperCase(),y=-o-f*1.9;ctx.save();ctx.globalAlpha=a;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font=`800 ${f}px Oxanium,sans-serif`;const w=Math.max(ctx.measureText(n).width,ctx.measureText('FORT UPGRADED').width*.78)+f*1.6;
+  ctx.fillStyle='rgba(9,14,19,.78)';ctx.beginPath();ctx.roundRect(-w/2,y-f*1.25,w,f*2.5,f*.5);ctx.fill();ctx.strokeStyle='rgba(150,215,255,.55)';ctx.lineWidth=1/sc;ctx.stroke();
+  ctx.fillStyle='#eaf6ff';ctx.fillText(n,0,y+f*.45);ctx.font=`800 ${f*.72}px Oxanium,sans-serif`;ctx.fillStyle='#8fd0ff';ctx.fillText('FORT UPGRADED',0,y-f*.55);ctx.restore()}
 // wall research overlay on the finished rampart ring (square, half-size ph, thickness T): joints, rebar caps, tiles, APS boxes, seams, shimmer
-function drawWallTier(ph,wlv){const t=tierOf('walls');if(!t||!G.wallHp)return;const T=wallThickAt(wlv),o=ph+T/2,inn=ph-T/2,e=eraOf('walls',t),acc=ERA_ACC[e];
+function drawWallTier(ph,wlv){if(G.fortUp)fortSweep(ph,wlv);const t=tierOf('walls');if(!t||!G.wallHp)return;const T=wallThickAt(wlv),o=ph+T/2,inn=ph-T/2,e=eraOf('walls',t),acc=ERA_ACC[e];
   const key=t+'|'+ph+'|'+T;let P=_wallP[0]===key?_wallP[1]:null;
   if(!P){P=new Path2D();const step=t===3?T/2:t===4?Math.max(14,T*1.6):6;for(let s=0;s<4;s++)for(let d=-o+step/2;d<o;d+=step){const pts=[[d,-o,d,-inn],[o,d,inn,d],[d,o,d,inn],[-o,d,-inn,d]][s];
       if(t===1||t===3){P.moveTo(pts[0],pts[1]);P.lineTo(pts[2],pts[3])}if(t===2||t===4){const cx=pts[0]+(pts[2]-pts[0])*.15,cy=pts[1]+(pts[3]-pts[1])*.15,r=t===4?Math.max(1.4,T*.16):Math.max(.5,T*.06);P.moveTo(cx+r,cy);P.rect(cx-r,cy-r,2*r,2*r)}}
@@ -7843,8 +7860,8 @@ const THUMB={
   gunship:[190,2,t=>drawGunshipHQ({x:0,y:0,ang:-.5},hqPx())],
   nade:[12,0,t=>{ctx.rotate(.5);if(t)nadeArt(t);else{ell(0,0,2.4,2.1,'#4b5a2a');box(-0.8,-3.2,1.6,1.3,'#2a2e22');box(0.6,-3,2.2,0.6,'#8c8f86')}}],
   mines:[13,0,t=>ctx.drawImage(mineSpriteT(t),-6,-6,12,12)],
-  walls:[42,0,t=>{const ph=14,T=wallThickAt(2),o=ph+T/2,i=ph-T/2;ctx.fillStyle=t?t>=5?'#5d6064':'#8d8a80':'#a08c64';ctx.beginPath();ctx.rect(-o,-o,2*o,2*o);ctx.rect(-i,-i,2*i,2*i);ctx.fill('evenodd');
-    ctx.strokeStyle='rgba(0,0,0,.45)';ctx.lineWidth=.4;ctx.stroke();ell(0,0,i-1,i-1,'#4a4a3a');drawWallTier(ph,2)}]};
+  walls:[66,0,t=>{const ph=16,wl=3,m=ctx.getTransform(),ppu=Math.hypot(m.a,m.b),mat=wallMat(t),rn=rng(4242+t*17);   // the real fort bake at design tier t
+    bakeFloor(ctx,ppu,ph,mat,rn);bakeWalls(ctx,ppu,ph,t,mat,wallThickAt(wl),rn,[]);drawWallTier(ph,wl)}]};
 function drawTierThumb(line,tier,c,size){const th=THUMB[line];if(!c||!th||!TIER_G[line])return;
   const t=Math.max(0,Math.min(TIER_G[line].length-1,tier|0)),m=ctx,g0=G,hq=HQ,ov=_tierOv;
   ctx=c;G=_thumbG;HQ=true;const hr=RLINES[line];_tierOv={[line]:t};if(hr&&hr.rides)_tierOv[hr.rides.id]=hr.t[t].sq;c.save();c.beginPath();c.rect(0,0,size,size);c.clip();
@@ -8778,7 +8795,7 @@ function grainCv(){if(_grain)return _grain;const[k,x]=mkCv(256,256),im=x.createI
 let _ter=null;
 const roadX=(y,fh)=>Math.sin(y*0.009+0.4)*22*Math.min(1,Math.max(0,y-fh)/90);
 function terrainBake(){
-  const V=vision(),wl=L('walls'),wi=L('wire'),th=mapCur(),fk=tFootK(th.id),key=V+'|'+wl+'|'+wi+'|'+th.id+(fk?'|'+fk:'');if(_ter&&_ter.key===key)return _ter;   // the theater sets palette + layout seed
+  const V=vision(),wl=L('walls'),wi=L('wire'),th=mapCur(),fk=tFootK(th.id),key=V+'|'+wl+'|'+wi+(wi?'d'+fortDes():'')+'|'+th.id+(fk?'|'+fk:'');if(_ter&&_ter.key===key)return _ter;   // the theater sets palette + layout seed
   const GR=th.ground,R=V*1.18+30,ppu=Math.min(7,2560/(2*R)),N=Math.ceil(2*R*ppu),[c,x]=mkCv(N,N),rn=rng(th.seed),fh=wl?wallHalfAt(wl)+wallThickAt(wl)/2:PLAT,
     wr=wi?fortHalf()+wallThick()/2+wireOut():0,keep=Math.max(fh+12,wr+10);
   const TL=TLOOK[th.id],TG=TL?tGeo(th.id,V,keep,fk):null,mf=TL&&TL.macro?TL.macro(TG):null,_mc=[0,0,0,0,1];   // theater look (none for Desert Outpost)
@@ -9319,9 +9336,10 @@ function drawPrecip(){const T=tLook();if(!T||!T.precip)return;const P=T.precip,s
 // Concertina: two staggered coil rows on steel pickets. Each loop of the helix reads from above as an ellipse across the coil axis;
 // loops overlap heavily so the row reads as a tangle, with a soft cast shadow (the coil stands ~1m tall) and sparse glints.
 // Concertina: each row is one continuous looped coil (prolate cycloid) along the four sides, so it reads as coiled wire, not a band.
-// Tier look: L1 one coil, L2-3 two coils side by side, L4+ a triple stack (two base coils + a brighter top coil). Pickets every ~20u.
-function bakeWire(x,ppu,r,rn){const wl=L('wire'),lw=Math.max(0.3,1.1/ppu),rows=wl>=4?[[-3,0],[3,0],[0,1]]:wl>=2?[[-2.6,0],[2.6,0]]:[[0,0]],
-    posts=new Path2D(),tens=new Path2D(),glint=new Path2D(),sp=wl>=3?16:20;
+// Design follows the fort (fortDes, Fort Walls research), never the Wire level (that only sets the ring's distance and the slow):
+// T0 one coil, T1 two coils side by side, T2 pickets every 16u instead of 20u, T3+ a triple stack (two base coils + a brighter top coil).
+function bakeWire(x,ppu,r,rn){const d=fortDes(),lw=Math.max(0.3,1.1/ppu),rows=d>=3?[[-3,0],[3,0],[0,1]]:d>=1?[[-2.6,0],[2.6,0]]:[[0,0]],
+    posts=new Path2D(),tens=new Path2D(),glint=new Path2D(),sp=d>=2?16:20;
   const coilPath=(off,top)=>{const q=new Path2D(),rr=r+off,pitch=top?3.2:2.8,ra=top?2.6:2.2,rc0=top?3.1:2.7,dt=0.45;
     for(let s=0;s<4;s++){const ph=rn()*TAU;let first=true,rc=rc0,tg=rc0,sk=0,sg=0;
       for(let th=0;;th+=dt){if(th%TAU<dt){tg=rc0*(0.75+rn()*0.5);sg=(rn()-.5)*1.4}rc+=(tg-rc)*0.35;sk+=(sg-sk)*0.3;
@@ -9351,15 +9369,16 @@ function sideRect(s,ph,a0,a1,d0,d1){return s===0?[a0,-ph-d1,a1-a0,d1-d0]:s===1?[
 const sidePt=(s,ph,a,d)=>s===0?[a,-ph-d]:s===1?[ph+d,a]:s===2?[a,ph+d]:[-ph-d,a];
 function bevel(x,r,col,b,hi=0.22,sh=0.34){const[X,Y,W,H]=r;x.fillStyle=col;x.fillRect(X,Y,W,H);b=Math.min(b,W/3,H/3);
   x.fillStyle=`rgba(255,238,205,${hi})`;x.fillRect(X,Y,W,b);x.fillRect(X,Y+b,b,H-b);x.fillStyle=`rgba(10,8,5,${sh})`;x.fillRect(X+b,Y+H-b,W-b,b);x.fillRect(X+W-b,Y+b,b,H-2*b)}
+// The Armory level (wlv) only sizes the fort (half-size ph, wall thickness T); the look (material, height, seed) is the design tier d.
 function fortBake(ph,wlv,up){
-  const tier=wlv?wallTier(wlv):'wood',T=wlv?wallThickAt(wlv):0,h=T/2,o=ph+h,E=ph+T+16,ppu=Math.max(2,Math.min(12,2048/(2*E),scrPPU(vision()*0.55)*1.2)),
-    key=[ph,wlv,up,Math.round(ppu*4)].join('|');if(_fort&&_fort.key===key)return _fort;
-  const N=Math.ceil(2*E*ppu),[c,x]=mkCv(N,N),rn=rng(4242+wlv*17),cracks=[];x.setTransform(ppu,0,0,ppu,N/2,N/2);x.lineCap='round';x.lineJoin='round';
+  const d=fortDes(),tier=wlv?wallMat(d):'wood',T=wlv?wallThickAt(wlv):0,h=T/2,o=ph+h,E=ph+T+16,ppu=Math.max(2,Math.min(12,2048/(2*E),scrPPU(vision()*0.55)*1.2)),
+    key=[ph,wlv,d,up,Math.round(ppu*4)].join('|');if(_fort&&_fort.key===key)return _fort;
+  const N=Math.ceil(2*E*ppu),[c,x]=mkCv(N,N),rn=rng(4242+d*17),cracks=[];x.setTransform(ppu,0,0,ppu,N/2,N/2);x.lineCap='round';x.lineJoin='round';
   if(!wlv){const deck=new Path2D();deck.rect(-ph,-ph,2*ph,2*ph);shadowFill(x,ppu,deck,0.9,0.9,1,0.6)}
-  bakeFloor(x,ppu,ph,tier,rn,wlv);
-  if(wlv)(up?bakeWalls:bakeRubble)(x,ppu,ph,wlv,tier,T,rn,cracks);
-  return _fort={key,c,E,cracks,ck:-1,cp:null}}
-function bakeFloor(x,ppu,ph,tier,rn,wlv){const w=2*ph,px=1/ppu;x.save();x.beginPath();x.rect(-ph,-ph,w,w);x.clip();
+  bakeFloor(x,ppu,ph,tier,rn);
+  if(wlv)(up?bakeWalls:bakeRubble)(x,ppu,ph,d,tier,T,rn,cracks);
+  return _fort={key,c,E,cracks,ck:-1,cp:null,mat:tier}}
+function bakeFloor(x,ppu,ph,tier,rn){const w=2*ph,px=1/ppu;x.save();x.beginPath();x.rect(-ph,-ph,w,w);x.clip();
   if(tier==='wood'){x.fillStyle='#5e4a30';x.fillRect(-ph,-ph,w,w);const pw=2.4;
     for(let cx=-ph;cx<ph;cx+=pw)for(let y=-ph-rn()*14;y<ph;){const l=8+rn()*14,k=0.82+rn()*0.3;x.fillStyle=rgb([122,96,62],k);x.fillRect(cx+0.12,y+0.12,pw-0.24,l-0.24);
       x.fillStyle='rgba(255,230,180,.08)';x.fillRect(cx+0.12,y+0.12,0.35,l-0.24);x.strokeStyle=`rgba(60,40,22,${0.18+rn()*0.15})`;x.lineWidth=Math.max(0.1,0.5*px);x.beginPath();
@@ -9376,6 +9395,7 @@ function bakeFloor(x,ppu,ph,tier,rn,wlv){const w=2*ph,px=1/ppu;x.save();x.beginP
     for(let i=0;i<w*w/900;i++){const sx=-ph+rn()*w,sy=-ph+rn()*w,r=1.2+rn()*3,g=x.createRadialGradient(sx,sy,0,sx,sy,r);g.addColorStop(0,'rgba(20,18,14,.35)');g.addColorStop(1,'rgba(20,18,14,0)');x.fillStyle=g;x.beginPath();x.ellipse(sx,sy,r,r*0.7,rn()*3,0,TAU);x.fill()}
     x.strokeStyle='rgba(214,170,52,.5)';x.lineWidth=1;x.setLineDash([4,3]);x.strokeRect(-ph*0.6,-ph*0.6,ph*1.2,ph*1.2);x.setLineDash([]);
     x.fillStyle='rgba(214,170,52,.55)';for(let k=-7;k<7;k+=2.4){x.beginPath();x.moveTo(k,ph-3.2);x.lineTo(k+1.2,ph-3.2);x.lineTo(k+2.4,ph-6.4);x.lineTo(k+1.2,ph-6.4);x.fill()}
+    // yard fittings appear once they fit (a size rule, not a design step): the helipad needs ph 60, the pallets ph 40
     if(ph>=60){const hx=-ph*0.55,hy=-ph*0.55;x.strokeStyle='rgba(230,230,220,.35)';x.lineWidth=0.9;x.beginPath();x.arc(hx,hy,11,0,TAU);x.stroke();x.fillStyle='rgba(230,230,220,.35)';x.fillRect(hx-4,hy-5,1.6,10);x.fillRect(hx+2.4,hy-5,1.6,10);x.fillRect(hx-2.4,hy-0.8,4.8,1.6)}
     for(const[dx,dy]of[[-0.3,0.3],[0.3,0.3],[0.3,-0.3]]){const gx=dx*ph*2,gy=dy*ph*2;x.fillStyle='#34383a';x.fillRect(gx-1.6,gy-1.6,3.2,3.2);x.fillStyle='#1a1d1e';for(let k=-1.2;k<1.3;k+=0.8)x.fillRect(gx-1.2,gy+k-0.15,2.4,0.3)}
     if(ph>=40)for(const[sx,sy]of[[1,-1],[-1,1],[1,1]])bakePallet(x,ppu,sx*(ph-10),sy*(ph-10),rn)}
@@ -9388,8 +9408,8 @@ function bakePallet(x,ppu,cx,cy,rn){const p=new Path2D();p.rect(cx-4,cy-4,8,8);s
   for(const[bx,by,bw,bh]of[[-3.6,-3.6,3.4,3.4],[0.2,-3.6,3.4,3.4],[-3.6,0.2,3.4,3.4]])bevel(x,[cx+bx,cy+by,bw,bh],rn()<.5?'#556040':'#4b5438',0.4,0.25,0.4);
   x.fillStyle='rgba(196,150,60,.8)';x.fillRect(cx-4,cy-0.9,8,0.5);x.fillRect(cx-0.9,cy-4,0.5,8)}
 function wallPieces(ph,T,step,gateW){const h=T/2,out=[];for(let s=0;s<4;s++){let i=0;for(let a=-ph;a<ph-0.01;a+=step,i++){const w=Math.min(step,ph-a),m=a+w/2;if(s===2&&Math.abs(m)<gateW)continue;out.push({s,i,a,w,m})}}return out}
-function bakeWalls(x,ppu,ph,wlv,tier,T,rn,cracks){
-  const h=T/2,o=ph+h,sh=1.4+wlv*0.3,ts=T*1.05+2,px=1/ppu,body=new Path2D();body.addPath(ringPath(o,ph-h));
+function bakeWalls(x,ppu,ph,d,tier,T,rn,cracks){
+  const h=T/2,o=ph+h,sh=wallRise(d),ts=T*1.05+2,px=1/ppu,body=new Path2D();body.addPath(ringPath(o,ph-h));
   const corners=[[-ph,-ph],[ph,-ph],[ph,ph],[-ph,ph]],tower=new Path2D();for(const[cx,cy]of corners){tower.moveTo(cx+ts,cy);tier==='stone'?tower.arc(cx,cy,ts,0,TAU):tower.rect(cx-ts,cy-ts,ts*2,ts*2)}
   shadowFill(x,ppu,body,sh,sh,sh*0.7,0.55);shadowFill(x,ppu,tower,sh*1.5,sh*1.5,sh,0.55);
   if(tier==='wood'){const st=T*0.66,rl=st*0.5;
@@ -9438,7 +9458,7 @@ function bakeTower(x,ppu,cx,cy,ts,tier,rn){
     x.fillStyle='#16191a';for(const[a,b,w,hh]of[[-s,-0.5,s*0.28,1],[s*0.72,-0.5,s*0.28,1],[-0.5,-s,1,s*0.28],[-0.5,s*0.72,1,s*0.28]])x.fillRect(cx+a,cy+b,w,hh);
     bevel(x,[cx-2.2,cy-2.2,4.4,4.4],'#5c6264',0.4,0.3,0.4);x.fillStyle='#2e3436';x.beginPath();x.arc(cx+s*0.4,cy-s*0.4,0.9,0,TAU);x.fill();
     x.strokeStyle='#2e3436';x.lineWidth=0.25;x.beginPath();x.moveTo(cx+s*0.4,cy-s*0.4);x.lineTo(cx+s*0.4+2.2,cy-s*0.4-2.2);x.stroke()}}
-function bakeRubble(x,ppu,ph,wlv,tier,T,rn){const h=T/2,P=WPAL[tier],chunks=[],all=new Path2D();
+function bakeRubble(x,ppu,ph,d,tier,T,rn){const h=T/2,P=WPAL[tier],chunks=[],all=new Path2D();
   const add=(cx,cy,sz)=>{const p=new Path2D(),n=4+(rn()*3|0),a0=rn()*TAU;for(let i=0;i<n;i++){const a=a0+i/n*TAU,r=sz*(0.6+rn()*0.5);i?p.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r):p.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r)}p.closePath();chunks.push([p,cx,cy,sz]);all.addPath(p)};
   for(let s=0;s<4;s++){x.fillStyle='rgba(22,18,14,.5)';x.fillRect(...sideRect(s,ph,-ph,ph,-h*1.3,h*1.5));
     for(let a=-ph;a<ph;a+=0.7+rn()*1.1){if(s===2&&Math.abs(a)<8)continue;for(let k=rn()<.6?1:2;k--;){const[X,Y]=sidePt(s,ph,a,(rn()-.5)*T*1.9);add(X,Y,0.35+rn()*rn()*T*0.32)}}}
@@ -9451,7 +9471,7 @@ function drawFortHi(ph,wlv){const up=!wlv||G.wallHp>0,f=fortBake(ph,wlv,up);ctx.
 function drawWallsHi(ph,wlv){const up=G.wallHp>0,f=_fort;
   if(up&&f&&f.cracks.length){const hk=G.wallMax?Math.max(0,G.wallHp/G.wallMax):0,ck=Math.round(hk*40);
     if(ck!==f.ck){f.ck=ck;const p=new Path2D();for(const c of f.cracks)if(c.d>hk+0.3){if(c.k==='char'){p.moveTo(c.x+c.r,c.y);p.arc(c.x,c.y,c.r,0,TAU)}else{p.moveTo(...c.pts[0]);for(let i=1;i<c.pts.length;i++)p.lineTo(...c.pts[i])}}f.cp=p}
-    if(wallTier(wlv)==='wood'){ctx.fillStyle='rgba(24,16,10,.62)';ctx.fill(f.cp)}else{ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='rgba(18,14,10,.85)';ctx.lineWidth=0.55;ctx.stroke(f.cp);
+    if(f.mat==='wood'){ctx.fillStyle='rgba(24,16,10,.62)';ctx.fill(f.cp)}else{ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='rgba(18,14,10,.85)';ctx.lineWidth=0.55;ctx.stroke(f.cp);
       ctx.save();ctx.translate(0.3,0.3);ctx.strokeStyle='rgba(255,240,215,.25)';ctx.lineWidth=0.3;ctx.stroke(f.cp);ctx.restore()}}
   if(!up){const T=wallThickAt(wlv),o=ph+T/2,inn=ph-T/2;ctx.fillStyle='rgba(255,60,40,.08)';ctx.beginPath();ctx.rect(-o,-o,o*2,o*2);ctx.rect(-inn,-inn,inn*2,inn*2);ctx.fill('evenodd')}}
 // ---- sprites: half-buried AT mine, airdropped supply crate ------------------------------------------------------
@@ -9570,25 +9590,33 @@ const WPAL={
   wood:{top:'#8b6a3e',side:'#4a3620',line:'#2a1d10',hi:'#b08a55',floor:'#6b5a3a',floorLine:'#54462c'},
   stone:{top:'#8f8b80',side:'#4d4a43',line:'#2d2b27',hi:'#bdb9ac',floor:'#6f6a5e',floorLine:'#5a564c'},
   concrete:{top:'#9ea4a4',side:'#51575b',line:'#2a2f32',hi:'#d0d6d7',floor:'#5f6466',floorLine:'#50555a'}};
-const wallTier=l=>l<=3?'wood':l<=6?'stone':'concrete';
+// ---- fort design: the fort's LOOK is research, its SIZE is gameplay ----
+// Owner rule: the fort looks the same through every Armory buy and changes design only when a Fort Walls research tier lands. Armory
+// levels move gameplay geometry only (half-size wallHalfAt, thickness wallThickAt, the wire ring wireOut) and stats. The design tier
+// (fortDes = the Fort Walls tier: the run's snapshot while deployed, the saved one at the base) picks the material (T0 timber palisade,
+// T1 precast blocks, T2+ poured concrete), the wall height (shadow reach), the texture seed, the concertina (bakeWire) and the tier overlays
+// (drawWallTier). Every fort bake is keyed on it, so a landed tier shows the new design the next time the fort is drawn.
+const fortDes=()=>tierOf('walls');
+const wallMat=d=>d<1?'wood':d<2?'stone':'concrete';
+const wallRise=(d,lo)=>lo?(d<2?3.75+0.75*d:5.3+0.15*(d-2)):(d<2?2.3+0.9*d:4.1+0.2*(d-2));   // wall height as shadow reach: High bake / Medium-Low
 const hash=(a,b)=>{const x=Math.sin(a*12.9898+b*78.233)*43758.5453;return x-Math.floor(x)};
 // Medium/Low: floor + walls + towers (+ their ground shadow) are static between wall-state changes, so they are baked together
-// (stSpr) keyed by layout, walls up/down and the set of cracked segments; drawWalls() then has nothing left to draw this frame.
+// (stSpr) keyed by layout, design, walls up/down and the set of cracked segments; drawWalls() then has nothing left to draw this frame.
 let _fortLo=false;
 function drawFloor(ph,wlv){
   if(hiGfx())return drawFortHi(ph,wlv);
-  _fortLo=false;const m=ctx.getTransform(),up=wlv&&G.wallHp>0;let key=ph+'|'+wlv+'|'+(up?1:0),E=ph+1;
-  if(wlv){const T=wallThickAt(wlv),tier=wallTier(wlv);E=ph+T/2+T*1.05+2+3+wlv*0.25+4;
+  const d=fortDes();_fortLo=false;const m=ctx.getTransform(),up=wlv&&G.wallHp>0;let key=ph+'|'+wlv+'|'+d+'|'+(up?1:0),E=ph+1;
+  if(wlv){const T=wallThickAt(wlv),tier=wallMat(d);E=ph+T/2+T*1.05+2+wallRise(d,1)+4;
     if(up){const hk=G.wallMax?Math.max(0,G.wallHp/G.wallMax):0,th=hk+(tier==='wood'?0.35:0.3),st=tier==='wood'?T*0.62:tier==='stone'?7:12,n=Math.ceil(ph*2/st)+1;let c=0;
       for(let q=0;q<4;q++)for(let i=0;i<n;i++)if(hash(i,q)>th)c++;key+='|'+c}}   // cracks / scorched stakes appear per segment as hash > hp + margin: the count names the set
   const f=stSpr('fortLo',key,Math.hypot(m.a,m.b),-E,-E,2*E,2*E,()=>{floorLo(ph,wlv);if(wlv)wallsLo(ph,wlv)});
   if(f){stDraw(f);_fortLo=!!wlv;return}floorLo(ph,wlv)}
-function floorLo(ph,wlv){
-  const P=WPAL[wallTier(Math.max(1,wlv))];ctx.fillStyle=P.floor;ctx.fillRect(-ph,-ph,ph*2,ph*2);
+function floorLo(ph,wlv){const mat=wlv?wallMat(fortDes()):'wood';
+  const P=WPAL[mat];ctx.fillStyle=P.floor;ctx.fillRect(-ph,-ph,ph*2,ph*2);
   ctx.strokeStyle=P.floorLine;ctx.lineWidth=0.8;
-  if(!wlv||wallTier(wlv)==='wood'){for(let i=-ph;i<ph;i+=6){ctx.beginPath();ctx.moveTo(i,-ph);ctx.lineTo(i,ph);ctx.stroke()}
+  if(mat==='wood'){for(let i=-ph;i<ph;i+=6){ctx.beginPath();ctx.moveTo(i,-ph);ctx.lineTo(i,ph);ctx.stroke()}
     for(let i=-ph,r=0;i<ph;i+=6,r++)for(let j=-ph+(r%3)*7;j<ph;j+=21){ctx.beginPath();ctx.moveTo(i,j);ctx.lineTo(i+6,j);ctx.stroke()}}
-  else if(wallTier(wlv)==='stone'){for(let j=-ph,r=0;j<ph;j+=9,r++){ctx.beginPath();ctx.moveTo(-ph,j);ctx.lineTo(ph,j);ctx.stroke();
+  else if(mat==='stone'){for(let j=-ph,r=0;j<ph;j+=9,r++){ctx.beginPath();ctx.moveTo(-ph,j);ctx.lineTo(ph,j);ctx.stroke();
     for(let i=-ph+(r%2)*6;i<ph;i+=12){ctx.beginPath();ctx.moveTo(i,j);ctx.lineTo(i,j+9);ctx.stroke()}}}
   else{for(let i=-ph;i<=ph;i+=16){ctx.beginPath();ctx.moveTo(i,-ph);ctx.lineTo(i,ph);ctx.moveTo(-ph,i);ctx.lineTo(ph,i);ctx.stroke()}
     ctx.strokeStyle='rgba(227,181,60,.35)';ctx.lineWidth=1.2;ctx.setLineDash([4,4]);ctx.strokeRect(-ph*0.6,-ph*0.6,ph*1.2,ph*1.2);ctx.setLineDash([])}
@@ -9600,10 +9628,10 @@ function drawWalls(ph,wlv){
   if(hiGfx())return drawWallsHi(ph,wlv);
   if(_fortLo)return;wallsLo(ph,wlv)}
 function wallsLo(ph,wlv){
-  const tier=wallTier(wlv),P=WPAL[tier],up=G.wallHp>0,hk=G.wallMax?Math.max(0,G.wallHp/G.wallMax):0;
+  const d=fortDes(),tier=wallMat(d),P=WPAL[tier],up=G.wallHp>0,hk=G.wallMax?Math.max(0,G.wallHp/G.wallMax):0;
   const T=wallThickAt(wlv),h=T/2,o=ph+h,inn=ph-h;
   // cast shadow on the ground (fake height, light from top-left)
-  const sh=up?3+wlv*0.25:1.5;ctx.fillStyle='rgba(0,0,0,.38)';ctx.beginPath();ctx.rect(-o+sh,-o+sh,o*2,o*2);ctx.rect(-inn+sh,-inn+sh,inn*2,inn*2);ctx.fill('evenodd');
+  const sh=up?wallRise(d,1):1.5;ctx.fillStyle='rgba(0,0,0,.38)';ctx.beginPath();ctx.rect(-o+sh,-o+sh,o*2,o*2);ctx.rect(-inn+sh,-inn+sh,inn*2,inn*2);ctx.fill('evenodd');
   for(let s=0;s<4;s++){ctx.save();ctx.rotate(s*Math.PI/2);
     const len=ph*2,gate=s===2;
     if(tier==='wood'){const st=T*0.62;let i=0;
