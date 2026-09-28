@@ -537,7 +537,7 @@
         return fetchProducts([id]).then(function () { return productCache[id]; });
       })
       .then(function (product) {
-        if (!product) throw new Error('Unknown product: ' + id);
+        if (!product) throw new Error('not in the App Store yet (' + id + ')');
         return Purchases.purchaseStoreProduct({ product: product });
       })
       .then(function () {
@@ -624,7 +624,9 @@
 
   function notePermission() {
     if (notePerm) return notePerm;
-    notePerm = Notes.checkPermissions()
+    // After the launch ATT prompt settles, so the two system sheets never stack.
+    notePerm = (attPromise || Promise.resolve())
+      .then(function () { return Notes.checkPermissions(); })
       .then(function (p) {
         if (p && p.display === 'granted') return true;
         if (p && p.display === 'denied') return false;
@@ -728,6 +730,7 @@
     platform: platform,
     build: String(window.FORT_BUILD || ''),     // stamped by build_www.py: the TestFlight build number
     version: String(window.FORT_VERSION || ''), // and MARKETING_VERSION from the Xcode project
+    liveAds: window.FORT_ADS === 'live',         // build_www.py --release: live AdMob units, else Google's test units
     configure: configure,
     ready: ready,
     log: function () { return events.slice(); },

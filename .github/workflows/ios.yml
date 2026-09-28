@@ -7,6 +7,9 @@
 #   IOS_CERT_P12_B64, CERT_EXPORT_PASS                   the team's one Apple Distribution cert, as a
 #                                                        password-protected p12 (ios-mint-cert.yml)
 # Signing is manual with that cert and an App Store profile; see native/ios/fastlane/Fastfile.
+#
+# Ads: a normal run builds with Google's test ad units (safe for TestFlight testers); tick the
+# `release` input for the build you will submit to App Review, which uses the live AdMob units.
 
 name: iOS TestFlight
 
@@ -14,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       release:
-        description: "App Store candidate: fail if index.html PLAT_IDS still holds a placeholder (test ads, no RevenueCat key)"
+        description: "App Store candidate: live AdMob units (otherwise Google's test units)"
         type: boolean
         default: false
 

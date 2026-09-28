@@ -330,24 +330,25 @@ Code: `// ================= PLATFORM (Plat) =================` and `// =========
 
 **Machine rule (owner's PC crashed once):** run ONE headless Edge/node test at a time, never pools; `shots4.py`/`smoke.py` are sequential.
 
-### Platform layer `Plat` (Capacitor integration points)
-One seam between the game and the device. Every native call is guarded: a missing or failing plugin reads as "no ad / not bought", never as an error.
+### Platform layer `Plat`
+One seam between the game and the device. The web build has no ads or store; the iOS app routes every call through `window.Shell` (`native/shell.js`, see "iOS app" below). Every native call is guarded: a missing or failing plugin reads as "no ad / not bought", never as an error.
 
-| Call | Web build | iOS (Capacitor) plug-in point |
+| Call | Web build | iOS app (`window.Shell`) |
 |---|---|---|
-| `Plat.ad(kind) -> Promise<bool>` (rewarded) | hidden without the dev flag; simulated sheet with SKIP with it | `@capacitor-community/admob`: `prepareRewardVideoAd({adId})` + `showRewardVideoAd()`. The reward comes from `onRewardedVideoAdReward` and settles on `onRewardedVideoAdDismissed` (`nativeAd`). Check the event names against the plugin version |
-| `Plat.interstitial()` | never without the dev flag; simulated with it | AdMob `prepareInterstitial` + `showInterstitial`. Pacing lives in `iaOk()`, not in the plugin |
-| `Plat.buy(sku) -> Promise<bool>` | hidden; simulated confirm sheet with the dev flag | `@revenuecat/purchases-capacitor`: `configure({apiKey})` and `getProducts` (in `init`), then `purchaseStoreProduct({product})`. A cancel throws and reads as false. Grants happen in `shopGrant(sku)` |
-| `Plat.restore()` | `[]` | `Purchases.restorePurchases()` returns the owned non-consumables (noads, starter). The "Restore purchases" link in the shop footer covers the App Store requirement |
-| `Plat.notify(when,title,body,id)` / `Plat.cancel(id)` | logged only (`Plat.log`) | `@capacitor/local-notifications` `schedule`/`cancel`. The string `id` is hashed to the plugin's int id, so rescheduling an id replaces the old one |
-| `Plat.haptic(kind)` | `navigator.vibrate` while screen shake is on | `@capacitor/haptics` impact / notification |
-| `Plat.price(sku, usd)` | `$usd` | RevenueCat `priceString` (localized) |
+| `Plat.ad(kind) -> Promise<bool>` (rewarded) | hidden without the dev flag; simulated sheet with SKIP with it | `Shell.ads.showRewarded()`; true only when the reward was earned, settled when the ad closes. No fill: a toast |
+| `Plat.interstitial() -> Promise<bool>` | never without the dev flag; simulated with it | `Shell.ads.showInterstitial()`. Pacing lives in `iaOk()`; the counter resets only once one was shown |
+| `Plat.buy(sku) -> Promise<bool>` | hidden; simulated confirm sheet with the dev flag | `Shell.iap.purchase(sku)` (RevenueCat). A cancel is silent, a store error toasts. Grants happen in `shopGrant(sku)` |
+| `Plat.restore()` | `[]` | `Shell.iap.restore()`: the owned non-consumables; `shopOwn()` sets the flags only. Also run quietly at launch |
+| `Plat.notify(when,title,body,id)` / `Plat.cancel(id)` | logged only (`Plat.log`) | `Shell.notify.schedule/cancel` (local notifications; string id hashed to the plugin's int id) |
+| `Plat.haptic(kind)` | `navigator.vibrate` while screen shake is on | `Shell.haptic(kind)` |
+| `Plat.price(sku, usd)` | `$usd` | the store's localized price |
+| `Plat.score(board, n)` | nothing | Game Center, once `PLAT_IDS.lbDaily` is set (`dcEnd` submits the challenge wave) |
 
-- `PLAT_IDS` holds Google's public iOS TEST ad unit ids and `rcKey:''` (empty = purchases off, even in the app). At release, swap in the real AdMob units and the RevenueCat public iOS key. Also add the AdMob app id, `SKAdNetworkItems` and the ATT prompt text to Info.plist (see the AdMob plugin docs).
-- Dev flag: URL `?dev=1`, or Settings → tap the SETTINGS title 7 times → "Developer mode" (`S.set.dev`). Without it the live GitHub Pages build shows no rewarded-ad button, no gem packs / Starter Pack / Remove Ads (the shop says they are sold in the iOS app), and never an interstitial. QA hooks: `Plat.auto=true/false` settles simulated ads and purchases at once; `Plat.adSecs` sets the simulated ad's length.
-- SKUs to create in App Store Connect + RevenueCat:
-  - consumables: `gems_80` $0.99, `gems_500` $4.99, `gems_1200` $9.99 (POPULAR), `gems_2600` $19.99, `gems_7000` $49.99 (BEST VALUE)
-  - non-consumables: `starter` $2.99, `noads` $3.99
+- `PLAT_IDS` holds the live AdMob app id and units, Google's test units, the RevenueCat key and the (empty) leaderboard id. Only a release build (`build_www.py --release`) uses the live units.
+- Dev flag: URL `?dev=1`, or Settings → tap the SETTINGS title 7 times → "Developer mode" (`S.set.dev`). Web only: the iOS app hides the toggle and ignores the flag. Without it the live GitHub Pages build shows no rewarded-ad button, no gem packs / Starter Pack / Remove Ads (the shop says they are sold in the iOS app), and never an interstitial. QA hooks: `Plat.auto=true/false` settles simulated ads and purchases at once; `Plat.adSecs` sets the simulated ad's length.
+- Product ids (App Store Connect + RevenueCat, not created yet), `fort_`-prefixed because App Store ids are unique per developer account and Euchre already sells `remove_ads`/`coins_*`:
+  - consumables: `fort_gems_80` $0.99, `fort_gems_500` $4.99, `fort_gems_1200` $9.99 (POPULAR), `fort_gems_2600` $19.99, `fort_gems_7000` $49.99 (BEST VALUE)
+  - non-consumables: `fort_starter` $2.99, `fort_noads` $3.99
 
 ### Clock safety and roll-out
 - Every daily thing keys on `today()` = the local calendar day of `labNow()` (the phase 3 lab clock, which only moves forward with `Date.now()`).
@@ -461,3 +462,16 @@ One seam between the game and the device. Every native call is guarded: a missin
   - shop: packs, starter + voucher, starter once, Remove Ads, cancel; reset keeps purchases
   - the Base dot
 - `.qa/shot4.js` + `shots4.py`: `HASH=#base|streak|aar|sw|shop|dch|dcres|web`, sizes p/l/s/d, strictly one Edge at a time.
+
+## iOS app (branch `ios-native`)
+Capacitor 8 wrapper in `native/`, built and uploaded to TestFlight by `.github/workflows/ios.yml`. Copied from Euchre Unleashed's setup: SPM plugins, manual signing with the team's one distribution cert (secrets copied from euchre-unleashed), fastlane `beta`, build number = run number, `macos-26`. Details: `native/README.md` (architecture, ids, products) and `CI_SETUP.md` (secrets, accounts, shipping, cert renewal).
+
+- App Store name "The Fort: Last Stand", home-screen name The Fort, bundle `com.thefort.game`, ASC Apple ID 6816787587. iPhone, portrait + landscape, status bar hidden, home indicator auto-hides, edge swipes deferred.
+- `native/shell.js` = `window.Shell`, injected into `<head>` by `native/build_www.py` (with `capacitor.js`, the build stamp and the bundled fonts). The web page never loads it, so GitHub Pages behaves exactly as before.
+- Save seam: `save()` → `saveWrite(json)` → localStorage, plus `Shell.store.put` in the app (Preferences, sequence-numbered, debounced, flushed on background). `Plat.boot()` → `saveBoot()` restores the native copy when iOS purged localStorage; the splash stays up until then. No iCloud (Euchre has none).
+- Backgrounding: `bgPause()` (persist + pause) runs on `visibilitychange` and on the app's `appStateChange`.
+- Ads: ATT at launch, then UMP consent; non-personalized unless ATT is authorized and consent obtained/not required. Test units unless `--release`; the Settings build line says "test ads".
+- Tests: `node native/test_shell.cjs` (92, mocked plugins), `node native/check_game.cjs` (scripts compile, PLAT_IDS, fort_ ids, Shell contract), `node native/check_www.cjs` (built page), `python native/test_plat.py` (33, Plat against a scripted Shell in headless Edge, local only).
+- Art: `native/assets/art.html` + `render_art.py` draw the icon (gold star fort, green turret, muzzle flash) and the splash; `npx capacitor-assets generate --ios` puts them in the asset catalog.
+- Open: the seven IAP products, the Game Center leaderboard, AdMob approval of the listing, App Store privacy labels.
+

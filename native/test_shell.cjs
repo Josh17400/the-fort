@@ -16,7 +16,7 @@
 //   store      save mirror: nothing written before hydrate, purged localStorage restored, newer
 //              native copy wins, newer local copy mirrored out, debounce, flush on background
 //   gc         Game Center stays off without a leaderboard id; with one: sign-in, submitScore
-//   splash     ready() hides once; the fallback timer hides it if the game never does
+//   splash     ready() hides once; the fallback timer hides it if the game never does; build stamp and ad mode
 //
 // Run:  node native/test_shell.cjs
 'use strict';
@@ -197,6 +197,7 @@ function makeEnv(opts = {}) {
     window.capacitorExports = { registerPlugin: (name) => plugins[name] || null };
   }
   if (opts.build) window.FORT_BUILD = opts.build;
+  if (opts.ads) window.FORT_ADS = opts.ads;
 
   const ctx = vm.createContext(Object.assign(window, {
     window, document, setTimeout: setTimeoutF, clearTimeout: clearTimeoutF, Date, Math, JSON, Promise, Object, Array,
@@ -406,7 +407,7 @@ async function iap() {
   const ok = await env.Shell.iap.purchase('fort_gems_500');
   check('iap: purchase ok', ok.ok === true && env.args('purchaseStoreProduct').includes('fort_gems_500'), ok);
   const unknown = await env.Shell.iap.purchase('fort_gems_1200');
-  check('iap: a product the store lacks fails cleanly', unknown.ok === false && /Unknown product/.test(unknown.error), unknown);
+  check('iap: a product the store lacks fails cleanly', unknown.ok === false && /not in the App Store yet/.test(unknown.error), unknown);
   const owned = await env.Shell.iap.owned();
   check('iap: owned = configured non-consumables only, from all three CustomerInfo fields', JSON.stringify(owned) === '["fort_starter","fort_noads"]', owned);
   const restored = await env.Shell.iap.restore();
@@ -459,6 +460,13 @@ async function notify() {
   check('notify: a time in the past is ignored', (await S.notify.schedule({ id: 'x', at: Date.now() - 1, title: '', body: '' })) === false);
   await S.notify.cancel('daily');
   check('notify: cancel by string id', env.args('notes.cancel').some((a) => a.notifications[0].id === S.notify.id('daily')));
+  const both = makeEnv();
+  both.Shell.configure(cfg());
+  const p = both.Shell.notify.schedule({ id: 'daily', at, title: 'Daily Ops', body: 'x' });
+  await both.advance(50);
+  await p;
+  const bn = both.names();
+  check('notify: the permission sheet waits for the launch ATT prompt', bn.indexOf('att.request') >= 0 && bn.indexOf('att.request') < bn.indexOf('notes.check'), bn);
   const denied = makeEnv({ plugins: { LocalNotifications: { perm: 'prompt', grant: 'denied' } } });
   check('notify: denied permission = not scheduled', (await denied.Shell.notify.schedule({ id: 'a', at, title: '', body: '' })) === false && denied.count('notes.schedule') === 0);
 }
@@ -571,6 +579,8 @@ async function splash() {
   check('splash: fallback hides it after 8 s', env.count('splash.hide') === 1);
   env = makeEnv({ build: '42' });
   check('build number exposed', env.Shell.build === '42');
+  check('liveAds: false unless the build says live', env.Shell.liveAds === false && makeEnv({ ads: 'test' }).Shell.liveAds === false);
+  check('liveAds: true in a release build', makeEnv({ ads: 'live' }).Shell.liveAds === true);
 }
 
 (async () => {

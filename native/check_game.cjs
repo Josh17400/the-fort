@@ -49,6 +49,7 @@ const CONTRACT = {
   ready: /\.ready\(\)/,
   build: /\.build\b/,
   version: /\.version\b/,
+  liveAds: /\.liveAds\b/,
   'app.onState': /\.app\.onState\(/,
   'ads.available': /\.ads\.available\(/,
   'ads.showRewarded': /\.ads\.showRewarded\(/,
@@ -85,7 +86,7 @@ function checkGame(html) {
   const ids = /const PLAT_IDS=\{([\s\S]*?)\n\};/.exec(html);
   if (!ids) fails.push('const PLAT_IDS={...}; not found');
   else {
-    for (const k of ['admobApp', 'rewarded', 'interstitial', 'rcKey', 'lbDaily']) {
+    for (const k of ['admobApp', 'rewarded', 'interstitial', 'testRewarded', 'testInterstitial', 'rcKey', 'lbDaily']) {
       if (!new RegExp('^\\s*' + k + ":'[^']*'", 'm').test(ids[1])) fails.push('PLAT_IDS.' + k + ' missing');
     }
   }

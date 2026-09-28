@@ -1938,14 +1938,18 @@ function gemInit(){S.gems=Math.max(0,Math.floor(+S.gems||0));const t=S.gemT&&typ
 // Every native call is guarded: a missing or failing plugin reads as "no ad / not bought", never as an error. QA hooks: Plat.auto =
 // true/false settles simulated ads and purchases at once (no sheet); Plat.log keeps the last notifications scheduled; Plat.adSecs is
 // the simulated ad's length.
-// PLAT_IDS: PLACEHOLDERS until release (native/README.md, "Release checklist"). Until the owner swaps them the app shows Google's test
-// ads, sells nothing and skips Game Center. The product ids themselves are SHOP_PACKS / SHOP_ONE (fort_*).
+// PLAT_IDS: the ids the iOS app runs with (the product ids are SHOP_PACKS / SHOP_ONE, fort_*). App Store name "The Fort: Last Stand",
+// bundle com.thefort.game. Ads: only a release build (build_www.py --release, the App Store candidate) uses the live AdMob units; every
+// other build (Xcode debug, TestFlight test runs) gets Google's public test units, so nobody taps a live ad by accident. The AdMob app id
+// is the real one in both. Shell.liveAds says which a build got; Settings shows it next to the build number.
 const PLAT_IDS={
-  admobApp:'ca-app-pub-3940256099942544~1458002511',      // PLACEHOLDER Google's iOS test app id. Must equal GADApplicationIdentifier in
+  admobApp:'ca-app-pub-8913077727879528~2474795069',       // AdMob app "The Fort". Must equal GADApplicationIdentifier in
                                                            //   native/ios/App/App/Info.plist: build_www.py refuses to build otherwise
-  rewarded:'ca-app-pub-3940256099942544/1712485313',       // PLACEHOLDER Google's iOS test rewarded unit
-  interstitial:'ca-app-pub-3940256099942544/4411468910',   // PLACEHOLDER Google's iOS test interstitial unit
-  rcKey:'',                                                // PLACEHOLDER RevenueCat public App Store SDK key (appl_...). Empty = no store
+  rewarded:'ca-app-pub-8913077727879528/5913234786',       // live rewarded unit (release builds only)
+  interstitial:'ca-app-pub-8913077727879528/3784007309',   // live interstitial unit (release builds only)
+  testRewarded:'ca-app-pub-3940256099942544/1712485313',   // Google's public iOS test units: every non-release build
+  testInterstitial:'ca-app-pub-3940256099942544/4411468910',
+  rcKey:'appl_CoLlGppaiooTIcoxtSShLvmUqxA',                // RevenueCat project "The Fort", public App Store SDK key
   lbDaily:''                                               // PLACEHOLDER Game Center leaderboard id (recurring, daily). Empty = off
 };
 const Plat=(()=>{let busy=false,booted=null;
@@ -1963,8 +1967,10 @@ const Plat=(()=>{let busy=false,booted=null;
     boot(){if(booted)return booted;const s=sh();if(!s)return booted=Promise.resolve();
       s.app.onState(on=>{if(!on)bgPause()});
       return booted=saveBoot(s.store).catch(()=>{}).then(()=>{
-        s.configure({rewarded:PLAT_IDS.rewarded,interstitial:PLAT_IDS.interstitial,rcKey:PLAT_IDS.rcKey,products:SHOP_SKUS(),
+        const live=s.liveAds===true;
+        s.configure({rewarded:live?PLAT_IDS.rewarded:PLAT_IDS.testRewarded,interstitial:live?PLAT_IDS.interstitial:PLAT_IDS.testInterstitial,rcKey:PLAT_IDS.rcKey,products:SHOP_SKUS(),
           nonConsumables:[SHOP_ONE.starter.sku,SHOP_ONE.noads.sku],leaderboards:[PLAT_IDS.lbDaily],preloadInterstitial:!S.shop.noAds&&(S.runs|0)>=IA_RUNS});
+        if(!running)renderHome();   // the store is on now: the Base screen can show the Starter Pack and the gem shop
         if(s.iap.available())s.iap.owned().then(ids=>{if(shopOwn(ids))gemRefresh()}).catch(()=>{})}).finally(()=>s.ready())},
     async ad(kind){if(busy||!P.adsOn())return false;busy=true;try{const s=sh();if(!s)return await sim('ad',kind);
         const r=await full(()=>s.ads.showRewarded());if(r&&r.reason==='nofill')toast('No ad available right now · try again in a minute','play');return!!(r&&r.rewarded)}
@@ -2839,7 +2845,7 @@ sheetDrag('settings',closeSettings);sheetDrag('howto',closeHowto);
 $('howClose').onclick=$('howDone').onclick=closeHowto;$('howto').addEventListener('mousedown',e=>{if(e.target.id==='howto')closeHowto()});$('howBtn').onclick=openHowto;
 const segSync=(seg,v)=>{for(const b of $(seg).children)b.setAttribute('aria-pressed',b.dataset.v===String(v))};
 const volFill=()=>$('sVol').style.setProperty('--v',$('sVol').value+'%');
-function syncSettings(){$('devRow').hidden=Plat.native()||!S.set.dev&&_devTap<7;const vl=$('verLine');vl.hidden=!Plat.native();if(Plat.native()){const sh=window.Shell;vl.textContent='The Fort for iOS'+(sh.version?' · v'+sh.version:'')+' · build '+(sh.build||'local')}$('sDev').checked=!!S.set.dev;$('sVol').value=S.set.vol;volFill();$('sMusic').checked=S.set.music;$('sShake').checked=S.set.shake;$('sDmg').checked=S.set.dmgNums;$('sCall').checked=S.set.callouts!==false;$('sRing').checked=S.set.ring;$('sDay').checked=S.set.dayNight;$('sBlur').checked=S.set.blurPause;
+function syncSettings(){$('devRow').hidden=Plat.native()||!S.set.dev&&_devTap<7;const vl=$('verLine');vl.hidden=!Plat.native();if(Plat.native()){const sh=window.Shell;vl.textContent='The Fort for iOS'+(sh.version?' · v'+sh.version:'')+' · build '+(sh.build||'local')+(sh.liveAds?'':' · test ads')}$('sDev').checked=!!S.set.dev;$('sVol').value=S.set.vol;volFill();$('sMusic').checked=S.set.music;$('sShake').checked=S.set.shake;$('sDmg').checked=S.set.dmgNums;$('sCall').checked=S.set.callouts!==false;$('sRing').checked=S.set.ring;$('sDay').checked=S.set.dayNight;$('sBlur').checked=S.set.blurPause;
   $('sSpeed').value=String(S.set.speed);$('sGfx').value=S.set.gfx;segSync('gfxSeg',S.set.gfx);segSync('spdSeg',S.set.speed);$('sRm').checked=!!S.set.reduceMotion;$('sLeft').checked=!!S.set.leftHand;
   const rb=$('resetBtn');rb.disabled=running;delete rb.dataset.arm;rb.textContent=running?'END RUN FIRST':'RESET'}
 for(const[seg,sel]of[['gfxSeg','sGfx'],['spdSeg','sSpeed']])$(seg).addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;e.preventDefault();const s=$(sel);if(s.value!==b.dataset.v){s.value=b.dataset.v;s.dispatchEvent(new Event('change'))}segSync(seg,b.dataset.v)});

@@ -21,7 +21,7 @@
   var stateCb = null;
   window.__plat = { calls: calls, next: next, state: function (v) { stateCb(v); } };
   window.Shell = {
-    native: true, platform: 'ios', build: '7', version: '1.0.0',
+    native: true, platform: 'ios', build: '7', version: '1.0.0', liveAds: false,
     configure: function (c) { rec('configure', c); },
     ready: function () { rec('ready'); },
     app: { onState: function (cb) { stateCb = cb; cb(true); }, active: function () { return true; } },
@@ -71,7 +71,9 @@
         localStorage.getItem('theFortSave').indexOf('"tkills":3000') > 0);
       var cfg = last('configure') || {};
       T('boot: configure after hydrate', calls.findIndex(function (c) { return c.name === 'configure'; }) > calls.findIndex(function (c) { return c.name === 'hydrate'; }));
-      T('boot: configure gets PLAT_IDS', cfg.rewarded === PLAT_IDS.rewarded && cfg.interstitial === PLAT_IDS.interstitial && cfg.rcKey === PLAT_IDS.rcKey);
+      T('boot: a non-release build gets Google\'s test units', cfg.rewarded === PLAT_IDS.testRewarded && cfg.interstitial === PLAT_IDS.testInterstitial &&
+        cfg.rewarded.indexOf('ca-app-pub-3940256099942544/') === 0);
+      T('boot: configure gets the RevenueCat key', cfg.rcKey === PLAT_IDS.rcKey && cfg.rcKey.indexOf('appl_') === 0);
       T('boot: configure gets the fort_ products', JSON.stringify(cfg.products) === JSON.stringify(['fort_gems_80', 'fort_gems_500', 'fort_gems_1200', 'fort_gems_2600', 'fort_gems_7000', 'fort_starter', 'fort_noads']));
       T('boot: non-consumables = starter + noads', JSON.stringify(cfg.nonConsumables) === '["fort_starter","fort_noads"]');
       T('boot: owned purchases rehydrated quietly', has('owned') && S.shop.noAds === 1 && !has('restore'));
@@ -134,7 +136,7 @@
     step(function () {
       syncSettings();
       T('ui: no developer toggle in the app', $('devRow').hidden === true);
-      T('ui: build line', !$('verLine').hidden && $('verLine').textContent === 'The Fort for iOS · v1.0.0 · build 7');
+      T('ui: build line', !$('verLine').hidden && $('verLine').textContent === 'The Fort for iOS · v1.0.0 · build 7 · test ads');
     });
     step(function () {
       document.title = 'PLAT pass=' + ok + ' fail=' + bad.length + (bad.length ? ' [' + bad.join(' | ') + ']' : '');

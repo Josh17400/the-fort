@@ -49,11 +49,10 @@
 	<!-- System sheets (ATT, notifications, Game Center, purchases) match the game's dark UI. -->
 	<key>UIUserInterfaceStyle</key>
 	<string>Dark</string>
-	<!-- PLACEHOLDER: Google's iOS TEST AdMob app id. Replace with The Fort's AdMob app id
-	     (AdMob > Apps > The Fort > App settings), and set index.html PLAT_IDS.admobApp to the
-	     same value: build_www.py refuses to build when the two differ. -->
+	<!-- AdMob app "The Fort". index.html PLAT_IDS.admobApp holds the same id (build_www.py refuses
+	     to build when they differ); the ad unit ids are in PLAT_IDS too. -->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<string>ca-app-pub-8913077727879528~2474795069</string>
 	<!-- ATT prompt text; native/shell.js asks at launch, before any ad loads. Declined = non-personalized ads. -->
 	<key>NSUserTrackingUsageDescription</key>
 	<string>Your data will be used to show you more relevant ads. The Fort works the same either way.</string>

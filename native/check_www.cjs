@@ -32,6 +32,8 @@ const firstGame = html.indexOf('<script>', shell);
 need(head >= 0 && cap > head && shell > cap, 'capacitor.js and shell.js must load, in that order, right after <head>');
 need(firstGame > shell, 'shell.js must load before the first game script');
 need(!/\r/.test(html), 'www/index.html has CR line endings');
+const adMode = (/^<head><script>window\.FORT_ADS="(live|test)";/m.exec(html.slice(head)) || [])[1];
+need(!!adMode, 'ad mode stamp (window.FORT_ADS) missing right after <head>');
 const bn = (process.env.BUILD_NUMBER || '').trim();
 if (/^\d+$/.test(bn)) need(html.includes('window.FORT_BUILD="' + bn + '";'), 'build stamp missing: window.FORT_BUILD="' + bn + '"');
 
@@ -64,6 +66,6 @@ const g = checkGame(html);
 fails.push(...c.fails, ...g.fails);
 
 console.log('check_www: ' + c.count + ' script block(s) compiled, ' + new Set(refs).size + ' local file(s) present, shell ' +
-  (shell > 0 ? 'injected' : 'MISSING') + (bn ? ', build ' + bn : ''));
+  (shell > 0 ? 'injected' : 'MISSING') + (bn ? ', build ' + bn : '') + ', ' + (adMode || '?') + ' ads');
 fails.forEach((f) => console.log('  FAIL ' + f));
 process.exit(fails.length ? 1 : 0);

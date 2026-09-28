@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """Rebuild native/www from ../index.html (the game), shell.js, the Capacitor runtime and the bundled fonts.
 
-www/index.html is the game with three changes, nothing else:
-  1. right after <head>: the build stamp (window.FORT_BUILD / FORT_VERSION), capacitor.js and shell.js,
-     so window.Shell exists before the game's first script runs and Plat takes its native branch;
-  2. the fonts.googleapis.com stylesheet swapped for fonts/fonts.css (the app must render offline);
-  3. nothing is minified or reordered, so a device bug maps 1:1 onto the repo's index.html.
+www/index.html is the game with two changes, nothing else:
+  1. right after <head>: the build stamp (window.FORT_BUILD / FORT_VERSION / FORT_ADS), capacitor.js and
+     shell.js, so window.Shell exists before the game's first script runs and Plat takes its native branch;
+  2. the fonts.googleapis.com stylesheet swapped for fonts/fonts.css (the app must render offline).
+Nothing is minified or reordered, so a device bug maps 1:1 onto the repo's index.html.
 
-It also refuses to build when the AdMob app id in index.html (PLAT_IDS.admobApp) differs from
-GADApplicationIdentifier in ios/App/App/Info.plist, and reports every PLACEHOLDER id still in PLAT_IDS.
-With --release a placeholder is an error instead of a warning.
+Ads: a --release build (the App Store candidate) stamps FORT_ADS="live" and the game uses the live AdMob
+units in PLAT_IDS; any other build stamps "test" and gets Google's public test units.
+
+It refuses to build when the AdMob app id in index.html (PLAT_IDS.admobApp) differs from
+GADApplicationIdentifier in ios/App/App/Info.plist, when a live unit is a test id (or the other way
+round), or when the RevenueCat key is not an App Store public key; it warns about a PLACEHOLDER id.
 
 Run before every `npx cap sync ios`:   python build_www.py [--release]
 Env: BUILD_NUMBER (CI: the GitHub run number) is stamped into the page for the Settings build line.
@@ -37,13 +40,13 @@ PBXPROJ = NATIVE / "ios" / "App" / "App.xcodeproj" / "project.pbxproj"
 ROOT_FILES = ("apple-touch-icon.png",)
 WWW = NATIVE / "www"
 MARKER = "<head>"
-INJECTED = ('src="capacitor.js"', 'src="shell.js"', "window.FORT_BUILD")
+INJECTED = ('src="capacitor.js"', 'src="shell.js"', "window.FORT_BUILD", "window.FORT_ADS")
 GOOGLE_FONTS = re.compile(
     r'<link rel="preconnect" href="https://fonts\.googleapis\.com">\s*'
     r'<link href="https://fonts\.googleapis\.com/css2\?[^"]*" rel="stylesheet">')
 LOCAL_FONTS = '<link rel="stylesheet" href="fonts/fonts.css">'
 
-# Google's published iOS test ids: fine for TestFlight, never for the App Store.
+# Google's publisher id for its public test ad units.
 TEST_ADMOB = "ca-app-pub-3940256099942544"
 
 
@@ -61,7 +64,7 @@ def plat_ids(html: str) -> dict:
     if not m:
         fail("const PLAT_IDS={...}; not found in index.html")
     ids = dict(re.findall(r"^\s*(\w+):'([^']*)'", m.group(1), re.M))
-    for key in ("admobApp", "rewarded", "interstitial", "rcKey", "lbDaily"):
+    for key in ("admobApp", "rewarded", "interstitial", "testRewarded", "testInterstitial", "rcKey", "lbDaily"):
         if key not in ids:
             fail(f"PLAT_IDS.{key} not found in index.html")
     return ids
@@ -83,23 +86,20 @@ def check_ids(ids: dict, release: bool) -> None:
         if plist_app != ids["admobApp"]:
             fail(f"AdMob app id mismatch: index.html PLAT_IDS.admobApp is {ids['admobApp']!r} but "
                  f"{INFO_PLIST.relative_to(NATIVE).as_posix()} GADApplicationIdentifier is {plist_app!r}. Set both to the same id.")
-    placeholders = []
     for key in ("admobApp", "rewarded", "interstitial"):
         if ids[key].startswith(TEST_ADMOB):
-            placeholders.append(f"PLAT_IDS.{key} is Google's test id (the app shows test ads)")
+            fail(f"PLAT_IDS.{key} is one of Google's test ids; it must be The Fort's own (test units go in testRewarded/testInterstitial)")
+    for key in ("testRewarded", "testInterstitial"):
+        if not ids[key].startswith(TEST_ADMOB + "/"):
+            fail(f"PLAT_IDS.{key} must be one of Google's public test units ({TEST_ADMOB}/...), not {ids[key]!r}")
     if not ids["rcKey"]:
-        placeholders.append("PLAT_IDS.rcKey is empty (the gem shop sells nothing)")
+        (fail if release else warn)("PLAT_IDS.rcKey is empty: the gem shop sells nothing")
     elif not ids["rcKey"].startswith("appl_"):
         fail(f"PLAT_IDS.rcKey {ids['rcKey']!r} is not a RevenueCat App Store public key (appl_...)")
     if not ids["lbDaily"]:
-        placeholders.append("PLAT_IDS.lbDaily is empty (no Game Center leaderboard)")
-    # Game Center is optional: an empty leaderboard id never blocks a release.
-    blocking = [p for p in placeholders if release and "lbDaily" not in p]
-    for p in placeholders:
-        if p not in blocking:
-            warn("PLACEHOLDER: " + p)
-    if blocking:
-        fail("--release with placeholder ids still in index.html PLAT_IDS:\n  " + "\n  ".join(blocking))
+        # Game Center is optional: an empty leaderboard id never blocks a build.
+        warn("PLACEHOLDER: PLAT_IDS.lbDaily is empty (no Game Center leaderboard)")
+    print("ads: " + ("LIVE AdMob units (release build)" if release else "Google's test units (pass --release for the live units)"))
 
 
 def validate() -> str:
@@ -113,32 +113,32 @@ def validate() -> str:
     if html.count(MARKER) != 1:
         fail(f"{GAME} must contain exactly one {MARKER!r}, found {html.count(MARKER)}")
     if any(s in html for s in INJECTED):
-        fail(f"{GAME} already loads capacitor.js / shell.js or sets FORT_BUILD - refusing to double-inject")
+        fail(f"{GAME} already loads capacitor.js / shell.js or sets FORT_BUILD / FORT_ADS - refusing to double-inject")
     if len(GOOGLE_FONTS.findall(html)) != 1:
         fail("the Google Fonts <link> pair in index.html changed; update GOOGLE_FONTS in build_www.py and fonts/fonts.css")
     return html
 
 
-def stamp_tag() -> str:
+def stamp_tag(release: bool) -> str:
     bn = os.environ.get("BUILD_NUMBER", "").strip()
     ver = marketing_version()
-    parts = []
+    parts = [f'window.FORT_ADS="{"live" if release else "test"}";']
     if bn.isdigit():
         parts.append(f'window.FORT_BUILD="{bn}";')
     if ver:
         parts.append(f'window.FORT_VERSION="{ver}";')
-    return "<script>" + "".join(parts) + "</script>" if parts else ""
+    return "<script>" + "".join(parts) + "</script>"
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--release", action="store_true", help="fail on any PLACEHOLDER id (App Store builds)")
+    ap.add_argument("--release", action="store_true", help="App Store candidate: live AdMob units, RevenueCat key required")
     args = ap.parse_args()
 
     html = validate()
     check_ids(plat_ids(html), args.release)
 
-    inject = MARKER + stamp_tag() + '\n<script src="capacitor.js"></script>\n<script src="shell.js"></script>'
+    inject = MARKER + stamp_tag(args.release) + '\n<script src="capacitor.js"></script>\n<script src="shell.js"></script>'
     html = html.replace(MARKER, inject, 1)
     html = GOOGLE_FONTS.sub(LOCAL_FONTS, html, count=1)
 
