@@ -30,7 +30,7 @@ Top-down modern-military roguelite fort defense. Tap/click enemies to shoot them
 | Campaign | `MAPS`, `switchMap(id)`, `campInit`, `campHold`, `mapCur()`, `MAPM`, `careerBest()`, `rsBest()`, `mapHooks`. UI: `renderTheater`, `openTheaters`, `openThWin` |
 | Upgrades | table `U` (`id, need, wave, max, cost, g, cat`). Helpers: `L(id)`, `lockWhy(u)`, `costOf(u,l)` |
 | Research | `RLINES` (`lines` + ride-along `ride`: the squad rides on Infantry Kit `dmg`), `rTier(id)`, `rMult`, `rSig`, `rsOwned`, `rsWhy`, `rsDone`, `rsReady`, `rsOpenNext`. Gates `RS_GATE` + `rsProg()`; prices `RS_RP`/`rsCostAt`; lab times `RS_MIN`/`rsMinAt`; what a tier costs on this save `rsPrice`/`rsCost`/`rsMs` |
-| Lab + gems | `S.lab`, `labStart`, `labTick`/`labLand`, `labLeft`, `labSkip`, `labSkipCost`, `labBuySlot`, `labUi` (1s ticker). Lab speed-up ad `labAd`/`labAdSt`/`labAdBtn` `S.gems`, `gemAdd(n,src)`, `gemSpend(n,why)`, `GEM_FREE`, `openGems()`. Shop markup `gemHtml()`, one click handler `shopClick` on `#gemBody` (sheet) and `#shop` (STORE view), repaint `gemRefresh()` |
+| Lab + gems | `S.lab`, `labStart`, `labTick`/`labLand`, `labLeft`, `labSkip`, `labSkipCost`, `labBuySlot`, `labUi` (1s ticker). Lab speed-up ad `labAd`/`labAdSt`/`labAdBtn` `S.gems`, `gemAdd(n,src)`, `gemSpend(n,why)`, `GEM_FREE`, `openGems()`. Cash packs `CASH_PACKS`, `cashWave`, `cashBuy`, `adCash`, UI `cashHtml`/`cashTop` (see "Cash packs"). Shop markup `gemHtml()`, one click handler `shopClick` on `#gemBody` (sheet) and `#shop` (STORE view), repaint `gemRefresh()` |
 | RP economy | `rpWave(w)` (0 before wave 10, then +1 per 10 waves, bonus on multiples of 10). Tier prices follow the tier's campaign gate (`rsCostAt`). Record bonus +1 only when w>=10. Medals give `rpGain(3)`. Checkpoint back-pay `cpBackPay` (cash + RP, after 5 held waves). Veteran back-pay `min(150,best+3*medals)` |
 | Graphics | presets via `S.set.gfx`, `GFX`, `hiGfx()`. Baked sprite cache: `hqBake`/`hqDraw` (tier keys end in `_tN`). Fort look = `fortDes()` (Fort Walls research) via `wallMat`/`wallRise`; Armory levels only size it |
 | Day/night + shadows | `G.todT`, `SH` (len/alpha), `hqShadow`. Vehicles have headlights at night |
@@ -554,3 +554,52 @@ Two owner requests: "the fort should look the same and only change in design unt
 ### QA (`.qa/`, gitignored)
 - `t_merge.js` (45: data, totals, gates, fresh progression, commander-ahead / squad-ahead saves, running squad job in one and two slots, old commander job, old squad Refit, Refits reach the squad, UI) and `t_fort.js` (23: material and wall colour across Walls 2/6/12 at T0/T1/T2/T5, Walls 3→4→7 keeps the palisade, wire coils vs Wire level, terrain parity at T2, Low sprite key, mid-run freeze, the upgrade moment once, thumbnails, bag ring). Run: `python h.py dom merge t_merge.js`, `VT=40000 python h.py dom fort t_fort.js`.
 - Updated: `t_econ.js` ("two at once" uses walls; 100 gated tiers). `rdtot.js` = the before/after economy table. `fortshot.py` = WebKit iPhone shots (`walls:wire:tier:gfx:zoom`, `sweep:walls:wire:tier:secs`, `rd:<line>`).
+
+## Cash packs (branch `cash-packs`)
+Owner-approved: gems buy Armory cash for the active theater, sized to the player. Code: `// ---- cash packs` in the DAILIES section (after `labAd`), UI `cashHtml`/`cashClick`/`cashPaid` (after `gemHtml`), `cashTop`/`cashTopClick` (after `renderArmory`), CSS `/* cash packs */` (before the pause-menu ad rules). Owner rules kept: battle speed and RP are never sold, the Armory still lists only available, not-maxed upgrades, the AAR stays gold.
+
+### One wave of cash (`cashWave`)
+- History: `S.maps[id].cw` = the last `CASH_RUNS` (5) campaign runs on that theater as `[cash, waves fought]`, written by `cashLog()` at `endRun` (waves = `G.wave - G.startWave + 1`, cash = `G.earned` minus the checkpoint back-pay `G.cpCash`, which pays for skipped waves). Daily challenge runs are not logged. It lives on the theater record, so `switchMap` needs nothing; RESET wipes it with the campaign.
+- Model `cashModel()`: kills, crates and events pay about `CP_KILLX` (14) x the wave-clear bonus `8w·waveRew(w)` (the back-pay constant), averaged over a run from the deploy checkpoint (`startWaveOk`) to `max(5, S.best)`, x War Bonds `(1+0.15·bounty)` x `medalMul()`. Calibrated on the phase 3 bot logs (`.qa/cbfall.py`): real/model median 0.9-1.1 on every theater, 1.4 on the Capital (perks/streaks); early runs sit lower (p10 0.4-0.8).
+- `cashWave() = (sum cash + CASH_PRIOR·model) / (sum waves + CASH_PRIOR)`, `CASH_PRIOR` = 5 waves: no history = the model; one short run can't swing it; five normal runs (~100 waves) make it ~95% history.
+- Amounts `cashAmt(w) = cashRound(w·cashWave())`, rounded to exactly what `fmtN` prints ($378, $1,230, $13.2k, $1.3M), so the button shows the exact amount paid.
+- Examples, model only (no history), War Bonds level in brackets, checkpoint = the deepest open one (`.qa/t_cashprobe.js`):
+
+| Theater, best wave (bounty) | 1 wave | Supply Crate (3) | War Chest (10) |
+|---|---|---|---|
+| Desert w5 (0) | $378 | $1,140 | $3,780 |
+| Desert w25 (4) | $4,870 | $14.6k | $48.7k |
+| Desert w50 (8) | $58.4k | $175k | $584k |
+| Mountain w30 (10) | $119k | $356k | $1.2M |
+| Coastal w50 (14) | $1.0M | $3.1M | $10.2M |
+| City w50 (16) | $2.8M | $8.3M | $27.7M |
+| Arctic w60 (18) | $29.4M | $88.1M | $294M |
+| Jungle w70 (20) | $156M | $467M | $1.6B |
+| Island w80 (22) | $1.4B | $4.1B | $13.8B |
+| Capital w90 (24) | $3.8B | $11.4B | $37.9B |
+
+### Packs, prices and the value check
+- `CASH_PACKS`: Supply Crate = 3 waves for 4 gems, War Chest = 10 waves for 10 gems (+33% cash per gem). The War Chest costs exactly what the free gem ad pays.
+- Value model (calendar time of campaign saved): in the cash-paced stretch (a theater before its Armory caps) cash arrives at ~380 waves' worth a day (bot logs, `.qa/cbcash.py`: 316-549 waves/day at 1.2 h of play), so 3 waves ≈ 11 min and 10 waves ≈ 38 min of that stretch. The same gems as a research skip (`labSkipCost` inverted: h = (g/10)^1.25) buy 19 min (4 gems) and 60 min (10 gems) of a lab-paced stretch. Ratio cash/skip: Supply Crate 0.60, War Chest 0.63 (0.41-0.76 across the logs' waves/day). A gem buys about two thirds of the progress a timer skip buys.
+- The first sketch (15 / 40 gems) would have been ~0.11, nine times worse than a skip. Knobs: `CASH_PACKS[].w/.g`.
+
+### Limits and balance
+- `CASH_DAY` = 3 packs a day, across all theaters, on the lab-clock day (`S.dy.cb = {d, n}`): a clock rollback never re-arms it (rollback + return = a forward jump, the phase 4 rule). Why: the price per gem is low, and a hoard of free gems (~800 by the end of the campaign) must not buy out a fresh theater's early Armory in one sitting. 3 War Chests = 30 waves ≈ 8% of a day's cash.
+- Campaign effect: cash only reaches the per-theater caps sooner. The cash-paced stretch is ~40% of the campaign (bot logs); the R&D-timer-paced endgame is unchanged. Upper bound, the daily limit every day: that stretch shrinks ~7%, about −3% campaign length (~1.2 days of 43). A free player spending ~30 gems a day here instead of on skips gets about a third less progress for them, so skips stay the better use of gems. Not re-simulated with the bot.
+- Early game: the section opens with Daily Ops (3 runs, best 6). Desert w5 packs are $1,140 / $3,780, against ~300 waves of play a day there.
+- Shown only while cash can still buy something here: `cashNeed()` = every Armory level left up to this theater's caps, minus the bank. Nothing left, or the bank already covers it: hidden. The bigger pack shows only while the smaller one leaves something to buy. Hidden in a run, in the challenge sandbox and before Daily Ops.
+- `cashBuy(id, n)`: `n` is the amount the button showed; a stale button buys nothing. Pays `gemSpend(g, 'cash')` (lifetime ledger `S.gemT.out.cash`), credits `S.bank` (the active theater only), counts `S.shop.cb[id]`. RP is never touched.
+
+### Rewarded ad
+- `AD_CAP.cash` = 1 a day, `AD_CASH_W` = 1 wave (`adCash`, through `adWatch('cash')`: per-day ledger `S.dy.ads.cash`, stamps `S.ia.rw` so no interstitial shows within `IA_RW`). A skip or no-fill grants nothing and uses no slot. Hidden on the plain web build (`adLeft` is 0 without the dev flag or a native plugin) and whenever the packs are hidden. Lifetime count `S.shop.cb.ad`.
+- One wave is worth ~4 min of the cash-paced stretch, ~1-2 gems: less than the other ads (the gem ad and the lab ad are worth 10 gems). The owner asked for 1 wave; `AD_CASH_W` = 5 would match the others. Not added to Daily Ops, which already has an ad button.
+
+### UI
+- STORE view and gems sheet: a CASH · <THEATER> block after the balance/gem packs (`.gsx`): the day's allowance chip (n LEFT TODAY / BACK TOMORROW), "One wave here pays about $X" (average of the last N runs, or estimated from the best wave), two cards (waves, exact amount in gold, name, gem price; two taps: TAP TO CONFIRM in gold for 3 s, like FINISH NOW), the ad row (dev/native), and a note that cash buys Armory levels here up to the caps. Short on gems: the price is dashed and a tap flashes the balance. Two-column STORE (700 px+): the block heads the right column above FREE GEMS.
+- Armory: one line (`.c-cash`) above the cards: "Short $11.3k for Body Armor? Top up +$386k [gem 4]". It targets the cheapest visible (current category) card the bank can't pay for and offers the smallest pack that covers the gap. It shows only when a pack covers the gap, the player has the gems and the day's allowance is left (it never nudges towards buying gems), and replaces the "Nothing affordable here yet" callout when both would show. Two taps (CONFIRM); the card flashes with its now-green UPGRADE button. The name scrolls to the card.
+- STORE subtitle: "Gems finish research early, open lab slots and top up a theater's cash. They never buy battle speed."
+
+### QA (`.qa/`, gitignored)
+- `t_cash.js` (69 checks): numbers, `cashRound` = what `fmtN` prints, model scaling Desert w5 → Capital w90 + War Bonds + checkpoints, history (logged, back-pay out, challenge skipped, last 5, weighted, bad entries), per-theater history and bank, prices + ledger + stale amount + RP untouched, the daily allowance across theaters + rollback + next day, hidden states (roll-out, run, maxed, bank covers all, challenge, chest only when needed), two taps in the view and the sheet, short on gems, the ad (web hidden, dev, skip, pays one wave, cap, interstitial hold, rollback, click path), the Armory line (right pack, right card, per category, no line when uncovered / short on gems / allowance used, two taps) and the owner rule. Run: `python h.py dom cash t_cash.js`.
+- `cash_shot.py <name> <store|armory|sheet> <WxH> [dev] [hist] [arm] [out] [scroll=N]`: WebKit screenshots (iPhone 13 profile under 1000 px) of a City Ruins w48 save. `cbcash.py` / `cbfall.py`: the economy numbers above from the phase 3 bot logs (`cb_F/G/P.jsonl`, copied in). `t_cashprobe.js`: the example table.
+- Unchanged: t_core 57, t_econ 82, t_daily 108, t_store 51/52 (the "tile scrolled into view" check fails on main too), t_adlab 62, t_merge 45, t_fort 23, t_tw 20, own.js, t_par identical (curves -2048449059, midsim w21 k896 hp-3646 bank1023409 ex-5889330).

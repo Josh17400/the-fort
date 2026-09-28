@@ -1192,6 +1192,27 @@ body.rm .adc::before{animation:none}@keyframes adSpin{to{transform:rotate(1turn)
 .gml li>.btn{flex:none}.gml li.own>b{color:var(--c-green)}
 .gfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;font:400 11px/1.4 var(--f-body);color:var(--c-dim)}
 .gfoot button{min-height:40px;padding:0 4px;border:0;background:none;color:var(--c-gem-hi);font:600 12px var(--f-body);text-decoration:underline;text-underline-offset:3px;cursor:pointer;flex:none}
+/* cash packs: the shop's Cash section and the Armory top-up line (the cash is gold, the price is gems) */
+.gcxh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 8px}
+.gshop .gcxh .eyebrow{margin:0;min-width:0;color:var(--c-gold-hi)}.gcxh .eyebrow::before{background:var(--c-gold-hi)}
+.gcl{flex:none;padding:5px 9px;border-radius:var(--rad-pill);border:1px solid var(--b-gold);background:var(--t-gold);font:700 11px/1 var(--f-display);letter-spacing:.12em;color:var(--c-gold-hi);white-space:nowrap}
+.gcl.out{border-color:var(--c-line-2);background:none;color:var(--c-dim)}
+.gcx{display:flex;align-items:center;gap:12px;margin:0 0 8px;padding:10px 12px;border-radius:12px;background:var(--g-card);border:1px solid var(--c-line);font:500 13px/1.35 var(--f-body);color:var(--c-text)}
+.gcx>.ic{flex:none;color:var(--c-gold-hi)}.gcx>span{min-width:0}.gcx b{font-weight:700;color:var(--c-gold-hi);font-variant-numeric:tabular-nums}.gcx small{display:block;margin-top:2px;font-size:12px;color:var(--c-text-2)}
+.gcg{grid-template-columns:repeat(2,minmax(0,1fr))}
+.gcash{gap:4px;padding-top:20px}.gcash .gw{font:700 11px/1 var(--f-display);letter-spacing:.14em;color:var(--c-text-2)}
+.gcash .gn{margin:2px 0 1px;font-size:24px;color:var(--c-gold-hi)}.gcash .gb{margin-bottom:4px}
+.gcash.arm{border-color:var(--c-gold-hi)}.gcash.arm .gp{background:var(--g-gold);color:var(--c-on-gold);font-size:12px;letter-spacing:.1em}
+.gcash .gp.short{background:rgba(24,18,36,.94);color:var(--c-gem-hi);border:1px dashed var(--b-gem)}
+.gcash .gp .ic{fill:none;margin-right:4px}
+.gcash.off{cursor:default;opacity:.5}.gcash.off:active{transform:none}
+@media (hover:hover){.gcash:not(.off):hover{border-color:var(--c-gold)}}
+.gca{margin:8px 0 0}.gca li>.btn{min-width:92px;text-transform:none;letter-spacing:.04em;font-variant-numeric:tabular-nums}.gca li>b{color:var(--c-dim)}
+.gshop .gcn{margin:8px 0 0}.gcn .ic{color:var(--c-gold-hi)}
+.c-cash{color:var(--c-text);background:linear-gradient(90deg,rgba(255,207,90,.13),rgba(185,140,255,.07));border:1px solid var(--b-gold);align-items:center}
+.c-cash>.ic{color:var(--c-gold-hi);margin-top:0}.c-cash b{font-weight:700;color:var(--c-gold-hi);font-variant-numeric:tabular-nums}
+.c-cash .lnk{padding:0;border:0;background:none;font:inherit;font-weight:600;color:var(--c-text);text-decoration:underline;text-decoration-color:rgba(255,255,255,.3);text-underline-offset:3px;cursor:pointer}
+.c-cash .btn{min-width:64px;font-variant-numeric:tabular-nums}.c-cash .btn.arm{min-width:96px}
 /* pause menu: free supply drop; directive modal: reroll */
 .pad{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;margin-top:10px;padding:0 14px;border-radius:10px;border:1px solid rgba(127,211,90,.5);background:rgba(127,211,90,.08);color:#bdf0a4;cursor:pointer;touch-action:manipulation;
   font:800 13px var(--f-display,Oxanium,sans-serif);letter-spacing:.1em;text-align:left}
@@ -1210,12 +1231,13 @@ body.rm .adc::before{animation:none}@keyframes adSpin{to{transform:rotate(1turn)
 .gmh.flash{animation:gemFlash 1.2s ease-out}@keyframes gemFlash{0%,50%{box-shadow:0 0 0 2px var(--c-gem),0 0 30px rgba(185,140,255,.45)}100%{box-shadow:0 0 0 0 transparent}}
 #shop .gshop .eyebrow{margin:22px 0 10px}
 #shop .gmh{margin:0 0 12px;padding:18px 20px}#shop .gmh>div:not(.gled)>b{font-size:36px}
-#shop .gnote{margin:12px 0 0}#shop .gsc .gnote{margin:0}
+#shop .gnote{margin:12px 0 0}#shop .gsc .gnote{margin:0}#shop .gcxh{margin:22px 0 10px}#shop .gshop .gcxh .eyebrow{margin:0}#shop .gshop .gcn{margin:8px 0 0}
 #shop .gml{margin-bottom:0}
 #shop .gfoot{margin-top:16px}
 @media (min-width:700px){
-  #shop .gshop{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-rows:auto 1fr;gap:0 24px;align-items:start}
-  #shop .gsa{grid-area:1/1}#shop .gsc{grid-area:2/1}#shop .gsb{grid-area:1/2/3/3}#shop .gfoot{grid-column:1/-1}
+  #shop .gshop{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-rows:auto auto 1fr;gap:0 24px;align-items:start}
+  #shop .gsa{grid-area:1/1/3/2}#shop .gsx{grid-area:1/2/2/3}#shop .gsc{grid-area:3/1/4/2}#shop .gsb{grid-area:2/2/4/3}#shop .gfoot{grid-column:1/-1}
+  #shop .gsx>.gcxh{margin-top:0}#shop .gsx+.gsb>.eyebrow:first-child{margin-top:22px}
   #shop .gsb>.eyebrow:first-child{margin-top:0}#shop .gshop{gap:0 28px}
 }
 @media (max-width:899px),(max-height:500px) and (orientation:landscape){.view[data-v=store] .vhead{margin-top:4px}}
@@ -1332,7 +1354,7 @@ body.rm .adc::before{animation:none}@keyframes adSpin{to{transform:rotate(1turn)
     <div id="store" class="armx"></div>
   </section>
   <section class="view" data-v="rd" aria-label="Research and Development"><div id="rd"></div></section>
-  <section class="view" data-v="store" aria-label="Store"><div class="vhead"><div><h1 class="vt">STORE</h1><p class="vsub">Gems finish research early and open lab slots. They never buy battle speed.</p></div></div><div id="shop"></div></section>
+  <section class="view" data-v="store" aria-label="Store"><div class="vhead"><div><h1 class="vt">STORE</h1><p class="vsub">Gems finish research early, open lab slots and top up a theater's cash. They never buy battle speed.</p></div></div><div id="shop"></div></section>
 </div>
 <nav class="dock" id="dock" aria-label="Home sections">
   <button class="dk" data-view="base"><span class="ni"><span data-ic="fort" data-s="22"></span><i class="dot vio" data-d="base"></i></span>BASE</button>
@@ -2071,7 +2093,8 @@ const Plat=(()=>{let busy=false,booted=null;
 // resets a cap; setting it forward only pulls days early, and they are spent: the lab clock stays ahead from then on).
 // Save: S.dy = {seed (per save: mission rolls), d (day of m), m: [{id, n goal, p progress, c claimed}], b (all-3 bonus claimed),
 //   st: {n streak day 0-7 claimed, last day claimed, gr grace used this cycle}, pop (day the streak popup showed), seen (day the Base
-//   screen was last looked at: the BASE nav dot), ads: {d, x2, sw, drop, reroll, gems, lab} rewarded ads watched that day, dc: {d, best
+//   screen was last looked at: the BASE nav dot), ads: {d, x2, sw, drop, reroll, gems, lab, cash} rewarded ads watched that day, cb: {d, n}
+//   cash packs bought that day (CASH_DAY), dc: {d, best
 //   wave reached, g gems + u RP units paid for it, n attempts} the daily challenge, rem (day the reminder was scheduled), hi (unlocked)}
 // S.runs = runs ended (old saves: 10 from a best of 10); S.born = lab-clock time the save first met this code; S.shop = {noAds, starter,
 // voucher (1 unused, 2 spent), stT (starter window start), buys: {sku: n}}; S.ia = {n runs since the last interstitial, t its time,
@@ -2082,7 +2105,7 @@ const Plat=(()=>{let busy=false,booted=null;
 // Desert, ~40 at the Capital), so a full day of dailies is ~15% of one research tier. See handoff "Phase 4" for the campaign impact.
 const DAY_MS=86400e3,DY_RUNS=3,DY_BEST=6,DC_W=25,IA_RUNS=12,IA_DAYS=2,IA_EVERY=3,IA_GAP=4*60e3,IA_RW=3*60e3;
 const DQ_GEM=3,DQ_BONUS_GEM=5,DQ_BONUS_U=2,STREAK=[3,3,5,3,5,8,25],STREAK_U7=2;
-const AD_CAP={x2:3,sw:2,drop:2,reroll:3,gems:1,lab:2},AD_GEMS=10,AD_LAB_MS=60*60e3,AD_LAB_MIN=2*60e3;
+const AD_CAP={x2:3,sw:2,drop:2,reroll:3,gems:1,lab:2,cash:1},AD_GEMS=10,AD_LAB_MS=60*60e3,AD_LAB_MIN=2*60e3;
 const SW_GEMS=25,SW_W=6,SW_HP=0.5,SW_WALL=0.5,SW_SHIELD=5,SW_RAPID=8,SW_ASK=10;
 // local calendar day number of a lab-clock time, the current one, and what is left of it
 const dayOf=t=>Math.floor((t-new Date(t).getTimezoneOffset()*60e3)/DAY_MS),today=()=>dayOf(labNow());
@@ -2097,7 +2120,7 @@ function dyInit(){const o=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},int=
   y.seed=int(y.seed)||dyHash(Date.now(),performance.now(),S.tkills)||1;y.d=int(y.d);
   y.m=Array.isArray(y.m)?y.m.filter(q=>q&&DQB[q.id]).slice(0,3).map(q=>({id:q.id,n:Math.max(1,int(q.n)),p:int(q.p),c:q.c?1:0})):[];y.b=y.b?1:0;
   const s=y.st=o(y.st);s.n=Math.min(7,int(s.n));s.last=int(s.last);s.gr=s.gr?1:0;y.pop=int(y.pop);y.seen=int(y.seen);y.rem=int(y.rem);y.hi=y.hi?1:0;
-  y.ads=o(y.ads);y.ads.d=int(y.ads.d);const c=y.dc=o(y.dc);for(const k of['d','best','g','u','n'])c[k]=int(c[k]);
+  y.ads=o(y.ads);y.ads.d=int(y.ads.d);const cb=y.cb=o(y.cb);cb.d=int(cb.d);cb.n=int(cb.n);const c=y.dc=o(y.dc);for(const k of['d','best','g','u','n'])c[k]=int(c[k]);
   if(S.runs==null)S.runs=careerBest()>=10?10:careerBest()>0?1:0;S.runs=int(S.runs);if(!(+S.born>0))S.born=labNow();
   S.shop=o(S.shop);S.shop.buys=o(S.shop.buys);S.ia=o(S.ia);dqSync()}
 // ---- daily missions: 3 a day, one per category, drawn for the active theater and progress (c = dqCtx()); s = the stat that counts,
@@ -2174,6 +2197,35 @@ async function adGems(){if(!(await adWatch('gems')))return false;gemAdd(AD_GEMS,
 const labAdSt=j=>!j||running||adLeft('lab')<=0||labLeft(j)<=AD_LAB_MIN?'':labLeft(j)<=AD_LAB_MS?'fin':'cut';
 async function labAd(id){const j=labOf(id);if(!labAdSt(j)||Plat.busy())return 0;if(!(await Plat.ad('lab'))||!S.lab.q.includes(j))return 0;
   const now=labNow(),cut=Math.min(AD_LAB_MS,j.end-now);if(!(cut>0))return 0;adUse('lab');j.end-=cut;if(j.end>now)labNote(j);else Plat.cancel('lab:'+id);save();return cut}
+// ---- cash packs: gems buy Armory cash for the ACTIVE theater, sized in waves of that theater's earnings at the player's level of play.
+// One wave = cashWave(): cash per wave fought over the last CASH_RUNS campaign runs here (S.maps[id].cw = [[cash, waves], ...], logged
+// by cashLog at the end of a run; checkpoint back-pay is left out, it pays for waves that were skipped), weighted by waves, with
+// CASH_PRIOR waves of cashModel() mixed in, so a theater without runs reads the model and one short run can't swing the price.
+// cashModel(): kills, crates and events pay about CP_KILLX times the wave-clear bonus (the back-pay constant; on the phase 3 bot logs
+// real/model is 0.9-1.1 at the median, Capital 1.4), averaged over a run from the deploy checkpoint to this theater's best, with War Bonds
+// and medals. Prices: a gem buys about two thirds of the campaign time the same gems buy as a research skip (handoff "Cash packs").
+// Limits: CASH_DAY packs a day across theaters (lab-clock day), never in a run, and only while cash can still buy something here:
+// cashNeed() = every Armory level left up to this theater's caps, minus the bank. A bigger pack shows only while the smaller ones
+// leave something to buy. A rewarded ad pays AD_CASH_W wave of cash once a day (AD_CAP.cash). Cash never touches RP.
+const CASH_PACKS=[{id:'crate',name:'Supply Crate',w:3,g:4},{id:'chest',name:'War Chest',w:10,g:10}],CASH_RUNS=5,CASH_PRIOR=5,CASH_DAY=3,AD_CASH_W=1;
+const cashHist=id=>{const h=mapRec(id).cw;return Array.isArray(h)?h.filter(e=>Array.isArray(e)&&+e[0]>=0&&+e[1]>=1&&isFinite(+e[0])):[]};
+function cashLog(){if(!G||G.dc)return;const w=G.wave-(G.startWave||1)+1,c=Math.round(G.earned-(G.cpCash||0));if(!(w>=1)||!(c>=0))return;
+  const r=mapRec(S.map),h=cashHist(S.map);h.push([c,w]);r.cw=h.slice(-CASH_RUNS)}
+function cashModel(){const b=Math.max(5,S.best),w0=Math.min(startWaveOk(),b);let c=0;for(let w=w0;w<=b;w++)c+=CP_KILLX*8*w*waveRew(w);
+  return c/(b-w0+1)*(1+0.15*L('bounty'))*medalMul()}
+function cashWave(){let c=0,w=0;for(const e of cashHist(S.map)){c+=+e[0];w+=+e[1]}return(c+CASH_PRIOR*cashModel())/(w+CASH_PRIOR)}
+// round to what fmtN prints, so the amount on the button is exactly the amount paid: $378 · $1,230 · $13.2k · $132k · $1.3M
+const cashRound=v=>{if(!(v>0))return 0;if(v<1e4)return v<1e3?Math.max(1,Math.round(v)):Math.round(v/10)*10;const u=Math.pow(10,3*Math.floor(Math.log10(v)/3)),p=v/u>=100?1:10;return Math.round(v/u*p)*u/p};
+const cashAmt=w=>cashRound(w*cashWave());
+function cashNeed(){let n=-S.bank;for(const u of U)for(let l=L(u.id);l<u.max;l++)n+=costOf(u,l);return n}
+const cashLeft=()=>{const b=S.dy&&S.dy.cb;return Math.max(0,CASH_DAY-(b&&b.d===today()?b.n|0:0))};
+function cashPacks(){const out=[];if(running||S.dcHold||!dyOn())return out;const need=cashNeed();if(!(need>0))return out;
+  for(const p of CASH_PACKS){const n=cashAmt(p.w);out.push(Object.assign({n},p));if(n>=need)break}return out}
+// n = the amount the player was shown: a stale button (the amount moved since) buys nothing
+function cashBuy(id,n){const p=cashPacks().find(q=>q.id===id);if(!p||cashLeft()<=0||n!=null&&n!==p.n||!gemSpend(p.g,'cash'))return 0;
+  const y=S.dy,d=today();if(y.cb.d!==d)y.cb={d,n:0};y.cb.n++;S.bank+=p.n;const t=S.shop.cb||(S.shop.cb={});t[id]=(t[id]|0)+1;save();return p.n}
+const adCashOk=()=>adLeft('cash')>0&&cashPacks().length>0;
+async function adCash(){if(!adCashOk())return 0;const n=cashAmt(AD_CASH_W);if(!(await adWatch('cash')))return 0;S.bank+=n;const t=S.shop.cb||(S.shop.cb={});t.ad=(t.ad|0)+1;save();return n}
 // ---- interstitials: at most every IA_EVERY-th run end, IA_GAP apart, never in the first IA_RUNS runs / IA_DAYS days, never within
 // IA_RW of a rewarded ad, never with Remove Ads, never over a theater-cleared debrief
 function iaOk(){const n=labNow();return Plat.adsOn()&&!S.shop.noAds&&(S.runs|0)>=IA_RUNS&&n-(+S.born||n)>=IA_DAYS*DAY_MS&&(S.ia.n|0)>=IA_EVERY&&n-(+S.ia.t||0)>=IA_GAP&&n-(+S.ia.rw||0)>=IA_RW&&!Plat.busy()&&!S.campWin}
@@ -2258,7 +2310,7 @@ const CP_W=[25,50,75],CP_HOLD=5,CP_PAY=0.5,CP_KILLX=14;
 const cpBase=w0=>{let c=0;for(let w=1;w<w0;w++)c+=8*w*waveRew(w);return c*CP_KILLX*CP_PAY};
 const cpCash=w0=>Math.round(cpBase(w0)*(1+0.15*L('bounty'))*medalMul());   // the Base preview: War Bonds + medals, no run directives
 const cpRp=w0=>{let n=0;for(let w=1;w<w0;w++)n+=rpWave(w);return Math.floor(n*CP_PAY)};
-function cpBackPay(){const w0=G.startWave||1;if(w0<=1||G.cpPaid)return;G.cpPaid=1;dqAdd('cp',1);const c=money(cpBase(w0)),n=cpRp(w0);S.bank+=c;G.earned+=c;if(n)rpGain(n);
+function cpBackPay(){const w0=G.startWave||1;if(w0<=1||G.cpPaid)return;G.cpPaid=1;dqAdd('cp',1);const c=money(cpBase(w0)),n=cpRp(w0);S.bank+=c;G.earned+=c;G.cpCash=c;if(n)rpGain(n);
   feed('CHECKPOINT BACK-PAY · +$'+f1(c)+(n?' · +'+n+' RP':''),'255,207,90','coin','BACK-PAY +$'+f1(c)+(n?' +'+n+' RP':''))}
 // Plain-language signature lines for the research cards
 const ORD=n=>n+(n%100>10&&n%100<14?'th':['th','st','nd','rd'][n%10]||'th');
@@ -2548,20 +2600,33 @@ function renderArmory(){const rec=new Map(recommend(3).map(p=>[p.u.id,p.why]));
   const grp=u=>rec.has(u.id)?0:L(u.id)>=u.max?3:affordable(u)?1:2;
   if(_armFreeze&&_armFreeze.cat===armCat){const ix=new Map(_armFreeze.ids.map((id,i)=>[id,i]));open.sort((a,b)=>(ix.has(a.id)?ix.get(a.id):999)-(ix.has(b.id)?ix.get(b.id):999))}
   else{if(S.set.affFirst!==false)open.sort((a,b)=>grp(a)-grp(b)||(grp(a)<3?costOf(a,L(a.id))-costOf(b,L(b.id)):0));_armFreeze={cat:armCat,ids:open.map(u=>u.id)}}
-  let h='';
-  if(open.length&&!open.some(affordable)){const ch=open.filter(u=>L(u.id)<u.max).sort((a,b)=>costOf(a,L(a.id))-costOf(b,L(b.id)))[0];
+  let h=cashTop(open);
+  if(!h&&open.length&&!open.some(affordable)){const ch=open.filter(u=>L(u.id)<u.max).sort((a,b)=>costOf(a,L(a.id))-costOf(b,L(b.id)))[0];
     if(ch)h+=`<div class="callout c-info">${ic('coin',16)}<span>Nothing affordable here yet. Cheapest: <b>${ch.name}</b> · $${fmtN(costOf(ch,L(ch.id)))}</span><button class="btn sm" data-scard="${ch.id}">SHOW</button></div>`}
   if(open.length)h+=`<div class="grid">${open.map(u=>cardHtml(u,rec)).join('')}</div>`;
   if(lk.length)h+=`<div class="lgroup"><div class="eyebrow">LOCKED · ${lk.length}</div><div class="lrows">${lk.map(lrowHtml).join('')}</div></div>`;
   $('store').innerHTML=h;
   const c=$('tabs'),a=c.querySelector('[aria-pressed=true]');if(a&&(a.offsetLeft<c.scrollLeft||a.offsetLeft+a.offsetWidth>c.scrollLeft+c.clientWidth))c.scrollLeft=Math.max(0,a.offsetLeft-(c.clientWidth-a.offsetWidth)/2);catMask()}
+// Armory top-up: one line for the cheapest visible upgrade the bank can't pay for, offering the smallest cash pack that covers the gap.
+// Only when the player has the gems and today's allowance (it never nudges towards buying gems) and never on more than one card.
+function cashTop(open){if(!cashLeft())return'';const u=open.filter(u=>!affordable(u)).sort((a,b)=>costOf(a,L(a.id))-costOf(b,L(b.id)))[0];if(!u)return'';
+  const gap=costOf(u,L(u.id))-S.bank,p=cashPacks().find(q=>q.n>=gap);if(!p||(S.gems|0)<p.g)return'';
+  return`<div class="callout c-cash" data-ctop="${u.id}">${ic('coin',16)}<span>Short <b>$${fmtN(gap)}</b> for <button class="lnk" data-scard="${u.id}">${u.name}</button>? Top up <b>+$${fmtN(p.n)}</b></span>`
+    +`<button class="btn sm gm" data-cashtop="${p.id}" data-n="${p.n}" aria-label="${p.name}: top up $${fmtN(p.n)} for ${p.g} gems">${ic('gem',13)}${p.g}</button></div>`}
+// first tap arms (gold, 3 s), the second pays; the card it was for flashes with its now-affordable UPGRADE button
+function cashTopClick(b){const id=b.dataset.cashtop,p=CASH_PACKS.find(q=>q.id===id),c=b.closest('[data-ctop]'),uid=c&&c.dataset.ctop;if(!p)return;
+  if((S.gems|0)<p.g){openGems();return}
+  if(!b.dataset.arm){b.dataset.arm=1;b.classList.add('arm');b.textContent='CONFIRM';clearTimeout(b._t);b._t=setTimeout(()=>{if(document.contains(b))renderArmory()},3000);sfx('buy');return}
+  clearTimeout(b._t);const n=cashBuy(id,+b.dataset.n);if(!n){sfx('deny');renderArmory();return}
+  claimFx();toast(`${p.name} · +$${fmtN(n)} for ${mapCur().name}`,'coin');renderHome();tweenBank(S.bank-n,S.bank);
+  const k=uid&&$('store').querySelector(`[data-card="${uid}"]`);if(k){k.scrollIntoView({behavior:S.set.reduceMotion?'auto':'smooth',block:'nearest'});flash(k)}}
 function catMask(){const c=$('tabs');if(!c)return;c.classList.toggle('fl',c.scrollLeft>2);c.classList.toggle('fr',c.scrollLeft<c.scrollWidth-c.clientWidth-2)}
 $('tabs').addEventListener('scroll',catMask,{passive:true});
 $('tabs').addEventListener('click',e=>{const t=e.target.closest('[data-tab]');if(!t||t.dataset.tab===armCat)return;armCat=t.dataset.tab;_armFreeze=null;renderArmory();
   const b=$('tabs').querySelector(`[data-tab="${CSS.escape(armCat)}"]`);if(b)b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
   const st=$('store'),top=st.getBoundingClientRect().top-$('hdr').offsetHeight-60;if(top<0)$('home').scrollTop+=top});
 $('affBtn').onclick=()=>{S.set.affFirst=S.set.affFirst===false;save();_armFreeze=null;renderArmory()};
-$('store').addEventListener('click',e=>{const b=e.target.closest('[data-id]');
+$('store').addEventListener('click',e=>{const t=e.target.closest('[data-cashtop]');if(t){cashTopClick(t);return}const b=e.target.closest('[data-id]');
   if(b){const id=b.dataset.id,from=S.bank;if(buyUpgrade(id)){renderHome();tweenBank(from,S.bank);const nb=$('store').querySelector(`[data-id="${id}"]`);if(nb){const c=nb.closest('.card');nb.classList.add('pop');flash(c);
       const f=c.querySelectorAll('.pips .f');if(f.length)f[f.length-1].classList.add('new');const lb=c.querySelector('.lvbar i');if(lb)lb.classList.add('new')}}
     else if(!b.disabled){b.classList.remove('deny');void b.offsetWidth;b.classList.add('deny')}return}
@@ -2828,7 +2893,7 @@ function gemHtml(){const sl=S.lab.slots<LAB_SLOTS_MAX,sc=labSlotCost(),ok=(S.gem
     +(S.shop.noAds?'<b>OWNED</b>':`<button class="btn sm" data-sku="${SHOP_ONE.noads.sku}">${Plat.price(SHOP_ONE.noads.sku,SHOP_ONE.noads.usd)}</button>`)+'</li></ul>';
   else h+=`<p class="gnote">${ic('gem',16)}<span>Gem packs and offers are sold in the iOS app. Everything gems buy can also be earned by playing.</span></p>`;
   const st=dyOn()&&S.dy?stNext():null;
-  h+=`</div><div class="gsb"><div class="eyebrow">FREE GEMS</div><ul class="gml">`
+  h+='</div>'+cashHtml()+`<div class="gsb"><div class="eyebrow">FREE GEMS</div><ul class="gml">`
     +(st&&st.can?`<li class="can">${ic('cal',18)}<span>Day ${st.day} supply ready<small>Login streak · day 7 is the supply cache: +${STREAK[6]}</small></span><button class="btn sm gm" data-streak>${ic('gem',13)}+${STREAK[st.day-1]}</button></li>`:'')
     +(dyOn()&&Plat.adsOn()?`<li>${ic('play',18)}<span>Watch an ad<small>${ag?'Once a day':'Back tomorrow'}</small></span>${ag?`<button class="btn sm gm" data-adgems>${ic('gem',13)}+${AD_GEMS}</button>`:`<b>+${AD_GEMS}</b>`}</li>`:'')
     +(dyOn()?`<li>${ic('flag',18)}<span>Daily missions<small>+${DQ_GEM} each, +${DQ_BONUS_GEM} for all three</small></span><b>+${3*DQ_GEM+DQ_BONUS_GEM} a day</b></li>`
@@ -2844,6 +2909,23 @@ function gemHtml(){const sl=S.lab.slots<LAB_SLOTS_MAX,sc=labSlotCost(),ok=(S.gem
     +`<p class="gnote" style="margin-top:0">${ic('speed',16)}<span>Gems never buy battle speed or anything you can't earn by playing.</span></p></div>`
     +(iap?`<div class="gfoot"><span>Prices in USD. The App Store shows your local price.</span><button data-restore>Restore purchases</button></div>`:'')+'</div>';
   return h}
+// the shop's Cash section (cash packs, see cashPacks): what one wave pays here, the packs with their exact amounts (two taps buy, like
+// FINISH NOW), the day's allowance and the once-a-day ad (dev/native only). Hidden in a run and when cash can buy nothing more here.
+function cashHtml(){const ps=cashPacks();if(!ps.length)return'';const m=mapCur(),left=cashLeft(),gems=S.gems|0,hist=cashHist(S.map).length,ad=dyOn()&&Plat.adsOn(),ag=adCashOk(),one=cashAmt(AD_CASH_W);
+  const v=p=>p.w/p.g,v0=v(CASH_PACKS[0]);   // cash per gem against the smallest pack, like the gem packs' bonus line
+  return`<div class="gsx"><div class="gcxh"><div class="eyebrow">CASH · ${m.name}</div><span class="gcl${left?'':' out'}">${left?left+' LEFT TODAY':'BACK TOMORROW'}</span></div>`
+    +`<p class="gcx">${ic('coin',18)}<span>One wave here pays about <b>$${fmtN(cashAmt(1))}</b><small>${hist?`Average of your last ${hist===1?'run':hist+' runs'} here`:`Estimated from your best wave here`} · paid into this theater's bank</small></span></p>`
+    +`<div class="ggrid gcg">${ps.map(p=>{const ok=left>0&&gems>=p.g;return`<button class="gcard gcash${left?'':' off'}" data-cash="${p.id}" data-n="${p.n}"${left?'':' disabled'} aria-label="${p.name}: $${fmtN(p.n)} cash for ${p.g} gems">`
+      +`<span class="gw">${p.w} WAVES</span><span class="gn">$${fmtN(p.n)}</span><span class="gl">${p.name}</span><span class="gb">${v(p)>v0?'+'+Math.round(100*(v(p)/v0-1))+'% cash per gem':''}</span>`
+      +`<span class="gp${ok?'':' short'}">${ic('gem',14)}${p.g}</span></button>`}).join('')}</div>`
+    +(ad?`<ul class="gml gca"><li>${ic('play',18)}<span>Watch an ad<small>${ag?AD_CASH_W+' wave of cash · once a day':'Back tomorrow'}</small></span>${ag?`<button class="btn sm pri" data-adcash data-n="${one}">+$${fmtN(one)}</button>`:'<b>USED</b>'}</li></ul>`:'')
+    +`<p class="gnote gcn">${ic('armor',16)}<span>Cash buys Armory levels in ${m.name} up to its caps. Research, RP and battle speed are never for sale.</span></p></div>`}
+// buy a pack from the shop: first tap arms (gold, 3 s), the second pays. Short on gems: the balance flashes (the gem packs are right there)
+function cashClick(b){const id=b.dataset.cash,n=+b.dataset.n,p=CASH_PACKS.find(q=>q.id===id);if(!p||b.disabled)return;
+  if((S.gems|0)<p.g){sfx('deny');const g=b.closest('.gshop'),h=g&&g.querySelector('.gmh');if(h){h.scrollIntoView({behavior:S.set.reduceMotion?'auto':'smooth',block:'nearest'});flash(h)}return}
+  if(!b.dataset.arm){b.dataset.arm=1;b.classList.add('arm');const t=b.querySelector('.gp');if(t)t.textContent='TAP TO CONFIRM';clearTimeout(b._t);b._t=setTimeout(()=>{if(document.contains(b))gemRefresh()},3000);sfx('buy');return}
+  clearTimeout(b._t);cashPaid(cashBuy(id,n),p.name)}
+function cashPaid(n,what){if(!n){sfx('deny');gemRefresh();return}const from=S.bank-n;claimFx();toast(`${what} · +$${fmtN(n)} for ${mapCur().name}`,'coin');gemRefresh();tweenBank(from,S.bank)}
 let _gemFrom=null;
 function openGems(){fillIcons();$('gemBody').innerHTML=gemHtml();$('gemBody').scrollTop=0;_gemFrom=document.activeElement;$('gemSheet').classList.add('on');shopSeen();setTimeout(()=>$('gemClose').focus({preventScroll:true}),30)}
 function closeGems(){$('gemSheet').classList.remove('on');const f=_gemFrom;_gemFrom=null;if(f&&f.focus&&document.contains(f)&&f.offsetParent)f.focus({preventScroll:true})}
@@ -2856,6 +2938,8 @@ function shopClick(e){const q=s=>e.target.closest(s);let b;
     shopBuy(sku).then(ok=>{if(ok){const it=shopItem(sku);sfx('buy');Plat.haptic('success');toast(isSku(sku,'noads')?'Ads removed · thank you':isSku(sku,'starter')?'Starter Pack unlocked':'+'+fmtN(it.n)+' gems','gem','gm')}gemRefresh()});return}
   if(q('[data-restore]')){shopRestore().then(n=>toast(n?'Purchases restored':'No purchases to restore','gem','gm'),
     err=>{if(!err||!err.cancelled)toast(String(err&&err.message||'Restore failed · try again later').slice(0,90),'close')}).then(gemRefresh);return}
+  if(b=q('[data-cash]')){cashClick(b);return}
+  if(b=q('[data-adcash]')){b.disabled=true;b.classList.add('wait');adCash().then(n=>{if(n)cashPaid(n,'Ad reward');else gemRefresh()});return}
   if(b=q('[data-adgems]')){b.disabled=true;adGems().then(ok=>{if(ok){toast('+'+AD_GEMS+' gems','gem','gm');Plat.haptic('success')}gemRefresh()});return}
   if(q('[data-streak]')){if($('gemSheet').classList.contains('on'))closeGems();openStreak();return}
   if(!(b=q('[data-slot]')))return;if((S.gems|0)<labSlotCost()){sfx('deny');return}
@@ -3623,7 +3707,7 @@ function endRun(retreat){if(G.over)return;   // several hits in one frame can ea
   running=false;sfx('die');closePerks();G.choosing=null;
   const tot=Object.values(G.threat).reduce((a,b)=>a+b,0),top=Object.entries(G.threat).filter(([,v])=>v>=tot*0.2).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>k);
   lastCause=retreat||!top.length?null:{top,breachW:G.breachW&&!wallsUp()?G.breachW:0,doc:top.some(t=>STANDOFF.has(t))&&prio()!=='threat'?prioShown()?'threat':'lock':''};
-  S.rpLast=G.rp||0;G.over=true;
+  S.rpLast=G.rp||0;G.over=true;cashLog();
   const rec=G.wave>G.startBest&&G.startBest>0;if(G.wave>S.best)S.best=G.wave;
   if(careerBest()>=15&&!S.set.bakTip){S.set.bakTip=1;setTimeout(()=>toast('Tip: back up your progress in Settings → Data','star'),2500)}   // once: point at the save-code backup
   save();
