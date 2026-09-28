@@ -73,7 +73,7 @@ ios/                the Xcode project (committed); fastlane/ holds the CI lanes
 plugins/            capacitor-gamekit, installed as a file: dependency
 assets/             art.html + render_art.py draw icon-only.png and splash*.png (@capacitor/assets sources)
 fix_spm_paths.cjs   capacitor:sync:after hook: a sync on Windows writes backslash SPM paths; this fixes them
-test_shell.cjs      shell.js against mocked plugins in plain Node (90 checks)
+test_shell.cjs      shell.js against mocked plugins in plain Node (94 checks)
 check_game.cjs      ../index.html: scripts compile, PLAT_IDS keys, fort_ product ids, Shell contract
 check_www.cjs       the built www/: injection order, offline, every referenced file present
 test_plat.py/.js    the game's Plat against a scripted Shell, in headless Edge (local only)
@@ -92,7 +92,8 @@ python native/test_plat.py
 cd native && npx cap sync ios
 ```
 
-`npx cap sync ios` works on Windows. Builds reach TestFlight only through
+`python native/build_www.py --release` builds with the live AdMob units instead of Google's test
+units. `npx cap sync ios` works on Windows. Builds reach TestFlight only through
 `.github/workflows/ios.yml`; see `../CI_SETUP.md`.
 
 Icon and splash: edit `assets/art.html` (`?show=1` previews it in a browser), then run

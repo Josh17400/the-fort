@@ -120,8 +120,8 @@ function makeEnv(opts = {}) {
         return new Promise((res) => {
           setTimeoutF(() => emit('AdMob', 'onRewardedVideoAdShowed', {}), 5);
           if (mode === 'failShow') { setTimeoutF(() => emit('AdMob', 'onRewardedVideoAdFailedToShow', { code: 0, message: 'boom' }), 6); return; }
-          if (mode === 'reward') setTimeoutF(() => { emit('AdMob', 'onRewardedVideoAdReward', { type: 'coins', amount: 1 }); res({ type: 'coins', amount: 1 }); }, 1000);
-          setTimeoutF(() => emit('AdMob', 'onRewardedVideoAdDismissed', {}), 2000);
+          if (mode === 'reward' || mode === 'noDismiss') setTimeoutF(() => { emit('AdMob', 'onRewardedVideoAdReward', { type: 'coins', amount: 1 }); res({ type: 'coins', amount: 1 }); }, 1000);
+          if (mode !== 'noDismiss') setTimeoutF(() => emit('AdMob', 'onRewardedVideoAdDismissed', {}), 2000);
         });
       },
       prepareInterstitial: (o) => {
@@ -336,6 +336,17 @@ async function rewarded() {
   await env.advance(1500);
   check('rewarded: watchdog settles a show that never appeared', res && res.rewarded === false, res);
 
+  // reward earned, dismissal never reported: settled by the cap, still rewarded
+  env = makeEnv({ plugins: { AdMob: { rewardedShow: 'noDismiss' } } });
+  env.Shell.configure(cfg());
+  await env.advance(100);
+  res = null;
+  env.Shell.ads.showRewarded().then((r) => { res = r; });
+  await env.advance(149000);
+  check('rewarded: no dismissal yet = still pending', res === null, res);
+  await env.advance(2000);
+  check('rewarded: a missing dismissal is capped at 150 s and keeps the reward', res && res.rewarded === true, res);
+
   // no fill, then a retry with backoff
   let loads = 0;
   env = makeEnv({ plugins: { AdMob: { rewardedLoad: () => (++loads === 1 ? 'fail' : 'ok') } } });
@@ -461,8 +472,9 @@ async function notify() {
   await S.notify.cancel('daily');
   check('notify: cancel by string id', env.args('notes.cancel').some((a) => a.notifications[0].id === S.notify.id('daily')));
   const both = makeEnv();
-  both.Shell.configure(cfg());
+  // the game schedules its daily reminder while booting, before Plat.boot configures the shell
   const p = both.Shell.notify.schedule({ id: 'daily', at, title: 'Daily Ops', body: 'x' });
+  both.Shell.configure(cfg());
   await both.advance(50);
   await p;
   const bn = both.names();

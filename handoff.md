@@ -471,7 +471,7 @@ Capacitor 8 wrapper in `native/`, built and uploaded to TestFlight by `.github/w
 - Save seam: `save()` → `saveWrite(json)` → localStorage, plus `Shell.store.put` in the app (Preferences, sequence-numbered, debounced, flushed on background). `Plat.boot()` → `saveBoot()` restores the native copy when iOS purged localStorage; the splash stays up until then. No iCloud (Euchre has none).
 - Backgrounding: `bgPause()` (persist + pause) runs on `visibilitychange` and on the app's `appStateChange`.
 - Ads: ATT at launch, then UMP consent; non-personalized unless ATT is authorized and consent obtained/not required. Test units unless `--release`; the Settings build line says "test ads".
-- Tests: `node native/test_shell.cjs` (92, mocked plugins), `node native/check_game.cjs` (scripts compile, PLAT_IDS, fort_ ids, Shell contract), `node native/check_www.cjs` (built page), `python native/test_plat.py` (33, Plat against a scripted Shell in headless Edge, local only).
+- Tests: `node native/test_shell.cjs` (94, mocked plugins), `node native/check_game.cjs` (scripts compile, PLAT_IDS, fort_ ids, Shell contract), `node native/check_www.cjs` (built page), `python native/test_plat.py` (33, Plat against a scripted Shell in headless Edge, local only).
 - Art: `native/assets/art.html` + `render_art.py` draw the icon (gold star fort, green turret, muzzle flash) and the splash; `npx capacitor-assets generate --ios` puts them in the asset catalog.
 - Open: the seven IAP products, the Game Center leaderboard, AdMob approval of the listing, App Store privacy labels.
 

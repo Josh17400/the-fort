@@ -28,7 +28,7 @@
     rewardedWait: 6000,       // showRewarded() waits this long for an ad that is still loading
     interstitialWait: 4000,   // showInterstitial() likewise; a slow one is skipped, not waited on
     showWatchdog: 8000,       // iOS drops show() with no event when there is no root view controller
-    rewardedMax: 150000,      // a reward earned but never dismissed still settles
+    showMax: 150000,          // an ad on screen this long without a dismissal event is settled anyway
     storeDebounce: 1200,      // native save mirror: coalesce bursts of save() calls
     splashFallback: 8000      // hide the splash even if the game never calls Shell.ready()
   };
@@ -311,6 +311,7 @@
       retryIdx: 0,
       settle: null,     // set while a show is in flight
       watchdog: null,
+      maxTimer: null,
       waiters: []       // resolvers waiting on a load
     };
 
@@ -357,6 +358,7 @@
 
     f.finish = function (result) {
       if (f.watchdog) { clearTimeout(f.watchdog); f.watchdog = null; }
+      if (f.maxTimer) { clearTimeout(f.maxTimer); f.maxTimer = null; }
       var s = f.settle;
       f.settle = null;
       if (s) s(result);
@@ -396,6 +398,12 @@
       f.ready.emit(false); // also blocks a double-tap re-entry
       return new Promise(function (resolve) {
         f.settle = resolve;
+        // Settles like a dismissal if the plugin never reports one, so the game can't stay busy.
+        f.maxTimer = setTimeout(function () {
+          f.maxTimer = null;
+          log(o.name + ' no dismissal after ' + TIMING.showMax / 1000 + ' s');
+          f.onDismissed();
+        }, TIMING.showMax);
         f.watchdog = setTimeout(function () {
           f.watchdog = null;
           log(o.name + ' never reached the screen (' + TIMING.showWatchdog / 1000 + ' s watchdog)');
@@ -425,9 +433,7 @@
     }
   });
   var rewardEarned = false;
-  var rewardMaxTimer = null;
   function rewardDone(reason) {
-    clearTimeout(rewardMaxTimer);
     rewarded.finish(reason ? { rewarded: rewardEarned, reason: reason } : { rewarded: rewardEarned });
   }
   rewarded.onDismissed = function () { rewardDone(); };
@@ -473,9 +479,6 @@
     listen(AdMob, 'onRewardedVideoAdReward', function () {
       log('rewarded reward earned');
       rewardEarned = true;
-      // Settles even if the dismissal never arrives.
-      clearTimeout(rewardMaxTimer);
-      rewardMaxTimer = setTimeout(function () { rewardDone(); }, TIMING.rewardedMax);
     });
   }
 
@@ -625,7 +628,7 @@
   function notePermission() {
     if (notePerm) return notePerm;
     // After the launch ATT prompt settles, so the two system sheets never stack.
-    notePerm = (attPromise || Promise.resolve())
+    notePerm = ensureAtt()
       .then(function () { return Notes.checkPermissions(); })
       .then(function (p) {
         if (p && p.display === 'granted') return true;
