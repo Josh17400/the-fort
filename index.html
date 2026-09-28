@@ -956,6 +956,9 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
 .rts{display:flex;flex-wrap:wrap;gap:5px}.rts span{padding:3px 8px;border-radius:7px;font:600 12px var(--f-display);letter-spacing:.02em;color:var(--c-dim);background:var(--c-inset);border:1px solid var(--c-line)}
 .rts span b{color:var(--c-text)}.rts span em{font-style:normal;color:var(--c-green)}
 .rsg{display:flex;gap:7px;align-items:flex-start;font:400 13px/1.45 var(--f-body);color:#cfe3f0}.rsg .ic{color:var(--c-blue);margin-top:1px}
+.rsq{display:flex;gap:7px;align-items:flex-start;padding:6px 8px;border-radius:8px;background:var(--c-inset);border:1px solid var(--c-line);font:400 12px/1.4 var(--f-body);color:var(--c-text-2)}
+.rsq .ic{flex:none;color:var(--c-dim);margin-top:1px}.rsq b{font:700 11px var(--f-display);letter-spacing:.1em;color:var(--c-dim);margin-right:6px}.rsq .n{color:var(--c-text);font-weight:600}
+.rsq small{display:block;margin-top:2px;font-size:12px;color:#cfe3f0}.rsq.new{border-color:rgba(152,210,110,.32)}.rsq.new b,.rsq.new .ic{color:var(--c-green)}
 .rgt{position:relative;overflow:hidden;display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:7px;font:600 12px var(--f-display);letter-spacing:.02em;color:var(--c-amber);border:1px dashed var(--c-line-2);background:var(--c-inset)}
 .rgt em{margin-left:auto;font-style:normal;color:var(--c-dim)}.rgt i{position:absolute;left:0;bottom:0;height:2px;background:var(--c-gold);opacity:.75}
 .rwhy{display:flex;gap:6px;align-items:flex-start;font:400 12px/1.4 var(--f-body);color:var(--c-amber)}.rwhy .ic{color:var(--c-gold-hi);margin-top:1px}
@@ -971,7 +974,7 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
 .rcmp .cg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}
 .rcmp .tile b{font-size:16px}.rcmp .tile b em{font-style:normal;color:var(--c-green);font-size:13px;margin-left:4px}
 .rcmp .tile b .ar{display:inline;font:600 14px/1 var(--f-body);letter-spacing:0;color:var(--c-dim);margin:0 6px}
-.rcmp .rsg{margin-top:10px}
+.rcmp .rsg{margin-top:10px}.rcmp .rsq{margin-top:8px}
 /* R&D phone: sticky line chips, vertical tier list, sticky CTA */
 .rsc{position:sticky;top:calc(var(--hdr-h) + var(--safe-t));z-index:4;display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;margin:0 calc(-1 * var(--gutter));padding:6px var(--gutter) 12px;
   background:linear-gradient(var(--c-bg) 75%,rgba(11,13,9,0));scrollbar-width:none}
@@ -1606,7 +1609,7 @@ const U=[
  {id:'wire',wave:5,need:[["walls", 3]],cat:'FORT',name:'Barbed Wire',max:8,cost:100,g:1.75,desc:'A wire ring that slows and cuts enemies near the fort.',val:l=>l?'-'+pct(Math.min(0.7,0.25+0.06*l))+' speed · '+2*l+' dps':'none'},
  {id:'hp',late:1,cat:'SQUAD',name:'Body Armor',max:0,cost:20,g:1.4,desc:'More soldier health.',val:l=>fmtN(hpAt(l))+' HP'},
  {id:'medic',wave:3,need:[["hp", 3]],cat:'SQUAD',name:'Field Medic',max:0,cost:60,g:1.6,desc:'Regenerate health over time.',val:l=>(0.4*l).toFixed(1)+' HP/s'},
- {id:'squad',wave:4,need:[["walls", 2]],cat:'SQUAD',name:'Squad',max:0,cost:200,g:1.85,desc:'Another soldier who fights on their own (70% dmg). Their weapon improves with Squad Kit research.',val:l=>Math.min(8,l)+' extra '+pl(Math.min(8,l),'soldier')+(l>8?' · +'+pct(0.12*(l-8))+' dmg':'')},
+ {id:'squad',wave:4,need:[["walls", 2]],cat:'SQUAD',name:'Squad',max:0,cost:200,g:1.85,desc:'Another soldier who fights on their own (70% dmg). Their weapon improves with Infantry Kit research.',val:l=>Math.min(8,l)+' extra '+pl(Math.min(8,l),'soldier')+(l>8?' · +'+pct(0.12*(l-8))+' dmg':'')},
  {id:'arty',late:1,wave:6,need:[["walls", 2], ["vision", 3]],cat:'SUPPORT',name:'Artillery',max:0,cost:250,g:1.55,desc:'A gun emplaced in your fort shells the biggest enemy cluster. Starts as a mortar pit; research the M777 Howitzer and HIMARS rocket salvos in R&D.',val:l=>l?f1(artyDmg(l))+' dmg / '+artyCd(l).toFixed(1)+'s':'none'},
  {id:'mines',late:1,wave:3,need:[["vision", 2]],cat:'SUPPORT',name:'Minefield',max:0,cost:120,g:1.55,desc:'Mines are laid at the start of each wave.',val:l=>l?Math.min(30,2*l)+' mines · '+f1(mineDmg(l))+' dmg':'none'},
  {id:'air',late:1,wave:10,need:[["vision", 4]],cat:'SUPPORT',name:'Air Support',max:0,cost:400,g:1.6,desc:'Call a bombing run anywhere (Q, then click).',val:l=>l?Math.min(16,5+l)+' bombs · '+f1(airDmg(l))+' dmg · '+Math.round(airCd(l))+'s cd':'none'},
@@ -1692,7 +1695,7 @@ function afterAction(){if(!lastCause)return'';const u=counterPick(),c=u&&costOf(
 // armor broke the fort and the rifle still can't pierce it: point at the next commander tier with armor-piercing rounds
 function rsCounter(){if(!lastCause.top.some(t=>ARMOR_KILL[t]||t==='technical')||rPen('dmg')>=0.4)return'';const t=RLINES.dmg.t.find(x=>x.i>rsOwned('dmg')&&x.pen>rPen('dmg'));if(!t)return'';
   const w=t.i===rsOwned('dmg')+1?rsWhy('dmg',t.i):'Research '+RLINES.dmg.t[rsOwned('dmg')+1].n+' first';
-  return`<button class="aarfix rd${w?'':' can'}" data-rsgo="dmg"><span class="ico">${ic('research',18)}</span><span class="ft">Research <b>${t.n}</b>: AP rounds ignore ${pct(t.pen)} of armor</span><i>${w?(rsProg()<t.gate?gateTxt(t.gate).replace(/^Reach /,''):w==='Lab busy'?'lab busy':t.cost+' RP'):t.cost+' RP →'}</i></button>`}
+  return`<button class="aarfix rd${w?'':' can'}" data-rsgo="dmg"><span class="ico">${ic('research',18)}</span><span class="ft">Research <b>${t.n}</b>: AP rounds ignore ${pct(t.pen)} of armor</span><i>${w?(rsProg()<t.gate?gateTxt(t.gate).replace(/^Reach /,''):w==='Lab busy'?'lab busy':rsCost('dmg',t.i)+' RP'):rsCost('dmg',t.i)+' RP →'}</i></button>`}
 
 // ================= RESEARCH =================
 // Research Points (RP, S.rp) are earned by holding waves and buy unit tiers: new weapons, a cumulative damage multiplier (mul,
@@ -1701,28 +1704,23 @@ function rsCounter(){if(!lastCause.top.some(t=>ARMOR_KILL[t]||t==='technical')||
 // take effect at the next deployment: startRun() snapshots S.rs/S.rf into G.
 // S.rs[line] = the tier index owned (0-based; dmg/squad tier 0 is the pistol start). S.rf[line] = Refits bought after the last tier.
 // t.g (the original wave gate) now only picks the tier's era tint; t.gate/t.cost/t.ms are filled in from RS_GATE below.
+// Infantry Kit (line 'dmg') equips the commander AND the squad: each tier's `sq` is the squad tier it brings (RLINES.ride.squad), paired
+// by era, so the squad keeps its own art, damage and signatures and every reader of rTier/rMult/sg('squad') works unchanged.
+// S.rs.squad stays the squad tier actually owned: a tier lands its `sq` (job.sq), and a save from before the merge keeps whatever
+// squad tier it had, ahead of or behind its commander (the next Infantry tier then bundles the squad tiers it still lacks: rsCost).
 const REFIT_MUL=1.08,refitCost=n=>Math.round(300*Math.pow(1.15,n)),refitMs=n=>Math.min(24,4*Math.pow(1.08,n))*3600e3;
 const RLINES={currency:'RP',rpCost:'rsCostAt(gate)',refit:{mul:REFIT_MUL,cost:'300*1.15^n',time:'4h*1.08^n (max 24h)'},lines:[
- {id:'dmg',label:'Commander Kit',u:'dmg',t:[
-  {n:'Recruit',w:'M17 sidearm',g:0,mul:0.6,hp:1,art:'era0 softcap noplate pistol'},
-  {n:'Rifleman',w:'M4A1 carbine',g:1,mul:1,hp:1,art:'era1 helmet plate carbine'},
-  {n:'Designated Marksman',w:'Mk 12 SPR, 4x optic',g:15,mul:1.25,hp:1.25,sig:{pierce:[1,0.5]},art:'era2 optic longbarrel'},
-  {n:'Squad Leader',w:'M7 6.8mm rifle, AP rounds',g:25,mul:3,pen:0.25,hp:2,sig:{pen:0.25},art:'era2 suppressor radio'},
-  {n:'Grenadier Sergeant',w:'M7 + M320 40mm airburst',g:35,mul:12.5,pen:0.4,hp:3.5,sig:{splash:[24,1],every:6},art:'era3 underbarrel nvg'},
-  {n:'Smart-Rifle Operator',w:'Fire-control rifle, programmable rounds',g:45,mul:25,pen:0.55,hp:6,sig:{mark:[0.25,3],lockCrit:1},art:'era3 fcs-optic irstrobe'},
-  {n:'Exoskeleton Trooper',w:'8mm gauss carbine',g:60,mul:30,pen:0.65,hp:8,sig:{pierce:[4,0.8]},art:'era4 exoframe coilbarrel'},
-  {n:'Coilgun Vanguard',w:'Coilgun, magnetic rounds',g:80,mul:33,pen:0.75,hp:10,sig:{chain:[1,0.5]},art:'era4 exoframe cyanrails'},
-  {n:'Directed-Energy Operator',w:'HEL carbine (pulsed laser)',g:110,mul:36,pen:0.85,hp:12,sig:{instant:1,burn:[0.2,2]},art:'era5 beam'},
-  {n:'Vanguard Commander',w:'Rail rifle + 2 escort drones',g:150,mul:40,pen:0.9,hp:14,sig:{drones:[2,0.25]},art:'era5 exo drones'}]},
- {id:'squad',label:'Squad Kit',u:'squad',t:[
-  {n:'Militia',w:'Pistols and pump shotguns',g:0,mul:0.6,art:'era0 mixed-kit'},
-  {n:'Rifle Squad',w:'M4A1s',g:1,mul:1,art:'era1'},
-  {n:'Fireteam',w:'M4A1 + M27 IAR',g:15,mul:1.25,sig:{salvo:2,every:8},art:'era2 iar'},
-  {n:'Infantry Squad (NGSW)',w:'M7 rifles + M250 LMG',g:25,mul:3,pen:0.25,art:'era2 lmg-bipod'},
-  {n:'Mechanized Dismounts',w:'M250 + Carl Gustaf M4',g:35,mul:12.5,pen:0.4,sig:{seek:1,splash:[18,0.6],every:10},art:'era3 recoilless'},
-  {n:'Drone-Teamed Squad',w:'Rifles + quadcopter each',g:45,mul:25,pen:0.55,sig:{drones:[1,0.2]},art:'era3 quad'},
-  {n:'Exo Squad',w:'Gauss carbines',g:60,mul:30,pen:0.65,sig:{pierce:[2,0.7]},art:'era4 exoframe'},
-  {n:'Directed-Energy Squad',w:'HEL carbines',g:110,mul:36,pen:0.85,sig:{instant:1},art:'era5 beam'}]},
+ {id:'dmg',label:'Infantry Kit',u:'dmg',t:[
+  {n:'Recruit',w:'M17 sidearm',g:0,mul:0.6,hp:1,sq:0,art:'era0 softcap noplate pistol'},
+  {n:'Rifleman',w:'M4A1 carbine',g:1,mul:1,hp:1,sq:1,art:'era1 helmet plate carbine'},
+  {n:'Designated Marksman',w:'Mk 12 SPR, 4x optic',g:15,mul:1.25,hp:1.25,sq:2,sig:{pierce:[1,0.5]},art:'era2 optic longbarrel'},
+  {n:'Squad Leader',w:'M7 6.8mm rifle, AP rounds',g:25,mul:3,pen:0.25,hp:2,sq:3,sig:{pen:0.25},art:'era2 suppressor radio'},
+  {n:'Grenadier Sergeant',w:'M7 + M320 40mm airburst',g:35,mul:12.5,pen:0.4,hp:3.5,sq:4,sig:{splash:[24,1],every:6},art:'era3 underbarrel nvg'},
+  {n:'Smart-Rifle Operator',w:'Fire-control rifle, programmable rounds',g:45,mul:25,pen:0.55,hp:6,sq:5,sig:{mark:[0.25,3],lockCrit:1},art:'era3 fcs-optic irstrobe'},
+  {n:'Exoskeleton Trooper',w:'8mm gauss carbine',g:60,mul:30,pen:0.65,hp:8,sq:6,sig:{pierce:[4,0.8]},art:'era4 exoframe coilbarrel'},
+  {n:'Coilgun Vanguard',w:'Coilgun, magnetic rounds',g:80,mul:33,pen:0.75,hp:10,sq:6,sig:{chain:[1,0.5]},art:'era4 exoframe cyanrails'},
+  {n:'Directed-Energy Operator',w:'HEL carbine (pulsed laser)',g:110,mul:36,pen:0.85,hp:12,sq:7,sig:{instant:1,burn:[0.2,2]},art:'era5 beam'},
+  {n:'Vanguard Commander',w:'Rail rifle + 2 escort drones',g:150,mul:40,pen:0.9,hp:14,sq:7,sig:{drones:[2,0.25]},art:'era5 exo drones'}]},
  {id:'nade',label:'Hand Grenades',u:'nade',t:[
   {n:'M67 Frag',g:1,mul:1},
   {n:'Thermobaric Frag',g:15,mul:1.25,sig:{burn:[0.1,2]},art:'orange-band'},
@@ -1731,13 +1729,13 @@ const RLINES={currency:'RP',rpCost:'rsCostAt(gate)',refit:{mul:REFIT_MUL,cost:'3
   {n:'EMP Frag',g:45,mul:12.5,pen:0.5,sig:{stun:[1.5]},art:'cyan-ring'},
   {n:'Shaped-Charge Swarm',g:60,mul:15,pen:0.8,sig:{bomblets:6},art:'era4'}]},
  {id:'walls',label:'Fort Walls',u:'walls',t:[
-  {n:'Sandbag and HESCO',g:1,mul:1},
-  {n:'Concrete T-Walls',g:15,mul:1.3,art:'grey-slabs'},
-  {n:'Reinforced Bastion',g:25,mul:1.7,sig:{thorns:0},art:'rebar-caps'},
-  {n:'Ceramic Composite',g:35,mul:2.2,art:'tan-tiles'},
-  {n:'Active Protection Walls',g:45,mul:2.8,sig:{intercept:0.5},art:'aps-boxes'},
-  {n:'Self-Healing Nanocrete',g:60,mul:3.4,sig:{regen:0.01},art:'cyan-seams'},
-  {n:'EM Armor Screen',g:80,mul:4,sig:{breachShield:1},art:'era5 shimmer'}]},
+  {n:'Sandbag and HESCO',g:1,mul:1,look:'Timber palisade, sandbagged posts, single concertina'},
+  {n:'Concrete T-Walls',g:15,mul:1.3,art:'grey-slabs',look:'Precast block walls, round towers, T-wall joints, double concertina'},
+  {n:'Reinforced Bastion',g:25,mul:1.7,sig:{thorns:0},art:'rebar-caps',look:'Poured concrete walls, firing slits, bunker towers, rebar caps'},
+  {n:'Ceramic Composite',g:35,mul:2.2,art:'tan-tiles',look:'Ceramic armor tiles, triple-stacked concertina'},
+  {n:'Active Protection Walls',g:45,mul:2.8,sig:{intercept:0.5},art:'aps-boxes',look:'Active-protection launcher boxes along the walls'},
+  {n:'Self-Healing Nanocrete',g:60,mul:3.4,sig:{regen:0.01},art:'cyan-seams',look:'Glowing self-healing seams'},
+  {n:'EM Armor Screen',g:80,mul:4,sig:{breachShield:1},art:'era5 shimmer',look:'Shimmering EM screen over the walls'}]},
  {id:'mines',label:'Minefield',u:'mines',t:[
   {n:'M15/M16 Mixed Field',g:1,mul:1},
   {n:'M18 Claymores',g:15,mul:1.25,sig:{cone:1}},
@@ -1851,15 +1849,29 @@ const RLINES={currency:'RP',rpCost:'rsCostAt(gate)',refit:{mul:REFIT_MUL,cost:'3
   {n:'PrSM Increment 2 (multi-warhead)',g:45,mul:8,sig:{bomblets:3}},
   {n:'Dark Eagle Hypersonic',g:60,mul:30,sig:{instant:1}},
   {n:'Conventional Prompt Strike + EMP',g:80,mul:50,sig:{stun:[2]}},
-  {n:'Kinetic Bombardment (Tungsten Rod)',g:110,mul:60,pen:1,sig:{radius:2}}]}]};
-// Campaign gates (see rsProg): RS_GATE[line][tier] = the progress point that opens the tier, (theater-1)*100 + wave. Desert Outpost
-// carries 16 tiers (Rifleman and Rifle Squad at wave 1 for the tutorial), theaters 2-8 carry 13 each, spread over their waves in the
-// order the original wave gates rolled them out (.qa/gates.js). Vanguard Commander opens at Capital Defense wave 94, so R&D runs
-// out as the campaign ends. Tier 0 is the starting kit.
+  {n:'Kinetic Bombardment (Tungsten Rod)',g:110,mul:60,pen:1,sig:{radius:2}}]}],
+ // ride-along lines: never researched on their own; their tiers arrive with the host line's tiers (`on` = host id, host tier `sq`)
+ ride:[{id:'squad',label:'Squad',u:'squad',on:'dmg',t:[
+  {n:'Militia',w:'Pistols and pump shotguns',g:0,mul:0.6,art:'era0 mixed-kit'},
+  {n:'Rifle Squad',w:'M4A1s',g:1,mul:1,art:'era1'},
+  {n:'Fireteam',w:'M4A1 + M27 IAR',g:15,mul:1.25,sig:{salvo:2,every:8},art:'era2 iar'},
+  {n:'Infantry Squad (NGSW)',w:'M7 rifles + M250 LMG',g:25,mul:3,pen:0.25,art:'era2 lmg-bipod'},
+  {n:'Mechanized Dismounts',w:'M250 + Carl Gustaf M4',g:35,mul:12.5,pen:0.4,sig:{seek:1,splash:[18,0.6],every:10},art:'era3 recoilless'},
+  {n:'Drone-Teamed Squad',w:'Rifles + quadcopter each',g:45,mul:25,pen:0.55,sig:{drones:[1,0.2]},art:'era3 quad'},
+  {n:'Exo Squad',w:'Gauss carbines',g:60,mul:30,pen:0.65,sig:{pierce:[2,0.7]},art:'era4 exoframe'},
+  {n:'Directed-Energy Squad',w:'HEL carbines',g:110,mul:36,pen:0.85,sig:{instant:1},art:'era5 beam'}]}]};
+// Campaign gates (see rsProg): RS_GATE[line][tier] = the progress point that opens the tier, (theater-1)*100 + wave. 100 researchable
+// tiers: Desert Outpost 13 (Rifleman at wave 1 for the tutorial), Mountain 12, Coastal 12, City 13, Arctic 12, Jungle 13, Island 13,
+// Capital 12, spread over their waves in the order the original wave gates rolled them out (.qa/gates.js). Vanguard Commander opens at
+// Capital Defense wave 94, so R&D runs out as the campaign ends. Tier 0 is the starting kit.
+// RS_GATE.squad opens nothing: the squad's tiers open with Infantry Kit tiers; its entries are the price points (RP + lab time) each
+// squad tier adds to the Infantry tier that brings it, so the merged line costs what Commander Kit + Squad Kit cost (.qa/rdtot.js).
+// The merge moved Drone-Teamed Squad's price from City (323) into Coastal (Smart-Rifle Operator, 294); F-15EX took its old City slot
+// (286 -> 323) so each theater's RP and lab hours stay where the phase 3 pacing put them.
 const RS_GATE={dmg:[0,1,6,52,158,294,458,616,709,794],squad:[0,1,26,84,186,323,486,716],walls:[0,10,60,165,303,465,623],nade:[0,15,68,172,309,472],
   mines:[0,20,76,179,316,479],truck:[0,32,92,194,330,494,723],arty:[0,38,103,203,337,503,630],aagun:[0,45,109,209,351,509,637],turret:[0,116,216,358,516,651],
   sniper:[0,123,223,365,523,730],apc:[0,130,230,372,530,658],air:[0,137,237,379,537,737],tank:[0,151,251,386,551,751],flame:[0,258,394,558,665],
-  sam:[0,265,403,565,758],mlaunch:[0,272,409,572,672],heli:[0,279,416,579,765],fighter:[0,286,423,586,679],tesla:[0,430,594,686,772],
+  sam:[0,265,403,565,758],mlaunch:[0,272,409,572,672],heli:[0,279,416,579,765],fighter:[0,323,423,586,679],tesla:[0,430,594,686,772],
   silo:[0,437,603,694,779],gunship:[0,451,609,703,786]};
 // A tier's RP price and lab time both follow its gate: 20 RP and a minute in the Desert, over a thousand RP and most of a day at the
 // Capital. Anchors are the values at the start of each theater (and at the campaign's end), interpolated geometrically in between.
@@ -1871,8 +1883,13 @@ const gateLerp=(A,g)=>{const i=Math.min(A.length-2,Math.floor(g/CLEAR_W)),f=g/CL
 const rsCostAt=g=>nice(gateLerp(RS_RP,g));
 const rsMinAt=g=>{const m=gateLerp(RS_MIN,g);return m<10?Math.round(m):m<120?Math.round(m/5)*5:Math.round(m/15)*15};
 // Index by id (RLINES.tank) and give every tier its long-form fields: id, name, weapon, visual, mult, gate, cost, ms (lab time), sig, pen, i.
-for(const r of RLINES.lines){Object.defineProperty(RLINES,r.id,{value:r,enumerable:false});
-  r.t.forEach((t,i)=>{const g=i?RS_GATE[r.id][i]:0;Object.assign(t,{i,id:r.id+'_'+i,name:t.n,weapon:t.w||'',visual:t.art||'',mult:t.mul,gate:g,cost:i?rsCostAt(g):0,ms:i?rsMinAt(g)*60e3:0,sig:t.sig||null,pen:t.pen||0})})}
+// A ride line's tier keeps its own price (cost/ms at its RS_GATE price point) and opens with the first host tier that brings it. A host
+// tier's cost/ms = its own (cc/cm) + the ride tiers it adds over the tier before it: the price on a save that never predates the merge.
+for(const r of[...RLINES.lines,...RLINES.ride]){Object.defineProperty(RLINES,r.id,{value:r,enumerable:false});
+  r.t.forEach((t,i)=>{const p=i?RS_GATE[r.id][i]:0;Object.assign(t,{i,id:r.id+'_'+i,name:t.n,weapon:t.w||'',visual:t.art||'',mult:t.mul,gate:p,cost:i?rsCostAt(p):0,ms:i?rsMinAt(p)*60e3:0,sig:t.sig||null,pen:t.pen||0})})}
+for(const q of RLINES.ride){const h=RLINES[q.on];h.rides=q;
+  q.t.forEach(t=>{const k=h.t.findIndex(x=>x.sq>=t.i);t.gate=k>0?h.t[k].gate:0});
+  h.t.forEach((t,i)=>{t.cc=t.cost;t.cm=t.ms;if(i)for(let j=h.t[i-1].sq+1;j<=t.sq;j++){t.cost+=q.t[j].cost;t.ms+=q.t[j].ms}})}
 // sig keys that are plain numeric multipliers: folded into rMult() (cumulative over tiers) instead of being reported by rSig()
 const RS_MULKEYS=new Set(['rate','radius','cd','count']);
 const rsNow=()=>running&&G&&G.rs?G.rs:S.rs, rfNow=()=>running&&G&&G.rf?G.rf:S.rf;
@@ -1881,7 +1898,8 @@ const rsNow=()=>running&&G&&G.rs?G.rs:S.rs, rfNow=()=>running&&G&&G.rf?G.rf:S.rf
 function rTier(id){const r=RLINES[id];if(!r)return 0;return Math.max(0,Math.min(r.t.length-1,rsNow()[id]|0))}
 // rMult(line,key): cumulative multiplier at the active tier (1 when none). 'dmg' = damage (times Refits; walls have none),
 // 'hp' = HP (commander tier hp field for 'dmg', wall HP for 'walls'), 'rate'/'radius'/'cd'/'count' = product of those sig values.
-function rMult(id,key='dmg'){const r=RLINES[id];if(!r)return 1;const k=rTier(id),t=r.t[k],rf=Math.pow(REFIT_MUL,rfNow()[id]||0);
+// A ride line (the squad) also takes its host's Refits: an Infantry Kit Refit rebuilds the commander's kit and the squad's.
+function rMult(id,key='dmg'){const r=RLINES[id];if(!r)return 1;const k=rTier(id),t=r.t[k],rn=rfNow(),rf=Math.pow(REFIT_MUL,(rn[id]||0)+(r.on&&rn[r.on]||0));
   if(key==='dmg')return id==='walls'?1:t.mul*rf;
   if(key==='hp')return id==='walls'?t.mul*rf:t.hp||1;
   let m=1;if(RS_MULKEYS.has(key))for(let i=0;i<=k;i++){const s=r.t[i].sig;if(s&&typeof s[key]==='number')m*=s[key]}return m}
@@ -1896,21 +1914,31 @@ const rSigP=(id,key)=>{const s=rSigAt(id,key);return s?s[key]:null};
 const rPen=id=>{const r=RLINES[id];return r?r.t[rTier(id)].pen:0};
 // saved (home-screen) state: owned tier, Refits, what is fielded
 const rsOwned=id=>S.rs[id]|0;
+// the ride tier a save owns or already has in the lab (a squad job started before the merge): a host tier never charges for it twice
+const rsRideHave=h=>{const q=h.rides,j=labOf(q.id);return Math.max(rsOwned(q.id),j&&!j.rf?j.k:0)};
+// What tier k of a line costs (RP) and takes (lab ms) on this save, and the ride tier it lands (sq, 0 = none). A host tier buys the ride
+// tiers it brings that the save lacks: the next tier also catches up any a pre-merge save fell behind on, none it already owns is paid.
+function rsPrice(id,k){const r=RLINES[id],t=r&&r.t[k];if(!t)return{rp:0,ms:0,sq:0};if(!r.rides||!k)return{rp:t.cost,ms:t.ms,sq:0};
+  const q=r.rides,have=rsRideHave(r),lo=k===rsOwned(id)+1?have:Math.max(have,r.t[k-1].sq);let rp=t.cc,ms=t.cm;
+  for(let j=lo+1;j<=t.sq;j++){rp+=q.t[j].cost;ms+=q.t[j].ms}return{rp,ms,sq:t.sq>have?t.sq:0}}
+const rsCost=(id,k)=>rsPrice(id,k).rp,rsMs=(id,k)=>rsPrice(id,k).ms;
 // Lock reason for researching tier k of a line ('' = can research now), in lockWhy() style.
-function rsWhy(id,k){const r=RLINES[id],t=r&&r.t[k];if(!t)return'No such tier';const own=rsOwned(id),u=UB[r.u];
+function rsWhy(id,k){const r=RLINES[id],t=r&&r.t[k];if(!t)return'No such tier';if(r.on)return'Comes with '+RLINES[r.on].label;const own=rsOwned(id),u=UB[r.u];
   if(k<=own)return'Researched';if(k>own+1)return'Research '+r.t[k-1].n+' first';
   const lw=lockWhy(u);if(lw)return lw;if(L(u.id)<1)return'Field '+u.name+' first (buy Lv 1)';
-  if(rsProg()<t.gate)return gateTxt(t.gate);if(labOf(id))return'Researching';if(S.rp<t.cost)return'Need '+(t.cost-S.rp)+' more RP';
+  if(rsProg()<t.gate)return gateTxt(t.gate);if(labOf(id))return'Researching';const c=rsCost(id,k);if(S.rp<c)return'Need '+(c-S.rp)+' more RP';
   return labFree()?'':'Lab busy'}
 const rsDone=id=>rsOwned(id)>=RLINES[id].t.length-1;
 // tiers that are new since the last deployment (for the run-start banner); the first deployment after migration only records
-function rsFieldNew(){const prev=S.rsF;S.rsF=Object.assign({},S.rs);save();if(!prev)return'';
-  const n=RLINES.lines.filter(r=>(S.rs[r.id]|0)>(prev[r.id]|0)&&L(r.u)>0).map(r=>r.t[S.rs[r.id]|0].n);
+function rsFieldNew(){const prev=S.rsF;S.rsF=Object.assign({},S.rs);save();if(!prev)return'';const up=r=>(S.rs[r.id]|0)>(prev[r.id]|0)&&L(r.u)>0;   // a ride tier is named only when it landed on its own (a pre-merge squad job)
+  const n=[...RLINES.lines,...RLINES.ride].filter(r=>up(r)&&!(r.on&&up(RLINES[r.on]))).map(r=>r.t[S.rs[r.id]|0].n);
   return n.length>3?n.slice(0,3).join(' · ')+' +'+(n.length-3)+' more':n.join(' · ')}
 // first time a researched tier is ever fielded: a non-blocking briefing card through the intel pipeline (seen()['rs_'+line+'_'+tier])
 function rsBriefs(){let n=0;for(const r of RLINES.lines){if(n>=3)break;   // at most three a run so enemy contact cards are not held up
   const k=rTier(r.id);if(k<=rsDefTier(r.id)||L(r.u)<1)continue;const key='rs_'+r.id+'_'+k;if(seen()[key])continue;
-  const t=r.t[k],s=sigText(t.sig);INTEL[key]=[t.n,0,r.label+(t.w?': '+t.w:'')+'. '+(s||'DMG x'+fxm(t.mul)+(t.pen?', AP '+pct(t.pen):''))+'.'];spotted(key);n++}}
+  const t=r.t[k],s=sigText(t.sig),q=rsRideAt(r,k);INTEL[key]=[t.n,0,r.label+(t.w?': '+t.w:'')+'. '+(s||'DMG x'+fxm(t.mul)+(t.pen?', AP '+pct(t.pen):''))+'.'+(q&&q.fresh?' Squad: '+q.t.n+', '+q.t.w+'.':'')];spotted(key);n++}}
+// the ride tier (squad) that goes with host tier k: {t: its tier, fresh: this host tier is the one that brings it}; null for other lines
+const rsRideAt=(r,k)=>{const q=r.rides;if(!q)return null;const t=q.t[r.t[k].sq];return{t,fresh:k>0&&r.t[k].sq>r.t[k-1].sq}};
 const rsReady=()=>RLINES.lines.filter(r=>!rsDone(r.id)&&!rsWhy(r.id,rsOwned(r.id)+1));
 // lines whose next tier could start as soon as there is RP and a free lab slot (gate, fielding and the lab queue are clear)
 const rsOpenNext=r=>{if(rsDone(r.id))return false;const w=rsWhy(r.id,rsOwned(r.id)+1);return!w||w==='Lab busy'||w.startsWith('Need ')};
@@ -1938,11 +1966,13 @@ const labSkipCost=ms=>ms>0?Math.max(1,Math.ceil(GEM_PER_H*Math.pow(ms/3600e3,0.8
 function labTick(){const now=labNow(),out=[];let ch=false;
   for(const j of S.lab.q.slice()){const r=RLINES[j.id],bad=!r||(j.rf?!rsDone(j.id)||(S.rf[j.id]|0)>=j.k:j.k>=r.t.length||rsOwned(j.id)>=j.k);
     if(!bad&&j.end>now)continue;S.lab.q.splice(S.lab.q.indexOf(j),1);ch=true;if(bad)continue;
-    if(j.rf)S.rf[j.id]=j.k;else S.rs[j.id]=j.k;Plat.cancel('lab:'+j.id);const n={id:j.id,k:j.k};if(j.rf)n.rf=1;S.lab.news.push(n);out.push(n)}
+    if(j.rf)S.rf[j.id]=j.k;else{S.rs[j.id]=j.k;const q=r.rides;if(q&&j.sq>0)S.rs[q.id]=Math.max(rsOwned(q.id),Math.min(q.t.length-1,j.sq|0))}   // job.sq: the squad tier this Infantry tier paid for
+    Plat.cancel('lab:'+j.id);const n={id:j.id,k:j.k};if(j.rf)n.rf=1;S.lab.news.push(n);out.push(n)}
   if(S.lab.news.length>8)S.lab.news.splice(0,S.lab.news.length-8);if(ch)save();return out}
-function labStart(id){const r=RLINES[id];if(!r||!S.lab)return false;labTick();if(labOf(id)||!labFree())return false;const now=labNow();
+// A ride line (the squad) is never started on its own; a squad job from before the merge still finishes (labTick lands any line).
+function labStart(id){const r=RLINES[id];if(!r||r.on||!S.lab)return false;labTick();if(labOf(id)||!labFree())return false;const now=labNow();
   if(rsDone(id)){const n=S.rf[id]|0,c=refitCost(n);if(S.rp<c)return false;S.rp-=c;S.lab.q.push({id,k:n+1,rf:1,t0:now,end:now+refitMs(n)})}
-  else{const k=rsOwned(id)+1;if(rsWhy(id,k))return false;S.rp-=r.t[k].cost;S.lab.q.push({id,k,t0:now,end:now+r.t[k].ms})}
+  else{const k=rsOwned(id)+1;if(rsWhy(id,k))return false;const p=rsPrice(id,k),j={id,k,t0:now,end:now+p.ms};if(p.sq)j.sq=p.sq;S.rp-=p.rp;S.lab.q.push(j)}
   labNote(S.lab.q[S.lab.q.length-1]);dqAdd('research',1);save();return true}
 // finish a running job with gems now; false (nothing spent) when there is no such job or the gems fall short
 function labSkip(id){const j=labOf(id);if(!j)return false;const c=labSkipCost(labLeft(j));if(c&&!gemSpend(c,'skip'))return false;j.end=labNow();labTick();Plat.cancel('lab:'+id);return true}
@@ -2321,7 +2351,7 @@ function renderHome(){fillIcons();labLand();const h=$('home');if(h.dataset.view!
   renderHdr();({base:renderBase,armory:renderArmory,rd:renderResearch,store:renderStore})[homeView]();_nar=narrow()}
 const affordable=u=>{const l=L(u.id);return l<u.max&&!lockWhy(u)&&S.bank>=costOf(u,l)};
 // how many next tiers the banked RP covers together (cheapest first)
-function rsAffordN(){let rp=S.rp,n=0;for(const c of RLINES.lines.filter(r=>rsOpenNext(r)&&!labOf(r.id)).map(r=>r.t[rsOwned(r.id)+1].cost).sort((a,b)=>a-b)){if(c>rp)break;rp-=c;n++}return n}
+function rsAffordN(){let rp=S.rp,n=0;for(const c of RLINES.lines.filter(r=>rsOpenNext(r)&&!labOf(r.id)).map(r=>rsCost(r.id,rsOwned(r.id)+1)).sort((a,b)=>a-b)){if(c>rp)break;rp-=c;n++}return n}
 let _bankTw=0;
 function renderHdr(){if(!_bankTw)$('bank').textContent='$'+fmtN(S.bank);$('rpBank').textContent=fmtN(S.rp);$('gemBank').textContent=fmtN(S.gems|0);
   const aff=U.some(affordable),rd=S.lab.news.length>0||rsReady().length>0,med=medalPts()>(S.set.medalSeen|0),st=storeDot();   // R&D dot: research landed, or the lab is free and a tier is affordable
@@ -2340,7 +2370,7 @@ const flash=el=>{if(!el)return;el.classList.remove('flash');void el.offsetWidth;
 // ================= OWNER DECISIONS (do NOT revert in UI passes) =================
 // 1) After-action report (.panel.aar) is GOLD/yellow so it stands out from other panels.
 // 2) Base screen: Quartermaster's Picks (#picks) and Next Unlocks (#nextUnl) stay REMOVED - the Armory covers them.
-//    Keep: Mission Briefing (commander kit, stats, checkpoint, Deploy), after-action report, R&D summary, Field Manual.
+//    Keep: Mission Briefing (infantry kit, stats, checkpoint, Deploy), after-action report, R&D summary, Field Manual.
 // 3) Armory shows ONLY unlocked, not-maxed upgrades; no locked list; category tabs with nothing buyable are hidden.
 // 4) R&D shows ONLY lines whose next tier is open (an RP shortfall still shows) and only the current + next tier per line.
 // Goal: a slow, non-overwhelming roll-out of progression for new players.
@@ -2420,7 +2450,7 @@ function closeThWin(go){const nx=mapNext(S.campWin);$('thWin').classList.remove(
   if(go&&nx&&switchMap(nx.id)){sfx('buy');toast('Now defending '+nx.name,'map')}else renderHome()}
 function renderMission(){const r=RLINES.dmg,k=rTier('dmg'),t=r.t[k];
   $('kit').innerHTML=`<div class="por" style="${rsEraVars(t)}"><canvas data-th="dmg:${k}" width="192" height="192"></canvas></div>`
-    +`<div class="kb"><div class="eyebrow">COMMANDER KIT</div><div class="kn">${t.n}</div><div class="kw">${t.w}</div><button class="chip-btn rd" data-rsgo="dmg">${ic('research',14)}Tier ${rank(k+1)} of ${r.t.length} · R&amp;D<span class="chev">→</span></button></div>`;
+    +`<div class="kb"><div class="eyebrow">INFANTRY KIT</div><div class="kn">${t.n}</div><div class="kw">${t.w}${L('squad')?' · squad: '+r.rides.t[rTier('squad')].n:''}</div><button class="chip-btn rd" data-rsgo="dmg">${ic('research',14)}Tier ${rank(k+1)} of ${r.t.length} · R&amp;D<span class="chev">→</span></button></div>`;
   paintThumb($('kit').querySelector('canvas'));
   $('loadout').innerHTML=[['HP','hp',fmtN(hpAt(L('hp')))],['DMG','dmg',fmtN(dmgAt(L('dmg'))*rMult('dmg'))],['VISION','vision',Math.round(vision())+'m'],
     ['SQUAD','squad',1+Math.min(8,L('squad'))],['WALLS','walls',L('walls')?'Lv '+L('walls'):'Crate'],['BEST','trophy',S.best]]
@@ -2452,7 +2482,7 @@ function renderPicks(){const el=$('picks'),p=recommend(3);if(!p.length){el.hidde
     +p.map(({u,why})=>{const l=L(u.id),c=costOf(u,l),ok=S.bank>=c;
       return`<div class="pick-row"><button class="ico" data-goto="${u.id}" aria-label="Show ${u.name} in the Armory">${ic(u.id,20)}</button><div style="min-width:0"><div class="pn">${u.name} <em>→ Lv ${l+1}</em></div>${why?`<div class="pw">${why}</div>`:''}</div>`
         +`<div class="pdv"><span>${u.val(l)}</span><b>→ ${u.val(l+1)}</b></div><button class="btn${ok?' pos':''}" data-buy="${u.id}"${ok?'':' disabled'}><span>${ok?'<span class="nc">$'+fmtN(c)+'</span> · BUY':'SAVE <span class="nc">$'+fmtN(c-S.bank)+'</span>'}</span></button></div>`}).join('')}
-function renderRdSum(){const rd=rsReady(),el=$('rdSum'),q=S.lab.q;if(!rd.length&&!q.length){el.innerHTML='';return}const n=rsAffordN(),cost=r=>r.t[rsOwned(r.id)+1].cost;
+function renderRdSum(){const rd=rsReady(),el=$('rdSum'),q=S.lab.q;if(!rd.length&&!q.length){el.innerHTML='';return}const n=rsAffordN(),cost=r=>rsCost(r.id,rsOwned(r.id)+1);
   el.innerHTML=`<div class="panel rdsum"><div class="sec-h"><div class="eyebrow">R&amp;D</div><button class="btn ghost sm" data-view-go="rd">OPEN R&amp;D<span class="chev">→</span></button></div>`
     +(q.length?`<div class="lstrip" style="margin-bottom:12px">${q.map(j=>`<button class="labs on" data-rsgo="${j.id}"><span class="ico">${ic(RLINES[j.id].u,18)}</span><span class="lb"><span class="ln">${labName(j)}</span><span class="lpb"><i data-lpb="${j.id}" style="width:${(100*labPct(j)).toFixed(1)}%"></i></span></span><b data-left="${j.id}">${durTxt(labLeft(j))}</b></button>`).join('')}</div>`:'')
     +`<div class="rdl">${ic('research',18)}<b>${fmtN(S.rp)} RP</b>${n?`<span>· <em>enough for ${n} ${pl(n,'tier')}</em></span>`:''}</div><div class="rdc">`
@@ -2487,8 +2517,8 @@ let armCat='ALL',_armFreeze=null;const _open=new Set();
 if(S.set.affFirst==null)S.set.affFirst=true;
 function buyUpgrade(id){const u=UB[id];if(!u)return false;const l=L(id),c=costOf(u,l);
   if(l<u.max&&S.bank>=c&&!lockWhy(u)){S.bank-=c;S.lv[id]=l+1;save();sfx('buy');return true}sfx('deny');return false}
-function rdLink(id){const r=RLINES[id];if(!r)return'';const k=rTier(id);
-  return`<button class="chip-btn rd rdl2" data-rsgo="${id}">${ic('research',12)}${r.t[k].n} · T${k+1}/${r.t.length}<span class="chev">→</span></button>`}
+function rdLink(id){const r=RLINES[id];if(!r)return'';const k=rTier(id),h=r.on&&RLINES[r.on],hk=h&&rTier(h.id);   // the squad card points at the Infantry Kit that equips it
+  return`<button class="chip-btn rd rdl2" data-rsgo="${h?h.id:id}">${ic('research',12)}${r.t[k].n} · ${h?h.label+' T'+(hk+1)+'/'+h.t.length:'T'+(k+1)+'/'+r.t.length}<span class="chev">→</span></button>`}
 function cardHtml(u,rec){const l=L(u.id),c=costOf(u,l),mx=l>=u.max,ok=affordable(u),isRec=rec.has(u.id),why=rec.get(u.id)||'',fin=isFinite(u.max);
   const prog=!fin?'':u.max<=12?`<div class="pips">${Array.from({length:u.max},(_,i)=>`<span class="${i<l?'f':''}"></span>`).join('')}</div>`:`<div class="lvbar"><i style="width:${(100*l/u.max).toFixed(1)}%"></i></div>`;
   const deps=U.filter(x=>lockWhy(x)&&(x.need||[]).some(n=>n[0]===u.id)&&!(isRec&&why==='Unlocks '+x.name));
@@ -2551,7 +2581,7 @@ const rsEra=t=>{const m=/era(\d)/.exec(t.art||'');return m?+m[1]:t.g<1?0:t.g<15?
 const rsEraVars=t=>{const[b,a]=RS_ERA[rsEra(t)];return`--eb:${b};--ea:${a}`};
 const fxm=n=>String(+n.toFixed(n<10?2:n<100?1:0));
 const rsNarrow=()=>narrow();
-const rsLine=()=>RLINES[S.set.rsLine]||RLINES.dmg;
+const rsLine=()=>{const r=RLINES[S.set.rsLine];return r?r.on?RLINES[r.on]:r:RLINES.dmg};   // a ride line (a pre-merge squad job in the lab strip) opens its host
 const rsDefTier=id=>id==='dmg'||id==='squad'?1:0;
 const rsLineLock=r=>{const u=UB[r.u];return lockWhy(u)||(L(u.id)<1?'Field '+u.name+' first (buy Lv 1)':'')};
 const rsNF=r=>r.id!=='dmg'&&!!rsLineLock(r);
@@ -2573,7 +2603,7 @@ function paintThumb(cv){const[id,ks]=cv.dataset.th.split(':'),k=+ks,r=RLINES[id]
   c.stroke(new Path2D(IC[r.u]||IC.star));c.restore()}
 function rsStats(r,k){const t=r.t[k],d=t.mul/r.t[rsOwned(r.id)].mul;
   return`<div class="rts"><span>${r.id==='walls'?'WALL HP':'DMG'} <b>×${fxm(t.mul)}</b>${d>1.001?` <em>×${fxm(d)} vs now</em>`:''}</span>`
-    +(t.pen?`<span>AP <b>${pct(t.pen)}</b></span>`:'')+(t.hp&&t.hp!==1?`<span>HP <b>×${fxm(t.hp)}</b></span>`:'')+(k>rsOwned(r.id)&&t.ms&&!labOf(r.id)?`<span class="tm">LAB <b>${durTxt(t.ms)}</b></span>`:'')+'</div>'}
+    +(t.pen?`<span>AP <b>${pct(t.pen)}</b></span>`:'')+(t.hp&&t.hp!==1?`<span>HP <b>×${fxm(t.hp)}</b></span>`:'')+(k>rsOwned(r.id)&&t.ms&&!labOf(r.id)?`<span class="tm">LAB <b>${durTxt(rsMs(r.id,k))}</b></span>`:'')+'</div>'}
 // the wave gate of a locked tier: progress on the theater that opens it (or which theater that is, while it is still closed)
 const rsGate=t=>{if(rsProg()>=t.gate||t.gate<=1)return'';const m=gateMap(t.gate),w=gateWave(t.gate),open=mapOpen(m.id),b=open?Math.min(mapBest(m.id),w):0;
   return`<div class="rgt">${ic('trophy',12)}${open?gateTxt(t.gate):'Opens in '+m.name+' (theater '+m.ord+')'}${open?`<em>best ${b}</em>`:''}<i style="width:${Math.round(100*b/w)}%"></i></div>`};
@@ -2601,6 +2631,12 @@ function labStrip(){const b=S.lab,rows=b.q.map(j=>{const ad=labAdBtn(j,true),row
   if(b.slots<LAB_SLOTS_MAX&&rsProg()>CLEAR_W)rows.push(`<button class="labs add" data-gems>${ic('lock',14)}<span>SECOND LAB SLOT</span><b>${ic('gem',13)}${fmtN(LAB_SLOT_GEMS)}</b></button>`);
   return`<div class="lstrip"><div class="eyebrow">LAB · ${b.q.length} OF ${b.slots} ${pl(b.slots,'SLOT')} BUSY</div>${rows.join('')}</div>`}
 const rsSigHtml=t=>{const s=sigText(t.sig);return s?`<div class="rsg">${ic('star',14)}<span>${s}</span></div>`:''};
+// Infantry Kit cards: the squad kit that serves with this tier ("+ SQUAD" with its weapon and signature when this tier brings it)
+function rsRideHtml(r,k){const q=r.rides;if(!q)return'';const own=rsOwned(r.id),have=rsRideHave(r),nu=k>own&&r.t[k].sq>have,t=q.t[k>own?Math.max(have,r.t[k].sq):rsOwned(q.id)],s=nu?sigText(t.sig):'';
+  return`<div class="rsq${nu?' new':''}">${ic('squad',14)}<span><b>${nu?'+ SQUAD':'SQUAD'}</b><span class="n">${t.n}</span>${nu&&t.w?' · '+t.w:''}${s?`<small>${s}</small>`:''}</span></div>`}
+// Fort Walls cards: the fort design a tier builds (the fort's look changes only with these tiers, never with Armory buys)
+function rsLookHtml(r,k){const t=r.t[k];if(!t.look)return'';const nu=k>rsOwned(r.id);
+  return`<div class="rsq${nu?' new':''}">${ic('walls',14)}<span><b>${nu?'+ FORT DESIGN':'FORT DESIGN'}</b>${t.look}</span></div>`}
 // why the next tier is blocked, said once (the wave gate already has its own progress chip)
 function rsWhyHtml(r,k){const own=rsOwned(r.id),t=r.t[k];if(rsNF(r)||k<=own)return'';
   if(k>own+1)return`<div class="rwhy">${ic('lock',13)}<span>Research Tier ${rank(own+2)} first</span></div>`;
@@ -2610,22 +2646,22 @@ function rsBtn(r,k){const st=rsStL(r,k),t=r.t[k];
   if(st==='own')return'<button class="rbt gh" disabled>RESEARCHED</button>';
   if(st==='kit')return'';
   if(st==='lab'){const j=labOf(r.id);return skipBtn(j,'rbt')+labAdBtn(j)}
-  if(st==='ok')return`<button class="rbt go" data-rsbuy="${r.id}">RESEARCH · ${t.cost} RP</button>`;
+  if(st==='ok')return`<button class="rbt go" data-rsbuy="${r.id}">RESEARCH · ${rsCost(r.id,k)} RP</button>`;
   if(k===rsOwned(r.id)+1&&rsWhy(r.id,k)==='Lab busy')return`<button class="rbt" disabled>${labBusyTxt()}</button>`;
-  return k===rsOwned(r.id)+1||rsNF(r)?'<button class="rbt" disabled>LOCKED</button>':`<button class="rbt" disabled>${ic('lock',13)}${t.cost} RP</button>`}
+  return k===rsOwned(r.id)+1||rsNF(r)?'<button class="rbt" disabled>LOCKED</button>':`<button class="rbt" disabled>${ic('lock',13)}${rsCost(r.id,k)} RP</button>`}
 function rsRefit(r){const n=S.rf[r.id]||0,c=refitCost(n),ok=S.rp>=c;return{n,c,ok,tot:Math.pow(REFIT_MUL,n)}}
 function rsHead(r,nar){const k=rsOwned(r.id),t=r.t[k],n=S.rf[r.id]||0,lock=rsLineLock(r),nf=rsNF(r),u=UB[r.u],lw=lockWhy(u);
   return`<div class="rsdh"><div class="hd"><div class="ico">${ic(r.u,26)}</div><div class="rb"><h3>${r.label}${n?`<span class="badge b-own">REFIT MK ${rank(n)}</span>`:''}${nf?'<span class="badge b-nf">NOT FIELDED</span>':''}</h3>`
-    +`<div class="rt">${nf?'Starting kit':'In service'}: <b>${t.n}</b>${t.w?' · '+t.w:''}</div></div></div>`
+    +`<div class="rt">${nf?'Starting kit':'In service'}: <b>${t.n}</b>${t.w?' · '+t.w:''}${r.rides?` · squad: <b>${r.rides.t[rsOwned(r.rides.id)].n}</b>`:''}</div></div></div>`
     +(nar?'':`<div class="stepper" role="group" aria-label="Tiers">${r.t.map((q,i)=>`<button class="stp ${rsStL(r,i)}"${i<k||i>k+1?' disabled':` data-stp="${i}"`} title="Tier ${rank(i+1)}: ${q.n} · ${RS_STL[rsStL(r,i)].toLowerCase()}">${rank(i+1)}</button>`).join('')}</div>`)
     +(lock?`<div class="callout c-lock">${ic('lock',16)}<span>${nf?`Not fielded: buy ${u.name} Lv 1 in the Armory${lw?' ('+lw.replace(/^Needs /,'needs ')+')':''}.`:`Buy ${u.name} Lv 1 in the Armory to start ${r.label} research.`}</span><button class="btn sm" data-goto="${r.u}">OPEN IN ARMORY →</button></div>`:'')+'</div>'}
 function rsCard(r,k){const t=r.t[k],st=rsStL(r,k);
   return`<div class="rtc ${st}" data-k="${k}" style="${rsEraVars(t)}"><div class="rth"><canvas data-th="${r.id}:${k}" width="192" height="192"></canvas></div>`
     +`<div class="rtl2"><span>TIER ${rank(k+1)}</span><span class="badge ${RS_B[st]}">${RS_STL[st]}</span></div><div class="rtn">${t.n}</div>${t.w?`<div class="rtw">${t.w}</div>`:''}`
-    +rsStats(r,k)+rsSigHtml(t)+(st==='lab'?labBar(labOf(r.id)):'')+(st==='lk'?rsGate(t)+rsWhyHtml(r,k):'')+rsBtn(r,k)+'</div>'}
+    +rsStats(r,k)+rsSigHtml(t)+rsRideHtml(r,k)+rsLookHtml(r,k)+(st==='lab'?labBar(labOf(r.id)):'')+(st==='lk'?rsGate(t)+rsWhyHtml(r,k):'')+rsBtn(r,k)+'</div>'}
 function rsRefitCard(r){const{n,c,ok,tot}=rsRefit(r),t=r.t[r.t.length-1],j=labOf(r.id),busy=!j&&!labFree();
   return`<div class="rtc rfc${j?' lab':''}" data-k="rf" style="${rsEraVars(t)}"><div class="rth"><canvas data-th="${r.id}:${r.t.length-1}" width="192" height="192"></canvas></div>`
-    +`<div class="rtl2"><span>REFIT MK ${rank(j?j.k:n+1)}</span><span class="badge ${j?'b-lab':'b-own'}">${j?'RESEARCHING':'ENDLESS'}</span></div><div class="rtn">Field Refit</div><div class="rtw">Depot rebuild of every ${t.n}</div>`
+    +`<div class="rtl2"><span>REFIT MK ${rank(j?j.k:n+1)}</span><span class="badge ${j?'b-lab':'b-own'}">${j?'RESEARCHING':'ENDLESS'}</span></div><div class="rtn">Field Refit</div><div class="rtw">Depot rebuild of every ${t.n}${r.rides?' and '+r.rides.t[r.rides.t.length-1].n:''}</div>`
     +`<div class="rts"><span>${r.id==='walls'?'WALL HP':'DMG'} <b>+8%</b></span><span>NOW <b>×${fxm(tot)}</b></span>${j?'':`<span class="tm">LAB <b>${durTxt(refitMs(n))}</b></span>`}</div>`
     +(j?labBar(j)+skipBtn(j,'rbt')+labAdBtn(j):busy?`<button class="rbt" disabled>${labBusyTxt()}</button>`:`<button class="rbt ${ok?'rf':''}" ${ok?`data-rsbuy="${r.id}"`:'disabled'}>${ok?'REFIT · '+c+' RP':'NEED '+(c-S.rp)+' MORE RP'}</button>`)+'</div>'}
 // in service vs the next tier (fills the space under the track on desktop)
@@ -2633,16 +2669,18 @@ function rsCompare(r){if(rsNF(r)||rsDone(r.id))return'';const o=rsOwned(r.id),a=
   const tl=(k,v)=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`,ar='<span class="ar">→</span>';
   return`<div class="rcmp"><div class="eyebrow">COMPARE · IN SERVICE VS TIER ${rank(o+2)}</div><div class="cg">`
     +tl(w,`×${fxm(a.mul)}${ar}×${fxm(b.mul)}<em>×${fxm(x)}</em>`)+tl('ARMOR PIERCING',`${pct(a.pen||0)}${ar}${pct(b.pen||0)}`)
-    +(r.id==='dmg'?tl('HP',`×${fxm(a.hp||1)}${ar}×${fxm(b.hp||1)}`):'')+tl('COST',`${b.cost} RP`)+'</div>'+rsSigHtml(b)+'</div>'}
+    +(r.id==='dmg'?tl('HP',`×${fxm(a.hp||1)}${ar}×${fxm(b.hp||1)}`):'')
+    +(r.rides?(()=>{const q=r.rides.t,h=rsRideHave(r),qa=q[rsOwned(r.rides.id)].mul,qb=q[Math.max(h,b.sq)].mul;return tl('SQUAD DMG',`×${fxm(qa)}${ar}×${fxm(qb)}${qb>qa?`<em>×${fxm(qb/qa)}</em>`:''}`)})():'')
+    +tl('COST',`${rsCost(r.id,o+1)} RP`)+'</div>'+rsSigHtml(b)+rsRideHtml(r,o+1)+rsLookHtml(r,o+1)+'</div>'}
 function rsCta(r){const own=rsOwned(r.id);
   if(rsLineLock(r)){const nf=rsNF(r);return`<button class="rsgo nf" data-goto="${r.u}"><span class="l1">${ic('lock',14)}${nf?'NOT FIELDED':'TIER '+rank(own+2)+' LOCKED'}</span><span class="l2">${nf?'OPEN ARMORY →':'BUY '+UB[r.u].name.toUpperCase()+' LV 1 IN THE ARMORY →'}</span></button>`}
   const j=labOf(r.id);if(j)return skipBtn(j,'rsgo');
   if(rsDone(r.id)){const f=rsRefit(r);if(!labFree())return`<button class="rsgo" disabled><span class="l1">REFIT MK ${rank(f.n+1)}</span><span class="l2">${labBusyTxt()}</span></button>`;
     return`<button class="rsgo${f.ok?' rf':''}"${f.ok?` data-rsbuy="${r.id}"`:' disabled'}><span class="l1">REFIT MK ${rank(f.n+1)}</span><span class="l2">${f.ok?f.c+' RP · '+durTxt(refitMs(f.n)).toUpperCase():'NEED '+(f.c-S.rp)+' MORE RP'}</span></button>`}
-  const k=own+1,t=r.t[k],w=rsWhy(r.id,k);
-  if(!w)return`<button class="rsgo go" data-rsbuy="${r.id}" aria-label="Research ${t.n}, tier ${rank(k+1)}, ${t.cost} RP, ${durTxt(t.ms)}"><span class="l1"><span class="t">${t.n.toUpperCase()}</span></span><span class="l2">RESEARCH · ${t.cost} RP · ${durTxt(t.ms).toUpperCase()}</span></button>`;
+  const k=own+1,t=r.t[k],w=rsWhy(r.id,k),p=rsPrice(r.id,k);
+  if(!w)return`<button class="rsgo go" data-rsbuy="${r.id}" aria-label="Research ${t.n}, tier ${rank(k+1)}, ${p.rp} RP, ${durTxt(p.ms)}"><span class="l1"><span class="t">${t.n.toUpperCase()}</span></span><span class="l2">RESEARCH · ${p.rp} RP · ${durTxt(p.ms).toUpperCase()}</span></button>`;
   if(w==='Lab busy')return`<button class="rsgo" disabled><span class="l1"><span class="t">${t.n.toUpperCase()}</span></span><span class="l2">${labBusyTxt()}</span></button>`;
-  if(rsProg()>=t.gate)return`<button class="rsgo" disabled><span class="l1"><span class="t">${t.n.toUpperCase()}</span></span><span class="l2">NEED ${t.cost-S.rp} MORE RP</span></button>`;
+  if(rsProg()>=t.gate)return`<button class="rsgo" disabled><span class="l1"><span class="t">${t.n.toUpperCase()}</span></span><span class="l2">NEED ${p.rp-S.rp} MORE RP</span></button>`;
   return`<button class="rsgo" disabled><span class="l1">${ic('lock',14)}TIER ${rank(k+1)} LOCKED</span><span class="l2">${w.toUpperCase()}</span></button>`}
 const rsVis=q=>!!labOf(q.id)||rsOpenNext(q);   // owner decision 4: open next tier (an RP shortfall or a busy lab still shows), or a job in the lab
 function renderResearch(){const nar=rsNarrow(),vis=RLINES.lines.filter(rsVis),r0=rsLine(),r=vis.includes(r0)||!vis.length?r0:vis[0],el=$('rd');
@@ -2658,8 +2696,8 @@ function renderResearch(){const nar=rsNarrow(),vis=RLINES.lines.filter(rsVis),r0
     h+=rsHead(r,true)+'<div class="rtls">'+r.t.map((t,k)=>{if(k<own||k>own+1)return'';const st=rsStL(r,k),on=k===sel;
       return`<div class="rtr ${st}${on?' sel':''}" data-k="${k}" style="${rsEraVars(t)}"><button data-rst="${k}" aria-expanded="${on}"><span class="mth"><canvas data-th="${r.id}:${k}" width="92" height="92"></canvas></span>`
         +`<span class="rb"><span class="rtn">${t.n}</span><span class="rtl2">TIER ${rank(k+1)} <span class="badge ${RS_B[st]}">${RS_STL[st]}</span></span></span>`
-        +`<span class="rc">${st==='own'||st==='act'||st==='kit'?ic('star',16):st==='lab'?(on?ic('research',16):`<span data-left="${r.id}">${durTxt(labLeft(labOf(r.id)))}</span>`):t.cost+' RP'}</span></button>`
-        +(on?`<div class="rtx">${t.w?`<div class="rtw">${t.w}</div>`:''}${rsStats(r,k)}${rsSigHtml(t)}${st==='lab'?labBar(labOf(r.id))+labAdBtn(labOf(r.id)):''}${st==='lk'?rsGate(t)+rsWhyHtml(r,k):''}</div>`:'')+'</div>'}).join('')
+        +`<span class="rc">${st==='own'||st==='act'||st==='kit'?ic('star',16):st==='lab'?(on?ic('research',16):`<span data-left="${r.id}">${durTxt(labLeft(labOf(r.id)))}</span>`):rsCost(r.id,k)+' RP'}</span></button>`
+        +(on?`<div class="rtx">${t.w?`<div class="rtw">${t.w}</div>`:''}${rsStats(r,k)}${rsSigHtml(t)}${rsRideHtml(r,k)}${rsLookHtml(r,k)}${st==='lab'?labBar(labOf(r.id))+labAdBtn(labOf(r.id)):''}${st==='lk'?rsGate(t)+rsWhyHtml(r,k):''}</div>`:'')+'</div>'}).join('')
       +(rsDone(r.id)?`<div class="rtr" data-k="rf" style="${rsEraVars(r.t[r.t.length-1])}"><button disabled><span class="mth">${ic('repair',22)}</span><span class="rb"><span class="rtn">Refit Mk ${rank(rsRefit(r).n+1)}</span><span class="rtl2">ENDLESS · +8% ${r.id==='walls'?'WALL HP':'DMG'} EACH</span></span><span class="rc">${rsRefit(r).c} RP</span></button></div>`:'')+'</div>';
     h+=rsCta(r)}
   else{h+='<div class="rsb"><nav class="rsl" aria-label="Research lines">'+(vis.length?'':`<div class="rsl-empty">${ic('lock',18)}<b>No lines open yet</b><span>Hold deeper waves and field new units in the Armory to open research lines.</span></div>`)+CATS.slice(1).filter(c=>vis.some(q=>UB[q.u].cat===c)).map(c=>`<h4>${c}</h4>`+vis.filter(q=>UB[q.u].cat===c).map(q=>{const lk=rsNF(q);
@@ -2749,7 +2787,7 @@ if('IntersectionObserver' in window)new IntersectionObserver(es=>{for(const x of
 let _nar=narrow();addEventListener('resize',()=>{if(!$('home').classList.contains('on'))return;if(narrow()!==_nar){_nar=narrow();renderHome()}else if(homeView==='armory')catMask()});
 // ---------------- lab ticker, finish-now, gems sheet ----------------
 // land finished research with a toast (renderHome runs this first, so the Base/R&D screens never show a finished job as running)
-function labLand(){const got=labTick();for(const n of got)toast((n.rf?'Refit complete: ':'Research complete: ')+labName(n),'research','rd');return got.length}
+function labLand(){const got=labTick();for(const n of got)toast(n.id==='walls'&&!n.rf?'Fort redesigned: '+labName(n)+' · rebuilt for your next deployment':(n.rf?'Refit complete: ':'Research complete: ')+labName(n),'research','rd');return got.length}
 // every second on the home screen: land finished jobs (full re-render), else just move the countdowns, bars and gem prices
 function labUi(){if(running||!S.lab.q.length||!$('home').classList.contains('on'))return;if(labLand()){renderHome();return}
   for(const j of S.lab.q){const l=durTxt(labLeft(j)),w=(100*labPct(j)).toFixed(1)+'%';
@@ -3228,7 +3266,7 @@ function startRun(){
   G={wave:startWaveOk()-1,spawnLeft:0,spawnT:0,spawnInt:1,breakT:2,breakMax:2,enemies:[],fx:[],parts:[],floats:[],shells:[],bombs:[],planes:[],mines:[],crates:[],
     hp:hpAt(L('hp')),maxHp:hpAt(L('hp')),wallMax:wallMaxAt(L('walls')),wallHp:wallMaxAt(L('walls')),sold,kills:0,earned:0,time:0,shake:0,
     zoomV:vision()*0.3,artyT:3,airT:0,airArmed:false,nadeT:0,nadeArmed:false,nades:[],rapidT:0,crateT:10,banner:'',bannerT:0,hurtT:0,breached:false,pk:{},choosing:null,perkAt:0,startBest:S.best,threat:{},breachW:0,ev:null,evLast:0,evPrev:null,evN:0,fogK:0,drops:[],transports:[],vq:[],eshots:[],vwrecks:[]};
-  labTick();G.rs=Object.assign({},S.rs);G.rf=Object.assign({},S.rf);G.rp=0;G.cleared=0;G.rsNew=rsFieldNew();   // research is frozen for the whole run
+  labTick();G.rs=Object.assign({},S.rs);G.rf=Object.assign({},S.rf);G.rp=0;G.cleared=0;G.rsNew=rsFieldNew();fortUpInit();   // research is frozen for the whole run
   {const w0=startWaveOk();G.startWave=w0;if(w0>1){G.cp={i:0,n:Math.min(8,Math.floor(w0/10))};G.perkAt=0.5;medalMax('cp',1)}}
   G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=speedOpts().filter(v=>v<=(S.set.lastSpeed||1)).pop()||1;syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;initLogi();
   pfSync();skyInit();sigInit();fcInit();syncPrioBtn();syncNadeBtn(true);$('hud').classList.toggle('air',L('air')>0);
@@ -4038,7 +4076,7 @@ function drawCIWS(u,flash){if(tierOf('tesla')){ciwsLo(u,flash,tierOf('tesla'));r
 function drawUnits(){
   if(S.set.gfx==='high'){drawUnitsHQ();return}
   const ph=wallHalfAt(L('walls'));
-  if(L('walls')>=2)for(let k=0;k<14;k++){if(k===10||k===11)continue;const a=k/14*Math.PI*2,x=Math.cos(a)*11,y=Math.sin(a)*11;ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/2);box(-2.6,-1.8,5.2,3.6,'#8a7650');ctx.strokeStyle='#3a2f1c';ctx.lineWidth=.5;ctx.strokeRect(-2.6,-1.8,5.2,3.6);ctx.restore()}
+  if(L('walls'))for(let k=0;k<14;k++){if(k===10||k===11)continue;const a=k/14*Math.PI*2,x=Math.cos(a)*11,y=Math.sin(a)*11;ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/2);box(-2.6,-1.8,5.2,3.6,'#8a7650');ctx.strokeStyle='#3a2f1c';ctx.lineWidth=.5;ctx.strokeRect(-2.6,-1.8,5.2,3.6);ctx.restore()}
   if(L('flame')&&L('walls')&&tierOf('flame'))flameLo(ph,tierOf('flame'));
   else if(L('flame')&&L('walls'))for(const a of [-Math.PI/2,0,Math.PI]){const x=Math.cos(a)*ph,y=Math.sin(a)*ph;ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.scale(1.6,1.6);box(-4,-4.5,8,9,'#3b3e40');box(-4,-4.5,8,1,'#5a5e60');ell(-2,0,2.4,2.4,'#7a1f10');ell(-2.6,-0.6,.8,.8,'#c0503a');box(2,-1.2,6,2.4,'#222');box(7.5,-1.6,1.5,3.2,'#111');if(G.flameT>0.05&&Math.random()<.5)ell(10,0,2.4,1.5,'#ffb13b');ctx.restore()}
   for(const u of G.units){
@@ -6685,7 +6723,7 @@ const flmSpr0=px=>hqBake('flm',px*1.6,13,12,5,6,()=>{
     hqCyl(-4,-4.2,3,2.6,'#7a1f10');hqCyl(-4,1.6,3,2.6,'#7a1f10');box(-2.9,-4.2,.5,2.6,'#e0b030');box(-2.9,1.6,.5,2.6,'#e0b030');limb(-1,-2.9,1.6,-.6,.35,'#1a1a1a');limb(-1,2.9,1.6,.6,.35,'#1a1a1a');
     hqBar(1.8,-1.2,6,2.4,'#2a2a2a');hqCyl(4.2,-1.5,1.6,3,'#3a3a3a');box(7.4,-1.6,1.6,3.2,'#111');ell(8.6,0,.4,.4,'#ff8a2a')});
 function drawUnitsHQ(){const px=hqPx(),ph=wallHalfAt(L('walls'));
-  if(L('walls')>=2){const r=hqBake('cbag',px,28,28,14,14,()=>hqBagRing(11,14,3.4,k=>k===10||k===11));hqShadow(r,.8,1.1,.45);hqDraw(r)}
+  if(L('walls')){const r=hqBake('cbag',px,28,28,14,14,()=>hqBagRing(11,14,3.4,k=>k===10||k===11));hqShadow(r,.8,1.1,.45);hqDraw(r)}
   if(L('flame')&&L('walls'))drawFlameHQ(px);
   for(const u of G.units){const flash=G.time-(u.fl||-9)<0.05;
     if(u.k==='turret')drawMGNestHQ(u,px,flash);
@@ -7781,8 +7819,22 @@ function mineSpriteT(t){if(!t)return mineSprite();if(_mineT[t])return _mineT[t];
     else if(t===4){hqDome(0,0,3,3,'#2c3035',.3,-.5);ctx.strokeStyle=acc;ctx.lineWidth=.35;ctx.beginPath();ctx.arc(0,0,2.2,0,7);ctx.stroke();limb(0,0,2.6,-2.8,.22,'#15171a');ell(2.6,-2.8,.3,.3,acc)}
     else{for(const a of[.785,2.356,3.927,5.498]){limb(0,0,Math.cos(a)*3,Math.sin(a)*3,.5,'#2a2d31');ell(Math.cos(a)*3,Math.sin(a)*3,1.4,1.4,'rgba(60,66,72,.4)')}hqRR(-1.5,-1.1,3,2.2,.5,'#3b3f44');ell(1,0,.4,.4,acc)}}
   finally{ctx=m}return _mineT[t]=c}
+// "Fort upgraded": the first deployment after a Fort Walls tier landed (a new fort design, S.fortSeen = the last design deployed with
+// walls standing) sweeps a band of light across the rebuilt walls and towers and names the design over the north wall (G.fortUp).
+const FORT_UP_T0=0.5,FORT_UP_DUR=2.6;
+function fortUpInit(){G.fortUp=0;if(!L('walls'))return;const d=G.rs.walls|0,s=S.fortSeen;S.fortSeen=d;save();if(s!=null&&d>s)G.fortUp=G.time+FORT_UP_T0}
+function fortSweep(ph,wlv){const u=(G.time-G.fortUp)/FORT_UP_DUR;if(u<0)return;if(u>1||!G.wallHp){G.fortUp=0;return}
+  const T=wallThickAt(wlv),ts=T*1.05+2,o=ph+ts,e=Math.sin(Math.PI*u),rnd=wallMat(fortDes())==='stone',p=ringPath(ph+T/2,ph-T/2);   // clip = walls + towers (round on the block design)
+  for(const[cx,cy]of[[-ph,-ph],[ph,-ph],[ph,ph],[-ph,ph]]){p.moveTo(cx+ts,cy);if(rnd)p.arc(cx,cy,ts,0,TAU);else p.rect(cx-ts,cy-ts,2*ts,2*ts)}
+  const b=(-1.35+2.7*u)*o,g=ctx.createLinearGradient(b-o*.3,b-o*.3,b+o*.3,b+o*.3);g.addColorStop(0,'rgba(150,215,255,0)');g.addColorStop(.5,`rgba(215,242,255,${(.75*e).toFixed(3)})`);g.addColorStop(1,'rgba(150,215,255,0)');
+  ctx.save();ctx.clip(p);ctx.globalCompositeOperation='lighter';ctx.fillStyle=g;ctx.fillRect(-o,-o,2*o,2*o);ctx.fillStyle=`rgba(120,190,255,${(.12*e).toFixed(3)})`;ctx.fillRect(-o,-o,2*o,2*o);ctx.restore();
+  // the label: a dark pill over the north wall, constant screen size (14 px) at any zoom
+  const a=Math.min(1,e*2.4),f=14/sc,n=RLINES.walls.t[fortDes()].n.toUpperCase(),y=-o-f*1.9;ctx.save();ctx.globalAlpha=a;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font=`800 ${f}px Oxanium,sans-serif`;const w=Math.max(ctx.measureText(n).width,ctx.measureText('FORT UPGRADED').width*.78)+f*1.6;
+  ctx.fillStyle='rgba(9,14,19,.78)';ctx.beginPath();ctx.roundRect(-w/2,y-f*1.25,w,f*2.5,f*.5);ctx.fill();ctx.strokeStyle='rgba(150,215,255,.55)';ctx.lineWidth=1/sc;ctx.stroke();
+  ctx.fillStyle='#eaf6ff';ctx.fillText(n,0,y+f*.45);ctx.font=`800 ${f*.72}px Oxanium,sans-serif`;ctx.fillStyle='#8fd0ff';ctx.fillText('FORT UPGRADED',0,y-f*.55);ctx.restore()}
 // wall research overlay on the finished rampart ring (square, half-size ph, thickness T): joints, rebar caps, tiles, APS boxes, seams, shimmer
-function drawWallTier(ph,wlv){const t=tierOf('walls');if(!t||!G.wallHp)return;const T=wallThickAt(wlv),o=ph+T/2,inn=ph-T/2,e=eraOf('walls',t),acc=ERA_ACC[e];
+function drawWallTier(ph,wlv){if(G.fortUp)fortSweep(ph,wlv);const t=tierOf('walls');if(!t||!G.wallHp)return;const T=wallThickAt(wlv),o=ph+T/2,inn=ph-T/2,e=eraOf('walls',t),acc=ERA_ACC[e];
   const key=t+'|'+ph+'|'+T;let P=_wallP[0]===key?_wallP[1]:null;
   if(!P){P=new Path2D();const step=t===3?T/2:t===4?Math.max(14,T*1.6):6;for(let s=0;s<4;s++)for(let d=-o+step/2;d<o;d+=step){const pts=[[d,-o,d,-inn],[o,d,inn,d],[d,o,d,inn],[-o,d,-inn,d]][s];
       if(t===1||t===3){P.moveTo(pts[0],pts[1]);P.lineTo(pts[2],pts[3])}if(t===2||t===4){const cx=pts[0]+(pts[2]-pts[0])*.15,cy=pts[1]+(pts[3]-pts[1])*.15,r=t===4?Math.max(1.4,T*.16):Math.max(.5,T*.06);P.moveTo(cx+r,cy);P.rect(cx-r,cy-r,2*r,2*r)}}
@@ -7801,8 +7853,7 @@ let _wallP=[null,null];
 const _thumbG={time:.35,units:[],air:[],aa:[],sold:[],fleet:[],missiles:[],nukes:[],jets:[],tshells:[],mines:[],nades:[],bombs:[],shells:[],gun:null,flashT:0,fighterT:0,wallHp:1,wallMax:1};
 // [world span across the square, x offset of the unit, painter]
 const THUMB={
-  dmg:[30,-3,t=>drawSoldierHQ({x:0,y:0,ang:0,main:true,alt:false})],
-  squad:[34,-3,t=>{if(KIT_ALT[t]){drawSoldierHQ({x:0,y:-7,ang:0,alt:false});drawSoldierHQ({x:-2,y:7,ang:0,alt:true})}else drawSoldierHQ({x:0,y:0,ang:0,alt:false})}],
+  dmg:[36,-2,t=>{drawSoldierHQ({x:-8,y:7,ang:0,alt:!!KIT_ALT[tierOf('squad')]});drawSoldierHQ({x:1,y:-3,ang:0,main:true,alt:false})}],   // Infantry Kit: the commander leads, a squad member at the matching tier behind
   turret:[40,-7,t=>drawMGNestHQ({x:0,y:0,ang:0},hqPx(),false)],
   tank:[70,-3,t=>{drawTankHQ(0,0,0,-.55,0,9,US.tank,hqPx(),tankOpt(t));if(t===5)drawDrones(0,0,2,5,26,.8)}],
   sniper:[40,-3,t=>drawSniperHQ({x:0,y:0,ang:-.3},hqPx(),false),1],
@@ -7821,11 +7872,11 @@ const THUMB={
   gunship:[190,2,t=>drawGunshipHQ({x:0,y:0,ang:-.5},hqPx())],
   nade:[12,0,t=>{ctx.rotate(.5);if(t)nadeArt(t);else{ell(0,0,2.4,2.1,'#4b5a2a');box(-0.8,-3.2,1.6,1.3,'#2a2e22');box(0.6,-3,2.2,0.6,'#8c8f86')}}],
   mines:[13,0,t=>ctx.drawImage(mineSpriteT(t),-6,-6,12,12)],
-  walls:[42,0,t=>{const ph=14,T=wallThickAt(2),o=ph+T/2,i=ph-T/2;ctx.fillStyle=t?t>=5?'#5d6064':'#8d8a80':'#a08c64';ctx.beginPath();ctx.rect(-o,-o,2*o,2*o);ctx.rect(-i,-i,2*i,2*i);ctx.fill('evenodd');
-    ctx.strokeStyle='rgba(0,0,0,.45)';ctx.lineWidth=.4;ctx.stroke();ell(0,0,i-1,i-1,'#4a4a3a');drawWallTier(ph,2)}]};
+  walls:[66,0,t=>{const ph=16,wl=3,m=ctx.getTransform(),ppu=Math.hypot(m.a,m.b),mat=wallMat(t),rn=rng(4242+t*17);   // the real fort bake at design tier t
+    bakeFloor(ctx,ppu,ph,mat,rn);bakeWalls(ctx,ppu,ph,t,mat,wallThickAt(wl),rn,[]);drawWallTier(ph,wl)}]};
 function drawTierThumb(line,tier,c,size){const th=THUMB[line];if(!c||!th||!TIER_G[line])return;
   const t=Math.max(0,Math.min(TIER_G[line].length-1,tier|0)),m=ctx,g0=G,hq=HQ,ov=_tierOv;
-  ctx=c;G=_thumbG;HQ=true;_tierOv={[line]:t};c.save();c.beginPath();c.rect(0,0,size,size);c.clip();
+  ctx=c;G=_thumbG;HQ=true;const hr=RLINES[line];_tierOv={[line]:t};if(hr&&hr.rides)_tierOv[hr.rides.id]=hr.t[t].sq;c.save();c.beginPath();c.rect(0,0,size,size);c.clip();
   try{const k=size/(th[0]*(th[3]?bS():1));c.translate(size/2,size/2);c.scale(k,k);c.translate(th[1],0);th[2](t)}
   finally{c.restore();ctx=m;G=g0;HQ=hq;_tierOv=ov;_thumbG.units=[];_thumbG.air=[];_thumbG.aa=[];_thumbG.gun=null}}
 // ================= /HIGH-DETAIL SPRITES =================
@@ -8756,7 +8807,7 @@ function grainCv(){if(_grain)return _grain;const[k,x]=mkCv(256,256),im=x.createI
 let _ter=null;
 const roadX=(y,fh)=>Math.sin(y*0.009+0.4)*22*Math.min(1,Math.max(0,y-fh)/90);
 function terrainBake(){
-  const V=vision(),wl=L('walls'),wi=L('wire'),th=mapCur(),fk=tFootK(th.id),key=V+'|'+wl+'|'+wi+'|'+th.id+(fk?'|'+fk:'');if(_ter&&_ter.key===key)return _ter;   // the theater sets palette + layout seed
+  const V=vision(),wl=L('walls'),wi=L('wire'),th=mapCur(),fk=tFootK(th.id),key=V+'|'+wl+'|'+wi+(wi?'d'+fortDes():'')+'|'+th.id+(fk?'|'+fk:'');if(_ter&&_ter.key===key)return _ter;   // the theater sets palette + layout seed
   const GR=th.ground,R=V*1.18+30,ppu=Math.min(7,2560/(2*R)),N=Math.ceil(2*R*ppu),[c,x]=mkCv(N,N),rn=rng(th.seed),fh=wl?wallHalfAt(wl)+wallThickAt(wl)/2:PLAT,
     wr=wi?fortHalf()+wallThick()/2+wireOut():0,keep=Math.max(fh+12,wr+10);
   const TL=TLOOK[th.id],TG=TL?tGeo(th.id,V,keep,fk):null,mf=TL&&TL.macro?TL.macro(TG):null,_mc=[0,0,0,0,1];   // theater look (none for Desert Outpost)
@@ -9297,9 +9348,10 @@ function drawPrecip(){const T=tLook();if(!T||!T.precip)return;const P=T.precip,s
 // Concertina: two staggered coil rows on steel pickets. Each loop of the helix reads from above as an ellipse across the coil axis;
 // loops overlap heavily so the row reads as a tangle, with a soft cast shadow (the coil stands ~1m tall) and sparse glints.
 // Concertina: each row is one continuous looped coil (prolate cycloid) along the four sides, so it reads as coiled wire, not a band.
-// Tier look: L1 one coil, L2-3 two coils side by side, L4+ a triple stack (two base coils + a brighter top coil). Pickets every ~20u.
-function bakeWire(x,ppu,r,rn){const wl=L('wire'),lw=Math.max(0.3,1.1/ppu),rows=wl>=4?[[-3,0],[3,0],[0,1]]:wl>=2?[[-2.6,0],[2.6,0]]:[[0,0]],
-    posts=new Path2D(),tens=new Path2D(),glint=new Path2D(),sp=wl>=3?16:20;
+// Design follows the fort (fortDes, Fort Walls research), never the Wire level (that only sets the ring's distance and the slow):
+// T0 one coil, T1 two coils side by side, T2 pickets every 16u instead of 20u, T3+ a triple stack (two base coils + a brighter top coil).
+function bakeWire(x,ppu,r,rn){const d=fortDes(),lw=Math.max(0.3,1.1/ppu),rows=d>=3?[[-3,0],[3,0],[0,1]]:d>=1?[[-2.6,0],[2.6,0]]:[[0,0]],
+    posts=new Path2D(),tens=new Path2D(),glint=new Path2D(),sp=d>=2?16:20;
   const coilPath=(off,top)=>{const q=new Path2D(),rr=r+off,pitch=top?3.2:2.8,ra=top?2.6:2.2,rc0=top?3.1:2.7,dt=0.45;
     for(let s=0;s<4;s++){const ph=rn()*TAU;let first=true,rc=rc0,tg=rc0,sk=0,sg=0;
       for(let th=0;;th+=dt){if(th%TAU<dt){tg=rc0*(0.75+rn()*0.5);sg=(rn()-.5)*1.4}rc+=(tg-rc)*0.35;sk+=(sg-sk)*0.3;
@@ -9329,15 +9381,16 @@ function sideRect(s,ph,a0,a1,d0,d1){return s===0?[a0,-ph-d1,a1-a0,d1-d0]:s===1?[
 const sidePt=(s,ph,a,d)=>s===0?[a,-ph-d]:s===1?[ph+d,a]:s===2?[a,ph+d]:[-ph-d,a];
 function bevel(x,r,col,b,hi=0.22,sh=0.34){const[X,Y,W,H]=r;x.fillStyle=col;x.fillRect(X,Y,W,H);b=Math.min(b,W/3,H/3);
   x.fillStyle=`rgba(255,238,205,${hi})`;x.fillRect(X,Y,W,b);x.fillRect(X,Y+b,b,H-b);x.fillStyle=`rgba(10,8,5,${sh})`;x.fillRect(X+b,Y+H-b,W-b,b);x.fillRect(X+W-b,Y+b,b,H-2*b)}
+// The Armory level (wlv) only sizes the fort (half-size ph, wall thickness T); the look (material, height, seed) is the design tier d.
 function fortBake(ph,wlv,up){
-  const tier=wlv?wallTier(wlv):'wood',T=wlv?wallThickAt(wlv):0,h=T/2,o=ph+h,E=ph+T+16,ppu=Math.max(2,Math.min(12,2048/(2*E),scrPPU(vision()*0.55)*1.2)),
-    key=[ph,wlv,up,Math.round(ppu*4)].join('|');if(_fort&&_fort.key===key)return _fort;
-  const N=Math.ceil(2*E*ppu),[c,x]=mkCv(N,N),rn=rng(4242+wlv*17),cracks=[];x.setTransform(ppu,0,0,ppu,N/2,N/2);x.lineCap='round';x.lineJoin='round';
+  const d=fortDes(),tier=wlv?wallMat(d):'wood',T=wlv?wallThickAt(wlv):0,h=T/2,o=ph+h,E=ph+T+16,ppu=Math.max(2,Math.min(12,2048/(2*E),scrPPU(vision()*0.55)*1.2)),
+    key=[ph,wlv,d,up,Math.round(ppu*4)].join('|');if(_fort&&_fort.key===key)return _fort;
+  const N=Math.ceil(2*E*ppu),[c,x]=mkCv(N,N),rn=rng(4242+d*17),cracks=[];x.setTransform(ppu,0,0,ppu,N/2,N/2);x.lineCap='round';x.lineJoin='round';
   if(!wlv){const deck=new Path2D();deck.rect(-ph,-ph,2*ph,2*ph);shadowFill(x,ppu,deck,0.9,0.9,1,0.6)}
-  bakeFloor(x,ppu,ph,tier,rn,wlv);
-  if(wlv)(up?bakeWalls:bakeRubble)(x,ppu,ph,wlv,tier,T,rn,cracks);
-  return _fort={key,c,E,cracks,ck:-1,cp:null}}
-function bakeFloor(x,ppu,ph,tier,rn,wlv){const w=2*ph,px=1/ppu;x.save();x.beginPath();x.rect(-ph,-ph,w,w);x.clip();
+  bakeFloor(x,ppu,ph,tier,rn);
+  if(wlv)(up?bakeWalls:bakeRubble)(x,ppu,ph,d,tier,T,rn,cracks);
+  return _fort={key,c,E,cracks,ck:-1,cp:null,mat:tier}}
+function bakeFloor(x,ppu,ph,tier,rn){const w=2*ph,px=1/ppu;x.save();x.beginPath();x.rect(-ph,-ph,w,w);x.clip();
   if(tier==='wood'){x.fillStyle='#5e4a30';x.fillRect(-ph,-ph,w,w);const pw=2.4;
     for(let cx=-ph;cx<ph;cx+=pw)for(let y=-ph-rn()*14;y<ph;){const l=8+rn()*14,k=0.82+rn()*0.3;x.fillStyle=rgb([122,96,62],k);x.fillRect(cx+0.12,y+0.12,pw-0.24,l-0.24);
       x.fillStyle='rgba(255,230,180,.08)';x.fillRect(cx+0.12,y+0.12,0.35,l-0.24);x.strokeStyle=`rgba(60,40,22,${0.18+rn()*0.15})`;x.lineWidth=Math.max(0.1,0.5*px);x.beginPath();
@@ -9354,6 +9407,7 @@ function bakeFloor(x,ppu,ph,tier,rn,wlv){const w=2*ph,px=1/ppu;x.save();x.beginP
     for(let i=0;i<w*w/900;i++){const sx=-ph+rn()*w,sy=-ph+rn()*w,r=1.2+rn()*3,g=x.createRadialGradient(sx,sy,0,sx,sy,r);g.addColorStop(0,'rgba(20,18,14,.35)');g.addColorStop(1,'rgba(20,18,14,0)');x.fillStyle=g;x.beginPath();x.ellipse(sx,sy,r,r*0.7,rn()*3,0,TAU);x.fill()}
     x.strokeStyle='rgba(214,170,52,.5)';x.lineWidth=1;x.setLineDash([4,3]);x.strokeRect(-ph*0.6,-ph*0.6,ph*1.2,ph*1.2);x.setLineDash([]);
     x.fillStyle='rgba(214,170,52,.55)';for(let k=-7;k<7;k+=2.4){x.beginPath();x.moveTo(k,ph-3.2);x.lineTo(k+1.2,ph-3.2);x.lineTo(k+2.4,ph-6.4);x.lineTo(k+1.2,ph-6.4);x.fill()}
+    // yard fittings appear once they fit (a size rule, not a design step): the helipad needs ph 60, the pallets ph 40
     if(ph>=60){const hx=-ph*0.55,hy=-ph*0.55;x.strokeStyle='rgba(230,230,220,.35)';x.lineWidth=0.9;x.beginPath();x.arc(hx,hy,11,0,TAU);x.stroke();x.fillStyle='rgba(230,230,220,.35)';x.fillRect(hx-4,hy-5,1.6,10);x.fillRect(hx+2.4,hy-5,1.6,10);x.fillRect(hx-2.4,hy-0.8,4.8,1.6)}
     for(const[dx,dy]of[[-0.3,0.3],[0.3,0.3],[0.3,-0.3]]){const gx=dx*ph*2,gy=dy*ph*2;x.fillStyle='#34383a';x.fillRect(gx-1.6,gy-1.6,3.2,3.2);x.fillStyle='#1a1d1e';for(let k=-1.2;k<1.3;k+=0.8)x.fillRect(gx-1.2,gy+k-0.15,2.4,0.3)}
     if(ph>=40)for(const[sx,sy]of[[1,-1],[-1,1],[1,1]])bakePallet(x,ppu,sx*(ph-10),sy*(ph-10),rn)}
@@ -9366,8 +9420,8 @@ function bakePallet(x,ppu,cx,cy,rn){const p=new Path2D();p.rect(cx-4,cy-4,8,8);s
   for(const[bx,by,bw,bh]of[[-3.6,-3.6,3.4,3.4],[0.2,-3.6,3.4,3.4],[-3.6,0.2,3.4,3.4]])bevel(x,[cx+bx,cy+by,bw,bh],rn()<.5?'#556040':'#4b5438',0.4,0.25,0.4);
   x.fillStyle='rgba(196,150,60,.8)';x.fillRect(cx-4,cy-0.9,8,0.5);x.fillRect(cx-0.9,cy-4,0.5,8)}
 function wallPieces(ph,T,step,gateW){const h=T/2,out=[];for(let s=0;s<4;s++){let i=0;for(let a=-ph;a<ph-0.01;a+=step,i++){const w=Math.min(step,ph-a),m=a+w/2;if(s===2&&Math.abs(m)<gateW)continue;out.push({s,i,a,w,m})}}return out}
-function bakeWalls(x,ppu,ph,wlv,tier,T,rn,cracks){
-  const h=T/2,o=ph+h,sh=1.4+wlv*0.3,ts=T*1.05+2,px=1/ppu,body=new Path2D();body.addPath(ringPath(o,ph-h));
+function bakeWalls(x,ppu,ph,d,tier,T,rn,cracks){
+  const h=T/2,o=ph+h,sh=wallRise(d),ts=T*1.05+2,px=1/ppu,body=new Path2D();body.addPath(ringPath(o,ph-h));
   const corners=[[-ph,-ph],[ph,-ph],[ph,ph],[-ph,ph]],tower=new Path2D();for(const[cx,cy]of corners){tower.moveTo(cx+ts,cy);tier==='stone'?tower.arc(cx,cy,ts,0,TAU):tower.rect(cx-ts,cy-ts,ts*2,ts*2)}
   shadowFill(x,ppu,body,sh,sh,sh*0.7,0.55);shadowFill(x,ppu,tower,sh*1.5,sh*1.5,sh,0.55);
   if(tier==='wood'){const st=T*0.66,rl=st*0.5;
@@ -9416,7 +9470,7 @@ function bakeTower(x,ppu,cx,cy,ts,tier,rn){
     x.fillStyle='#16191a';for(const[a,b,w,hh]of[[-s,-0.5,s*0.28,1],[s*0.72,-0.5,s*0.28,1],[-0.5,-s,1,s*0.28],[-0.5,s*0.72,1,s*0.28]])x.fillRect(cx+a,cy+b,w,hh);
     bevel(x,[cx-2.2,cy-2.2,4.4,4.4],'#5c6264',0.4,0.3,0.4);x.fillStyle='#2e3436';x.beginPath();x.arc(cx+s*0.4,cy-s*0.4,0.9,0,TAU);x.fill();
     x.strokeStyle='#2e3436';x.lineWidth=0.25;x.beginPath();x.moveTo(cx+s*0.4,cy-s*0.4);x.lineTo(cx+s*0.4+2.2,cy-s*0.4-2.2);x.stroke()}}
-function bakeRubble(x,ppu,ph,wlv,tier,T,rn){const h=T/2,P=WPAL[tier],chunks=[],all=new Path2D();
+function bakeRubble(x,ppu,ph,d,tier,T,rn){const h=T/2,P=WPAL[tier],chunks=[],all=new Path2D();
   const add=(cx,cy,sz)=>{const p=new Path2D(),n=4+(rn()*3|0),a0=rn()*TAU;for(let i=0;i<n;i++){const a=a0+i/n*TAU,r=sz*(0.6+rn()*0.5);i?p.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r):p.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r)}p.closePath();chunks.push([p,cx,cy,sz]);all.addPath(p)};
   for(let s=0;s<4;s++){x.fillStyle='rgba(22,18,14,.5)';x.fillRect(...sideRect(s,ph,-ph,ph,-h*1.3,h*1.5));
     for(let a=-ph;a<ph;a+=0.7+rn()*1.1){if(s===2&&Math.abs(a)<8)continue;for(let k=rn()<.6?1:2;k--;){const[X,Y]=sidePt(s,ph,a,(rn()-.5)*T*1.9);add(X,Y,0.35+rn()*rn()*T*0.32)}}}
@@ -9429,7 +9483,7 @@ function drawFortHi(ph,wlv){const up=!wlv||G.wallHp>0,f=fortBake(ph,wlv,up);ctx.
 function drawWallsHi(ph,wlv){const up=G.wallHp>0,f=_fort;
   if(up&&f&&f.cracks.length){const hk=G.wallMax?Math.max(0,G.wallHp/G.wallMax):0,ck=Math.round(hk*40);
     if(ck!==f.ck){f.ck=ck;const p=new Path2D();for(const c of f.cracks)if(c.d>hk+0.3){if(c.k==='char'){p.moveTo(c.x+c.r,c.y);p.arc(c.x,c.y,c.r,0,TAU)}else{p.moveTo(...c.pts[0]);for(let i=1;i<c.pts.length;i++)p.lineTo(...c.pts[i])}}f.cp=p}
-    if(wallTier(wlv)==='wood'){ctx.fillStyle='rgba(24,16,10,.62)';ctx.fill(f.cp)}else{ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='rgba(18,14,10,.85)';ctx.lineWidth=0.55;ctx.stroke(f.cp);
+    if(f.mat==='wood'){ctx.fillStyle='rgba(24,16,10,.62)';ctx.fill(f.cp)}else{ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='rgba(18,14,10,.85)';ctx.lineWidth=0.55;ctx.stroke(f.cp);
       ctx.save();ctx.translate(0.3,0.3);ctx.strokeStyle='rgba(255,240,215,.25)';ctx.lineWidth=0.3;ctx.stroke(f.cp);ctx.restore()}}
   if(!up){const T=wallThickAt(wlv),o=ph+T/2,inn=ph-T/2;ctx.fillStyle='rgba(255,60,40,.08)';ctx.beginPath();ctx.rect(-o,-o,o*2,o*2);ctx.rect(-inn,-inn,inn*2,inn*2);ctx.fill('evenodd')}}
 // ---- sprites: half-buried AT mine, airdropped supply crate ------------------------------------------------------
@@ -9548,25 +9602,33 @@ const WPAL={
   wood:{top:'#8b6a3e',side:'#4a3620',line:'#2a1d10',hi:'#b08a55',floor:'#6b5a3a',floorLine:'#54462c'},
   stone:{top:'#8f8b80',side:'#4d4a43',line:'#2d2b27',hi:'#bdb9ac',floor:'#6f6a5e',floorLine:'#5a564c'},
   concrete:{top:'#9ea4a4',side:'#51575b',line:'#2a2f32',hi:'#d0d6d7',floor:'#5f6466',floorLine:'#50555a'}};
-const wallTier=l=>l<=3?'wood':l<=6?'stone':'concrete';
+// ---- fort design: the fort's LOOK is research, its SIZE is gameplay ----
+// Owner rule: the fort looks the same through every Armory buy and changes design only when a Fort Walls research tier lands. Armory
+// levels move gameplay geometry only (half-size wallHalfAt, thickness wallThickAt, the wire ring wireOut) and stats. The design tier
+// (fortDes = the Fort Walls tier: the run's snapshot while deployed, the saved one at the base) picks the material (T0 timber palisade,
+// T1 precast blocks, T2+ poured concrete), the wall height (shadow reach), the texture seed, the concertina (bakeWire) and the tier overlays
+// (drawWallTier). Every fort bake is keyed on it, so a landed tier shows the new design the next time the fort is drawn.
+const fortDes=()=>tierOf('walls');
+const wallMat=d=>d<1?'wood':d<2?'stone':'concrete';
+const wallRise=(d,lo)=>lo?(d<2?3.75+0.75*d:5.3+0.15*(d-2)):(d<2?2.3+0.9*d:4.1+0.2*(d-2));   // wall height as shadow reach: High bake / Medium-Low
 const hash=(a,b)=>{const x=Math.sin(a*12.9898+b*78.233)*43758.5453;return x-Math.floor(x)};
 // Medium/Low: floor + walls + towers (+ their ground shadow) are static between wall-state changes, so they are baked together
-// (stSpr) keyed by layout, walls up/down and the set of cracked segments; drawWalls() then has nothing left to draw this frame.
+// (stSpr) keyed by layout, design, walls up/down and the set of cracked segments; drawWalls() then has nothing left to draw this frame.
 let _fortLo=false;
 function drawFloor(ph,wlv){
   if(hiGfx())return drawFortHi(ph,wlv);
-  _fortLo=false;const m=ctx.getTransform(),up=wlv&&G.wallHp>0;let key=ph+'|'+wlv+'|'+(up?1:0),E=ph+1;
-  if(wlv){const T=wallThickAt(wlv),tier=wallTier(wlv);E=ph+T/2+T*1.05+2+3+wlv*0.25+4;
+  const d=fortDes();_fortLo=false;const m=ctx.getTransform(),up=wlv&&G.wallHp>0;let key=ph+'|'+wlv+'|'+d+'|'+(up?1:0),E=ph+1;
+  if(wlv){const T=wallThickAt(wlv),tier=wallMat(d);E=ph+T/2+T*1.05+2+wallRise(d,1)+4;
     if(up){const hk=G.wallMax?Math.max(0,G.wallHp/G.wallMax):0,th=hk+(tier==='wood'?0.35:0.3),st=tier==='wood'?T*0.62:tier==='stone'?7:12,n=Math.ceil(ph*2/st)+1;let c=0;
       for(let q=0;q<4;q++)for(let i=0;i<n;i++)if(hash(i,q)>th)c++;key+='|'+c}}   // cracks / scorched stakes appear per segment as hash > hp + margin: the count names the set
   const f=stSpr('fortLo',key,Math.hypot(m.a,m.b),-E,-E,2*E,2*E,()=>{floorLo(ph,wlv);if(wlv)wallsLo(ph,wlv)});
   if(f){stDraw(f);_fortLo=!!wlv;return}floorLo(ph,wlv)}
-function floorLo(ph,wlv){
-  const P=WPAL[wallTier(Math.max(1,wlv))];ctx.fillStyle=P.floor;ctx.fillRect(-ph,-ph,ph*2,ph*2);
+function floorLo(ph,wlv){const mat=wlv?wallMat(fortDes()):'wood';
+  const P=WPAL[mat];ctx.fillStyle=P.floor;ctx.fillRect(-ph,-ph,ph*2,ph*2);
   ctx.strokeStyle=P.floorLine;ctx.lineWidth=0.8;
-  if(!wlv||wallTier(wlv)==='wood'){for(let i=-ph;i<ph;i+=6){ctx.beginPath();ctx.moveTo(i,-ph);ctx.lineTo(i,ph);ctx.stroke()}
+  if(mat==='wood'){for(let i=-ph;i<ph;i+=6){ctx.beginPath();ctx.moveTo(i,-ph);ctx.lineTo(i,ph);ctx.stroke()}
     for(let i=-ph,r=0;i<ph;i+=6,r++)for(let j=-ph+(r%3)*7;j<ph;j+=21){ctx.beginPath();ctx.moveTo(i,j);ctx.lineTo(i+6,j);ctx.stroke()}}
-  else if(wallTier(wlv)==='stone'){for(let j=-ph,r=0;j<ph;j+=9,r++){ctx.beginPath();ctx.moveTo(-ph,j);ctx.lineTo(ph,j);ctx.stroke();
+  else if(mat==='stone'){for(let j=-ph,r=0;j<ph;j+=9,r++){ctx.beginPath();ctx.moveTo(-ph,j);ctx.lineTo(ph,j);ctx.stroke();
     for(let i=-ph+(r%2)*6;i<ph;i+=12){ctx.beginPath();ctx.moveTo(i,j);ctx.lineTo(i,j+9);ctx.stroke()}}}
   else{for(let i=-ph;i<=ph;i+=16){ctx.beginPath();ctx.moveTo(i,-ph);ctx.lineTo(i,ph);ctx.moveTo(-ph,i);ctx.lineTo(ph,i);ctx.stroke()}
     ctx.strokeStyle='rgba(227,181,60,.35)';ctx.lineWidth=1.2;ctx.setLineDash([4,4]);ctx.strokeRect(-ph*0.6,-ph*0.6,ph*1.2,ph*1.2);ctx.setLineDash([])}
@@ -9578,10 +9640,10 @@ function drawWalls(ph,wlv){
   if(hiGfx())return drawWallsHi(ph,wlv);
   if(_fortLo)return;wallsLo(ph,wlv)}
 function wallsLo(ph,wlv){
-  const tier=wallTier(wlv),P=WPAL[tier],up=G.wallHp>0,hk=G.wallMax?Math.max(0,G.wallHp/G.wallMax):0;
+  const d=fortDes(),tier=wallMat(d),P=WPAL[tier],up=G.wallHp>0,hk=G.wallMax?Math.max(0,G.wallHp/G.wallMax):0;
   const T=wallThickAt(wlv),h=T/2,o=ph+h,inn=ph-h;
   // cast shadow on the ground (fake height, light from top-left)
-  const sh=up?3+wlv*0.25:1.5;ctx.fillStyle='rgba(0,0,0,.38)';ctx.beginPath();ctx.rect(-o+sh,-o+sh,o*2,o*2);ctx.rect(-inn+sh,-inn+sh,inn*2,inn*2);ctx.fill('evenodd');
+  const sh=up?wallRise(d,1):1.5;ctx.fillStyle='rgba(0,0,0,.38)';ctx.beginPath();ctx.rect(-o+sh,-o+sh,o*2,o*2);ctx.rect(-inn+sh,-inn+sh,inn*2,inn*2);ctx.fill('evenodd');
   for(let s=0;s<4;s++){ctx.save();ctx.rotate(s*Math.PI/2);
     const len=ph*2,gate=s===2;
     if(tier==='wood'){const st=T*0.62;let i=0;
