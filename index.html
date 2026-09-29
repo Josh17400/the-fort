@@ -1648,7 +1648,7 @@ const U=[
  {id:'tank',from:6,late:1,wave:15,need:[["walls", 5], ["apc", 1], ["vision", 7]],cat:'HEAVY ARMOR',name:'Tank Platoon',max:0,cost:1800,g:1.9,desc:'Tanks patrol outside the walls firing explosive shells.',val:l=>l?Math.min(3,Math.ceil(l/2))+' '+pl(Math.min(3,Math.ceil(l/2)),'tank')+' · '+f1(tankDmg(l))+' dmg':'none'},
  {id:'depot',wave:6,need:[["truck", 1], ["vision", 5]],cat:'LOGISTICS',name:'Fuel Depot',max:1,cost:900,g:1,desc:'A fuel farm beyond the vehicle lanes. Vehicles and aircraft refuel here far faster than from field cans, several at once. Enemies will try to torch it: if it burns, nothing refuels for the rest of the run.',val:l=>l?depotSlots(L('dcap'))+' bays · '+depotRefuelT(L('dcap')).toFixed(0)+'s full tank':'field cans · '+FIELD_T+'s full tank'},
  {id:'dcap',wave:8,need:[["depot", 1]],cat:'LOGISTICS',name:'Pump Capacity',max:0,cost:450,g:1.6,desc:'High-flow pumps and extra fueling bays at the depot.',val:l=>depotSlots(l)+' bays · '+depotRefuelT(l).toFixed(1)+'s full tank'},
- {id:'darmor',late:1,wave:8,need:[["depot", 1]],cat:'LOGISTICS',name:'Depot Hardening',max:0,cost:500,g:1.6,desc:'Blast berms and armored tanks. The depot soaks up far more punishment.',val:l=>f1(depotHpAt(l))+' depot HP'},
+ {id:'darmor',late:1,wave:8,need:[["depot", 1]],cat:'LOGISTICS',name:'Depot Hardening',max:0,cost:500,g:1.6,desc:'Blast berms and armored tanks: the depot and the repair yards get tougher every level, about 8x at this theater\'s cap. Raiders, car bombs and mortar crews go after them, and a burnt-out structure stays lost for the run.',val:l=>f1(depotHpAt(l))+' depot HP'},
  {id:'ddef',late:1,wave:10,need:[["depot", 1], ["turret", 1]],cat:'LOGISTICS',name:'Depot Defenses',max:0,cost:900,g:1.7,desc:'Sandbag walls cut damage to the depot and MG nests guard its corners. From Lv 3 a 40mm AA gun joins them.',val:l=>l?Math.min(4,l)+' MG · '+f1(dMgDmg(l))+' dmg'+(l>=3?' · AA '+f1(dAaDmg(l)):''):'undefended'},
  {id:'feff',wave:8,need:[["truck", 2]],cat:'LOGISTICS',name:'Fuel Efficiency',max:10,cost:400,g:1.65,desc:'Tuned engines and disciplined crews. Vehicles and aircraft burn less fuel and stay in the fight longer.',val:l=>'-'+pct(1-burnMul(l))+' fuel burn'},
  {id:'rfac',wave:12,need:[["truck", 2]],cat:'LOGISTICS',name:'Repair Facility',max:10,cost:1500,g:1.7,desc:'A motor pool beyond the western lanes. Recovery trucks tow wrecked vehicles home once the fighting around them dies down, and repair bays rebuild them. Levels add bays, heavier classes and speed; Lv 4 adds a field repair team. Without one, a destroyed vehicle is lost for the run.',val:l=>siteVal('rfac',l)},
@@ -3418,6 +3418,7 @@ function spawn(type,at){if(SKY[type])return spawnSky(type);const d=ET[type],w=G.
     _sx:undefined,_sy:undefined,_top:undefined,_cull:undefined,vtT:undefined,vt:undefined,vp:undefined,fsite:undefined,vbied:undefined,vsn:undefined,mech:undefined,mechT:undefined,mechOf:undefined,mhT:undefined,mhBy:undefined,amph:undefined,lc:undefined,lcT:undefined,hd:undefined,pfB:undefined,pfT:undefined,pfN:undefined,pfF:undefined});
   const e=G.enemies[G.enemies.length-1],T=tw();if(_pf)pfSnap(e,d.veh||d.boss);if(d.boss)trackBoss(e);if(_amph){_amph=false;e.amph=1}   // amphibious carrier: swims in from the sea arc
   if(type==='technical'&&!at&&w>=(T.vbW||VBIED_W)&&R()<(G.ev==='convoy'?0.5:T.vbP||VBIED_P))makeVbied(e);
+  if(!at&&!d.stand)shRaid(e);
   if(d.veh&&!at&&w>=(T.mechW||MECH_W)&&R()<(T.mechP||MECH_P)){const a2=R()*TAU,m=spawn('grunt',{x:e.x+Math.cos(a2)*(e.r+10),y:e.y+Math.sin(a2)*(e.r+10)});m.mech=1;m.mechOf=e;m.rew*=2;G.waveTotal++}   // combat mechanic escorts some vehicles
   return e}
 // VBIED: from VBIED_W some technicals come rigged as car bombs; shot before contact they still go up and hurt nearby hostiles
@@ -3584,11 +3585,11 @@ function standOff(e,spd,dt){const d=Math.hypot(e.x,e.y)||1,want=e.fwd?Math.max(b
   e.atk-=dt;if(e.atk>0)return;e.atk=e.rate*(0.85+Math.random()*0.3);e.shots++;e.fl=G.time;
   if(e.type==='mortar')fireMortar(e);else fireMLRS(e)}
 const cbTrack=()=>0.5*Math.min(6,L('radar'));   // counter-battery: radar holds a launch position this much longer (s)
-function fireMortar(e){const h=blockHalf()*0.85,v=R()<0.3?fcNear(e,520):null,tx=v?v.x+(R()-.5)*18:(R()*2-1)*h,ty=v?v.y+(R()-.5)*18:(R()*2-1)*h;e.rev=1.8+cbTrack();if(pk('cbfire'))G.artyT=Math.min(G.artyT,0.6);if(e.shots>=4)e.fwd=1;
-  G.eshots.push({k:'mortar',x:e.x,y:e.y,tx,ty,t:0,dur:1.35,dmg:e.dmg,src:e.type,h:70,warn:1});
+function fireMortar(e){const h=blockHalf()*0.85,v=R()<0.3?fcNear(e,520):null,sh=v?null:shArty(),tx=v?v.x+(R()-.5)*18:sh?sh.cx+(R()-.5)*30:(R()*2-1)*h,ty=v?v.y+(R()-.5)*18:sh?sh.cy+(R()-.5)*30:(R()*2-1)*h;e.rev=1.8+cbTrack();if(pk('cbfire'))G.artyT=Math.min(G.artyT,0.6);if(e.shots>=4)e.fwd=1;
+  G.eshots.push({k:'mortar',x:e.x,y:e.y,tx,ty,t:0,dur:1.35,dmg:e.dmg,src:e.type,h:70,warn:1,dep:!!sh&&sh===G.depot,site:sh&&sh!==G.depot?sh:null});
   light(e.x,e.y,46,'255,190,110',0.18);puff(e.x,e.y,4,5,1.2,'170,165,150',16,0.5);sfx('mortar',e.x,e.y);sfx('whistle')}
-function fireMLRS(e){const n=Math.min(10,6+Math.floor(Math.max(0,G.wave-22)/5)),v=R()<0.3?fcNear(e,560):null,h=v?40:blockHalf()*0.95,cx=v?v.x:0,cy=v?v.y:0;e.rev=4+cbTrack();if(pk('cbfire'))G.artyT=Math.min(G.artyT,0.6);if(e.shots>=2)e.fwd=1;
-  for(let i=0;i<n;i++)G.eshots.push({k:'mlrs',x:e.x,y:e.y,tx:cx+(R()*2-1)*h,ty:cy+(R()*2-1)*h,t:-1.1-i*0.16,dur:1.1,dmg:e.dmg,src:e.type,h:95,warn:1});   // rings first, then the ripple
+function fireMLRS(e){const n=Math.min(10,6+Math.floor(Math.max(0,G.wave-22)/5)),v=R()<0.3?fcNear(e,560):null,sh=v?null:shArty(),h=v||sh?40:blockHalf()*0.95,cx=v?v.x:sh?sh.cx:0,cy=v?v.y:sh?sh.cy:0,dep=!!sh&&sh===G.depot,site=sh&&sh!==G.depot?sh:null;e.rev=4+cbTrack();if(pk('cbfire'))G.artyT=Math.min(G.artyT,0.6);if(e.shots>=2)e.fwd=1;
+  for(let i=0;i<n;i++)G.eshots.push({k:'mlrs',x:e.x,y:e.y,tx:cx+(R()*2-1)*h,ty:cy+(R()*2-1)*h,t:-1.1-i*0.16,dur:1.1,dmg:e.dmg,src:e.type,h:95,warn:1,dep,site});   // rings first, then the ripple
   sfx('alarm');float(e.x,e.y-e.r-10,'ROCKET SALVO','#ff8a70',12)}
 // APC: once at the wall it drops the ramp and a rifle squad pours out on both flanks, then its turret opens up
 function apcUnload(e){const n=e.load,d=Math.hypot(e.x,e.y)||1,ux=-e.x/d,uy=-e.y/d;e.load=0;e.atk=1.2;
@@ -4220,7 +4221,15 @@ const FIELD_T=40,FUEL_LOW=0.25,AIR_LOW=0.2,RESERVE=0.02;
 const depotRefuelT=l=>Math.max(4,16*Math.pow(0.88,l)),depotSlots=l=>Math.min(4,3+Math.floor(l/4));
 const burnMul=l=>Math.max(0.4,Math.pow(0.92,l));
 const dMgDmg=l=>4.5*Math.pow(1.24,l-1)*late('ddef',l,1.24),dAaDmg=l=>18*Math.pow(1.26,l-1)*late('ddef',l,1.26);
-const depotHpAt=l=>Math.round(Math.max(800,wallMaxAt(L('walls'))*0.9)*Math.pow(1.35,l)*late('darmor',l,1.35));
+// Base structures (fuel depot, motor pool, hangar) are raid targets, not scenery (owner: "way too hard to destroy"). Their HP follows the fort's
+// walls (RAID.hp of the wall max; the motor pool x1.4, the hangar x2) times Depot Hardening at +RAID.hard per Desert-sized level (levels
+// scale to the theater's cap, so the cap is ~x8 everywhere): real but bounded protection (it used to compound x1.35 a level on top of the walls,
+// so a mid-game depot had 40-400x the walls' HP). Fire on them grows with fortPress like fire on the fort; Engineers patch them only after
+// repairHold() without a hit (no free refill between waves); raiders pick one at spawn (RAID.raid by class, from wave RAID.w0, only when their
+// bearing is within RAID.arc of it, so nobody crosses the fort to get there; x RAID.hot on boss waves and hostile events); mortar/rocket crews
+// drop RAID.arty of their volleys on one. Tuned with .qa/t_basehp.js (see handoff "Base structures under raid").
+const RAID={hp:0.18,hard:0.2,hot:2,arty:0.2,arc:0.9,w0:8,warn:0.5,raid:{vbied:0.45,technical:0.22,apc:0.14,ifv:0.14,mbt:0.12,bomber:0.1,rpg:0.1,brute:0.06,shooter:0.05,grunt:0.03,runner:0.03}};
+const hardMul=l=>1+RAID.hard*l*CAPS.darmor[0]/capAt('darmor',mapCur().ord),depotHpAt=l=>Math.round(Math.max(800,wallMaxAt(L('walls'))*RAID.hp)*hardMul(l));
 // seconds of running per full tank (before Fuel Efficiency); each shot costs a little extra
 const TANK_S={truck:75,apc:95,tank:105,jet:65,heli:85},SHOT_FUEL={truck:0.0006,apc:0.002,tank:0.006},LOGI_SPD={truck:50,apc:42,tank:40};
 // compact depot footprint (local units): storage tanks and the tanker east of the pump island, bays to the west
@@ -4249,7 +4258,7 @@ function initLogi(){
   for(const u of G.units)if(u.k==='truck'||u.k==='apc'||u.k==='tank'){u.fuel=0.7+Math.random()*0.3;u.fs='patrol'}
   const fy=H*0.25;G.field={x:H+62,y:fy,ax:H+30,ay:fy,exitF:{},slots:[-16,16].map(o=>({x:H+30,y:fy+o,u:null}))};
   if(L('depot')){const x=H+64,y=-H*0.2,n=depotSlots(L('dcap')),dl=L('ddef'),mx=depotHpAt(L('darmor'));
-    G.depot={x,y,hp:mx,max:mx,dead:false,hitT:0,sfxT:0,smT:0,wave:G.wave,ax:x-16,ay:y,exitF:{},
+    G.depot={x,y,cx:x,cy:y,hp:mx,max:mx,dead:false,hitT:0,fT:-9,warn:0,sfxT:0,smT:0,ax:x-16,ay:y,exitF:{},
       slots:Array.from({length:n},(_,i)=>({x:x-16,y:y+(i-(n-1)/2)*26,u:null})),
       guns:[[-46,-62],[46,62],[46,-62],[-46,62]].slice(0,Math.min(4,dl)).map(([ox,oy])=>({k:'mg',x:x+ox,y:y+oy,ang:Math.atan2(oy,ox),cd:Math.random()}))
         .concat(dl>=3?[{k:'aa',x:x+56,y:y-4,ang:-Math.PI/4,cd:1}]:[])}}
@@ -4340,8 +4349,19 @@ function updateJets(dt){if(G.jets)G.jets.length=0;else G.jets=[];G.jetSfxT-=dt;i
     case'taxiIn':if(j.path.length<2&&G.rwy===j)G.rwy=null;if(jetFollow(j,34,dt)){if(G.rwy===j)G.rwy=null;j.fs='parked'}break}
     if(j.alt>=1)G.jets.push({x:j.x,y:j.y,dx:Math.cos(j.ang),dy:Math.sin(j.ang),t:900/700})}}   // drawAirTop renders fully airborne jets
 // ---- fuel depot
-function hitDepot(d){const D=G.depot,dl=L('ddef');if(!D||D.dead)return;D.hp-=d*(1-(dl?Math.min(0.3,0.1+0.04*dl):0));D.hitT=0.5;
-  if(D.sfxT<=0){D.sfxT=0.5;sfx('wall')}if(D.hp<=0)destroyDepot()}
+function hitDepot(d){const D=G.depot,dl=L('ddef');if(!D||D.dead)return;D.hp-=d*fortPress(G.wave)*(1-(dl?Math.min(0.3,0.1+0.04*dl):0));D.hitT=0.5;D.fT=G.time;
+  if(D.sfxT<=0){D.sfxT=0.5;sfx('wall')}if(D.hp<=0)destroyDepot();else shWarn(D)}
+// ---- base structures under raid (see RAID): live list, spawn-time raider pick, artillery pick, patching, the half-HP warning
+const _shL=[];
+function shLive(){_shL.length=0;for(const s of[G.depot,G.mp,G.hg])if(s&&!s.dead)_shL.push(s);return _shL}
+const shHot=()=>G.wave%10===0||!!(G.ev&&EVENTS[G.ev]&&!EVENTS[G.ev].good);
+function shRaid(e){const p=RAID.raid[e.vbied?'vbied':e.type];if(!p||G.wave<RAID.w0)return;const a=Math.atan2(e.y,e.x);let b=null,bd=RAID.arc;
+  for(const s of shLive()){const q=Math.abs(wrapA(Math.atan2(s.cy,s.cx)-a));if(q<bd){bd=q;b=s}}
+  if(!b||R()>=p*(shHot()?RAID.hot:1))return;if(b===G.depot)e.dep=true;else{e.dep=false;e.fsite=b}}
+function shArty(){const l=shLive();if(!l.length||R()>=RAID.arty)return null;return l[Math.floor(R()*l.length)]}
+function shPatch(s,dt){if(G.time-s.fT>repairHold())s.hp=Math.min(s.max,s.hp+s.max*repairAt(L('repair'))*(1+0.5*pk('sappers'))*dt);if(s.warn&&s.hp>s.max*0.8)s.warn=0}
+function shWarn(s){if(s.warn||s.hp>=s.max*RAID.warn)return;s.warn=1;const dep=s===G.depot;
+  feed((dep?'FUEL DEPOT':s.air?'HANGAR':'MOTOR POOL')+' UNDER ATTACK · '+Math.ceil(s.hp/s.max*100)+'%','255,150,90',dep?'depot':'repair',dep?'DEPOT HIT':s.air?'HANGAR HIT':'MOTOR POOL HIT')}
 function destroyDepot(){const D=G.depot;D.dead=true;D.hp=0;G.depotWarnT=7;for(const s of D.slots)s.u=null;
   explode(D.x+28,D.y-20,80,D.max*0.25);fireball(D.x+28,D.y-36,70,1.4);fireball(D.x+28,D.y-11,70,1.2);ring(D.x,D.y,240,1,'255,200,140',6);
   light(D.x,D.y,420,'255,150,60',1.2);puff(D.x,D.y,30,40,5,'28,24,20',60,0.75);decal(D.x,D.y,'scorch',120);shake(12);sfx('nuke',D.x,D.y)}
@@ -4354,7 +4374,7 @@ function depotEnemy(e,spd,dt){const D=G.depot;if(!D||D.dead||e.air||e.nodep){if(
   if(e.dead)return true;
   if(edge>(e.range||0)+e.r*0.5){if(!(_pf&&pfBlocked(e,D.x,D.y)&&pfStep(e,spd,dt))){e.x+=dx/d*spd*dt;e.y+=dy/d*spd*dt}e.moving=true;e.odo+=spd*dt}
   else{e.moving=false;if(e.load)apcUnload(e);e.atk-=dt;if(e.atk<=0){e.atk=e.rate;
-    if(e.bomb){e.dead=true;explode(e.x,e.y,30,0);hitDepot(e.dmg)}
+    if(e.bomb){e.dead=true;if(e.vbied)vbiedBlast(e);else explode(e.x,e.y,30,0);hitDepot(e.dmg)}
     else if(EFIRE[e.type])EFIRE[e.type](e,e.x+dx/d*(d-40),e.y+dy/d*(d-40),true)
     else if(e.range){const tx=e.x+dx/d*(d-40),ty=e.y+dy/d*(d-40);G.fx.push({k:'tracer',x:e.x,y:e.y,x2:tx,y2:ty,life:0.08,max:0.08,c:e.boss?'#ffd08a':'#ff6a5a',w:e.boss?2.4:1.2});hitDepot(e.dmg)}
     else{hitDepot(e.dmg);e.lunge=0.15}}}
@@ -4366,8 +4386,7 @@ function updateLogi(dt){
   if(D.dead){D.smT-=dt;if(D.smT<=0){D.smT=0.12;const t=DEPOT_FIRE[Math.floor(Math.random()*3)];
       puff(D.x+t[0],D.y+t[1],1,12,4,'22,20,18',10,0.65);if(Math.random()<.5)spark(D.x+t[0],D.y+t[1],2,40,['#ffb04a','#ff7a1a'],0.8,1.2);light(D.x+t[0],D.y+t[1],70,'255,120,40',0.2)}return}
   D.hitT-=dt;D.sfxT-=dt;
-  if(D.wave!==G.wave){D.wave=G.wave;D.hp=Math.min(D.max,D.hp+D.max*0.25)}
-  D.hp=Math.min(D.max,D.hp+D.max*repairAt(L('repair'))*dt);
+  shPatch(D,dt);
   const dl=L('ddef');
   for(const gn of D.guns){gn.cd-=dt;const aa=gn.k==='aa';let t=null,bd=aa?210:150;
     for(const e of G.enemies){const dx=e.x-gn.x;if(dx>=bd||dx<=-bd)continue;const dy=e.y-gn.y;if(dy>=bd||dy<=-bd||e.dead||!visible(e))continue;const d=hyp(dx,dy);if(d<bd){bd=d;t=e}}
@@ -4519,8 +4538,8 @@ function fcInit(){G.fw=[];G.crash=[];G._cg=[];G._ca=[];G._vz=[];G.gsAway=[];G.cs
   G.mp=L('rfac')?mkSite('rfac'):null;G.hg=L('hangar')&&L('airstrip')&&L('walls')?mkSite('hangar'):null}
 // Motor pool west of the fort beyond the outer lane (2 x rows grid of bays, queue hardstand north, wreckers south);
 // hangar south-west beside the runway's west end (one column of service pads under an open truss, workshop behind).
-function mkSite(id){const air=id==='hangar',l=L(id),n=bayN(l),H=laneOuter(),mx=Math.round(depotHpAt(L('darmor'))*(air?1.5:1.4));   // bermed yards: tougher than the fuel farm, and Depot Hardening counts
-  const s={id,air,lv:l,hp:mx,max:mx,dead:false,hitT:0,sfxT:0,wave:G.wave,bays:[],q:[],crews:[],guns:[],dl:0};
+function mkSite(id){const air=id==='hangar',l=L(id),n=bayN(l),H=laneOuter(),mx=Math.round(depotHpAt(L('darmor'))*(air?2:1.4));   // bermed yards: tougher than the fuel farm (the hangar's long yard by the runway draws the most raids), and Depot Hardening counts
+  const s={id,air,lv:l,hp:mx,max:mx,dead:false,hitT:0,fT:-9,warn:0,sfxT:0,bays:[],q:[],crews:[],guns:[],dl:0};
   if(!air){const rows=Math.ceil(n/2);s.rows=rows;s.x=-(H+82);s.y=-30;s.hw=58;s.top=-rows*31-74;s.bot=rows*31+44;
     for(let i=0;i<n;i++)s.bays.push({x:s.x+(i%2?-26:26),y:s.y+(Math.floor(i/2)-(rows-1)/2)*62,a:-Math.PI/2,w:null});
     for(let i=0;i<2;i++)s.q.push({x:s.x+(i?-26:26),y:s.y-rows*31-40,a:-Math.PI/2});
@@ -4529,7 +4548,7 @@ function mkSite(id){const air=id==='hangar',l=L(id),n=bayN(l),H=laneOuter(),mx=M
     for(let i=0;i<n;i++)s.bays.push({x:s.x+12,y:s.y+(i-(n-1)/2)*64,a:0,w:null});
     s.q.push({x:s.x+12,y:s.y-n*32-38,a:0});
     const nc=Math.min(2,1+Math.floor(l/4));for(let i=0;i<nc;i++){const hx=s.x+20-i*30,hy=s.y+n*32+22;s.crews.push({i,x:hx,y:hy,hx,hy,ang:-Math.PI/2,st:'home',w:null,path:null,t:0,tr:0})}}
-  s.rect={x0:s.x-s.hw,y0:s.y+s.top,x1:s.x+s.hw,y1:s.y+s.bot};s.rad=Math.max(s.hw,(s.bot-s.top)/2);
+  s.rect={x0:s.x-s.hw,y0:s.y+s.top,x1:s.x+s.hw,y1:s.y+s.bot};s.cx=s.x;s.cy=s.y+(s.top+s.bot)/2;s.rad=Math.max(s.hw,(s.bot-s.top)/2);
   const dl=Math.min(2,L('ddef'));s.dl=dl;s.guns=[[s.hw+6,s.top-6],[-s.hw-6,s.bot+6]].slice(0,dl).map(([ox,oy])=>({x:s.x+ox,y:s.y+oy,ang:Math.atan2(oy,ox),cd:R()}));
   return s}
 
@@ -4599,8 +4618,7 @@ function fcFx(o,dt){const r=o.hp/o.max;if(r>=0.6)return;const c=FC[o.ck],k=0.6-r
 const _siteQ=[];
 function siteTick(s,dt){
   if(s.dead){if(R()<dt*6){const x=s.x+(R()-.5)*s.hw*1.4,y=s.y+s.top+R()*(s.bot-s.top);puff(x,y,1,12,4,'22,20,18',10,0.6);if(R()<.4)G.fx.push({k:'fire',x,y,r:10+R()*8,life:0.4,max:0.4})}return}
-  s.hitT-=dt;s.sfxT-=dt;if(s.wave!==G.wave){s.wave=G.wave;s.hp=Math.min(s.max,s.hp+s.max*0.25)}
-  s.hp=Math.min(s.max,s.hp+s.max*repairAt(L('repair'))*dt);
+  s.hitT-=dt;s.sfxT-=dt;shPatch(s,dt);
   for(const gn of s.guns){gn.cd-=dt;let t=null,bd=150;for(const e of G.enemies){if(e.dead)continue;const dx=e.x-gn.x;if(dx>=bd||dx<=-bd)continue;const dy=e.y-gn.y;if(dy>=bd||dy<=-bd||!visible(e))continue;const d=Math.hypot(dx,dy);if(d<bd){bd=d;t=e}}   // box test first: hypot is never below |dx| or |dy|, so the same nearest wins
     if(!t)continue;gn.ang=Math.atan2(t.y-gn.y,t.x-gn.x);if(gn.cd>0)continue;gn.cd=0.2;gn.fl=G.time;
     G.fx.push({k:'tracer',x:gn.x+Math.cos(gn.ang)*10,y:gn.y+Math.sin(gn.ang)*10,x2:t.x+(R()-.5)*5,y2:t.y+(R()-.5)*5,life:0.05,max:0.05,c:'#ffe28a'});_dk='s';hurtEnemy(t,dMgDmg(L('ddef')),false);_dk='';sfx('mg',gn.x,gn.y)}
@@ -4757,12 +4775,12 @@ function siteEnemy(e,spd,dt){if(e.air||e.nodep||!G.fw)return false;let s=e.fsite
   if(e.dead)return true;
   if(d>(e.range||0)+e.r*0.5){if(!(_pf&&pfBlocked(e,cx,cy)&&pfStep(e,spd,dt))){e.x+=dx/d*spd*dt;e.y+=dy/d*spd*dt}e.moving=true;e.odo+=spd*dt}
   else{e.moving=false;if(e.load)apcUnload(e);e.atk-=dt;if(e.atk<=0){e.atk=e.rate;
-    if(e.bomb){e.dead=true;explode(e.x,e.y,30,0);hitSite(s,e.dmg)}
+    if(e.bomb){e.dead=true;if(e.vbied)vbiedBlast(e);else explode(e.x,e.y,30,0);hitSite(s,e.dmg)}
     else if(EFIRE[e.type])EFIRE[e.type](e,cx,cy,s);
     else if(e.range){G.fx.push({k:'tracer',x:e.x,y:e.y,x2:cx,y2:cy,life:0.08,max:0.08,c:e.boss?'#ffd08a':'#ff6a5a',w:e.boss?2.4:1.2});hitSite(s,e.dmg)}
     else{hitSite(s,e.dmg);e.lunge=0.15}}}
   if(e.lunge>0)e.lunge-=dt;return true}
-function hitSite(s,d){if(!s||s.dead)return;s.hp-=d*(1-(s.dl?Math.min(0.3,0.1+0.04*L('ddef')):0));s.hitT=0.5;if(s.sfxT<=0){s.sfxT=0.5;sfx('wall')}if(s.hp<=0)destroySite(s)}
+function hitSite(s,d){if(!s||s.dead)return;s.hp-=d*fortPress(G.wave)*(1-(s.dl?Math.min(0.3,0.1+0.04*L('ddef')):0));s.hitT=0.5;s.fT=G.time;if(s.sfxT<=0){s.sfxT=0.5;sfx('wall')}if(s.hp<=0)destroySite(s);else shWarn(s)}
 function destroySite(s){s.dead=true;s.hp=0;const air=s.air;
   for(const w of G.fw)if(w.site===s&&w.st!=='lost'){if(w.svc){G.fw=G.fw.filter(q=>q!==w);w.o.svc=false;continue}w.st='lost';w.claim=null;w.t=0}
   for(const b of s.bays)b.w=null;s.crews.length=0;
