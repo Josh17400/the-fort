@@ -1200,10 +1200,13 @@ body.rm .adc::before{animation:none}@keyframes adSpin{to{transform:rotate(1turn)
 .gcx{display:flex;align-items:center;gap:12px;margin:0 0 8px;padding:10px 12px;border-radius:12px;background:var(--g-card);border:1px solid var(--c-line);font:500 13px/1.35 var(--f-body);color:var(--c-text)}
 .gcx>.ic{flex:none;color:var(--c-gold-hi)}.gcx>span{min-width:0}.gcx b{font-weight:700;color:var(--c-gold-hi);font-variant-numeric:tabular-nums}.gcx small{display:block;margin-top:2px;font-size:12px;color:var(--c-text-2)}
 .gcg{grid-template-columns:repeat(2,minmax(0,1fr))}
-.gcash{gap:4px;padding-top:20px}.gcash .gw{font:700 11px/1 var(--f-display);letter-spacing:.14em;color:var(--c-text-2)}
+/* cash reads as cash: the section and its buttons are gold, not gem violet */
+.gsx{padding:14px;border-radius:14px;border:1px solid rgba(240,190,70,.38);background:linear-gradient(180deg,rgba(240,190,70,.13),rgba(240,190,70,.03))}
+.gsx .eyebrow{color:var(--c-gold-hi)}.gsx .eyebrow::before{background:var(--c-gold)}
+.gcash{gap:4px;padding-top:20px;border-color:rgba(240,190,70,.3)}.gcash .gp{background:var(--g-gold);color:var(--c-on-gold)}.gcash .gw{font:700 11px/1 var(--f-display);letter-spacing:.14em;color:var(--c-text-2)}
 .gcash .gn{margin:2px 0 1px;font-size:24px;color:var(--c-gold-hi)}.gcash .gb{margin-bottom:4px}
 .gcash.arm{border-color:var(--c-gold-hi)}.gcash.arm .gp{background:var(--g-gold);color:var(--c-on-gold);font-size:12px;letter-spacing:.1em}
-.gcash .gp.short{background:rgba(24,18,36,.94);color:var(--c-gem-hi);border:1px dashed var(--b-gem)}
+.gcash .gp.short{background:rgba(40,30,10,.94);color:var(--c-gold-hi);border:1px dashed var(--c-gold)}
 .gcash .gp .ic{fill:none;margin-right:4px}
 .gcash.off{cursor:default;opacity:.5}.gcash.off:active{transform:none}
 @media (hover:hover){.gcash:not(.off):hover{border-color:var(--c-gold)}}
@@ -2207,7 +2210,7 @@ async function labAd(id){const j=labOf(id);if(!labAdSt(j)||Plat.busy())return 0;
 // Limits: CASH_DAY packs a day across theaters (lab-clock day), never in a run, and only while cash can still buy something here:
 // cashNeed() = every Armory level left up to this theater's caps, minus the bank. A bigger pack shows only while the smaller ones
 // leave something to buy. A rewarded ad pays AD_CASH_W wave of cash once a day (AD_CAP.cash). Cash never touches RP.
-const CASH_PACKS=[{id:'crate',name:'Supply Crate',w:3,g:4},{id:'chest',name:'War Chest',w:10,g:10}],CASH_RUNS=5,CASH_PRIOR=5,CASH_DAY=3,AD_CASH_W=1;
+const CASH_PACKS=[{id:'crate',name:'Supply Crate',w:3,g:15},{id:'chest',name:'War Chest',w:10,g:75}],CASH_RUNS=5,CASH_PRIOR=5,CASH_DAY=3,AD_CASH_W=1;
 const cashHist=id=>{const h=mapRec(id).cw;return Array.isArray(h)?h.filter(e=>Array.isArray(e)&&+e[0]>=0&&+e[1]>=1&&isFinite(+e[0])):[]};
 function cashLog(){if(!G||G.dc)return;const w=G.wave-(G.startWave||1)+1,c=Math.round(G.earned-(G.cpCash||0));if(!(w>=1)||!(c>=0))return;
   const r=mapRec(S.map),h=cashHist(S.map);h.push([c,w]);r.cw=h.slice(-CASH_RUNS)}
@@ -2612,7 +2615,7 @@ function renderArmory(){const rec=new Map(recommend(3).map(p=>[p.u.id,p.why]));
 function cashTop(open){if(!cashLeft())return'';const u=open.filter(u=>!affordable(u)).sort((a,b)=>costOf(a,L(a.id))-costOf(b,L(b.id)))[0];if(!u)return'';
   const gap=costOf(u,L(u.id))-S.bank,p=cashPacks().find(q=>q.n>=gap);if(!p||(S.gems|0)<p.g)return'';
   return`<div class="callout c-cash" data-ctop="${u.id}">${ic('coin',16)}<span>Short <b>$${fmtN(gap)}</b> for <button class="lnk" data-scard="${u.id}">${u.name}</button>? Top up <b>+$${fmtN(p.n)}</b></span>`
-    +`<button class="btn sm gm" data-cashtop="${p.id}" data-n="${p.n}" aria-label="${p.name}: top up $${fmtN(p.n)} for ${p.g} gems">${ic('gem',13)}${p.g}</button></div>`}
+    +`<button class="btn sm pri" data-cashtop="${p.id}" data-n="${p.n}" aria-label="${p.name}: top up $${fmtN(p.n)} for ${p.g} gems">${ic('gem',13)}${p.g}</button></div>`}
 // first tap arms (gold, 3 s), the second pays; the card it was for flashes with its now-affordable UPGRADE button
 function cashTopClick(b){const id=b.dataset.cashtop,p=CASH_PACKS.find(q=>q.id===id),c=b.closest('[data-ctop]'),uid=c&&c.dataset.ctop;if(!p)return;
   if((S.gems|0)<p.g){openGems();return}
