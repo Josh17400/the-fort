@@ -1902,11 +1902,13 @@ const RS_GATE={dmg:[0,1,6,52,158,294,458,616,709,794],squad:[0,1,26,84,186,323,4
 // Capital. Anchors are the values at the start of each theater (and at the campaign's end), interpolated geometrically in between.
 // Prices track the lab's throughput for a daily player (about 4 short jobs a day early, one long one a day late) against RP income
 // (roughly flat per day across theaters), so the runs played while a job runs are what pays for the next one.
-const RS_MIN=[1,45,150,300,450,600,720,900,1080],RS_RP=[20,500,600,750,1000,1250,1500,1800,2100];
+const RS_MIN=[1,120,240,300,450,600,720,900,1080],RS_RP=[20,500,600,750,1000,1250,1500,1800,2100];
 const nice=x=>x<100?Math.max(5,Math.round(x/5)*5):x<1000?Math.round(x/10)*10:Math.round(x/50)*50;
 const gateLerp=(A,g)=>{const i=Math.min(A.length-2,Math.floor(g/CLEAR_W)),f=g/CLEAR_W-i;return A[i]*Math.pow(A[i+1]/A[i],f)};
 const rsCostAt=g=>nice(gateLerp(RS_RP,g));
-const rsMinAt=g=>{const m=gateLerp(RS_MIN,g);return m<10?Math.round(m):m<120?Math.round(m/5)*5:Math.round(m/15)*15};
+// Desert lab times: minutes for the tutorial tiers (gate < 25), then 30 min rising to 60 min by wave 100; Mountain 2 h rising to 4 h
+// (owner: early research should give a reason to come back). From Coastal on the RS_MIN anchors take over.
+const rsMinAt=g=>{const m=g<25?Math.pow(3,g/25):g<CLEAR_W?30*Math.pow(2,(g-25)/(CLEAR_W-25)):gateLerp(RS_MIN,g);return m<10?Math.round(m):m<120?Math.round(m/5)*5:Math.round(m/15)*15};
 // Index by id (RLINES.tank) and give every tier its long-form fields: id, name, weapon, visual, mult, gate, cost, ms (lab time), sig, pen, i.
 // A ride line's tier keeps its own price (cost/ms at its RS_GATE price point) and opens with the first host tier that brings it. A host
 // tier's cost/ms = its own (cc/cm) + the ride tiers it adds over the tier before it: the price on a save that never predates the merge.
@@ -2210,7 +2212,7 @@ async function labAd(id){const j=labOf(id);if(!labAdSt(j)||Plat.busy())return 0;
 // Limits: CASH_DAY packs a day across theaters (lab-clock day), never in a run, and only while cash can still buy something here:
 // cashNeed() = every Armory level left up to this theater's caps, minus the bank. A bigger pack shows only while the smaller ones
 // leave something to buy. A rewarded ad pays AD_CASH_W wave of cash once a day (AD_CAP.cash). Cash never touches RP.
-const CASH_PACKS=[{id:'crate',name:'Supply Crate',w:3,g:15},{id:'chest',name:'War Chest',w:10,g:75}],CASH_RUNS=5,CASH_PRIOR=5,CASH_DAY=3,AD_CASH_W=1;
+const CASH_PACKS=[{id:'crate',name:'Supply Crate',w:3,g:15},{id:'chest',name:'War Chest',w:25,g:75}],CASH_RUNS=5,CASH_PRIOR=5,CASH_DAY=3,AD_CASH_W=1;
 const cashHist=id=>{const h=mapRec(id).cw;return Array.isArray(h)?h.filter(e=>Array.isArray(e)&&+e[0]>=0&&+e[1]>=1&&isFinite(+e[0])):[]};
 function cashLog(){if(!G||G.dc)return;const w=G.wave-(G.startWave||1)+1,c=Math.round(G.earned-(G.cpCash||0));if(!(w>=1)||!(c>=0))return;
   const r=mapRec(S.map),h=cashHist(S.map);h.push([c,w]);r.cw=h.slice(-CASH_RUNS)}
