@@ -1604,7 +1604,7 @@ const dmgAt=l=>10*Math.pow(1.22,l)*late('dmg',l,1.22),
       cdAt=l=>Math.max(0.08,0.65*Math.pow(0.9,l)), visionAt=l=>110+42*l;
 // Late-game pressure (owner playtest: walls became unbreakable and armor took minutes to kill). Past WALL_KNEE each wall level adds
 // x1.3*WALL_SOFT instead of x1.3, enemy fire on the fort grows FORT_PRESS per wave from wave 20, and vehicles lose VEH_THIN of HP per wave from 15.
-const REPAIR_HOLD=3,repairHold=()=>REPAIR_HOLD/(1+pk('sappers')),WALL_KNEE=12,WALL_SOFT=0.95,VEH_THIN=0.965,BOMB_PCT=0.06;
+const REPAIR_HOLD=3,repairHold=()=>REPAIR_HOLD/(1+0.5*pk('sappers')),WALL_KNEE=12,WALL_SOFT=0.95,VEH_THIN=0.965,BOMB_PCT=0.06;
 // fort pressure: from wave FP_W, fire on the fort grows with the gap between enemy HP and enemy damage growth (parity with HP), so walls
 // bought on the curve keep taking real damage instead of shrugging off whole armored columns
 const FP_W=25,FP_EXP=1;let _fpW=-1,_fpV=1;const fortPress=w=>{if(w<=FP_W)return 1;if(w!==_fpW){_fpW=w;_fpV=Math.pow((hpBase(w)/dmgBase(w))/(hpBase(FP_W)/dmgBase(FP_W)),FP_EXP)}return _fpV};   // base curves: the theater ramp is not fort pressure
@@ -1614,11 +1614,17 @@ const artyCd=l=>Math.max(1.2,9*Math.pow(0.88,l-1)), artyDmg=l=>35*Math.pow(1.28,
 const crateEvery=l=>Math.max(8,22*Math.pow(0.9,l)), crateMul=l=>1+0.15*l, crateVal=(w,l)=>money((12+4*w)*crateMul(l)*waveRew(w));
 // Frag grenade: the rifleman's own active ability from wave 1. Damage rides on rifle damage (so it stays relevant) times its own levels.
 const nadeDmg=l=>(dmgAt(L('dmg'))*2.2+22)*Math.pow(1.16,l)*late('nade',l,1.16)*rMult('nade'),nadeR=l=>Math.min(64,36+2*l),nadeCd=l=>Math.max(5,12*Math.pow(0.93,l)),nadeN=l=>1+(l>=5)+(l>=10);
-const mineDmg=l=>45*Math.pow(1.3,l-1)*late('mines',l,1.3)*rMult('mines'), airDmg=l=>60*Math.pow(1.25,l-1)*late('air',l,1.25)*rMult('air'), airCd=l=>Math.max(12,50*Math.pow(0.9,l-1));
+// Air Support levels (owner 2026-10-02): the old damage growth (x1.25 a level, late() past the knee) times an extra x1.03 a level
+// (AIR_DG, compounding); odd levels add a bomb (up to AIR_NMAX), even levels
+// widen every bomb's blast by AIR_RSTEP of the base radius (levels past the bomb cap widen it too), up to AIR_RMAX x the base.
+const AIR_DG=1.03,AIR_NMAX=16,AIR_R0=34,AIR_RSTEP=0.08,AIR_RMAX=2.5,airBombs=l=>Math.min(AIR_NMAX,5+((l+1)>>1)),
+  airRad=l=>AIR_R0*Math.min(AIR_RMAX,1+AIR_RSTEP*((l>>1)+Math.max(0,5+((l+1)>>1)-AIR_NMAX)));
+const mineDmg=l=>45*Math.pow(1.3,l-1)*late('mines',l,1.3)*rMult('mines'), airDmg=l=>60*Math.pow(1.25,l-1)*late('air',l,1.25)*Math.pow(AIR_DG,l-1)*rMult('air'), airCd=l=>Math.max(12,50*Math.pow(0.9,l-1));
 const SUF=['','k','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc'];
 const f1=n=>{if(!isFinite(n))return'∞';if(n<1e4)return n>=100?Math.round(n)+'':(Math.round(n*10)/10)+'';const e=Math.min(SUF.length-1,Math.floor(Math.log10(n)/3));return e===SUF.length-1&&n>=1e36?n.toExponential(2):(n/Math.pow(10,e*3)).toFixed(n/Math.pow(10,e*3)>=100?0:1)+SUF[e]};
 const pct=n=>Math.round(n*100)+'%';
 // max:0 = capped per theater: capSync() fills it in from CAPS (see costOf)
+const WB=0.025;   // War Bonds: +2.5% money per level (owner 2026-10-02, was 15%)
 const U=[
  {id:'dmg',late:1,knee:20,cat:'WEAPONS',name:'Weapon Damage',max:0,cost:15,g:1.33,desc:'Harder-hitting shots for you and your squad, whatever weapon research has put in your hands.',val:l=>f1(dmgAt(l)*rMult('dmg'))+' dmg'},
  {id:'rate',cat:'WEAPONS',name:'Rate of Fire',max:20,cost:20,g:1.3,desc:'Faster trigger work and reloads for you and your squad.',val:l=>(1/cdAt(l)).toFixed(2)+' shots/s'},
@@ -1637,8 +1643,8 @@ const U=[
  {id:'squad',wave:4,need:[["walls", 2]],cat:'SQUAD',name:'Squad',max:0,cost:200,g:1.85,desc:'Another soldier who fights on their own (70% dmg). Their weapon improves with Infantry Kit research.',val:l=>Math.min(8,l)+' extra '+pl(Math.min(8,l),'soldier')+(l>8?' · +'+pct(0.12*(l-8))+' dmg':'')},
  {id:'arty',late:1,wave:6,need:[["walls", 2], ["vision", 3]],cat:'SUPPORT',name:'Artillery',max:0,cost:250,g:1.55,desc:'A gun emplaced in your fort shells the biggest enemy cluster. Starts as a mortar pit; research the M777 Howitzer and HIMARS rocket salvos in R&D.',val:l=>l?f1(artyDmg(l))+' dmg / '+artyCd(l).toFixed(1)+'s':'none'},
  {id:'mines',late:1,wave:3,need:[["vision", 2]],cat:'SUPPORT',name:'Minefield',max:0,cost:120,g:1.55,desc:'Mines are laid at the start of each wave.',val:l=>l?Math.min(30,2*l)+' mines · '+f1(mineDmg(l))+' dmg':'none'},
- {id:'air',late:1,wave:10,need:[["vision", 4]],cat:'SUPPORT',name:'Air Support',max:0,cost:400,g:1.6,desc:'Call a bombing run anywhere (Q, then click).',val:l=>l?Math.min(16,5+l)+' bombs · '+f1(airDmg(l))+' dmg · '+Math.round(airCd(l))+'s cd':'none'},
- {id:'bounty',wave:5,cat:'ECONOMY',name:'War Bonds',max:0,cost:60,g:1.62,desc:'More money per kill and per wave.',val:l=>'+'+pct(l*0.15)+' money'},
+ {id:'air',late:1,wave:10,need:[["vision", 4]],cat:'SUPPORT',name:'Air Support',max:0,cost:400,g:1.6,desc:'Call a bombing run anywhere (Q, then click).',val:l=>l?airBombs(l)+' bombs · '+Math.round(airRad(l))+'m blast · '+f1(airDmg(l))+' dmg · '+Math.round(airCd(l))+'s cd':'none'},
+ {id:'bounty',wave:5,cat:'ECONOMY',name:'War Bonds',max:0,cost:60,g:1.62,desc:'More money per kill and per wave.',val:l=>'+'+(Math.round(l*WB*1000)/10)+'% money'},
  {id:'scav',wave:2,cat:'ECONOMY',name:'Scavengers',max:0,cost:40,g:1.5,desc:'Supply crates drop more often and hold more cash.',val:l=>'every '+Math.round(crateEvery(l))+'s · x'+crateMul(l).toFixed(1)},
 
  {id:'truck',late:1,wave:6,need:[["walls", 3], ["squad", 1], ["vision", 4]],cat:'HEAVY ARMOR',name:'Gun Trucks',max:0,cost:350,g:1.9,desc:'Armed light vehicles patrol around the fort. Your first vehicles; research turns them from pickup technicals into MRAPs and strike vehicles.',val:l=>l?Math.min(3,Math.ceil(l/2))+' '+pl(Math.min(3,Math.ceil(l/2)),'truck')+' · '+f1(truckDmg(l))+' dmg · 5/s':'none'},
@@ -1886,18 +1892,23 @@ const RLINES={currency:'RP',rpCost:'rsCostAt(gate)',refit:{mul:REFIT_MUL,cost:'3
   {n:'Exo Squad',w:'Gauss carbines',g:60,mul:30,pen:0.65,sig:{pierce:[2,0.7]},art:'era4 exoframe'},
   {n:'Directed-Energy Squad',w:'HEL carbines',g:110,mul:36,pen:0.85,sig:{instant:1},art:'era5 beam'}]}]};
 // Campaign gates (see rsProg): RS_GATE[line][tier] = the progress point that opens the tier, (theater-1)*100 + wave. 100 researchable
-// tiers: Desert Outpost 13 (Rifleman at wave 1 for the tutorial), Mountain 12, Coastal 12, City 13, Arctic 12, Jungle 13, Island 13,
-// Capital 12, spread over their waves in the order the original wave gates rolled them out (.qa/gates.js). Vanguard Commander opens at
+// tiers: Desert Outpost 23 (Rifleman at wave 1 for the tutorial), Mountain 10, Coastal 8, City 12, Arctic 9, Jungle 13, Island 13,
+// Capital 12 (was 13/12/12/13/12/13/13/12 before every line's first tier moved early, see below). Vanguard Commander opens at
 // Capital Defense wave 94, so R&D runs out as the campaign ends. Tier 0 is the starting kit.
 // RS_GATE.squad opens nothing: the squad's tiers open with Infantry Kit tiers; its entries are the price points (RP + lab time) each
 // squad tier adds to the Infantry tier that brings it, so the merged line costs what Commander Kit + Squad Kit cost (.qa/rdtot.js).
 // The merge moved Drone-Teamed Squad's price from City (323) into Coastal (Smart-Rifle Operator, 294); F-15EX took its old City slot
 // (286 -> 323) so each theater's RP and lab hours stay where the phase 3 pacing put them.
-const RS_GATE={dmg:[0,1,6,52,158,294,458,616,709,794],squad:[0,1,26,84,186,323,486,716],walls:[0,10,60,165,303,465,623],nade:[0,15,68,172,309,472],
-  mines:[0,20,76,179,316,479],truck:[0,32,92,194,330,494,723],arty:[0,38,103,203,337,503,630],aagun:[0,45,109,209,351,509,637],turret:[0,116,216,358,516,651],
-  sniper:[0,123,223,365,523,730],apc:[0,130,230,372,530,658],air:[0,137,237,379,537,737],tank:[0,151,251,386,551,751],flame:[0,258,394,558,665],
-  sam:[0,265,403,565,758],mlaunch:[0,272,409,572,672],heli:[0,279,416,579,765],fighter:[0,323,423,586,679],tesla:[0,430,594,686,772],
-  silo:[0,437,603,694,779],gunship:[0,451,609,703,786]};
+// Owner 2026-10-02 ("the only thing I've been able to research is the infantry kit"): every line's FIRST tier now opens in the
+// Desert (or Mountain Pass for the three lines whose Armory item opens at wave 30+ of a theater), staggered behind the Armory wave
+// that unlocks the item: grenades 3, walls 5, mines 8, artillery 12, gun trucks 16, AA 20, MG nests 25, sniper 30, APCs 35, air 40,
+// tanks 50, flame 58, missiles 66, SAM 74, helicopters 82, fighters 88; point defense / silo / gunship at Mountain 30/35/40. Tier 2+
+// gates are unchanged. A first tier is priced at its new (earlier) gate: tree 107590 -> 101045 RP, 822.7 -> 774.1 lab hours.
+const RS_GATE={dmg:[0,1,6,52,158,294,458,616,709,794],squad:[0,1,26,84,186,323,486,716],walls:[0,5,60,165,303,465,623],nade:[0,3,68,172,309,472],
+  mines:[0,8,76,179,316,479],truck:[0,16,92,194,330,494,723],arty:[0,12,103,203,337,503,630],aagun:[0,20,109,209,351,509,637],turret:[0,25,216,358,516,651],
+  sniper:[0,30,223,365,523,730],apc:[0,35,230,372,530,658],air:[0,40,237,379,537,737],tank:[0,50,251,386,551,751],flame:[0,58,394,558,665],
+  sam:[0,74,403,565,758],mlaunch:[0,66,409,572,672],heli:[0,82,416,579,765],fighter:[0,88,423,586,679],tesla:[0,130,594,686,772],
+  silo:[0,135,603,694,779],gunship:[0,140,609,703,786]};
 // A tier's RP price and lab time both follow its gate: 20 RP and a minute in the Desert, over a thousand RP and most of a day at the
 // Capital. Anchors are the values at the start of each theater (and at the campaign's end), interpolated geometrically in between.
 // Prices track the lab's throughput for a daily player (about 4 short jobs a day early, one long one a day late) against RP income
@@ -1975,20 +1986,20 @@ function buyResearch(id){if(!labStart(id)){sfx('deny');return false}const r=RLIN
 // ================= LAB (research timers) =================
 // Research takes real time. Starting a tier or a Refit pays its RP and puts it in a lab slot; it lands when its timer ends, even
 // while the app is closed, and like every tier it deploys with the next run. One slot to start; LAB_SLOT_GEMS buys the second.
-// Gems finish a job at once: labSkipCost() rises with the time left, sublinearly, so long jobs cost less per hour skipped.
+// Gems finish a job at once: labSkipCost() is linear in the time left, GEM_PER_H (50) gems an hour = 25 per 30 min, per started minute.
 // Clock safety: timers run on a lab clock (S.lab.t, ms) that advances by Date.now() deltas and never goes backwards. Setting the
 // device clock back never stretches a timer; setting it forward and back again cannot un-finish a job. It starts at Date.now(), so
 // the stored ends are absolute timestamps unless the device clock has ever been set back.
 // S.lab = {t: lab clock, w: last Date.now() seen, slots: 1-2, q: [{id: line, k: tier (or Refit number when rf), rf?: 1, t0, end}],
 // news: [{id, k, rf?}] landed jobs the R&D screen has not shown yet (the nav dot)}.
-const LAB_SLOTS_MAX=2,LAB_SLOT_GEMS=900,GEM_PER_H=10;
+const LAB_SLOTS_MAX=2,LAB_SLOT_GEMS=900,GEM_PER_H=50;   // finish now: 25 gems per 30 min (owner 2026-10-02), per started minute
 function labInit(){const o=S.lab&&typeof S.lab==='object'&&!Array.isArray(S.lab)?S.lab:{},now=Date.now(),num=v=>isFinite(+v)&&+v>0?+v:0;
   const job=j=>j&&typeof j==='object'&&typeof j.id==='string'&&(j.k|0)>0&&isFinite(+j.end)&&isFinite(+j.t0);
   S.lab={t:num(o.t)||now,w:num(o.w)||now,slots:Math.max(1,Math.min(LAB_SLOTS_MAX,o.slots|0)),q:Array.isArray(o.q)?o.q.filter(job):[],news:Array.isArray(o.news)?o.news.filter(j=>j&&typeof j.id==='string').slice(-8):[]}}
 function labNow(){const b=S.lab,w=Date.now();if(w>b.w)b.t+=w-b.w;b.w=w;return b.t}
 const labOf=id=>S.lab.q.find(j=>j.id===id)||null,labFree=()=>Math.max(0,S.lab.slots-S.lab.q.length);
 const labLeft=j=>Math.max(0,j.end-labNow());
-const labSkipCost=ms=>ms>0?Math.max(1,Math.ceil(GEM_PER_H*Math.pow(ms/3600e3,0.8))):0;
+const labSkipCost=ms=>ms>0?Math.max(1,Math.ceil(Math.ceil(ms/60e3)*GEM_PER_H/60-1e-9)):0;   // linear: ceil(started minutes x 25/30), min 1
 // land every finished job (and drop any a restored save made stale); returns the landed jobs. Cheap: callers run it on every render.
 function labTick(){const now=labNow(),out=[];let ch=false;
   for(const j of S.lab.q.slice()){const r=RLINES[j.id],bad=!r||(j.rf?!rsDone(j.id)||(S.rf[j.id]|0)>=j.k:j.k>=r.t.length||rsOwned(j.id)>=j.k);
@@ -2110,7 +2121,7 @@ const Plat=(()=>{let busy=false,booted=null;
 // Desert, ~40 at the Capital), so a full day of dailies is ~15% of one research tier. See handoff "Phase 4" for the campaign impact.
 const DAY_MS=86400e3,DY_RUNS=3,DY_BEST=6,DC_W=25,IA_RUNS=12,IA_DAYS=2,IA_EVERY=3,IA_GAP=4*60e3,IA_RW=3*60e3;
 const DQ_GEM=3,DQ_BONUS_GEM=5,DQ_BONUS_U=2,STREAK=[3,3,5,3,5,8,25],STREAK_U7=2;
-const AD_CAP={x2:3,sw:2,drop:2,reroll:3,gems:1,lab:2,cash:1},AD_GEMS=10,AD_LAB_MS=60*60e3,AD_LAB_MIN=2*60e3;
+const AD_CAP={x2:Infinity,sw:2,drop:2,reroll:3,gems:1,lab:2,cash:1},AD_GEMS=10,AD_LAB_MS=60*60e3,AD_LAB_MIN=2*60e3;   // x2: no daily cap (owner 2026-10-02), still once per campaign run end (lastAAR.x2), never in the challenge
 const SW_GEMS=25,SW_W=6,SW_HP=0.5,SW_WALL=0.5,SW_SHIELD=5,SW_RAPID=8,SW_ASK=10;
 // local calendar day number of a lab-clock time, the current one, and what is left of it
 const dayOf=t=>Math.floor((t-new Date(t).getTimezoneOffset()*60e3)/DAY_MS),today=()=>dayOf(labNow());
@@ -2194,8 +2205,8 @@ function adUse(k){const y=S.dy,d=today();if(y.ads.d!==d)y.ads={d};y.ads[k]=(y.ad
 async function adWatch(k){if(adLeft(k)<=0||Plat.busy())return false;const ok=await Plat.ad(k);if(ok)adUse(k);return ok}
 async function adGems(){if(!(await adWatch('gems')))return false;gemAdd(AD_GEMS,'ad');return true}
 // ---- lab speed-up: a rewarded ad takes AD_LAB_MS off a running research or Refit timer (and finishes it when that much or less is
-// left), AD_CAP.lab a day shared by both slots. AD_LAB_MS = 1 h is worth labSkipCost(1 h) = 10 gems = AD_GEMS, so no placement pays
-// better than another. Hidden with AD_LAB_MIN or less left (the ad would outlast the wait). The job's end moves on the lab clock and
+// left), AD_CAP.lab a day shared by both slots. AD_LAB_MS = 1 h is worth labSkipCost(1 h) = 50 gems (was 10 = AD_GEMS before the 2026-10-02 skip price); the lab ad is now
+// the richest placement (owner kept 1 h). Hidden with AD_LAB_MIN or less left (the ad would outlast the wait). The job's end moves on the lab clock and
 // never below now; labTick/labLand land a finished job as usual, and the job's notification is moved to its new end.
 // labAdSt(j): '' (no button), 'cut' (an hour off) or 'fin' (the ad finishes it). labAd(id) -> ms taken off, 0 when nothing was granted
 // (skipped or failed ad, or the job landed while the ad played: no cap slot is used then).
@@ -2217,7 +2228,7 @@ const cashHist=id=>{const h=mapRec(id).cw;return Array.isArray(h)?h.filter(e=>Ar
 function cashLog(){if(!G||G.dc)return;const w=G.wave-(G.startWave||1)+1,c=Math.round(G.earned-(G.cpCash||0));if(!(w>=1)||!(c>=0))return;
   const r=mapRec(S.map),h=cashHist(S.map);h.push([c,w]);r.cw=h.slice(-CASH_RUNS)}
 function cashModel(){const b=Math.max(5,S.best),w0=Math.min(startWaveOk(),b);let c=0;for(let w=w0;w<=b;w++)c+=CP_KILLX*8*w*waveRew(w);
-  return c/(b-w0+1)*(1+0.15*L('bounty'))*medalMul()}
+  return c/(b-w0+1)*(1+WB*L('bounty'))*medalMul()}
 function cashWave(){let c=0,w=0;for(const e of cashHist(S.map)){c+=+e[0];w+=+e[1]}return(c+CASH_PRIOR*cashModel())/(w+CASH_PRIOR)}
 // round to what fmtN prints, so the amount on the button is exactly the amount paid: $378 · $1,230 · $13.2k · $132k · $1.3M
 const cashRound=v=>{if(!(v>0))return 0;if(v<1e4)return v<1e3?Math.max(1,Math.round(v)):Math.round(v/10)*10;const u=Math.pow(10,3*Math.floor(Math.log10(v)/3)),p=v/u>=100?1:10;return Math.round(v/u*p)*u/p};
@@ -2249,7 +2260,7 @@ function swRevive(){const g=G;g.swUsed=1;g.swAsk=0;g.over=false;running=true;pau
 // dies mid-run); in-run RP, stars and medals are held off, and the lifetime medal tallies and kill count are put back too, so the
 // challenge never pays out anywhere except its own reward (and today's daily missions, which count every run).
 // Reward: the day's best wave pays DC_TIERS once in total (a better run tops it up). Unlimited attempts.
-const DC_MODS=[{id:'hazard',ic:'skull',name:'Hazard Pay',d:'Enemies 25% tougher · everything pays 40% more'},{id:'hot',ic:'threat',name:'Hot Zone',d:'Battlefield events on most waves'},
+const DC_MODS=[{id:'hazard',ic:'skull',name:'Hazard Pay',d:'Enemies 12.5% tougher · everything pays 20% more'},{id:'hot',ic:'threat',name:'Hot Zone',d:'Battlefield events on most waves'},
   {id:'armor',ic:'tank',name:'Armored Push',d:'50% more enemy vehicles'},{id:'lean',ic:'scav',name:'Short Supply',d:'Supply crates drop half as often'}];
 const DC_MB=Object.fromEntries(DC_MODS.map(m=>[m.id,m])),DC_DIRS=['hollow','drill','overwatch','eagle','tungsten','antiarmor','medevac','masons'];
 const DC_KIT={dmg:.45,rate:12,crit:.4,frag:2,nade:8,auto:3,vision:10,walls:.45,armor:5,repair:6,wire:3,hp:.45,medic:.4,squad:.5,arty:.4,mines:.4,air:.3,turret:.4,aagun:.35,truck:.3,scav:.4};
@@ -2313,7 +2324,7 @@ function rpClear(w){G.cleared=(G.cleared||0)+1;if((G.nightK||0)>0.5)medalBump('n
 // paid: their RP, plus their wave-clear bonuses times CP_KILLX (measured on bot runs: kills, crates and events pay about 14x the raw clear bonus).
 const CP_W=[25,50,75],CP_HOLD=5,CP_PAY=0.5,CP_KILLX=14;
 const cpBase=w0=>{let c=0;for(let w=1;w<w0;w++)c+=8*w*waveRew(w);return c*CP_KILLX*CP_PAY};
-const cpCash=w0=>Math.round(cpBase(w0)*(1+0.15*L('bounty'))*medalMul());   // the Base preview: War Bonds + medals, no run directives
+const cpCash=w0=>Math.round(cpBase(w0)*(1+WB*L('bounty'))*medalMul());   // the Base preview: War Bonds + medals, no run directives
 const cpRp=w0=>{let n=0;for(let w=1;w<w0;w++)n+=rpWave(w);return Math.floor(n*CP_PAY)};
 function cpBackPay(){const w0=G.startWave||1;if(w0<=1||G.cpPaid)return;G.cpPaid=1;dqAdd('cp',1);const c=money(cpBase(w0)),n=cpRp(w0);S.bank+=c;G.earned+=c;G.cpCash=c;if(n)rpGain(n);
   feed('CHECKPOINT BACK-PAY · +$'+f1(c)+(n?' · +'+n+' RP':''),'255,207,90','coin','BACK-PAY +$'+f1(c)+(n?' +'+n+' RP':''))}
@@ -3015,7 +3026,7 @@ $('stWin').addEventListener('click',e=>{if(e.target.closest('[data-stx]')){close
   toast(`Day ${r.day} supply · +${r.g} gems${r.rp?' · +'+r.rp+' RP':''}`,'gem','gm');$('stBody').innerHTML=stHtml();setTimeout(closeStreak,1100)});
 // ---- after-action extras: 2x payout (rewarded ad) on campaign runs; the daily challenge's result and reward
 const x2Html=a=>a.x2?`<div class="aar2x done"><span class="adp">${ic('check',20)}</span><span><b>PAYOUT DOUBLED</b><small>Added to the ${mapCur().name} war chest</small></span><em>+$${fmtN(a.earned)}</em></div>`
-  :!a.dc&&a.map===S.map&&a.earned>0&&adLeft('x2')>0?`<button class="aar2x" data-x2><span class="adp">${ic('play',18)}</span><span><b>DOUBLE THE PAYOUT</b><small>Watch an ad · ${adLeft('x2')} left today</small></span><em>+$${fmtN(a.earned)}</em></button>`:'';
+  :!a.dc&&a.map===S.map&&a.earned>0&&adLeft('x2')>0?`<button class="aar2x" data-x2><span class="adp">${ic('play',18)}</span><span><b>DOUBLE THE PAYOUT</b><small>Watch an ad · adds this run's cash again</small></span><em>+$${fmtN(a.earned)}</em></button>`:'';
 function dcResHtml(a){const d=a.dc,g=d.got||{g:0,rp:0},nx=DC_TIERS.find(t=>t[0]>d.best);
   return`<div class="dcres">${ic('gem',20)}<span>${g.g||g.rp?`<b>Challenge reward</b> · <em>+${g.g} gems${g.rp?' · +'+g.rp+' RP':''}</em>`:`<b>Today's best: wave ${d.best}</b> · ${nx?'reach wave '+nx[0]+' for more':'top reward earned'}`}</span></div>`
     +(dcOn()?`<div class="aarb"><button class="btn" data-dcgo>${ic('play',16)}TRY AGAIN</button></div>`:'')}
@@ -3369,7 +3380,7 @@ const wallsUp=()=>L('walls')>0&&G.wallHp>0;
 const blockHalf=()=>wallsUp()?wallHalfAt(L('walls'))+wallThickAt(L('walls'))/2:PLAT;
 // sight(): the live sight line. A sandstorm pulls it in by up to STORM_CUT and night by NIGHT_CUT (ground only: aircraft carry
 // nav lights and radar tracks them); radar still reaches the same distance past the storm line.
-const STORM_CUT=0.27,NIGHT_CUT=0.15,stormSight=()=>vision()*(1-STORM_CUT*(G&&G.fogK||0)),sight=()=>{const T=tw();return stormSight()*(1-NIGHT_CUT*T.nk*(G&&G.nightK||0)*(pk('illum')?0:1))*T.sk};   // Illumination Rounds directive: no night penalty; T = theater twist (rubble, canopy, Island nights)
+const STORM_CUT=0.27,NIGHT_CUT=0.15,stormSight=()=>vision()*(1-STORM_CUT*(G&&G.fogK||0)),sight=()=>{const T=tw();return stormSight()*(1-NIGHT_CUT*T.nk*(G&&G.nightK||0)*(pk('illum')?0.5:1))*T.sk};   // Illumination Rounds directive: no night penalty; T = theater twist (rubble, canopy, Island nights)
 // hyp(x,y) === Math.hypot(x,y), bit for bit: the algorithm V8 and JavaScriptCore both use (scale by the larger magnitude, sum the
 // squares, sqrt, scale back) written out so it inlines instead of calling a builtin that allocates. Hot sim scans use it, so every distance, tie-break and
 // position is exactly what Math.hypot produced. HB: a 1e-12 relative band; a squared distance outside it can't flip a comparison.
@@ -3387,7 +3398,7 @@ const visible=e=>{if(e.rev>0)return true;
   const lim=(e.air?_vsAr:_vsGr)-e.r*0.3,x=e.x,y=e.y;
   if(lim>1e-100&&lim<1e150){const dd=x*x+y*y,l2=lim*lim;if(dd<l2*(2-HB))return true;if(dd>l2*HB)return false}
   return hyp(x,y)<=lim};
-const money=v=>Math.round(v*(1+0.15*L('bounty'))*(1+0.25*pk('salvage')+0.4*pk('hazard'))*medalMul());
+const money=v=>Math.round(v*(1+WB*L('bounty'))*(1+0.125*pk('salvage')+0.2*pk('hazard'))*medalMul());
 
 // Wave scaling. Every stat is exp(curve): its per-wave growth rate starts at d0 (+2b per wave), holds that climb until wave
 // 1+x0, then eases linearly over `ease` waves to a steady late rate dL that never stops. Toughness climbs hardest around
@@ -3472,7 +3483,7 @@ function grabCrate(c){c.life=0;fxCrate(c);dqAdd('crate',1);S.bank+=c.val;G.earne
     if(best){const t=G.airT,a=G.airArmed;callAir(best.x,best.y);G.airT=t;G.airArmed=a;float(c.x,c.y-10,'AIR SUPPORT INBOUND','#ffb870',13)}else float(c.x,c.y-10,'+$'+c.val,'#ffe066',13)}
   else if(c.k==='intel'){let n=0;for(const e of G.enemies)if(!e.dead&&!e.air){e.rev=Math.max(e.rev||0,INTEL_T);n++}float(c.x,c.y-10,'INTEL · '+n+' HOSTILES MARKED','#9cc8ff',13);setTimeout(()=>tone(1320,0.12,'sine',0,0.05),90)}
   else float(c.x,c.y-10,'+$'+c.val,'#ffe066',13)}
-function layMines(){const ml=L('mines');if(!ml)return;const half=fortHalf()+wallThick()/2+wireOut(),n=Math.round(Math.min(30,2*ml)*rMult('mines','count'))*(1+pk('minelayer'));
+function layMines(){const ml=L('mines');if(!ml)return;const half=fortHalf()+wallThick()/2+wireOut(),n=Math.round(Math.min(30,2*ml)*rMult('mines','count')*(1+0.5*pk('minelayer')));
   for(let i=0;i<n&&G.mines.length<n*3;i++){const a=Math.random()*7,r=half+18+Math.random()*(Math.max(50,vision()*0.95-half-18));G.mines.push(pfSnap(landPt({x:Math.cos(a)*r,y:Math.sin(a)*r,blink:Math.random()*3})))}}
 // ---- boss contacts (enemy MBT, heavy gunship): klaxon + WARNING strip on spawn, then a top-of-screen HP bar until it dies
 const BOSS_NAME={boss:'ENEMY MBT',airboss:'HEAVY GUNSHIP'},BOSS_WARN=3,BOSS_FADE=1.6;
@@ -3500,8 +3511,8 @@ function shake(n){if(S.set.shake)G.shake=Math.min(12,G.shake+n)}
 // at 0, penetrators at 0.55; Tungsten Cores adds 0.15 to small arms. Explosive, flame and mine rules are unchanged.
 let _dk='',_pen=0;
 function armMul(e){if(_dk==='m')return e.veh||e.boss?2.2:1;if(!e.arm)return 1;
-  return _dk==='s'?1-e.arm*(1-Math.min(1,_pen+0.15*pk('tungsten'))):_dk==='p'?1-e.arm*(1-Math.max(0.55,_pen)):_dk==='f'?(1-e.arm)*0.5:1}
-function hurtEnemy(e,d,crit){if(e.dead)return;d*=(1+0.2*pk('overwatch'))*(e.veh||e.boss?1+0.35*pk('antiarmor'):1)*armMul(e)*(e.mkT>G.time?1+e.mkB:1);e.hp-=d;e.flash=0.08;(e.air?skyHit:fxHit)(e,crit);if(crit&&_mainHit&&G.time-(G.crT||0)>0.07){G.crT=G.time;tone(1500,0.045,'square',-500,0.03)}   // crit ping (commander rifle, throttled); e.mkT/e.mkB: research mark (sgMark)
+  return _dk==='s'?1-e.arm*(1-Math.min(1,_pen+0.075*pk('tungsten'))):_dk==='p'?1-e.arm*(1-Math.max(0.55,_pen)):_dk==='f'?(1-e.arm)*0.5:1}
+function hurtEnemy(e,d,crit){if(e.dead)return;d*=(1+0.1*pk('overwatch'))*(e.veh||e.boss?1+0.175*pk('antiarmor'):1)*armMul(e)*(e.mkT>G.time?1+e.mkB:1);e.hp-=d;e.flash=0.08;(e.air?skyHit:fxHit)(e,crit);if(crit&&_mainHit&&G.time-(G.crT||0)>0.07){G.crT=G.time;tone(1500,0.045,'square',-500,0.03)}   // crit ping (commander rifle, throttled); e.mkT/e.mkB: research mark (sgMark)
   if(S.set.dmgNums&&visible(e)&&(crit||_mainHit||S.set.gfx!=='high'))dmgFloat(e,d,crit);
   if(e.hp<=0)kill(e)}
 // Kill streak: kills from the player's own aimed rifle (a tapped/clicked lock, not auto-fire) chain within STREAK_T seconds;
@@ -3529,7 +3540,7 @@ function fire(s,e,mult=1){const m0=mult;
   // research signatures: every Nth round can be a 40mm airburst (Commander) or a Carl Gustaf HEAT round that seeks armor (squad)
   const line=s.main?'dmg':'squad',big=sgRound(s,line),heat=big&&!!sg(line,'seek');if(heat)e=sgSeek(G.enemies,s)||e;
   if(e.air&&!s.main)mult*=AIR_BONUS.squad;
-  let d=dmgAt(L('dmg'))*rMult(line)*mult*(1+0.25*pk('hollow'));const d0=d,crit=Math.random()<critChance()||s.main&&e===s.tgt&&sg('dmg','lockCrit')!=null;if(crit)d*=2.5+Math.max(0,L('crit')-15)*0.1;
+  let d=dmgAt(L('dmg'))*rMult(line)*mult*(1+0.125*pk('hollow'));const d0=d,crit=Math.random()<critChance()||s.main&&e===s.tgt&&sg('dmg','lockCrit')!=null;if(crit)d*=2.5+Math.max(0,L('crit')-15)*0.1;
   s.ang=Math.atan2(e.y-s.y,e.x-s.x);s.fl=G.time;
   sgTracer(line,s.x+Math.cos(s.ang)*6,s.y+Math.sin(s.ang)*6,e.x,e.y,crit?'#ffd23f':'#fff2b0',big?1.8:1.2,0.07);
   const ex=e.x,ey=e.y;_mainHit=!!s.main;_dk=heat&&!e.air?'':'s';_pen=rPen(line);hurtEnemy(e,d,crit);_mainHit=false;_dk='s';
@@ -3563,7 +3574,7 @@ const EFIRE={
   manpads(e,tx,ty,dep){const u=dep&&dep!==true&&!dep.bays&&FC[dep.ck]&&FC[dep.ck].air?dep:null;
     if(!u){eTracer(e,tx,ty,'#ff6a5a',1.1);sfx('shot2',e.x,e.y);eHit(e,e.dmg,dep);return}
     e.atk=6.5;e.fl=G.time;e.rev=1.5;const s={k:'sam',x:e.x,y:e.y,tx:u.x,ty:u.y,u,t:0,dur:Math.max(0.5,Math.hypot(u.x-e.x,u.y-e.y)/240),dmg:e.dmg*5,src:e.type};
-    if(G.time>=(u.flR||0)){u.flR=G.time+FLARE_CD/(1+pk('aircrew'));s.flT=Math.min(0.35,s.dur*0.3);s.fl=R()<Math.min(0.95,(u.ck==='heli'?0.65:0.8)+0.1*pk('aircrew'))}
+    if(G.time>=(u.flR||0)){u.flR=G.time+FLARE_CD/(1+0.5*pk('aircrew'));s.flT=Math.min(0.35,s.dur*0.3);s.fl=R()<Math.min(0.95,(u.ck==='heli'?0.65:0.8)+0.05*pk('aircrew'))}
     G.eshots.push(s);puff(e.x,e.y,3,4,0.9,'200,196,186',18,0.45);light(e.x,e.y,30,'255,200,140',0.12);sfx('launch',e.x,e.y)}};
 const FLARE_CD=4;
 function flares(u){if(!u||u.dead)return;const a=u.ang||0,bx=u.x-Math.cos(a)*10,by=u.y-Math.sin(a)*10;
@@ -3737,12 +3748,12 @@ function update(dt){
   if(G.perkAt&&G.time>=G.perkAt){G.perkAt=0;offerPerks()}
   // regen
   G.hp=Math.min(G.maxHp,G.hp+0.4*L('medic')*dt);
-  if(G.wallHp>0&&G.time-(G.wallHitT??-9)>repairHold())G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*repairAt(L('repair'))*(1+0.5*pk('sappers'))*dt);   // engineers can't work under fire
+  if(G.wallHp>0&&G.time-(G.wallHitT??-9)>repairHold())G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*repairAt(L('repair'))*(1+0.25*pk('sappers'))*dt);   // engineers can't work under fire
   // soldiers
   const half=blockHalf(),n=G.sold.length;
   for(const s of G.sold)s.cd-=dt;
   if(G.rapidT>0)G.rapidT-=dt;
-  const m=G.sold[0],cd=cdAt(L('rate'))/(1+0.15*pk('drill'))/(G.rapidT>0?1.5:1);
+  const m=G.sold[0],cd=cdAt(L('rate'))/(1+0.075*pk('drill'))/(G.rapidT>0?1.5:1);
   if(m.tgt&&(m.tgt.dead||!visible(m.tgt)))m.tgt=null;
   if(!m.tgt&&mouse.down&&!G.airArmed&&!G.nadeArmed)m.tgt=enemyAt(mouse.wx,mouse.wy,Math.max(24,(MOBILE?36:18)/sc));
   let t=m.tgt,rm=1;if(!t&&L('auto')){t=nearestVisible(m);rm=autoAt(L('auto'))}
@@ -3764,14 +3775,14 @@ function update(dt){
     if(e.chute>0){e.chute-=dt;if(e.chute<=0)chuteLand(e);continue}   // paratroopers are helpless until they touch down
     if(sigStatus(e,dt))continue;   // burning / stunned (research signatures)
     const d=hyp(e.x,e.y)||1,cheb=Math.max(Math.abs(e.x),Math.abs(e.y)),stop=half+e.range+e.r;
-    let spd=e.slT>G.time?e.spd*(1-e.slF):e.spd;if(e.veh&&pk('barriers')&&cheb<wireR+40)spd*=0.8;if(twS&&G.fogK)spd*=1-twS*G.fogK;   // Vehicle Barriers: jersey blocks outside the wire; blizzards slow the ground advance
+    let spd=e.slT>G.time?e.spd*(1-e.slF):e.spd;if(e.veh&&pk('barriers')&&cheb<wireR+40)spd*=0.9;if(twS&&G.fogK)spd*=1-twS*G.fogK;   // Vehicle Barriers: jersey blocks outside the wire; blizzards slow the ground advance
     if(wl&&cheb<wireR){if(e.veh)spd*=(1+slow)/2;else{spd*=slow;e.hp-=2*wl*dt;if(e.hp<=0){kill(e);continue}}}   // tracks and tyres crush the wire
     if(e.lc&&lcTick(e,dt))continue;
     if(vehEnemy(e,dt)||depotEnemy(e,spd,dt)||siteEnemy(e,spd,dt))continue;
     if(e.stand)standOff(e,spd,dt);
     else if(cheb>half+e.r&&(cheb>stop||(e.range&&d>sgt-e.r*1.5))){if(!pfStep(e,spd,dt)){e.x-=e.x/d*spd*dt;e.y-=e.y/d*spd*dt}e.moving=true;e.odo+=spd*dt}
     else{e.moving=false;if(e.load)apcUnload(e);e.atk-=dt;if(e.atk<=0){e.atk=e.rate;
-      if(e.bomb){e.dead=true;if(e.vbied)vbiedBlast(e);else explode(e.x,e.y,30,0);damageFort(e.dmg*(e.vbied?Math.pow(0.5,pk('barriers')):1),e.vbied?'vbied':e.type)}
+      if(e.bomb){e.dead=true;if(e.vbied)vbiedBlast(e);else explode(e.x,e.y,30,0);damageFort(e.dmg*(e.vbied?Math.pow(0.75,pk('barriers')):1),e.vbied?'vbied':e.type)}
       else if(EFIRE[e.type]){const tx=Math.max(-half,Math.min(half,e.x)),ty=Math.max(-half,Math.min(half,e.y));EFIRE[e.type](e,tx,ty,false)}
       else if(e.range){const tx=Math.max(-half,Math.min(half,e.x)),ty=Math.max(-half,Math.min(half,e.y));G.fx.push({k:'tracer',x:e.x,y:e.y,x2:tx,y2:ty,life:0.08,max:0.08,c:e.boss?'#ffd08a':'#ff6a5a',w:e.boss?2.4:1.2});if(e.boss)explode(tx,ty,16,0);damageFort(e.dmg,e.type)}
       else{damageFort(e.dmg,e.type);e.lunge=0.15;sigThorns(e)}}}
@@ -3788,7 +3799,7 @@ function update(dt){
   updateSky(dt,half);if(!running)return;
   // artillery
   const al=L('arty');if(al){G.artyT-=dt;if(G.artyT<=0){const vis=G.enemies.filter(visible),cb=pk('cbfire')&&vis.find(e=>e.stand&&e.rev>0&&!e.dead);   // counter-battery: a crew that just fired is shelled first
-    if(cb){fireArty(cb,artyR(al),artyDmg(al)*1.5);G.artyT=artyCdNow()}else if(vis.length){let best=vis[0],bc=-1,R=artyR(al);
+    if(cb){fireArty(cb,artyR(al),artyDmg(al)*1.25);G.artyT=artyCdNow()}else if(vis.length){let best=vis[0],bc=-1,R=artyR(al);
     const sk=sg('arty','seek');   // precision tiers weigh armor far heavier, then guide onto the armor inside the chosen cluster
     for(let i=0,nc=Math.min(25,vis.length);i<nc;i++){const c=vis[i];let k=0;for(const o of vis)if(within(o,c.x,c.y,R))k+=sk&&(o.veh||o.boss)?8:o.veh||o.stand?3:1;if(k>bc){bc=k;best=c}}
     fireArty(sk&&sgSeek(vis,best,R)||best,R,artyDmg(al));G.artyT=artyCdNow()}else G.artyT=0.5}}
@@ -3800,7 +3811,7 @@ function update(dt){
   for(const p of G.planes)p.t+=dt;keepT(G.planes,3.5);
   for(const b of G.bombs){b.t-=dt;if(b.t<=0){b.done=true;sigBomb(b)}}keepUndone(G.bombs);
   // crates
-  G.crateT-=dt;if(G.crateT<=0){G.crateT=crateEvery(L('scav'))/(1+0.4*pk('supply'))*(0.7+Math.random()*0.6)*(G.dcCr||1);dropCrate()}
+  G.crateT-=dt;if(G.crateT<=0){G.crateT=crateEvery(L('scav'))/(1+0.2*pk('supply'))*(0.7+Math.random()*0.6)*(G.dcCr||1);dropCrate()}
   for(const c of G.crates)c.life-=dt;keepLive(G.crates);
   // fx
   fxUpdate(dt);for(const f of G.fx)f.life-=dt;keepLive(G.fx);
@@ -3962,10 +3973,10 @@ function pfTrail(x,y){const out=[];if(!_pf)return out;for(let i=0;i<400;i++){con
 // is the straight line from e to (x,y) blocked for e's class? (depot / site / mechanic detours; a few samples per call)
 function pfBlocked(e,x,y){const wide=e.veh||e.boss,dx=x-e.x,dy=y-e.y,m=Math.ceil(hyp(dx,dy)/PF_CS);for(let s=1;s<=m;s++){const k=pfAt(e.x+dx*s/m,e.y+dy*s/m,wide);if(k>=0&&_pfL.st[k]===2)return true}return false}
 function callAir(x,y,ang){
-  const l=L('air'),n=Math.min(16,5+l),a=ang??Math.random()*Math.PI*2,dx=Math.cos(a),dy=Math.sin(a);
+  const l=L('air'),n=airBombs(l),br=airRad(l),a=ang??Math.random()*Math.PI*2,dx=Math.cos(a),dy=Math.sin(a);
   G.planes.push({x,y,dx,dy,t:0});sfx('plane');
   const hyper=sg('air','instant'),grp=new Set();   // research: hypersonic strike lands at once; SDB swarms share one target list
-  for(let i=0;i<n;i++){const o=(i-(n-1)/2)*24;G.bombs.push({x:x+dx*o,y:y+dy*o,t:hyper?0.1+i*0.03:(800+o)/500,dmg:airDmg(l),g:grp})}
+  for(let i=0;i<n;i++){const o=(i-(n-1)/2)*24;G.bombs.push({x:x+dx*o,y:y+dy*o,t:hyper?0.1+i*0.03:(800+o)/500,dmg:airDmg(l),r:br,g:grp})}
   if(hyper)sgBeam(x-dx*400,y-dy*400-600,x,y,BEAMC.air,2.4,0.3);
   G.airArmed=false;G.airT=airCdNow();
 }
@@ -3973,7 +3984,7 @@ function callAir(x,y,ang){
 // ================= FRAG GRENADE =================
 // Armed from the FRAG button (then tap/click a spot) or thrown straight at the cursor with G. The main rifleman lobs it in an arc;
 // it bursts on landing through explode(), so like every ground weapon it never touches aircraft. Throws are capped at sight range.
-const nadeCdNow=()=>nadeCd(L('nade'))*Math.pow(0.65,pk('grenadier')),nadeNow=()=>nadeN(L('nade'))+pk('grenadier');
+const nadeCdNow=()=>nadeCd(L('nade'))*Math.pow(0.825,pk('grenadier')),nadeNow=()=>nadeN(L('nade'))+(pk('grenadier')>>1);
 function nadeClamp(x,y){const d=Math.hypot(x,y),R=sight()*0.97;return d>R?[x/d*R,y/d*R]:[x,y]}
 function throwNade(x,y){if(!running||paused||G.choosing)return;if(G.nadeT>0){sfx('deny');return}
   const m=G.sold[0],l=L('nade'),r=nadeR(l),n=nadeNow(),dmg=nadeDmg(l);[x,y]=nadeClamp(x,y);m.ang=Math.atan2(y-m.y,x-m.x);
@@ -4239,7 +4250,7 @@ const DEPOT_TANKS=[[28,-36,11],[28,-11,11]],DEPOT_FIRE=[[28,-36],[28,-11],[29,24
 const JET_V={patrol:230,strafe:330,rtb:240,final:185};
 const depotUp=()=>!!G.depot&&!G.depot.dead,fuelGone=()=>!!G.depot&&G.depot.dead;
 const refuelRate=()=>fuelGone()?0:1/(depotUp()?depotRefuelT(L('dcap')):FIELD_T);
-const burnRate=k=>burnMul(L('feff'))*Math.pow(0.7,pk('fuel'))/TANK_S[k];
+const burnRate=k=>burnMul(L('feff'))*Math.pow(0.85,pk('fuel'))/TANK_S[k];
 const groundPoint=()=>fuelGone()?null:depotUp()?G.depot:G.field;
 const combatOn=()=>G.spawnLeft>0||G.enemies.length>0||G.drops.length>0;
 const laneOuter=()=>laneHalf(L('apc')?2:L('tank')?1:0);
@@ -4361,7 +4372,7 @@ function shRaid(e){const p=RAID.raid[e.vbied?'vbied':e.type];if(!p||G.wave<RAID.
   for(const s of shLive()){const q=Math.abs(wrapA(Math.atan2(s.cy,s.cx)-a));if(q<bd){bd=q;b=s}}
   if(!b||R()>=p*(shHot()?RAID.hot:1))return;if(b===G.depot)e.dep=true;else{e.dep=false;e.fsite=b}}
 function shArty(){const l=shLive();if(!l.length||R()>=RAID.arty)return null;return l[Math.floor(R()*l.length)]}
-function shPatch(s,dt){if(G.time-s.fT>repairHold())s.hp=Math.min(s.max,s.hp+s.max*repairAt(L('repair'))*(1+0.5*pk('sappers'))*dt);if(s.warn&&s.hp>s.max*0.8)s.warn=0}
+function shPatch(s,dt){if(G.time-s.fT>repairHold())s.hp=Math.min(s.max,s.hp+s.max*repairAt(L('repair'))*(1+0.25*pk('sappers'))*dt);if(s.warn&&s.hp>s.max*0.8)s.warn=0}
 function shWarn(s){if(s.warn||s.hp>=s.max*RAID.warn)return;s.warn=1;const dep=s===G.depot;
   feed((dep?'FUEL DEPOT':s.air?'HANGAR':'MOTOR POOL')+' UNDER ATTACK · '+Math.ceil(s.hp/s.max*100)+'%','255,150,90',dep?'depot':'repair',dep?'DEPOT HIT':s.air?'HANGAR HIT':'MOTOR POOL HIT')}
 function destroyDepot(){const D=G.depot;D.dead=true;D.hp=0;G.depotWarnT=7;for(const s of D.slots)s.u=null;
@@ -5484,8 +5495,8 @@ function sigBomb(b){let p;const lk=G.sold[0].tgt,lock=sg('air','snapToLock')&&lk
   if(b.g&&sg('air','autoDistribute')){let o=lock&&!b.g.has(lk)?lk:null,bd=110;   // the locked target is served first, then one bomb per target
     if(!o)for(const e of G.enemies){const dx=e.x-b.x;if(dx>=bd||dx<=-bd)continue;const dy=e.y-b.y;if(dy>=bd||dy<=-bd||b.g.has(e)||!sgLive(e))continue;const q=hyp(dx,dy);if(q<bd){bd=q;o=e}}if(o){b.g.add(o);b.x=o.x;b.y=o.y}}
   else if(lock){b.x=lk.x+(R()-.5)*8;b.y=lk.y+(R()-.5)*8}
-  explode(b.x,b.y,34,b.dmg);for(const e of G.enemies)if(!e.dead&&!e.air&&(e.veh||e.boss)&&within(e,b.x,b.y,34+e.r))hurtEnemy(e,e.max*BOMB_PCT,false);   // heavy bombs always bite armor
-  if((p=sg('air','burn'))){for(const e of G.enemies)if(!e.dead&&within(e,b.x,b.y,34+e.r))sgBurn(e,b.dmg*p[0],p[1]);fireball(b.x,b.y,30,0.9)}
+  const br=b.r||AIR_R0;explode(b.x,b.y,br,b.dmg);for(const e of G.enemies)if(!e.dead&&!e.air&&(e.veh||e.boss)&&within(e,b.x,b.y,br+e.r))hurtEnemy(e,e.max*BOMB_PCT,false);   // heavy bombs always bite armor
+  if((p=sg('air','burn'))){for(const e of G.enemies)if(!e.dead&&within(e,b.x,b.y,br+e.r))sgBurn(e,b.dmg*p[0],p[1]);fireball(b.x,b.y,30*br/AIR_R0,0.9)}
   const n=sg('air','bomblets');if(!n)return;const used=new Set();
   for(let i=0;i<n;i++){let o=sgSeek(G.enemies,b,80);if(!o||used.has(o)){o=null;for(const e of G.enemies)if(!used.has(e)&&within(e,b.x,b.y,70)&&sgLive(e)){o=e;break}}
     if(!o)break;used.add(o);sgHit(o,b.dmg*0.25,'',0);sgBeam(b.x,b.y-24,o.x,o.y,'255,215,170',0.7,0.1);G.fx.push({k:'boom',x:o.x,y:o.y,r:9,life:0.2,max:0.2})}}
@@ -8149,35 +8160,35 @@ function vehLo(t,e){const c=VC,tr=e?(e.odo||0)%3:0,since=e?G.time-(e.fl??-9):9,f
 // Run-only directives: after waves 3, 5, 10, 15... the battle freezes and the player picks one of three. They stack (rank I, II, III...)
 // and vanish when the run ends, so every run builds differently on top of the permanent upgrade tree.
 const pk=id=>G&&G.pk?G.pk[id]||0:0;
-const critChance=()=>Math.min(0.9,Math.min(0.6,L('crit')*0.04)+0.15*pk('eagle'));
-const hazardHp=()=>1+0.25*pk('hazard');
-const artyCdNow=()=>artyCd(L('arty'))/(1+0.35*pk('firemission'))/rMult('arty','rate'),airCdNow=()=>airCd(L('air'))*Math.pow(0.65,pk('cas'))*rMult('air','cd');
+const critChance=()=>Math.min(0.9,Math.min(0.6,L('crit')*0.04)+0.075*pk('eagle'));
+const hazardHp=()=>1+0.125*pk('hazard');
+const artyCdNow=()=>artyCd(L('arty'))/(1+0.175*pk('firemission'))/rMult('arty','rate'),airCdNow=()=>airCd(L('air'))*Math.pow(0.825,pk('cas'))*rMult('air','cd');
 const perkWave=w=>w===3||w%5===0;
 const hasFuel=()=>G.units.some(u=>u.fuel!=null)||G.fleet.length>0;
 const PERKS=[
- {id:'hollow',ic:'dmg',name:'Hollow-Point Rounds',desc:'Small-arms damage +25% for you and your squad.'},
- {id:'drill',ic:'rate',name:'Rapid Reload Drill',desc:'You and every squad soldier fire 15% faster.'},
- {id:'eagle',from:6,ic:'crit',name:'Eagle Eye',desc:'+15% critical-hit chance on small-arms shots.',ok:()=>critChance()<0.9},
- {id:'tungsten',ic:'crit',name:'Tungsten Cores',desc:'Small-arms rounds pierce 15% more armor.'},
- {id:'overwatch',ic:'vision',name:'Overwatch',desc:'Every gun, shell, missile and bomb you own deals +20% damage.'},
- {id:'masons',ic:'walls',name:'Combat Engineers',desc:'Walls +35% max HP and fully rebuilt right now, even if breached.',ok:()=>G.wallMax>0,go:()=>{G.wallMax*=1.35;G.wallHp=G.wallMax}},
- {id:'medevac',ic:'medic',name:'Medevac',desc:'Max health +35% and fully healed right now.',go:()=>{G.maxHp*=1.35;G.hp=G.maxHp}},
- {id:'salvage',ic:'bounty',name:'Battlefield Salvage',desc:'+25% cash from kills, crates and wave bonuses.'},
- {id:'hazard',ic:'skull',name:'Hazard Pay',desc:'Enemies arrive 25% tougher, but everything pays 40% more.',risk:true},
- {id:'supply',ic:'scav',name:'Supply Drop',desc:'Three cash crates land now, and crates drop 40% more often.',go:()=>{for(let i=0;i<3;i++)dropCrate('cash')}},
- {id:'firemission',ic:'arty',name:'Fire Mission',desc:'Artillery reloads 35% faster.',ok:()=>L('arty')>0,go:()=>{G.artyT=Math.min(G.artyT,0.5)}},
- {id:'grenadier',ic:'nade',name:'Grenadier Drill',desc:'Grenades reload 35% faster and every throw adds one more grenade. One is ready now.',go:()=>{G.nadeT=0}},
- {id:'cas',ic:'air',name:'Close Air Support',desc:'Airstrike cooldown -35%, and a strike is ready now.',ok:()=>L('air')>0,go:()=>{G.airT=0}},
- {id:'minelayer',ic:'mines',name:'Minelayers',desc:'Twice the mines every wave, and a fresh field is laid now.',ok:()=>L('mines')>0,go:()=>layMines()},
- {id:'flak',ic:'aagun',name:'Flak Barrage',desc:'Air-defence fire +40% damage against aircraft.',ok:()=>L('aagun')>0&&G.wave>=SKY_WAVE.drone},
- {id:'illum',ic:'vision',name:'Illumination Rounds',desc:'Parachute flares over the field: night no longer shortens your sight line.',ok:()=>dnWant()&&G.wave>=4&&!pk('illum')},
- {id:'sappers',ic:'repair',name:'Sapper Teams',desc:'Wall repairs restart twice as fast after a hit and run 50% faster.',ok:()=>L('repair')>0&&G.wave>=8},
- {id:'barriers',ic:'walls',name:'Vehicle Barriers',desc:'Car bombs deal half damage to the walls, and vehicles slow 20% near the wire.',ok:()=>G.wave>=VBIED_W},
- {id:'antiarmor',ic:'tank',name:'Anti-Armor Teams',desc:'Every gun, shell, missile and bomb deals +35% damage to vehicles and tanks.',ok:()=>G.wave>=6},
- {id:'cbfire',ic:'arty',name:'Counter-Battery Fire',desc:'Artillery answers every mortar and rocket launch: that crew is shelled first, for +50% damage.',ok:()=>L('arty')>0&&G.wave>=11},
- {id:'aircrew',ic:'heli',name:'Aircrew Countermeasures',desc:'2x faster flares that fool 10% more missiles. Aircraft healed 25%.',ok:()=>G.wave>=14&&flyingCraft(),
-  go:()=>{for(const u of[...G.units,...G.fleet,...G.air])if(u.hp!=null&&!u.dead&&FC[u.ck]&&FC[u.ck].air)u.hp=Math.min(u.max,u.hp+u.max*0.25)}},
- {id:'fuel',ic:'dcap',name:'Fuel Convoy',desc:'Every vehicle and aircraft is topped off now. Fuel burn -30%.',ok:hasFuel,
+ {id:'hollow',ic:'dmg',name:'Hollow-Point Rounds',desc:'Small-arms damage +12.5% for you and your squad.'},
+ {id:'drill',ic:'rate',name:'Rapid Reload Drill',desc:'You and every squad soldier fire 7.5% faster.'},
+ {id:'eagle',from:6,ic:'crit',name:'Eagle Eye',desc:'+7.5% critical-hit chance on small-arms shots.',ok:()=>critChance()<0.9},
+ {id:'tungsten',ic:'crit',name:'Tungsten Cores',desc:'Small-arms rounds pierce 7.5% more armor.'},
+ {id:'overwatch',ic:'vision',name:'Overwatch',desc:'Every gun, shell, missile and bomb you own deals +10% damage.'},
+ {id:'masons',ic:'walls',name:'Combat Engineers',desc:'Walls +17.5% max HP and fully rebuilt right now, even if breached.',ok:()=>G.wallMax>0,go:()=>{G.wallMax*=1.175;G.wallHp=G.wallMax}},
+ {id:'medevac',ic:'medic',name:'Medevac',desc:'Max health +17.5% and fully healed right now.',go:()=>{G.maxHp*=1.175;G.hp=G.maxHp}},
+ {id:'salvage',ic:'bounty',name:'Battlefield Salvage',desc:'+12.5% cash from kills, crates and wave bonuses.'},
+ {id:'hazard',ic:'skull',name:'Hazard Pay',desc:'Enemies arrive 12.5% tougher, but everything pays 20% more.',risk:true},
+ {id:'supply',ic:'scav',name:'Supply Drop',desc:'Two cash crates land now, and crates drop 20% more often.',go:()=>{for(let i=0;i<2;i++)dropCrate('cash')}},
+ {id:'firemission',ic:'arty',name:'Fire Mission',desc:'Artillery reloads 17.5% faster.',ok:()=>L('arty')>0,go:()=>{G.artyT=Math.min(G.artyT,0.5)}},
+ {id:'grenadier',ic:'nade',name:'Grenadier Drill',desc:'Grenades reload 17.5% faster, and every second rank adds one more grenade per throw. One is ready now.',go:()=>{G.nadeT=0}},
+ {id:'cas',ic:'air',name:'Close Air Support',desc:'Airstrike cooldown -17.5%, and a strike is ready now.',ok:()=>L('air')>0,go:()=>{G.airT=0}},
+ {id:'minelayer',ic:'mines',name:'Minelayers',desc:'50% more mines every wave, and a fresh field is laid now.',ok:()=>L('mines')>0,go:()=>layMines()},
+ {id:'flak',ic:'aagun',name:'Flak Barrage',desc:'Air-defence fire +20% damage against aircraft.',ok:()=>L('aagun')>0&&G.wave>=SKY_WAVE.drone},
+ {id:'illum',ic:'vision',name:'Illumination Rounds',desc:'Parachute flares over the field: night shortens your sight line half as much.',ok:()=>dnWant()&&G.wave>=4&&!pk('illum')},
+ {id:'sappers',ic:'repair',name:'Sapper Teams',desc:'Wall repairs restart 1.5x as fast after a hit and run 25% faster.',ok:()=>L('repair')>0&&G.wave>=8},
+ {id:'barriers',ic:'walls',name:'Vehicle Barriers',desc:'Car bombs deal 25% less damage to the walls, and vehicles slow 10% near the wire.',ok:()=>G.wave>=VBIED_W},
+ {id:'antiarmor',ic:'tank',name:'Anti-Armor Teams',desc:'Every gun, shell, missile and bomb deals +17.5% damage to vehicles and tanks.',ok:()=>G.wave>=6},
+ {id:'cbfire',ic:'arty',name:'Counter-Battery Fire',desc:'Artillery answers every mortar and rocket launch: that crew is shelled first, for +25% damage.',ok:()=>L('arty')>0&&G.wave>=11},
+ {id:'aircrew',ic:'heli',name:'Aircrew Countermeasures',desc:'1.5x faster flares that fool 5% more missiles. Aircraft healed 12.5%.',ok:()=>G.wave>=14&&flyingCraft(),
+  go:()=>{for(const u of[...G.units,...G.fleet,...G.air])if(u.hp!=null&&!u.dead&&FC[u.ck]&&FC[u.ck].air)u.hp=Math.min(u.max,u.hp+u.max*0.125)}},
+ {id:'fuel',ic:'dcap',name:'Fuel Convoy',desc:'Every vehicle and aircraft is topped off now. Fuel burn -15%.',ok:hasFuel,
   go:()=>{for(const u of G.units)if(u.fuel!=null){u.fuel=1;if(u.fs==='dry')u.fs='patrol'}for(const j of G.fleet)j.fuel=1}}];
 const ROMAN=['','I','II','III','IV','V','VI','VII','VIII','IX','X'],rank=n=>ROMAN[n]||String(n);
 let perkOpenT=0,perkReadyAt=Infinity,perkDownT=0;
@@ -8482,7 +8493,7 @@ Object.assign(IC,{aagun:'M4 21h16M7 21l2-5h6l2 5M9 16l6-11M12 16l6-9M14 5l2-1.5M
   sam:'M4 21h16M6 21l3-5h6l3 5M8.5 16l8-11 2.5 2-8 10.5zM16.5 5l3-2-1 3.5',
   radar:'M12 21v-6M8 21h8M4.5 12.5a7 7 0 0 0 10-10zM9.5 7.5l3 3M15 3a6 6 0 0 1 6 6M15 6a3 3 0 0 1 3 3'});
 Object.assign(US,{aagun:1.5,sam:1.6,radar:1.4});
-const aaDmg=l=>30*Math.pow(1.3,l-1)*late('aagun',l,1.3)*rMult('aagun'),aaGuns=l=>l>=4?2:1,radarR=l=>l?30+18*l:0,aaMul=()=>(1+0.06*L('radar'))*(1+0.4*pk('flak'));
+const aaDmg=l=>30*Math.pow(1.3,l-1)*late('aagun',l,1.3)*rMult('aagun'),aaGuns=l=>l>=4?2:1,radarR=l=>l?30+18*l:0,aaMul=()=>(1+0.06*L('radar'))*(1+0.2*pk('flak'));
 const samDmg=l=>900*Math.pow(1.33,l-1)*late('sam',l,1.33)*rMult('sam'),samCd=l=>Math.max(1.4,5*Math.pow(0.92,l-1)),samN=l=>Math.min(4,1+Math.floor(l/3));
 const AIR_BONUS={ciws:1.75,msl:1.5,squad:0.6};
 // Dedicated air defence (flak, SAMs, fighter AAMs) also strips a slice of the airframe's max HP on every hit, so AA stays decisive
@@ -10140,10 +10151,10 @@ function draw(){aqTick();
   drawUavMarks();drawFuelBars();drawDepotHp();drawRepairTop();
   drawFloats();drawNadeAim();
   if(G.airArmed||G.airAim){const lw=Math.max(1.5,2/sc);ctx.strokeStyle='#ff6a3a';ctx.fillStyle='rgba(255,106,58,.25)';ctx.lineWidth=lw;
-    if(G.airAim){const a=G.airAim,dx=mouse.wx-a.x,dy=mouse.wy-a.y,dd=Math.hypot(dx,dy),ok=dd*sc>14,ang=ok?Math.atan2(dy,dx):0,n=Math.min(16,5+L('air')),len=(n-1)*24;
+    if(G.airAim){const a=G.airAim,dx=mouse.wx-a.x,dy=mouse.wy-a.y,dd=Math.hypot(dx,dy),ok=dd*sc>14,ang=ok?Math.atan2(dy,dx):0,n=airBombs(L('air')),len=(n-1)*24;
       const ux=Math.cos(ang),uy=Math.sin(ang);ctx.setLineDash([6/sc,5/sc]);
       if(ok){ctx.beginPath();ctx.moveTo(a.x-ux*(len/2+30),a.y-uy*(len/2+30));ctx.lineTo(a.x+ux*(len/2+30),a.y+uy*(len/2+30));ctx.stroke();
-        for(let i=0;i<n;i++){const o=(i-(n-1)/2)*24;ctx.beginPath();ctx.arc(a.x+ux*o,a.y+uy*o,34*0.5,0,7);ctx.fill()}
+        for(let i=0;i<n;i++){const o=(i-(n-1)/2)*24;ctx.beginPath();ctx.arc(a.x+ux*o,a.y+uy*o,airRad(L('air'))*0.5,0,7);ctx.fill()}
         const hx=a.x+ux*(len/2+30),hy=a.y+uy*(len/2+30),ah=Math.max(10,12/sc);ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(hx+ux*ah,hy+uy*ah);ctx.lineTo(hx-uy*ah*0.6,hy+ux*ah*0.6);ctx.lineTo(hx+uy*ah*0.6,hy-ux*ah*0.6);ctx.closePath();ctx.fillStyle='#ff6a3a';ctx.fill()}
       else{ctx.beginPath();ctx.arc(a.x,a.y,len/2,0,7);ctx.stroke()}
       ctx.setLineDash([]);ctx.beginPath();ctx.arc(a.x,a.y,Math.max(4,5/sc),0,7);ctx.fillStyle='#fff';ctx.fill()}
