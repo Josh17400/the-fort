@@ -1663,7 +1663,7 @@ const U=[
  {id:'mlaunch',late:1,wave:20,need:[["walls", 6], ["arty", 3]],cat:'AIR & MISSILES',name:'Missile Launcher',max:0,cost:3500,g:1.9,desc:'Fires salvos of homing missiles at the toughest targets, aircraft first (+50% vs air).',val:l=>l?Math.min(8,1+Math.floor(l/2))+' '+pl(Math.min(8,1+Math.floor(l/2)),'missile')+' · '+f1(mslDmg(l))+' dmg':'none'},
  {id:'airstrip',wave:24,need:[["walls", 7], ["air", 2], ["vision", 9]],cat:'AIR & MISSILES',name:'Air Strip',max:3,cost:6000,g:2.2,desc:'A runway outside the south wall. Unlocks aircraft; higher levels speed up sorties.',val:l=>l?'Lv '+l+' · sorties -'+pct(1-Math.pow(0.85,l-1)):'no runway'},
  {id:'fighter',late:1,wave:26,need:[["airstrip", 1], ["vision", 10]],cat:'AIR & MISSILES',name:'Fighter Jets',max:0,cost:8000,g:1.95,desc:'Jets scramble from the strip and strafe enemy columns with cannons.',val:l=>l?Math.min(4,1+Math.floor(l/2))+' '+pl(Math.min(4,1+Math.floor(l/2)),'jet')+' · '+f1(jetDmg(l))+' dmg/pass':'none'},
- {id:'silo',late:1,wave:30,need:[["walls", 9], ["mlaunch", 3]],cat:'AIR & MISSILES',name:'Missile Silo',max:0,cost:15000,g:2.0,desc:'A ballistic missile that levels the biggest enemy concentration on the map.',val:l=>l?f1(siloDmg(l))+' dmg · every '+Math.round(siloCd(l))+'s':'none'},
+ {id:'silo',late:1,wave:30,need:[["walls", 9], ["mlaunch", 3]],cat:'AIR & MISSILES',name:'Missile Silo',max:0,cost:15000,g:2.0,desc:'A heavy ballistic missile: one huge blast that levels the biggest enemy concentration on the map.',val:l=>l?f1(siloDmg(l))+' dmg · every '+Math.round(siloCd(l))+'s':'none'},
  {id:'gunship',late:1,wave:35,need:[["airstrip", 2], ["fighter", 2], ["vision", 12]],cat:'AIR & MISSILES',name:'Gunship',max:0,cost:25000,g:2.0,desc:'25mm minigun mows infantry, 30mm cannon hits trucks and groups, 105mm is saved for armor: a circling gunship cycles them as each reloads.',val:l=>l?f1(gsRound(l,rSigP('gunship','instant')?'l':'m'))+' · '+f1(gsRound(l,'c'))+' · '+f1(gsRound(l,'h'))+' dmg':'none'},
 ];
 function lockWhy(u){const miss=[];
@@ -4395,7 +4395,7 @@ function depotEnemy(e,spd,dt){const D=G.depot;if(!D||D.dead||e.air||e.nodep){if(
   if(G.mines.length){const r=e.r+6+sgMineR();for(const mi of G.mines)if(!mi.used&&!e.dead&&within(mi,e.x,e.y,r))sigMine(mi,e)}
   if(e.dead)return true;
   if(edge>(e.range||0)+e.r*0.5){if(!(_pf&&pfBlocked(e,D.x,D.y)&&pfStep(e,spd,dt))){e.x+=dx/d*spd*dt;e.y+=dy/d*spd*dt}e.moving=true;e.odo+=spd*dt}
-  else{e.moving=false;if(e.load)apcUnload(e);e.atk-=dt;if(e.atk<=0){e.atk=e.rate;
+  else{e.moving=false;if(e.load)apcUnload(e);e.rev=Math.max(e.rev||0,0.5);e.atk-=dt;if(e.atk<=0){e.atk=e.rate;   // raiders at a structure are lit up by its floodlights/guards: never an unseen siege that stalls the wave
     if(e.bomb){e.dead=true;if(e.vbied)vbiedBlast(e);else explode(e.x,e.y,30,0);hitDepot(e.dmg)}
     else if(EFIRE[e.type])EFIRE[e.type](e,e.x+dx/d*(d-40),e.y+dy/d*(d-40),true)
     else if(e.range){const tx=e.x+dx/d*(d-40),ty=e.y+dy/d*(d-40);G.fx.push({k:'tracer',x:e.x,y:e.y,x2:tx,y2:ty,life:0.08,max:0.08,c:e.boss?'#ffd08a':'#ff6a5a',w:e.boss?2.4:1.2});hitDepot(e.dmg)}
@@ -4796,7 +4796,7 @@ function siteEnemy(e,spd,dt){if(e.air||e.nodep||!G.fw)return false;let s=e.fsite
   for(const mi of G.mines)if(!mi.used&&!e.dead&&Math.hypot(mi.x-e.x,mi.y-e.y)<e.r+6+sgMineR())sigMine(mi,e);
   if(e.dead)return true;
   if(d>(e.range||0)+e.r*0.5){if(!(_pf&&pfBlocked(e,cx,cy)&&pfStep(e,spd,dt))){e.x+=dx/d*spd*dt;e.y+=dy/d*spd*dt}e.moving=true;e.odo+=spd*dt}
-  else{e.moving=false;if(e.load)apcUnload(e);e.atk-=dt;if(e.atk<=0){e.atk=e.rate;
+  else{e.moving=false;if(e.load)apcUnload(e);e.rev=Math.max(e.rev||0,0.5);e.atk-=dt;if(e.atk<=0){e.atk=e.rate;   // raiders at a structure are lit up by its floodlights/guards: never an unseen siege that stalls the wave
     if(e.bomb){e.dead=true;if(e.vbied)vbiedBlast(e);else explode(e.x,e.y,30,0);hitSite(s,e.dmg)}
     else if(EFIRE[e.type])EFIRE[e.type](e,cx,cy,s);
     else if(e.range){G.fx.push({k:'tracer',x:e.x,y:e.y,x2:cx,y2:cy,life:0.08,max:0.08,c:e.boss?'#ffd08a':'#ff6a5a',w:e.boss?2.4:1.2});hitSite(s,e.dmg)}
