@@ -1669,7 +1669,7 @@ const U=[
  {id:'mlaunch',late:1,wave:20,need:[["walls", 6], ["arty", 3]],cat:'AIR & MISSILES',name:'Missile Launcher',max:0,cost:3500,g:1.9,desc:'Fires salvos of homing missiles at the toughest targets, aircraft first (+50% vs air).',val:l=>l?Math.min(8,1+Math.floor(l/2))+' '+pl(Math.min(8,1+Math.floor(l/2)),'missile')+' · '+f1(mslDmg(l))+' dmg':'none'},
  {id:'airstrip',wave:24,need:[["walls", 7], ["air", 2], ["vision", 9]],cat:'AIR & MISSILES',name:'Air Strip',max:3,cost:6000,g:2.2,desc:'A runway outside the south wall. Unlocks aircraft; higher levels speed up sorties.',val:l=>l?'Lv '+l+' · sorties -'+pct(1-Math.pow(0.85,l-1)):'no runway'},
  {id:'fighter',late:1,wave:26,need:[["airstrip", 1], ["vision", 10]],cat:'AIR & MISSILES',name:'Fighter Jets',max:0,cost:8000,g:1.95,desc:'Jets scramble from the strip and strafe enemy columns with cannons.',val:l=>l?Math.min(4,1+Math.floor(l/2))+' '+pl(Math.min(4,1+Math.floor(l/2)),'jet')+' · '+f1(jetDmg(l))+' dmg/pass':'none'},
- {id:'silo',late:1,wave:30,need:[["walls", 9], ["mlaunch", 3]],cat:'AIR & MISSILES',name:'Missile Silo',max:0,cost:15000,g:2.0,desc:'A ballistic missile that levels the biggest enemy concentration on the map.',val:l=>l?f1(siloDmg(l))+' dmg · every '+Math.round(siloCd(l))+'s':'none'},
+ {id:'silo',late:1,wave:30,need:[["walls", 9], ["mlaunch", 3]],cat:'AIR & MISSILES',name:'Missile Silo',max:0,cost:15000,g:2.0,desc:'A heavy ballistic missile: one huge blast that levels the biggest enemy concentration on the map.',val:l=>l?f1(siloDmg(l))+' dmg · every '+Math.round(siloCd(l))+'s':'none'},
  {id:'gunship',late:1,wave:35,need:[["airstrip", 2], ["fighter", 2], ["vision", 12]],cat:'AIR & MISSILES',name:'Gunship',max:0,cost:25000,g:2.0,desc:'25mm minigun mows infantry, 30mm cannon hits trucks and groups, 105mm is saved for armor: a circling gunship cycles them as each reloads.',val:l=>l?f1(gsRound(l,rSigP('gunship','instant')?'l':'m'))+' · '+f1(gsRound(l,'c'))+' · '+f1(gsRound(l,'h'))+' dmg':'none'},
 ];
 function lockWhy(u){const miss=[];
@@ -3463,6 +3463,7 @@ function startWave(){
   if(G.wave%10===0){spawn('boss');const b2=tw().boss2;if(b2&&G.wave>=b2){const t=spawn('boss');t.hp=t.max*=0.6;G.waveTotal++}}   // Capital: a second tank rides with it
   layMines();
   if(G.wallMax){G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.25)}
+  if(G.shS)G.shS*=RAID.ease;
   banner(G.wave%10===0?'WAVE '+G.wave+' — ENEMY ARMOR INCOMING':'WAVE '+G.wave,G.rsNew?'NEW KIT: '+G.rsNew:'',G.rsNew?'110,195,255':'');G.rsNew='';if(G.wave===G.startWave)rsBriefs();sfx('wave');
   skyWaveStart();evStart();vehWave();lcWave(G.wave);armorCallout();
   G.uavT=!G.ev&&G.wave>=6&&G.wave%10!==0&&Math.random()<0.3?4+Math.random()*7:0;   // recon UAV pass partway into the wave
@@ -3552,8 +3553,8 @@ function fire(s,e,mult=1){const m0=mult;
 // src = attacker type; G.threat keeps a decaying tally (x0.6 per wave) so the after-action report names what actually broke you
 function damageFort(d,src){d*=fortPress(G.wave);if(src)G.threat[src]=(G.threat[src]||0)+d;G.wHit=1;
   if(G.shT>0){sgShieldHit();return}   // EM Armor Screen up over a fresh breach
-  if(wallsUp()){G.wallHitT=G.time;if(L('repair')&&G.wallHp<G.wallMax*0.7&&!seen().ev_wallhold)spotted('ev_wallhold');G.wallHp-=d*(1-Math.min(0.5,0.05*L('armor')));sfx('wall');if(G.wallHp<=0){G.wallHp=0;G.breachW=G.wave;banner('WALLS BREACHED!','','','crit');sfx('breach');shake(8);sgBreach();if(!G.lastStand){G.lastStand=1;G.rapidT=Math.max(G.rapidT,10);setTimeout(()=>{if(running)feed('LAST STAND · RAPID FIRE 10s','255,120,90','threat')},700)}}}
-  else{G.hp-=d;G.hurtT=0.3;sfx('hurt');shake(3);if(G.hp<=0&&!G.over)endRun()}}
+  if(wallsUp()){G.wallHitT=G.time;if(L('repair')&&G.wallHp<G.wallMax*0.7&&!seen().ev_wallhold)spotted('ev_wallhold');G.wallHp-=d*(1-Math.min(0.5,0.05*L('armor')));sfx('wall');shSpill(d);if(G.wallHp<=0){G.wallHp=0;G.breachW=G.wave;banner('WALLS BREACHED!','','','crit');sfx('breach');shake(8);sgBreach();if(!G.lastStand){G.lastStand=1;G.rapidT=Math.max(G.rapidT,10);setTimeout(()=>{if(running)feed('LAST STAND · RAPID FIRE 10s','255,120,90','threat')},700)}}}
+  else{if(shGuard(d)){G.hurtT=0.15;shake(2);return}G.hp-=d;G.hurtT=0.3;sfx('hurt');shake(3);if(G.hp<=0&&!G.over)endRun()}}
 // ================= ENEMY ARMOR & SUPPORT WEAPONS =================
 // Vehicle guns fire from the muzzle end of the hull toward the aim point (a wall face, or the depot). dep: hit the depot, not the fort.
 const eHit=(e,d,dep)=>dep===true?hitDepot(d):dep&&dep.bays?hitSite(dep,d):dep?fcHit(dep,d,e.type):damageFort(d,e.type);
@@ -4241,7 +4242,14 @@ const dMgDmg=l=>4.5*Math.pow(1.24,l-1)*late('ddef',l,1.24),dAaDmg=l=>18*Math.pow
 // repairHold() without a hit (no free refill between waves); raiders pick one at spawn (RAID.raid by class, from wave RAID.w0, only when their
 // bearing is within RAID.arc of it, so nobody crosses the fort to get there; x RAID.hot on boss waves and hostile events); mortar/rocket crews
 // drop RAID.arty of their volleys on one. Tuned with .qa/t_basehp.js (see handoff "Base structures under raid").
-const RAID={hp:0.18,hard:0.2,hot:2,arty:0.2,arc:0.9,w0:8,warn:0.5,raid:{vbied:0.45,technical:0.22,apc:0.14,ifv:0.14,mbt:0.12,bomber:0.1,rpg:0.1,brute:0.06,shooter:0.05,grunt:0.03,runner:0.03}};
+// Collapsing perimeter (owner: "the fort still falls before the fuel station and repair facilities ... a last stand when everything
+// around you starts failing till it's only you left"): once the fort itself starts taking real damage, the structures go first.
+//   strain G.shS = the deepest the walls have been pushed (1 = breached), ratcheting up on every hit and easing x RAID.ease a wave;
+//   raiders and shells pick structures x(1 + RAID.esc x strain); every hit on the fort spills RAID.spill x strain^RAID.spe of
+//   itself onto the weakest standing structure (so they fall one after another, not all at once); and with the walls down the
+//   structures shield the keep: a hit that would reach the fort's own health lands on the weakest structure instead, as
+//   RAID.guard x the share of the fort's health it would have taken. A last standing structure falling = the LAST STAND banner.
+const RAID={hp:0.18,hard:0.2,hot:2,arty:0.2,arc:0.9,w0:8,warn:0.5,esc:8,spill:3,spe:0.7,ease:0.9,guard:2.5,raid:{vbied:0.45,technical:0.22,apc:0.14,ifv:0.14,mbt:0.12,bomber:0.1,rpg:0.1,brute:0.06,shooter:0.05,grunt:0.03,runner:0.03}};
 const hardMul=l=>1+RAID.hard*l*CAPS.darmor[0]/capAt('darmor',mapCur().ord),depotHpAt=l=>Math.round(Math.max(800,wallMaxAt(L('walls'))*RAID.hp)*hardMul(l));
 // seconds of running per full tank (before Fuel Efficiency); each shot costs a little extra
 const TANK_S={truck:75,apc:95,tank:105,jet:65,heli:85},SHOT_FUEL={truck:0.0006,apc:0.002,tank:0.006},LOGI_SPD={truck:50,apc:42,tank:40};
@@ -4370,14 +4378,26 @@ function shLive(){_shL.length=0;for(const s of[G.depot,G.mp,G.hg])if(s&&!s.dead)
 const shHot=()=>G.wave%10===0||!!(G.ev&&EVENTS[G.ev]&&!EVENTS[G.ev].good);
 function shRaid(e){const p=RAID.raid[e.vbied?'vbied':e.type];if(!p||G.wave<RAID.w0)return;const a=Math.atan2(e.y,e.x);let b=null,bd=RAID.arc;
   for(const s of shLive()){const q=Math.abs(wrapA(Math.atan2(s.cy,s.cx)-a));if(q<bd){bd=q;b=s}}
-  if(!b||R()>=p*(shHot()?RAID.hot:1))return;if(b===G.depot)e.dep=true;else{e.dep=false;e.fsite=b}}
-function shArty(){const l=shLive();if(!l.length||R()>=RAID.arty)return null;return l[Math.floor(R()*l.length)]}
+  if(!b||R()>=p*(shHot()?RAID.hot:1)*shEsc())return;if(b===G.depot)e.dep=true;else{e.dep=false;e.fsite=b}}
+function shArty(){const l=shLive();if(!l.length||R()>=Math.min(0.6,RAID.arty*shEsc()))return null;return l[Math.floor(R()*l.length)]}
+const shEsc=()=>1+RAID.esc*(G.shS||0);
+// the fort took d (pressure applied): raise the strain, spill onto the weakest structure; wallFrac<0 = the walls are down
+function shWeak(){let b=null,bf=2;for(const s of shLive()){const f=s.hp/s.max;if(f<bf){bf=f;b=s}}return b}
+function shStrain(){const st=G.wallMax>0?1-Math.max(0,G.wallHp)/G.wallMax:1-Math.max(0,G.hp)/G.maxHp;if(st>(G.shS||0))G.shS=Math.min(1,st);return G.shS}
+function shSpill(d){if(!G.depot&&!G.mp&&!G.hg)return;const s=shWeak();if(!s)return;const st=shStrain();if(st>0)shDmg(s,d*RAID.spill*Math.pow(st,RAID.spe))}
+// walls down: the weakest standing structure takes the hit (guard x the fort-health share it would have cost); true = absorbed
+function shGuard(d){if(!G.depot&&!G.mp&&!G.hg)return false;G.shS=1;const s=shWeak();if(!s)return false;shDmg(s,s.max*Math.min(1,RAID.guard*d/G.maxHp));return true}
+function shDmg(s,d){if(s.dead||!(d>0))return;s.hp-=d;s.hitT=0.5;s.fT=G.time;if(s===G.depot){if(s.hp<=0)destroyDepot();else shWarn(s)}else if(s.hp<=0)destroySite(s);else shWarn(s)}
+// a structure just fell: the perimeter is going; the last one = LAST STAND (the fort stands alone)
+function shFell(){const all=[G.depot,G.mp,G.hg].filter(Boolean),up=all.filter(s=>!s.dead).length;if(!running||G.over)return;
+  if(up===0){G.lsT=G.wave;setTimeout(()=>{if(running&&!G.over){banner('LAST STAND','The perimeter has fallen · only the fort remains','255,90,70','crit');G.rapidT=Math.max(G.rapidT,8);shake(10);sfx('breach')}},1600)}
+  else feed('PERIMETER FALLING · '+(all.length-up)+' of '+all.length+' structures lost','255,120,90','threat')}
 function shPatch(s,dt){if(G.time-s.fT>repairHold())s.hp=Math.min(s.max,s.hp+s.max*repairAt(L('repair'))*(1+0.25*pk('sappers'))*dt);if(s.warn&&s.hp>s.max*0.8)s.warn=0}
 function shWarn(s){if(s.warn||s.hp>=s.max*RAID.warn)return;s.warn=1;const dep=s===G.depot;
   feed((dep?'FUEL DEPOT':s.air?'HANGAR':'MOTOR POOL')+' UNDER ATTACK · '+Math.ceil(s.hp/s.max*100)+'%','255,150,90',dep?'depot':'repair',dep?'DEPOT HIT':s.air?'HANGAR HIT':'MOTOR POOL HIT')}
 function destroyDepot(){const D=G.depot;D.dead=true;D.hp=0;G.depotWarnT=7;for(const s of D.slots)s.u=null;
   explode(D.x+28,D.y-20,80,D.max*0.25);fireball(D.x+28,D.y-36,70,1.4);fireball(D.x+28,D.y-11,70,1.2);ring(D.x,D.y,240,1,'255,200,140',6);
-  light(D.x,D.y,420,'255,150,60',1.2);puff(D.x,D.y,30,40,5,'28,24,20',60,0.75);decal(D.x,D.y,'scorch',120);shake(12);sfx('nuke',D.x,D.y)}
+  light(D.x,D.y,420,'255,150,60',1.2);puff(D.x,D.y,30,40,5,'28,24,20',60,0.75);decal(D.x,D.y,'scorch',120);shake(12);sfx('nuke',D.x,D.y);shFell()}
 // enemies near the depot may divert to attack it; returns true when it handled this enemy's move/attack this tick
 function depotEnemy(e,spd,dt){const D=G.depot;if(!D||D.dead||e.air||e.nodep){if(e.dep)e.dep=false;return false}if(e.dep===false)return false;   // already decided against the depot: nothing below would run
   const dx=D.x-e.x,dy=D.y-e.y,d=hyp(dx,dy)||1,edge=d-50;
@@ -4386,7 +4406,7 @@ function depotEnemy(e,spd,dt){const D=G.depot;if(!D||D.dead||e.air||e.nodep){if(
   if(G.mines.length){const r=e.r+6+sgMineR();for(const mi of G.mines)if(!mi.used&&!e.dead&&within(mi,e.x,e.y,r))sigMine(mi,e)}
   if(e.dead)return true;
   if(edge>(e.range||0)+e.r*0.5){if(!(_pf&&pfBlocked(e,D.x,D.y)&&pfStep(e,spd,dt))){e.x+=dx/d*spd*dt;e.y+=dy/d*spd*dt}e.moving=true;e.odo+=spd*dt}
-  else{e.moving=false;if(e.load)apcUnload(e);e.atk-=dt;if(e.atk<=0){e.atk=e.rate;
+  else{e.moving=false;if(e.load)apcUnload(e);e.rev=Math.max(e.rev||0,0.5);e.atk-=dt;if(e.atk<=0){e.atk=e.rate;   // raiders at a structure are lit up by its floodlights/guards: never an unseen siege that stalls the wave
     if(e.bomb){e.dead=true;if(e.vbied)vbiedBlast(e);else explode(e.x,e.y,30,0);hitDepot(e.dmg)}
     else if(EFIRE[e.type])EFIRE[e.type](e,e.x+dx/d*(d-40),e.y+dy/d*(d-40),true)
     else if(e.range){const tx=e.x+dx/d*(d-40),ty=e.y+dy/d*(d-40);G.fx.push({k:'tracer',x:e.x,y:e.y,x2:tx,y2:ty,life:0.08,max:0.08,c:e.boss?'#ffd08a':'#ff6a5a',w:e.boss?2.4:1.2});hitDepot(e.dmg)}
@@ -4787,7 +4807,7 @@ function siteEnemy(e,spd,dt){if(e.air||e.nodep||!G.fw)return false;let s=e.fsite
   for(const mi of G.mines)if(!mi.used&&!e.dead&&Math.hypot(mi.x-e.x,mi.y-e.y)<e.r+6+sgMineR())sigMine(mi,e);
   if(e.dead)return true;
   if(d>(e.range||0)+e.r*0.5){if(!(_pf&&pfBlocked(e,cx,cy)&&pfStep(e,spd,dt))){e.x+=dx/d*spd*dt;e.y+=dy/d*spd*dt}e.moving=true;e.odo+=spd*dt}
-  else{e.moving=false;if(e.load)apcUnload(e);e.atk-=dt;if(e.atk<=0){e.atk=e.rate;
+  else{e.moving=false;if(e.load)apcUnload(e);e.rev=Math.max(e.rev||0,0.5);e.atk-=dt;if(e.atk<=0){e.atk=e.rate;   // raiders at a structure are lit up by its floodlights/guards: never an unseen siege that stalls the wave
     if(e.bomb){e.dead=true;if(e.vbied)vbiedBlast(e);else explode(e.x,e.y,30,0);hitSite(s,e.dmg)}
     else if(EFIRE[e.type])EFIRE[e.type](e,cx,cy,s);
     else if(e.range){G.fx.push({k:'tracer',x:e.x,y:e.y,x2:cx,y2:cy,life:0.08,max:0.08,c:e.boss?'#ffd08a':'#ff6a5a',w:e.boss?2.4:1.2});hitSite(s,e.dmg)}
@@ -4798,7 +4818,7 @@ function destroySite(s){s.dead=true;s.hp=0;const air=s.air;
   for(const w of G.fw)if(w.site===s&&w.st!=='lost'){if(w.svc){G.fw=G.fw.filter(q=>q!==w);w.o.svc=false;continue}w.st='lost';w.claim=null;w.t=0}
   for(const b of s.bays)b.w=null;s.crews.length=0;
   fcBlast(s.x,s.y,28);fireball(s.x,s.y+s.top*0.4,60,1.2);fireball(s.x,s.y+s.bot*0.4,60,1.1);ring(s.x,s.y,200,1,'255,200,140',6);puff(s.x,s.y,24,36,5,'28,24,20',50,0.7);decal(s.x,s.y,'scorch',110);shake(10);sfx('nuke',s.x,s.y);
-  banner(air?'HANGAR DESTROYED':'MOTOR POOL DESTROYED',air?'No aircraft repairs for the rest of the run':'No vehicle repairs for the rest of the run','255,120,90')}
+  banner(air?'HANGAR DESTROYED':'MOTOR POOL DESTROYED',air?'No aircraft repairs for the rest of the run':'No vehicle repairs for the rest of the run','239,90,79','crit');shFell()}
 // ---- drawing: sites and wrecks (base ground pass, under every unit), recovery crews (with the friendly units); bars and markers (world UI); falling aircraft
 // Wrecks are the real sprite painted once into a small canvas (the live painters run against a stand-in G, far from the fort so the
 // fort's own props stay off-canvas), charred for the hulk and clean for the rebuild cross-fade; cached per zoom bucket and preset.
@@ -4960,7 +4980,11 @@ function frPreview(cat){const c=$('intelCv'),W=c.width,x=c.getContext('2d'),o=G&
   const k=o.ck,f=W*0.92/FC[k].span,s=fcBake({o,k,air:!!FC[k].air,a:0,tr0:0.7,seed:7,spr:{}},f,false);x.drawImage(s.c,W/2-s.ox*f,W/2-s.oy*f,s.w*f,s.h*f);
   x.globalCompositeOperation='lighter';x.globalAlpha=0.75;const r=W*0.2;x.drawImage(fireSprite(),W*0.55-r,W*0.45-r,r*2,r*2);x.globalAlpha=1;x.globalCompositeOperation='source-over'}
 // ================= AIR & MISSILES =================
-const mslDmg=l=>60*Math.pow(1.28,l-1)*late('mlaunch',l,1.28)*rMult('mlaunch'),siloDmg=l=>320*Math.pow(1.3,l-1)*late('silo',l,1.3)*rMult('silo'),siloCd=l=>Math.max(8,28*Math.pow(0.9,l-1));
+// Missile Silo (owner: "the missile to be large since the silo is large ... the strike to be large ... it needs to be felt"): one round
+// a cycle, so it hits like one: SILO_R blast radius (was 95), SILO_D base damage (was 320), drawn SILO_VS x a launcher round, and an
+// impact with a heavy fireball, two shockwaves, a long smoke column, scorched ground and a rumble (siloImpact / siloAft).
+const SILO_R=175,SILO_D=2400,SILO_VS=2.6,siloR=()=>SILO_R*rMult('silo','radius');
+const mslDmg=l=>60*Math.pow(1.28,l-1)*late('mlaunch',l,1.28)*rMult('mlaunch'),siloDmg=l=>SILO_D*Math.pow(1.3,l-1)*late('silo',l,1.3)*rMult('silo'),siloCd=l=>Math.max(8,28*Math.pow(0.9,l-1));
 const jetDmg=l=>40*Math.pow(1.27,l-1)*late('fighter',l,1.27)*rMult('fighter'),gsDmg=l=>120*Math.pow(1.3,l-1)*late('gunship',l,1.3)*rMult('gunship'),gsGun=l=>12*Math.pow(1.25,l-1)*late('gunship',l,1.25)*rMult('gunship');
 const stripMul=()=>Math.pow(0.85,Math.max(0,L('airstrip')-1));
 function buildAir(){const ph=wallHalfAt(L('walls')),a=[];
@@ -4975,14 +4999,15 @@ function updateAir(dt,ph){
     if(u.k==='mlaunch'&&(vis.length||G.sky.length&&skyTargets().length)){if(u.aimT>0)u.aimT-=dt;const t=u.aimT>0&&!u.aimE.dead?u.aimE:nearestTo(u);u.ang+=Math.max(-5*dt,Math.min(5*dt,angTo(u.ang,Math.atan2(t.y-u.y,t.x-u.x))));
       if(u.cd<=0){u.cd=2.8;mlVolley(u,vis)}}
     if(u.k==='silo'&&u.cd<=0){const all=G.enemies.filter(e=>!e.dead&&visible(e));if(all.length<4){u.cd=1;continue}
-      const c=bestCluster(90,all),T=sg('silo','instant')?0.45:3;u.cd=siloCd(L('silo'));G.nukes.push(siloNew(u,c,T));banner('MISSILE AWAY','','','feed');sfx('silo',u.x,u.y)}
+      const c=bestCluster(SILO_R*0.8,all),T=sg('silo','instant')?0.45:3;u.cd=siloCd(L('silo'));G.nukes.push(siloNew(u,c,T));banner('MISSILE AWAY','','','feed');sfx('silo',u.x,u.y)}
     if(u.k==='gunship'){if(gunshipOut(u,dt))continue;u.orb-=0.12*dt;const r=Math.max(ph+140,vision()*0.75);u.x=Math.cos(u.orb)*r;u.y=Math.sin(u.orb)*r;u.ang=u.orb-Math.PI/2;
       if(!vis.length){u.gk='';continue}if(u.cd<=0)gsFire(u,vis,dt)}
   }
   // guided missiles (launcher volleys + ATGM racks): see MISSILES below
   updateMissiles(dt);
   // silo strikes
-  for(const n of G.nukes){n.t-=dt;if(n.t>0)siloFly(n);else{n.done=true;explode(n.x,n.y,95*rMult('silo','radius'),siloDmg(L('silo')));sigNuke(n);explode(n.x,n.y,60,0);ring(n.x,n.y,280,1.3,'255,240,210',7);ring(n.x,n.y,160,0.9,'255,190,120',4);fireball(n.x,n.y,130,1.3);puff(n.x,n.y,34,45,5,'64,56,48',70,.65);light(n.x,n.y,520,'255,200,120',1.1);decal(n.x,n.y,'scorch',140);shake(14);G.flashT=0.4;sfx('nuke',n.x,n.y)}}
+  for(const n of G.nukes){n.t-=dt;if(n.t>0)siloFly(n);else{n.done=true;siloImpact(n)}}
+  if(G.siloAft)siloAft(dt);
   keepUndone(G.nukes);
   // fighter jets: persistent fleet with parked -> taxi -> takeoff -> patrol/strafe -> RTB -> landing -> refuel
   updateJets(dt);
@@ -5024,8 +5049,8 @@ function drawJet(k=1){const ft=tierOf('fighter');if(ft){drawJetT(k,ft);return}ct
 function drawAirTop(){
   if(S.set.gfx==='high'){drawAirTopHQ();return}
   drawMissiles();
-  for(const n of G.nukes){const k=n.t/n.max;ctx.strokeStyle=`rgba(255,60,40,${0.5+0.5*Math.sin(G.time*12)})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(n.x,n.y,95,0,7);ctx.stroke();
-    ctx.beginPath();ctx.arc(n.x,n.y,95*k,0,7);ctx.stroke();drawSiloMsl(n)}
+  for(const n of G.nukes){const k=n.t/n.max;ctx.strokeStyle=`rgba(255,60,40,${0.5+0.5*Math.sin(G.time*12)})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(n.x,n.y,siloR(),0,7);ctx.stroke();
+    ctx.beginPath();ctx.arc(n.x,n.y,siloR()*k,0,7);ctx.stroke();drawSiloMsl(n)}
   for(const j of G.jets){const s=-900+700*j.t,x=j.x+j.dx*s,y=j.y+j.dy*s,a=Math.atan2(j.dy,j.dx);
     ctx.save();ctx.translate(x+40,y+45);ctx.rotate(a);ctx.fillStyle='rgba(0,0,0,.3)';drawJet(2.5);ctx.restore();
     ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.scale(2.5,2.5);const ft=tierOf('fighter');ctx.fillStyle=ft?JET_LO[ft]:'#8a969e';drawJet();jetLoDetail(ft);if(ft)jetThrust(ft,1,false);else ell(-15,0,3,1.6,'#ffb13b');ctx.restore()}
@@ -5241,6 +5266,21 @@ function drawMissiles(){if(!G.missiles||!G.missiles.length)return;const B=ctx.ge
 // fly a flat, fast arc; the tungsten rod falls from orbit. Height z is drawn the way the game draws every arc (mortars, MLRS,
 // bomblets): lifted up the screen by z*SILO_LIFT and scaled up a little, with its shadow on the ground under it.
 const SILO_K=['prsm','prsm','dke','cps','rod'],SILO_LIFT=.8,_sp1={gx:0,gy:0,z:0},_sp2={gx:0,gy:0,z:0};
+// the strike lands: full damage over the whole blast, a white-hot core, two shockwaves (the slow outer one rolls past the blast edge),
+// a fireball with burning debris, a smoke column that hangs for ~10 s, a wide scorch, the screen flash and a rumble (siloAft)
+function siloImpact(n){const r=siloR(),x=n.x,y=n.y;explode(x,y,r,siloDmg(L('silo')));sigNuke(n);boomFx(x,y,r*.42,true);
+  ring(x,y,r*1.15,.5,'255,255,240',10);ring(x,y,r*2.1,1.1,'255,214,150',7);ring(x,y,r*3.4,1.9,'255,240,210',4);
+  fireball(x,y,r*.95,1.9);for(let i=0;i<5;i++){const a=i*TAU/5+R()*.6,d=r*(.35+R()*.3);fireball(x+Math.cos(a)*d,y+Math.sin(a)*d,r*(.32+R()*.15),1.1+R()*.6)}
+  spark(x,y,70,r*4.5,['#fff6d0','#ffc04a','#ff7a1a','#ffffff'],1.3,2.6);
+  puff(x,y,40,r*.42,7,'64,56,48',r*.75,.7);puff(x,y,18,r*.28,11,'38,34,30',22,.62);   // the blast cloud, then the slow dark column that hangs
+  light(x,y,r*6,'255,200,120',1.8);decal(x,y,'scorch',r*1.5);for(let i=0;i<4;i++){const a=R()*TAU,d=r*(.5+R()*.4);decal(x+Math.cos(a)*d,y+Math.sin(a)*d,'scorch',r*.45)}
+  if(HQ){const h=hx();for(let i=0;i<3&&h.emit.length<9;i++){const a=R()*TAU,d=r*R()*.45;h.emit.push({x:x+Math.cos(a)*d,y:y+Math.sin(a)*d,life:9,t:0})}h.flash=Math.max(h.flash,.45)}
+  G.flashT=0.5;if(S.set.shake)G.shake=Math.max(G.shake,22);Plat.haptic('heavy');sfx('nuke',x,y);
+  (G.siloAft||(G.siloAft=[])).push({x,y,t:1.6})}
+// aftermath: the ground keeps rumbling and the cloud keeps boiling up for a second and a half
+function siloAft(dt){const a=G.siloAft;for(const f of a){f.t-=dt;if(f.t<=0)continue;if(S.set.shake)G.shake=Math.max(G.shake,7*f.t);
+    if(R()<.35)puff(f.x+(R()-.5)*60,f.y+(R()-.5)*60,1,26,6,'52,46,40',14,.5)}
+  for(let i=a.length-1;i>=0;i--)if(a[i].t<=0)a.splice(i,1)}
 function siloNew(u,c,T){const st=rTier('silo');puff(u.x,u.y,10,11,2.6,'206,200,188',48,.55);light(u.x,u.y,120,'255,190,110',.5);shake(3);
   return{x:c.x,y:c.y,t:T,max:T,sx:u.x,sy:u.y,st,k:SILO_K[st],split:0,tl:0,px:u.x,py:u.y}}
 function siloPos(n,q,o){
@@ -5250,15 +5290,15 @@ function siloPos(n,q,o){
   const p=(q-.18)/.82,e=p*p*(3-2*p);o.gx=n.sx+(n.x-n.sx)*e;o.gy=n.sy+(n.y-n.sy)*e;o.z=100*(1-p)*(1-p)+450*Math.sin(p*Math.PI)*(1-p*.25);return o}
 function siloFly(n){const q=1-n.t/n.max,o=siloPos(n,q,_sp1),lx=o.gx,ly=o.gy-o.z*SILO_LIFT,hs=n.st>=2;
   if(n.st>=1&&!n.split&&q>=.8)siloSplit(n,o);
-  if(n.st<4){if(q<.3&&!hs&&R()<.6)puff(n.sx+(R()-.5)*8,n.sy+(R()-.5)*8,1,9,2.6,'200,194,182',16,.5);   // launch cloud boiling out of the silo
+  if(n.st<4){if(q<.3&&!hs&&R()<.8)puff(n.sx+(R()-.5)*14,n.sy+(R()-.5)*14,1,16,3.2,'200,194,182',26,.55);   // launch cloud boiling out of the silo
     if(o.z<430&&(hs||q<.55)){const dx=lx-n.px,dy=ly-n.py,d=hyp(dx,dy),sp=hs?20:7;n.tl+=d;let k=0;   // trail puffs spaced along the (lifted) flight path
-      while(n.tl>=sp&&k<4){n.tl-=sp;k++;const f=d>0?Math.max(0,1-n.tl/d):1;puff(n.px+dx*f,n.py+dy*f,1,hs?3.2:4.4,hs?1.3:2.4,hs?'232,238,244':'214,210,200',5,.45)}}}
+      while(n.tl>=sp&&k<4){n.tl-=sp;k++;const f=d>0?Math.max(0,1-n.tl/d):1;puff(n.px+dx*f,n.py+dy*f,1,hs?6.5:9,hs?1.6:3.2,hs?'232,238,244':'214,210,200',6,.5)}}}
   n.px=lx;n.py=ly}
 function drawSiloMsl(n){const q=1-n.t/n.max,o=siloPos(n,q,_sp1),x=o.gx,y=o.gy-o.z*SILO_LIFT,p=siloPos(n,Math.min(1,q+.01),_sp2),
-    a=Math.atan2(p.gy-p.z*SILO_LIFT-y,p.gx-x),k=1+Math.min(500,o.z)/450,B=ctx.getTransform(),t=G.time,d=MSA[n.k];
-  ctx.globalAlpha=.35*(1-Math.min(.85,o.z/300));ctx.drawImage(mslShadowSpr(),o.gx-d.L*.5,o.gy-d.w*2,d.L,d.w*4);ctx.globalAlpha=1;   // ground shadow
+    a=Math.atan2(p.gy-p.z*SILO_LIFT-y,p.gx-x),k=(1+Math.min(500,o.z)/450)*SILO_VS,B=ctx.getTransform(),t=G.time,d=MSA[n.k];
+  ctx.globalAlpha=.35*(1-Math.min(.85,o.z/300));ctx.drawImage(mslShadowSpr(),o.gx-d.L*.5*SILO_VS,o.gy-d.w*2*SILO_VS,d.L*SILO_VS,d.w*4*SILO_VS);ctx.globalAlpha=1;   // ground shadow
   ctx.globalCompositeOperation='lighter';
-  if(n.st===4)drawStreak(B,x,y-720,x,y,7,.95);
+  if(n.st===4)drawStreak(B,x,y-720,x,y,7*SILO_VS*.6,.95);
   else if(n.st>=2){ctx.lineCap='round';ctx.beginPath();for(let i=0;i<=10;i++){const s=siloPos(n,Math.max(0,q-.7)+Math.min(q,.7)*i/10,_sp2);if(i)ctx.lineTo(s.gx,s.gy-s.z*SILO_LIFT);else ctx.moveTo(s.gx,s.gy-s.z*SILO_LIFT)}
     ctx.strokeStyle='rgba(170,215,255,.28)';ctx.lineWidth=6;ctx.stroke();ctx.strokeStyle='rgba(235,245,255,.8)';ctx.lineWidth=1.6;ctx.stroke()}
   xf(B,x,y,a,k*MSL_VS);
@@ -5507,14 +5547,14 @@ function sgFlak(t,f){if(sg('aagun','instant')){f.tx=t.x;f.ty=t.y;f.dur=0.001;sgB
 function sgFlakHit(f){const p=sg('aagun','executeAir');if(!p)return;const r=16*rMult('aagun','radius');
   for(const e of G.sky)if(!e.dead&&e.hp<e.max*p&&within(e,f.tx,f.ty,r+e.r))sgExecute(e)}
 // ---- silo: hitscan descent, EMP, MIRV warheads onto the next clusters ----
-function sigNuke(n){let p;const r=95*rMult('silo','radius');
+function sigNuke(n){let p;const r=siloR();
   if(n.st===4)sgBeam(n.x,n.y-900,n.x,n.y,BEAMC.silo,3,0.3);   // the rod's incandescent streak hangs a moment; glide bodies leave their arc
   else if(n.st>=2)for(let i=0;i<6;i++){const a=siloPos(n,i/6,_sp1),b=siloPos(n,(i+1)/6,_sp2);sgBeam(a.gx,a.gy-a.z*SILO_LIFT,b.gx,b.gy-b.z*SILO_LIFT,'214,236,255',1.4,.5)}
   if((p=sg('silo','stun'))){for(const e of G.enemies)if(!e.dead&&within(e,n.x,n.y,r*1.3+e.r))sgStun(e,p[0]);ring(n.x,n.y,r*1.5,1,'150,225,255',5);light(n.x,n.y,r*3,'140,210,255',0.6)}
   if(!n.split){_sp1.gx=n.x;_sp1.gy=n.y;_sp1.z=0;siloSplit(n,_sp1)}}   // a round that never reached its split point scatters them at impact
 // multi-warhead tiers: past 80% of the flight the bus releases its extra warheads onto the next clusters (the tier-4 rod cluster
 // instead drops each sub-rod straight down onto its own mark)
-function siloSplit(n,o){n.split=1;const k=sg('silo','bomblets');if(!k)return;const r=95*rMult('silo','radius'),rod=n.st===4,vis=G.enemies.filter(e=>sgLive(e)&&hyp(e.x-n.x,e.y-n.y)>r*0.8);
+function siloSplit(n,o){n.split=1;const k=sg('silo','bomblets');if(!k)return;const r=siloR(),rod=n.st===4,vis=G.enemies.filter(e=>sgLive(e)&&hyp(e.x-n.x,e.y-n.y)>r*0.8);
   for(let i=0;i<k;i++){const c=vis.length>i*7?bestCluster(50,vis.slice(i*7)):null,a=R()*TAU,tx=c?c.x:n.x+Math.cos(a)*r*1.4,ty=c?c.y:n.y+Math.sin(a)*r*1.4;
     G.sgl.push({x:o.gx,y:o.gy,sx:rod?tx:o.gx,sy:rod?ty:o.gy,tx,ty,tg:null,t:0,dur:Math.max(.2,n.t)+0.12+i*0.14,h:rod?0:22,h0:o.z*SILO_LIFT,r:50,dmg:siloDmg(L('silo'))*0.4,dk:'',big:true,rv:rod?'rod':'rv'})}}
 // ---- CIWS: extra mounts, Iron Beam arcs; damage lands at once (as before) and the burst walks unless the tier is hitscan ----
@@ -6947,8 +6987,8 @@ function drawAirGroundHQ(){const px=hqPx();
   drawMslShadows()}
 function drawAirTopHQ(){const px=hqPx();
   drawMissiles();
-  for(const n of G.nukes){const k=n.t/n.max;ctx.strokeStyle=`rgba(255,60,40,${0.5+0.5*Math.sin(G.time*12)})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(n.x,n.y,95,0,7);ctx.stroke();
-    ctx.beginPath();ctx.arc(n.x,n.y,95*k,0,7);ctx.stroke();drawSiloMsl(n)}
+  for(const n of G.nukes){const k=n.t/n.max;ctx.strokeStyle=`rgba(255,60,40,${0.5+0.5*Math.sin(G.time*12)})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(n.x,n.y,siloR(),0,7);ctx.stroke();
+    ctx.beginPath();ctx.arc(n.x,n.y,siloR()*k,0,7);ctx.stroke();drawSiloMsl(n)}
   const cca=tierOf('fighter')===3;for(const j of G.jets){const s=-900+700*j.t,x=j.x+j.dx*s,y=j.y+j.dy*s,a=Math.atan2(j.dy,j.dx);drawJetHQ(x+40,y+45,a,2.5,px,false,true);drawJetHQ(x,y,a,2.5,px,true,false);
     if(cca)for(const sd of[-1,1])drawCCA(x-j.dx*34-j.dy*sd*40,y-j.dy*34+j.dx*sd*40,a,px)}
   for(const u of G.air)if(u.k==='gunship')drawGunshipHQ(u,px);
@@ -9982,17 +10022,22 @@ function dnDark(f){const i=f===1?0:1,e=_dnDk[i]||(_dnDk[i]={k:'',f:-1,v:'',al:0}
 // The buffer holds darkness rather than light: the ambient darkening as alpha (dnDark), with every light source punching it out
 // ('destination-out', scaled so a light restores what it added in the multiply) plus a faint additive tint for its colour, then the
 // haze and the glow (cones, halos, fireflies) added on top. Fire and flashes punch out fully, which stands in for the emissive pass.
-function dnLite(m,W,H,V){const dk=DN.dk,lamp=DN.lamp,c=pfCanvas('dnlm',Math.max(2,Math.ceil(VW/5)),Math.max(2,Math.ceil(VH/5))),x=c._x;
+// Light-map resolution: CSS px per buffer px. Was a flat 1/5 (1/6 Medium): on a 390-wide iPhone that is a 78x169 buffer stretched
+// ~10x over the 2x backing store, and the bilinear stretch turned every pool, lamp and the lit ring's edge into blotchy, smeared
+// patches (owner: "weird low res lighting at night"). Now 1/2 on phones at full quality (195x422: ~6x the texels, still a few
+// dozen blits into a buffer under a tenth of the screen), stepping down with the adaptive-quality governor; desktop 1/2.5.
+const DN_Q=[2,2.5,3,4],dnQ=()=>PHONE?DN_Q[AQ.lv]||4:2.5,dnBuf=k=>pfCanvas(k,Math.max(2,Math.ceil(VW/dnQ())),Math.max(2,Math.ceil(VH/dnQ())));
+function dnLite(m,W,H,V){const dk=DN.dk,lamp=DN.lamp,c=dnBuf('dnlm'),x=c._x;
   if(dk>=0.004)dnLightMap(m,W,H,V,true);else{x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,c.width,c.height)}
   x.setTransform(1,0,0,1,0,0);
   if(DN.haze>0.02&&AQ.lv<1){x.globalCompositeOperation='lighter';x.globalAlpha=DN.haze*.07;x.fillStyle=DN.hazeCss;x.fillRect(0,0,c.width,c.height)}
   x.globalAlpha=1;x.globalCompositeOperation='source-over';
   if(lamp>=0.02&&GFX.lights)dnGlow(m,W,H,V,lamp,c);
-  ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.imageSmoothingEnabled=true;ctx.drawImage(c,0,0,W,H);xr(m);
+  ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(c,0,0,W,H);ctx.imageSmoothingQuality='low';xr(m);
   if(lamp>=0.02){if(GFX.lights)dnStars(V,lamp);dnLamps(lamp,V);xr(m)}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
 // Light map: ambient (deep beyond the lit ring, moonlit inside it) plus every light source, multiplied over the world.
 // lite (phones, via dnLite): the buffer is built as darkness instead and left for the caller to composite.
-function dnLightMap(m,W,H,V,lite){const q=HQ?5:6,lw=Math.max(2,Math.ceil(VW/q)),lh=Math.max(2,Math.ceil(VH/q)),c=pfCanvas('dnlm',lw,lh),x0=c._x,k=lw/W,lamp=DN.lamp,t=G.time,
+function dnLightMap(m,W,H,V,lite){const c=dnBuf('dnlm'),lw=c.width,lh=c.height,x0=c._x,k=lw/W,lamp=DN.lamp,t=G.time,
     x=lite?x0:CGL.begin('lmap',G.lights.length+G.fx.length+_rig.length*2+DN.beams.length*2,x0,lw,lh)||x0;   // opaque base: premultiplied additive is exact
   try{
   let gm=1;const M={a:m.a*k,b:m.b*k,c:m.c*k,d:m.d*k,e:m.e*k,f:m.f*k},P=(img,wx,wy,r,a)=>{a*=gm;if(a<=0.01||r<=0)return;x.globalAlpha=Math.min(1,a);x.setTransform(M.a,M.b,M.c,M.d,M.a*wx+M.c*wy+M.e,M.b*wx+M.d*wy+M.f);x.drawImage(img,-r,-r,2*r,2*r)};
@@ -10014,7 +10059,7 @@ function dnLightMap(m,W,H,V,lite){const q=HQ?5:6,lw=Math.max(2,Math.ceil(VW/q)),
     else if(f.k==='tracer'&&nt++<70)P(dnPool('255,214,140'),f.x2,f.y2,14,kk*.7)}
   if(HQ&&G.hx)for(const e of G.hx.emit)P(fire,e.x,e.y,62,.85*Math.min(1,e.life/4)*(.8+.2*Math.sin(t*13+e.x)));
   if(G.depot&&G.depot.dead)P(fire,G.depot.x,G.depot.y,90,.8);
-  for(const n of G.nukes)P(dnPool('255,70,50'),n.x,n.y,110,.35);
+  for(const n of G.nukes)P(dnPool('255,70,50'),n.x,n.y,siloR()*1.15,.35);
   if(lamp>0.02){
     // fort: sodium lamp pools in the courtyard, depot / field floodlights, runway edge lights
     const ph=fortHalf(),lp=dnPool(DN_LAMP);P(lp,0,0,ph*1.3+30,.55*lamp);
@@ -10035,12 +10080,12 @@ function dnLightMap(m,W,H,V,lite){const q=HQ?5:6,lw=Math.max(2,Math.ceil(VW/q)),
   x.globalAlpha=1;x.globalCompositeOperation='source-over';
   }finally{if(x!==x0)CGL.end()}
   if(lite)return;
-  ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='multiply';ctx.imageSmoothingEnabled=true;ctx.drawImage(c,0,0,W,H);ctx.globalCompositeOperation='source-over';xr(m)}
+  ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='multiply';ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(c,0,0,W,H);ctx.imageSmoothingQuality='low';ctx.globalCompositeOperation='source-over';xr(m)}
 // Glow layer: searchlight shafts, headlight cones (read as lit dust in the air - out in the fog too, a glimpse only: nothing
 // here touches visible(), so an enemy whose lights you can see still can't be targeted until it is in sight), lamp halos, nav
 // halos and fireflies are all drawn into one low-res buffer and added over the frame in a single full-screen pass.
 // into (phone High, dnLite): add into that buffer instead; the caller composites it.
-function dnGlow(m,W,H,V,lamp,into){let x;const q=HQ?4:6,c=into||(HQ?pfCanvas('dnvb',Math.max(2,Math.ceil(VW/q)),Math.max(2,Math.ceil(VH/q))):null),lw=c?c.width:2,lh=c?c.height:2,x0=HQ?c._x:ctx,k=HQ?lw/W:1,t=G.time,s=HQ?1:1.6,
+function dnGlow(m,W,H,V,lamp,into){let x;const c=into||(HQ?dnBuf('dnvb'):null),lw=c?c.width:2,lh=c?c.height:2,x0=HQ?c._x:ctx,k=HQ?lw/W:1,t=G.time,s=HQ?1:1.6,
     M={a:m.a*k,b:m.b*k,c:m.c*k,d:m.d*k,e:m.e*k,f:m.f*k},B=(img,wx,wy,r,a)=>{if(a<=0.01)return;x.globalAlpha=Math.min(1,a);x.setTransform(M.a,M.b,M.c,M.d,M.a*wx+M.c*wy+M.e,M.b*wx+M.d*wy+M.f);x.drawImage(img,-r,-r,2*r,2*r)};
   x=x0;if(HQ&&!into){x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.clearRect(0,0,lw,lh)}
   const gx=!into&&CGL.begin('glow',_rig.length*(HQ?5:2)+DN.beams.length*2+(HQ?34:0),x0,HQ?lw:W,HQ?lh:H,HQ);if(gx)x=gx;
