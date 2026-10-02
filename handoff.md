@@ -25,8 +25,8 @@ Top-down modern-military roguelite fort defense, headed for the iOS App Store. T
 
 ### Regression tests (`.qa/`, gitignored, local to this PC)
 Run from `.qa/`, **one headless process at a time** (the owner's PC crashed when ~100 headless Edge processes ran at once): `python h.py dom <name> <file>.js` prints the result in the page title.
-- Must stay green: `t_core` 57, `t_econ` 82, `t_daily` 108, `t_adlab` 62, `t_merge` 45, `t_fort` 23, `t_tw` 20, `t_cash` 69, `t_store` 52 (its "tile scrolled into view" check flakes headless), `own.js` (owner decisions), `PRE=pre_seed.js HASH='#unit' ... t_basehp.js` 28.
-- Desert parity: `PRE=pre_seed.js VT=60000 python h.py dom par t_par.js` must print `curves=-2048449059` and midsim `w21 k896 hp-3646 ... bank1023409 ... ex-5889330`. A change to Desert wave curves or the Desert sim is a red flag.
+- Must stay green: `t_core` 57, `t_econ` 82, `t_daily` 110, `t_adlab` 62, `t_merge` 45, `t_fort` 23, `t_tw` 20, `t_cash` 69, `t_store` 52 (its "tile scrolled into view" check flakes headless), `own.js` (owner decisions), `PRE=pre_seed.js HASH='#unit' ... t_basehp.js` 28.
+- Desert parity: `PRE=pre_seed.js VT=60000 python h.py dom par t_par.js` must print `curves=-2048449059` and midsim `w21 k887 hp-24673 ... bank1019576 ... ex1101626` (since the 2026-10-02 directive halving; it was `w21 k896 hp-3646 bank1023409 ex-5889330`: midsim picks directives). A change to Desert wave curves or the Desert sim is a red flag.
 - Smoke: `MAP=<id> python smoke.py 'mid#7'` (or `fresh`/`maxed`), expect `cw=0 errbox=false`.
 - iPhone-accurate screenshots: Playwright WebKit is installed (`python -m playwright`, iPhone 13 profile; see `.qa/wk2.py`, `cash_shot.py`). Read the PNGs and iterate before shipping UI.
 - Native: `node native/test_shell.cjs`, `node native/check_game.cjs`.
@@ -350,7 +350,7 @@ The campaign loop is play → die → earn a little RP → start research → re
 
 ### R&D gated by theater (`RS_GATE`, `rsProg()`)
 - Campaign progress `rsProg()` = (theater order − 1) × 100 + that theater's best wave (a cleared theater counts 100; only open theaters count). A tier opens when `rsProg() >= t.gate`.
-- 100 researchable tiers since the Infantry Kit merge (was 107; see "Infantry Kit and fort design"): Desert Outpost 13 (Rifleman at wave 1 as the tutorial), Mountain 12, Coastal 12, City 13, Arctic 12, Jungle 13, Island 13, Capital 12, spread over waves 3…94 in the order the old wave gates rolled them out (`.qa/gates.js` regenerates the table). Vanguard Commander is last, at Capital Defense wave 94.
+- 100 researchable tiers since the Infantry Kit merge (was 107; see "Infantry Kit and fort design"): Desert Outpost 23 (Rifleman at wave 1 as the tutorial), Mountain 10, Coastal 8, City 12, Arctic 9, Jungle 13, Island 13, Capital 12 since every line's first tier moved early (see "Owner balance pass 2026-10-02"; before: 13/12/12/13/12/13/13/12 in the order the old wave gates rolled them out). Vanguard Commander is last, at Capital Defense wave 94.
 - `t.g` (old wave gate) now only picks the tier's era tint. `t.gate`, `t.cost` (RP, `RS_RP` anchors per theater, geometric in between) and `t.ms` (lab time, `RS_MIN` anchors) are filled in at load. `.qa/tiers.js` prints the per-theater table.
 - Lock text `gateTxt(g)` ("Reach wave 58 on Mountain Pass"); a tier in a theater not yet open reads "Opens in <theater>".
 
@@ -363,7 +363,7 @@ The campaign loop is play → die → earn a little RP → start research → re
 ### Gems (premium currency core for phase 4)
 - `S.gems`, `gemAdd(n, src)`, `gemSpend(n, why) -> bool` (false and nothing spent when short), lifetime ledger `S.gemT = {in:{src:n}, out:{why:n}}`. Phase 4 credits with its own `src` ('daily', 'ad', 'iap:<sku>') and spends with its own `why`.
 - Free sources (`GEM_FREE`): first clear of theater k = 20 + 10k (30…100), stars +5/+5/+10, medals +3 (first award) / +2 (each rank). Old saves get a one-time credit for what they already earned (`gemInit`, `S.gemv`).
-- Uses: finish research now, `labSkipCost(ms) = ceil(10 × hours^0.8)` (10 min 3, 1 h 10, 8 h 53, 18 h 101); 2nd lab slot 900. Battle speed is never sold.
+- Uses: finish research now, `labSkipCost(ms)` = linear 25 gems per 30 min (`GEM_PER_H` 50), per started minute: ceil(minutes × 25/30), min 1 (1 min 1, 10 min 9, 30 min 25, 1 h 50, 8 h 400, 18 h 900; was ceil(10 × hours^0.8) until 2026-10-02); 2nd lab slot 900. Battle speed is never sold.
 - Header gem chip (violet, after RP) opens the gems sheet (`openGems`). RESET keeps gems (they may be bought).
 
 ### Armory caps + theater prices
@@ -450,7 +450,7 @@ One seam between the game and the device. The web build has no ads or store; the
 
 ### Rewarded ads (daily caps, `AD_CAP`) and interstitials
 - Placements:
-  - 2x payout on the AAR: 3/day, campaign runs only; adds the run's earnings to that theater's bank.
+  - 2x payout on the AAR: no daily cap since 2026-10-02 (`AD_CAP.x2` = Infinity), once per run end, campaign runs only; adds the run's earnings to that theater's bank.
   - Second Wind: 2/day.
   - Free supply drop from the pause menu: 2/day, once a run, from wave 3; drops munitions, repair and air strike crates.
   - Directive reroll on the commendation modal: 3/day, once per offer; the three cards shown are excluded.
@@ -521,7 +521,7 @@ One seam between the game and the device. The web build has no ads or store; the
 - Overall estimate for a free player who plays every day: −3 to −5% campaign length (≈ 41-42 days instead of 43). Not re-simulated with the bot (hours of headless Edge); do that before release if the number matters.
 
 ### QA
-- `.qa/t_daily.js` (108 checks), run with `python h.py dom daily t_daily.js`. Covers:
+- `.qa/t_daily.js` (110 checks), run with `python h.py dom daily t_daily.js`. Covers:
   - roll-out gates
   - mission roll: 3, one per category, deterministic, theater-aware
   - live progress through the real hooks; claim, bonus, claim-once
@@ -560,7 +560,7 @@ Owner request: STORE replaces MEDALS in the nav; medals move onto Base as a coll
 
 ## Lab speed-up ad (branch `ad-lab`)
 Owner-approved: an optional rewarded ad that speeds up the running research timer, so ads feed the core loop (play → die → research → come back). Code: `AD_CAP.lab`, `AD_LAB_MS`, `AD_LAB_MIN`, `labAdSt`, `labAd` (DAILIES section, after `adGems`); UI `labAdBtn`, `labAdClick`, the `labUi` ticker check; CSS block `/* lab speed-up ad */` after the lab strip rules.
-- **Numbers:** `AD_LAB_MS` = 1 h off per ad, `AD_CAP.lab` = 2 a day, shared by both lab slots. One hour is exactly what the free-gem ad pays at FINISH NOW prices (`labSkipCost(1 h)` = 10 = `AD_GEMS`), so no placement is worth more than another. 30 min would be worth 6 gems (less than the gem ad) and is under 5% of a mid/late job (Mountain 45 min-2.5 h, City 5 h, Capital 15-18 h, Refits 4-24 h); it would read as a token.
+- **Numbers:** `AD_LAB_MS` = 1 h off per ad, `AD_CAP.lab` = 2 a day, shared by both lab slots. One hour was exactly what the free-gem ad pays at FINISH NOW prices (`labSkipCost(1 h)` = 10 = `AD_GEMS`; since the 2026-10-02 skip price it is 50, so the lab ad is now the richest placement), so no placement is worth more than another. 30 min would be worth 6 gems (less than the gem ad) and is under 5% of a mid/late job (Mountain 45 min-2.5 h, City 5 h, Capital 15-18 h, Refits 4-24 h); it would read as a token.
 - **Rules:** hidden on the plain web build (`adLeft` = 0 without the dev flag or a native ad plugin), before Daily Ops opens, during a run, when the day's 2 are used, and with `AD_LAB_MIN` = 2 min or less left (the ad would outlast the wait). With an hour or less left the button reads FINISH and the ad lands the job. A skipped ad, a no-fill, or a job that landed (or ran out) while the ad played grants nothing and uses no cap slot.
 - **Clock safety:** the cut moves `j.end` back on the lab clock by `min(AD_LAB_MS, end − labNow())`: never below now, `t0` unchanged, so the bar jumps forward and a finished job lands through `labTick`/`labLand` (toast, R&D dot, flash) like any other. The day key is `today()` (lab clock): a device-clock rollback never re-arms the cap or stretches the job; rollback + return advances the lab clock (the documented phase 4 rule, same as a forward jump).
 - **Ledger / interstitials:** `adUse('lab')` counts it in `S.dy.ads.lab` (the per-day ledger every placement uses) and stamps `S.ia.rw`, so no interstitial shows within `IA_RW` of it.
@@ -703,3 +703,43 @@ Owner report: "The fuel depot is way too hard to destroy, along with the airstri
 - `smk_bh.py`: smoke mid#7/maxed with wall + structure minimums in the result line (`RUNS=` picks map/mode pairs, `SRC=` another build). `t_bhshot.js`: the screenshot (`bhshot_390x844.png`, `bhshot_844x390.png`: Desert w38, depot 49% under raiders, feed line up).
 - `t_cash.js` updated for the owner's pack prices (Supply Crate 15 gems, War Chest 75): the "chest cheaper per wave" check is now "packs ordered small to big", price literals read `CASH_PACKS`. 69/69.
 - Unchanged: t_core 57, t_econ 82, t_daily 108, t_adlab 62, t_merge 45, t_fort 23, t_tw 20, own.js, t_par identical (curves -2048449059, midsim w21 k896 hp-3646 bank1023409 ex-5889330: its save has no depot or yards).
+
+## Owner balance pass 2026-10-02 (branch `worktree-agent-a65c8fecdc8181cbb`)
+Six owner notes, one branch. Desert wave curves untouched (`t_par` curves -2048449059); the midsim moved only because it picks directives (verified: main + the directive edit alone prints the same new midsim).
+- **War Bonds** (`U` 'bounty'): +2.5% money per level (`WB` = 0.025, was 0.15) in `money`, `cpCash`, `cashModel` and the card (`+2.5% money`, one decimal). Desert cap 20 = +50% (was +300%), so cash runs on the base kill/wave curve much more; the cash-pack table above was computed at 15% and is now smaller for saves with War Bonds.
+- **Field Commendation directives** (`PERKS`): every bonus halved per rank, text to match. Hollow-Point +12.5%, Rapid Reload 7.5%, Eagle Eye +7.5% crit, Tungsten 7.5% pierce, Overwatch +10%, Combat Engineers +17.5% wall HP (still full rebuild), Medevac +17.5% max HP (still full heal), Salvage +12.5% cash, Hazard Pay 12.5% tougher / +20% pay (both sides halved so it stays a fair trade; also the daily-challenge modifier), Supply Drop 2 crates now + crates 20% more often, Fire Mission 17.5%, Grenadier reload x0.825 per rank and +1 grenade per throw every second rank, CAS cooldown x0.825, Minelayers +50% mines, Flak +20%, Illumination halves the night sight cut (was removes it), Sapper Teams hold /(1+0.5n) and +25% repair, Vehicle Barriers car bombs x0.75 and vehicles -10%, Anti-Armor +17.5%, Counter-Battery +25%, Aircrew flares /(1+0.5n), +5% fool, heal 12.5%, Fuel Convoy burn x0.85. Instant effects (full rebuild/heal, strike ready now, fresh mines, top-off) unchanged.
+- **2x payout ad**: `AD_CAP.x2` = Infinity; still once per AAR (`lastAAR.x2`, in memory only), campaign only, never in the challenge. The button reads "Watch an ad · adds this run's cash again" (no counter).
+- **Finish now**: linear 25 gems / 30 min (see Gems above). Refits use the same `labSkipCost`. The cash-pack "value check" (gems as skips) assumed the old curve: a gem now buys 1.2 min of lab time instead of ~6 min, so packs are relatively better value than skips.
+- **R&D access**: every line's first tier opens early. Desert gate table (progress = Desert best wave; tier 2+ gates unchanged):
+
+  | Gate | Tier (RP, lab) |
+  |---|---|
+  | 1 | Infantry Kit T1 (40, 2m) |
+  | 3 | Hand Grenades T1 (20, 1m) |
+  | 5 | Fort Walls T1 (25, 1m) |
+  | 6 | Infantry Kit T2 (70, 31m) |
+  | 8 | Minefield T1 (25, 1m) |
+  | 12 | Artillery T1 (30, 2m) |
+  | 16 | Gun Trucks T1 (35, 2m) |
+  | 20 | AA Gun T1 (40, 2m) |
+  | 25 | MG Nests T1 (45, 30m) |
+  | 30 | Sniper Tower T1 (55, 30m) |
+  | 35 | APC Squadron T1 (60, 35m) |
+  | 40 | Air Support T1 (70, 35m) |
+  | 50 | Tank Platoon T1 (100, 40m) |
+  | 52 | Infantry Kit T3 (410, 90m) |
+  | 58 | Flame Bunkers T1 (130, 40m) |
+  | 60 | Fort Walls T2 (140, 40m) |
+  | 66 | Missile Launcher T1 (170, 45m) |
+  | 68 | Hand Grenades T2 (180, 45m) |
+  | 74 | SAM Site T1 (220, 45m) |
+  | 76 | Minefield T2 (230, 50m) |
+  | 82 | Attack Helicopters T1 (280, 50m) |
+  | 88 | Fighter Jets T1 (340, 55m) |
+  | 92 | Gun Trucks T2 (390, 55m) |
+
+  Mountain Pass: Point Defense T1 at 130 (w30), Missile Silo 135 (w35), Gunship 140 (w40): their Armory items open at wave 30/30/35 of a theater. Each gate sits behind the Armory wave that unlocks the item, and a line still shows only once its item is fielded (owner rule). Visible lines on typical Desert saves (`.qa/x_rd.js`): w10 4 (Infantry, Grenades, Walls, Mines; was 2), w22 7 (was 4), w25 8 (was 4), w50 11 (was 7).
+  Per theater tiers 23/10/8/12/9/13/13/12, RP 3105/6050/5960/10430/11200/17750/21300/25250 (was 1770/7090/8750/11230/14450/…), tree 107590 -> 101045 RP (-6%), lab 822.7 -> 774.1 h. RP income is unchanged (owner rule 3): the Desert now offers ~3.1k RP of tiers against ~1.9k RP earned there, so the player chooses; Desert+Mountain together cost about what they did (8860 -> 9155 RP).
+- **Air Support**: `airBombs(l)` = min(16, 5 + ceil(l/2)) (odd levels +1 bomb), `airRad(l)` = 34 x min(2.5, 1 + 0.08 x (floor(l/2) + levels past the bomb cap)) (even levels +8% blast), `airDmg(l)` = 60 x 1.03^(l-1) x `rMult('air')` (knobs `AIR_DG`, `AIR_NMAX`, `AIR_R0`, `AIR_RSTEP`, `AIR_RMAX`). The bomb's radius rides on the bomb (`b.r`) into `sigBomb` (blast, armor bite, burn). Card: "7 bombs · 39m blast · 65.6 dmg · 36s cd".
+  Old vs new damage per bomb (before research): L1 60 / 60, L5 152 / 67.5, L10 561 / 78, L20 7,617 / 105, L38 (Desert cap) 834k / 179. Old grew x1.25 a level (x1.298 past the knee, matching enemy HP); a Desert grunt has 80 HP at w10, 720 at w20, 10.5k at w30. **At 1.03 a level the strike stops killing infantry from about wave 15**; it keeps the flat 6%-of-max-HP bite on vehicles/bosses per bomb (`BOMB_PCT`) and the research multipliers. Raise `AIR_DG` if the owner wants it to keep pace.
+- QA updated: `t_econ` skip-cost check (linear numbers), `t_adlab` "1h = 50 gems", `t_daily` cap checks moved to the reroll ad + "x2 has no daily cap" + "AAR 2x again next run, no counter" (108 -> 110), `t_merge` gives gems before its two `labSkip` calls (the skip now costs more than the seeded balance), `t_cash` War Bonds scale = 1 + 10 x WB.
