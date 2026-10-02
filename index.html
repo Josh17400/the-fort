@@ -1976,20 +1976,20 @@ function buyResearch(id){if(!labStart(id)){sfx('deny');return false}const r=RLIN
 // ================= LAB (research timers) =================
 // Research takes real time. Starting a tier or a Refit pays its RP and puts it in a lab slot; it lands when its timer ends, even
 // while the app is closed, and like every tier it deploys with the next run. One slot to start; LAB_SLOT_GEMS buys the second.
-// Gems finish a job at once: labSkipCost() rises with the time left, sublinearly, so long jobs cost less per hour skipped.
+// Gems finish a job at once: labSkipCost() is linear in the time left, GEM_PER_H (50) gems an hour = 25 per 30 min, per started minute.
 // Clock safety: timers run on a lab clock (S.lab.t, ms) that advances by Date.now() deltas and never goes backwards. Setting the
 // device clock back never stretches a timer; setting it forward and back again cannot un-finish a job. It starts at Date.now(), so
 // the stored ends are absolute timestamps unless the device clock has ever been set back.
 // S.lab = {t: lab clock, w: last Date.now() seen, slots: 1-2, q: [{id: line, k: tier (or Refit number when rf), rf?: 1, t0, end}],
 // news: [{id, k, rf?}] landed jobs the R&D screen has not shown yet (the nav dot)}.
-const LAB_SLOTS_MAX=2,LAB_SLOT_GEMS=900,GEM_PER_H=10;
+const LAB_SLOTS_MAX=2,LAB_SLOT_GEMS=900,GEM_PER_H=50;   // finish now: 25 gems per 30 min (owner 2026-10-02), per started minute
 function labInit(){const o=S.lab&&typeof S.lab==='object'&&!Array.isArray(S.lab)?S.lab:{},now=Date.now(),num=v=>isFinite(+v)&&+v>0?+v:0;
   const job=j=>j&&typeof j==='object'&&typeof j.id==='string'&&(j.k|0)>0&&isFinite(+j.end)&&isFinite(+j.t0);
   S.lab={t:num(o.t)||now,w:num(o.w)||now,slots:Math.max(1,Math.min(LAB_SLOTS_MAX,o.slots|0)),q:Array.isArray(o.q)?o.q.filter(job):[],news:Array.isArray(o.news)?o.news.filter(j=>j&&typeof j.id==='string').slice(-8):[]}}
 function labNow(){const b=S.lab,w=Date.now();if(w>b.w)b.t+=w-b.w;b.w=w;return b.t}
 const labOf=id=>S.lab.q.find(j=>j.id===id)||null,labFree=()=>Math.max(0,S.lab.slots-S.lab.q.length);
 const labLeft=j=>Math.max(0,j.end-labNow());
-const labSkipCost=ms=>ms>0?Math.max(1,Math.ceil(GEM_PER_H*Math.pow(ms/3600e3,0.8))):0;
+const labSkipCost=ms=>ms>0?Math.max(1,Math.ceil(Math.ceil(ms/60e3)*GEM_PER_H/60-1e-9)):0;   // linear: ceil(started minutes x 25/30), min 1
 // land every finished job (and drop any a restored save made stale); returns the landed jobs. Cheap: callers run it on every render.
 function labTick(){const now=labNow(),out=[];let ch=false;
   for(const j of S.lab.q.slice()){const r=RLINES[j.id],bad=!r||(j.rf?!rsDone(j.id)||(S.rf[j.id]|0)>=j.k:j.k>=r.t.length||rsOwned(j.id)>=j.k);
@@ -2195,8 +2195,8 @@ function adUse(k){const y=S.dy,d=today();if(y.ads.d!==d)y.ads={d};y.ads[k]=(y.ad
 async function adWatch(k){if(adLeft(k)<=0||Plat.busy())return false;const ok=await Plat.ad(k);if(ok)adUse(k);return ok}
 async function adGems(){if(!(await adWatch('gems')))return false;gemAdd(AD_GEMS,'ad');return true}
 // ---- lab speed-up: a rewarded ad takes AD_LAB_MS off a running research or Refit timer (and finishes it when that much or less is
-// left), AD_CAP.lab a day shared by both slots. AD_LAB_MS = 1 h is worth labSkipCost(1 h) = 10 gems = AD_GEMS, so no placement pays
-// better than another. Hidden with AD_LAB_MIN or less left (the ad would outlast the wait). The job's end moves on the lab clock and
+// left), AD_CAP.lab a day shared by both slots. AD_LAB_MS = 1 h is worth labSkipCost(1 h) = 50 gems (was 10 = AD_GEMS before the 2026-10-02 skip price); the lab ad is now
+// the richest placement (owner kept 1 h). Hidden with AD_LAB_MIN or less left (the ad would outlast the wait). The job's end moves on the lab clock and
 // never below now; labTick/labLand land a finished job as usual, and the job's notification is moved to its new end.
 // labAdSt(j): '' (no button), 'cut' (an hour off) or 'fin' (the ad finishes it). labAd(id) -> ms taken off, 0 when nothing was granted
 // (skipped or failed ad, or the job landed while the ad played: no cap slot is used then).
