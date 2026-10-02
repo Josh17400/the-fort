@@ -25,7 +25,7 @@ Top-down modern-military roguelite fort defense, headed for the iOS App Store. T
 
 ### Regression tests (`.qa/`, gitignored, local to this PC)
 Run from `.qa/`, **one headless process at a time** (the owner's PC crashed when ~100 headless Edge processes ran at once): `python h.py dom <name> <file>.js` prints the result in the page title.
-- Must stay green: `t_core` 57, `t_econ` 82, `t_daily` 108, `t_adlab` 62, `t_merge` 45, `t_fort` 23, `t_tw` 20, `t_cash` 69, `t_store` 52 (its "tile scrolled into view" check flakes headless), `own.js` (owner decisions), `PRE=pre_seed.js HASH='#unit' ... t_basehp.js` 28.
+- Must stay green: `t_core` 57, `t_econ` 82, `t_daily` 108, `t_adlab` 62, `t_merge` 45, `t_fort` 23, `t_tw` 20, `t_cash` 69, `t_store` 52 (its "tile scrolled into view" check flakes headless), `own.js` (owner decisions), `PRE=pre_seed.js HASH='#unit' ... t_basehp.js` 38.
 - Desert parity: `PRE=pre_seed.js VT=60000 python h.py dom par t_par.js` must print `curves=-2048449059` and midsim `w21 k896 hp-3646 ... bank1023409 ... ex-5889330`. A change to Desert wave curves or the Desert sim is a red flag.
 - Smoke: `MAP=<id> python smoke.py 'mid#7'` (or `fresh`/`maxed`), expect `cw=0 errbox=false`.
 - iPhone-accurate screenshots: Playwright WebKit is installed (`python -m playwright`, iPhone 13 profile; see `.qa/wk2.py`, `cash_shot.py`). Read the PNGs and iterate before shipping UI.
@@ -703,3 +703,29 @@ Owner report: "The fuel depot is way too hard to destroy, along with the airstri
 - `smk_bh.py`: smoke mid#7/maxed with wall + structure minimums in the result line (`RUNS=` picks map/mode pairs, `SRC=` another build). `t_bhshot.js`: the screenshot (`bhshot_390x844.png`, `bhshot_844x390.png`: Desert w38, depot 49% under raiders, feed line up).
 - `t_cash.js` updated for the owner's pack prices (Supply Crate 15 gems, War Chest 75): the "chest cheaper per wave" check is now "packs ordered small to big", price literals read `CASH_PACKS`. 69/69.
 - Unchanged: t_core 57, t_econ 82, t_daily 108, t_adlab 62, t_merge 45, t_fort 23, t_tw 20, own.js, t_par identical (curves -2048449059, midsim w21 k896 hp-3646 bank1023409 ex-5889330: its save has no depot or yards).
+
+## Collapsing perimeter, silo strike, night light map (branch `worktree-agent-aec59798fe36c10d6`)
+### Structures fall before the fort (owner: "a last stand when everything around you starts failing till it's only you left")
+- Code: new `RAID` knobs `esc` 8, `spill` 3, `spe` 0.7, `ease` 0.9, `guard` 2.5 and `shEsc`/`shWeak`/`shStrain`/`shSpill`/`shGuard`/`shDmg`/`shFell` right after `shArty`; hooks in `damageFort` (spill on a wall hit, guard when the walls are down), `startWave` (strain eases), `destroyDepot`/`destroySite` (`shFell`).
+- **Strain** `G.shS` = the deepest the walls have been pushed this stretch (1 = breached), ratchets up on every fort hit, x`ease` per wave. Raider pick chance and the artillery share (cap 60%) are x`shEsc()` = 1 + esc x strain, so a fort that is starting to crack sees its perimeter raided hard while a healthy fort (strain ~0) plays exactly as before.
+- **Spill**: every hit on the walls also lands `spill x strain^spe` of itself on the weakest standing structure (weakest first, so they go one after another).
+- **Guard**: with the walls down, a hit that would reach the fort's own health lands on the weakest standing structure instead (`guard` x the share of fort health it would have cost). The keep only bleeds once the perimeter is gone.
+- Feed "PERIMETER FALLING · n of m structures lost" per loss, the yard banners are now `crit`, and when the last structure falls a crit banner **LAST STAND** "The perimeter has fallen · only the fort remains" + 8 s Rapid Fire (`G.lsT` = wave). `G.lastStand` (walls breach, 3-star logic) is untouched.
+- Raiders standing at a structure are revealed (`e.rev`): a sim found a hidden shooter sieging a hardened hangar out of sight, stalling a wave forever.
+- No RNG draws were added (spill/guard are deterministic), so saves without structures replay bit for bit: `t_par` identical.
+- Numbers (t_basehp sims, 4 seeds x 3 plans x 3 structures; "fell first" = built structures lost before the fort in runs where the fort fell):
+| Fort | fell first before -> after | fort mean death wave neglected / typical / hardened, before -> after | waves fought without them (after) |
+|---|---|---|---|
+| Desert f0.4 (~w41) | 22/36 -> 36/36 | 40.3/40.8/41.3 -> 40.8/41.3/41.8 | 0-5, mostly 1-3 |
+| Desert f0.55 (~w57) | 27/36 -> 36/36 | 56.8/56.8/57.8 -> 57.8/56.3/57.0 | neglected ~5.5, typical ~1, hardened ~1.5 (hardened still reach w50 12/12) |
+| Capital f0.55 (~w39) | 12/36 -> 36/36 | 39.3/39.0/38.8 -> 39.3/38.8/39.3 | 0-2 |
+- QA: `t_basehp.js` unit 38 (new section 9: no strain on a fresh run, strain from a wall hit, spill only onto the weakest, next to no spill with whole walls, strain eases, raids escalate, the guard shields the keep, one-by-one falls + feed, LAST STAND marker, then the keep takes hits). Sims print `ORDER fell-first a/b`, mean end per plan and check >= 90%; "hardening pays" now compares the mean wave a structure is lost; strained forts check "hardened hold until the last 3 waves" (was "hardened mostly hold"). Keep sims to 1-2 seeds per call (4 seeds of Desert f0.4 now pass 140 s). `t_diag.js` = per-wave fort damage / wall min / structure HP / damage sources.
+
+### Missile Silo (owner: "for 35k it doesn't feel like a good purchase")
+- `SILO_R` 175 (was 95; x1.84; the rod tier's radius x2 gives 350), `SILO_D` 2400 base (was 320; x7.5): L1/L3/L5 = 2400/4056/6835 before research (was 320/541/911). Missile drawn `SILO_VS` 2.6x, bigger trail/launch cloud; `siloImpact`: full-radius damage, white-hot core, 3 shockwave rings, 6 fireballs, 70 sparks, a smoke column that hangs ~10 s, scorch field, burning emitters (High), flash 0.5, shake 22 (past the usual cap of 12) + 1.6 s rumble (`siloAft`), heavy haptic. `bestCluster` aims with 0.8 x SILO_R. Bomblets/EMP/rod all read `siloR()`.
+- `t_silo2.js` (seeded run, every strike counted): Desert f0.45 silo L8: killed 40%/44%/8% of what it caught in w30/35/40 (2.5-3 caught) -> 100%/100%/75% (4.5-7.5 caught); Mountain f0.45 L9: 26%/14%/11% -> 97%/70%/42% (7-16 caught). Fort death wave +1 in both.
+
+### Night light map (owner: "weird low res lighting at night", iPhone, Desert w10)
+- The phone High light pass (`dnLite`) used a 1/5 CSS-res buffer (78x169 on a 390-wide phone) stretched ~10x: blotchy pools and smeared dark patches. `dnQ()`/`dnBuf()`: phones 1/2 CSS px at AQ level 0 (195x422), 1/2.5, 1/3, 1/4 as the governor steps down; desktop 1/2.5 (was 1/5 light map, 1/4 glow). The final stretch uses `imageSmoothingQuality='high'` (reset to 'low' after). ChaosGL never records lmap/glow (min 1e9), so both renderers share the Canvas2D buffers; checked with GL on and off (`t_night.js`, no errbox).
+- Cost: WebKit iPhone 13 profile (software rendering, so only relative): light pass 20.8 -> 30.3 ms of a ~240 ms frame. `wk_night.py <src> <png> [aq] [gfx]` takes the screenshot and prints the timings.
+

@@ -5264,7 +5264,7 @@ function siloImpact(n){const r=siloR(),x=n.x,y=n.y;explode(x,y,r,siloDmg(L('silo
   puff(x,y,40,r*.42,7,'64,56,48',r*.75,.7);puff(x,y,18,r*.28,11,'38,34,30',22,.62);   // the blast cloud, then the slow dark column that hangs
   light(x,y,r*6,'255,200,120',1.8);decal(x,y,'scorch',r*1.5);for(let i=0;i<4;i++){const a=R()*TAU,d=r*(.5+R()*.4);decal(x+Math.cos(a)*d,y+Math.sin(a)*d,'scorch',r*.45)}
   if(HQ){const h=hx();for(let i=0;i<3&&h.emit.length<9;i++){const a=R()*TAU,d=r*R()*.45;h.emit.push({x:x+Math.cos(a)*d,y:y+Math.sin(a)*d,life:9,t:0})}h.flash=Math.max(h.flash,.45)}
-  G.flashT=0.75;if(S.set.shake)G.shake=Math.max(G.shake,22);Plat.haptic('heavy');sfx('nuke',x,y);
+  G.flashT=0.5;if(S.set.shake)G.shake=Math.max(G.shake,22);Plat.haptic('heavy');sfx('nuke',x,y);
   (G.siloAft||(G.siloAft=[])).push({x,y,t:1.6})}
 // aftermath: the ground keeps rumbling and the cloud keeps boiling up for a second and a half
 function siloAft(dt){const a=G.siloAft;for(const f of a){f.t-=dt;if(f.t<=0)continue;if(S.set.shake)G.shake=Math.max(G.shake,7*f.t);
