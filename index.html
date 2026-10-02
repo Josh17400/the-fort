@@ -3348,12 +3348,12 @@ const ET={
  mlrs:{hp:200,spd:16,dmg:4,rate:16,rew:90,r:15,col:'#8f7f58',range:1,stand:36,nodep:true,veh:1,arm:0.35,span:23,cx:0},
  // mobile air defence (only fields once you fly aircraft, see vehWave): SPAAG = tracked twin-35mm flak gun, its autocannon only
  // plinks the walls; SAM TEL = 6x6 launcher + search radar, long-range radar-guided missiles, a light MG for the walls (AAV below)
- spaag:{hp:170,spd:17,dmg:1.6,rate:0.22,rew:56,r:14,col:'#8f7f58',range:100,veh:1,arm:0.45,span:25,cx:2},
- samtel:{hp:210,spd:15,dmg:1.2,rate:0.3,rew:95,r:15,col:'#8f7f58',range:150,veh:1,arm:0.35,span:23,cx:0},
+ spaag:{hp:190,spd:17,dmg:1.6,rate:0.22,rew:56,r:14,col:'#8f7f58',range:100,veh:1,arm:0.45,span:25,cx:2},
+ samtel:{hp:240,spd:15,dmg:1.2,rate:3,rew:95,r:15,col:'#8f7f58',range:1,stand:30,nodep:true,veh:1,arm:0.4,span:23,cx:0},
 };
 // air-defence vehicles: r = reach vs aircraft, cd = reload; SPAAG fires n-round flak bursts, the SAM one radar missile per reload
 // (or an interceptor at a missile you launched when no aircraft is in reach)
-const AAV={spaag:{r:250,cd:1.9,n:6},samtel:{r:430,cd:8,n:1}};
+const AAV={spaag:{r:320,cd:1.9,n:6},samtel:{r:560,cd:8,n:1}};
 let G=null,running=false,paused=false,mouse={x:0,y:0,wx:0,wy:0,down:false};
 function startRun(){
   audioUnlock();
@@ -3453,7 +3453,7 @@ function roboMake(e,d){const hv=d.veh||d.boss?2:1;e.robo=hv;e.arm=hv===2?Math.mi
 function aavSpawn(e){e.aaT=1.5;
   if(e.type==='samtel'){trackBoss(e);return}   // priority target: WARNING strip, then an HP bar until it dies
   if(G.aavW!==G.wave){G.aavW=G.wave;setTimeout(()=>{if(running&&!G.over)feed('WARNING · ENEMY SPAAG INBOUND','255,138,112','threat','SPAAG INBOUND')},900)}}
-const SAM_K=40,SAM_V=330,SPG_K=1.1,SPG_HIT=0.5;
+const SAM_K=40,SAM_V=330,SPG_K=1.1,SPG_HIT=0.5,SPG_PCT=0.015,SAM_PCT=0.16,AAM_EPCT=0.1,EFG_PCT=0.008;
 function aavTick(e,dt){const A=AAV[e.type],ca=G._ca;let u=e.aaU;if(u&&(u.dead||!ca.includes(u)))u=e.aaU=null;
   const want=u?Math.atan2(u.y-e.y,u.x-e.x):eHd(e,e.x,e.y);e.aaA=e.aaA==null?want:e.aaA+Math.max(-4*dt,Math.min(4*dt,angTo(e.aaA,want)));
   if(e.aaB>0){e.aaBt-=dt;if(e.aaBt>0)return;e.aaBt=0.085;e.aaB--;if(!u){e.aaB=0;return}spgRound(e,u);return}
@@ -3462,21 +3462,21 @@ function aavTick(e,dt){const A=AAV[e.type],ca=G._ca;let u=e.aaU;if(u&&(u.dead||!
   if(!b){e.aaT=0.35;if(e.type==='samtel'&&G.missiles.length)samIntercept(e);return}
   e.aaU=b;e.aaT=A.cd*(0.9+0.2*R());
   if(e.type==='spaag'){e.aaB=A.n;e.aaBt=0;e.rev=Math.max(e.rev||0,1.2);sfx('ciws',e.x,e.y,0.8);return}
-  e.rev=Math.max(e.rev||0,2.5);e.fl=G.time;const a=e.aaA,mx=e.x+Math.cos(a)*e.r*0.6,my=e.y+Math.sin(a)*e.r*0.6;
-  seekerAt(e,b,e.dmg*SAM_K,true,mx,my,SAM_V);puff(e.x,e.y,4,6,1.3,'205,200,190',22,0.5);light(e.x,e.y,40,'255,200,140',0.14);sfx('launch',e.x,e.y)}
+  e.rev=Math.max(e.rev||0,2.5+cbTrack());e.fl=G.time;if(++e.shots>=3)e.fwd=1;const a=e.aaA,mx=e.x+Math.cos(a)*e.r*0.6,my=e.y+Math.sin(a)*e.r*0.6;
+  seekerAt(e,b,e.dmg*SAM_K,true,mx,my,SAM_V,SAM_PCT);puff(e.x,e.y,4,6,1.3,'205,200,190',22,0.5);light(e.x,e.y,40,'255,200,140',0.14);sfx('launch',e.x,e.y)}
 // one 35mm flak round: tracer to a point near the target, a dark burst; about half of them land close enough to bite
 function spgRound(e,u){const a=e.aaA,s=(e.aaB&1)?1:-1,mx=e.x+Math.cos(a)*e.r*0.95-Math.sin(a)*1.6*s,my=e.y+Math.sin(a)*e.r*0.95+Math.cos(a)*1.6*s,hit=R()<SPG_HIT,
     o=hit?6:14+R()*14,q=R()*TAU,tx=u.x+Math.cos(q)*o,ty=u.y+Math.sin(q)*o;e.fl=G.time;
   G.fx.push({k:'tracer',x:mx,y:my,x2:tx,y2:ty,life:0.07,max:0.07,c:'#ffd27a',w:1.5});puff(tx,ty,1,4,0.8,'40,38,36',8,0.55);spark(tx,ty,2,80,['#ffe7a0','#ff9a3a'],0.2,1.1);
-  if(e.aaB%3===0)sfx('cannon',e.x,e.y,0.6);if(hit)fcHit(u,e.dmg*SPG_K,e.type)}
+  if(e.aaB%3===0)sfx('cannon',e.x,e.y,0.6);if(hit)fcHitP(u,e.dmg*SPG_K,SPG_PCT,e.type)}
 // a guided missile from an enemy launcher at one of your aircraft. Heat-seekers (fighter AAMs) are spoofed by flares like the MANPADS
 // round; radar rounds (SAM) only by chaff, which fools far fewer of them. Same in-flight code as the MANPADS missile (samTick/samHit).
-function seekerAt(e,u,dmg,radar,x0,y0,spd){const s={k:'sam',x:x0,y:y0,tx:u.x,ty:u.y,u,t:0,dur:Math.max(0.5,hyp(u.x-x0,u.y-y0)/spd),dmg,src:e.type,rad:radar?1:0};
+function seekerAt(e,u,dmg,radar,x0,y0,spd,pct){const s={k:'sam',x:x0,y:y0,tx:u.x,ty:u.y,u,t:0,dur:Math.max(0.5,hyp(u.x-x0,u.y-y0)/spd),dmg,src:e.type,rad:radar?1:0,pct};
   if(G.time>=(u.flR||0)){u.flR=G.time+FLARE_CD/(1+pk('aircrew'));s.flT=Math.min(0.35,s.dur*0.3);const h=u.ck==='heli';
     s.fl=R()<(radar?Math.min(0.6,(h?0.22:0.35)+0.1*pk('aircrew')):Math.min(0.95,(h?0.6:0.75)+0.1*pk('aircrew')))}
   G.eshots.push(s);return s}
 // SAM vs your launcher missiles: one interceptor at a missile in mid-course (not helicopter/gunship ATGMs), 3/4 of them connect
-function samIntercept(e){let m=null,bd=320;for(const q of G.missiles){if(q.done||q.atgm||q.delay>0||!q.lit)continue;const d=hyp(q.x-e.x,q.y-e.y);if(d<bd){bd=d;m=q}}
+function samIntercept(e){if(!running)return;let m=null,bd=320;for(const q of G.missiles){if(q.done||q.atgm||q.delay>0||!q.lit)continue;const d=hyp(q.x-e.x,q.y-e.y);if(d<bd){bd=d;m=q}}
   if(!m||R()<0.5)return;e.aaT=3.5;e.rev=Math.max(e.rev||0,2);e.fl=G.time;e.aaA=Math.atan2(m.y-e.y,m.x-e.x);
   G.eshots.push({k:'sam',x:e.x,y:e.y,tx:m.x,ty:m.y,u:m,t:0,dur:Math.max(0.25,bd/520),dmg:0,src:e.type,msl:1,ok:R()<0.75});puff(e.x,e.y,3,5,1.1,'205,200,190',20,0.5);sfx('launch',e.x,e.y)}
 function makeVbied(e){e.vbied=1;e.bomb=true;e.range=0;e.vp=true;e.dmg=ET.bomber.dmg*3*waveDmg(G.wave);e.spd*=1.35;e.hp*=0.8;e.max*=0.8;e.rew*=1.5}   // no gun: rams the walls
@@ -3632,7 +3632,7 @@ function samTick(s,dt){const k=Math.min(1,s.t/s.dur),x=s.x+(s.tx-s.x)*k,y=s.y+(s
   if(s.fl&&s.flP&&!s.lost&&s.u&&s.t>=s.flT+0.12){const a=s.u.ang||0;s.lost=1;s.x=x;s.y=y;s.t=0;s.dur=0.35;s.tx=s.u.x-Math.cos(a)*24+(R()-.5)*16;s.ty=s.u.y-Math.sin(a)*24+(R()-.5)*16;s.u=null}}
 function samHit(s){s.done=true;
   if(s.msl){const m=s.u;if(m&&!m.done&&s.ok){m.done=true;float(m.x,m.y-16,'INTERCEPTED','#ff9d7a',11)}skyBlast(s.tx,s.ty,0.4);return}   // SAM interceptor vs one of your missiles
-  if(s.lost||!s.u||s.u.dead){skyBlast(s.tx,s.ty,0.35);return}fcHit(s.u,s.dmg,s.src);skyBlast(s.tx,s.ty,0.7);sfx('boom',s.tx,s.ty)}
+  if(s.lost||!s.u||s.u.dead){skyBlast(s.tx,s.ty,0.35);return}if(s.pct)fcHitP(s.u,s.dmg,s.pct,s.src);else fcHit(s.u,s.dmg,s.src);skyBlast(s.tx,s.ty,0.7);sfx('boom',s.tx,s.ty)}
 // RPG gunners pick a lane vehicle or MG nest in reach two times in three; a hit knocks it out (guns silent, engine dead) for a while
 const RPG_KO={truck:6,apc:5,tank:4,turret:4};
 function rpgTarget(e){let b=null,bd=e.range+70;for(const u of G.units){if(!RPG_KO[u.k]||u.stun>0)continue;const d=Math.hypot(u.x-e.x,u.y-e.y);if(d<bd){bd=d;b=u}}return b}
@@ -3643,8 +3643,8 @@ function stunUnit(u,t){t*=sgKo(u);const was=u.stun>0;u.stun=Math.max(u.stun||0,t
 function standOff(e,spd,dt){const d=Math.hypot(e.x,e.y)||1,want=e.fwd?Math.max(blockHalf()+70,sight()-e.r*2-12):sight()+e.stand;
   if(d>want){if(!pfStep(e,spd,dt)){e.x-=e.x/d*spd*dt;e.y-=e.y/d*spd*dt}e.moving=true;e.odo+=spd*dt;return}
   if(e.moving){e.moving=false;e.atk=Math.max(e.atk,e.type==='mlrs'?2.2:1.4)}   // set up: tube bipod / launcher jacks down
-  e.atk-=dt;if(e.atk>0)return;e.atk=e.rate*(0.85+Math.random()*0.3);e.shots++;e.fl=G.time;
-  if(e.type==='mortar')fireMortar(e);else fireMLRS(e)}
+  if(e.type==='samtel')return;e.atk-=dt;if(e.atk>0)return;e.atk=e.rate*(0.85+Math.random()*0.3);e.shots++;e.fl=G.time;
+  if(e.type==='mortar')fireMortar(e);else if(e.type==='mlrs')fireMLRS(e)}   // SAM TEL: its missiles go up in aavTick, not at the walls
 const cbTrack=()=>0.5*Math.min(6,L('radar'));   // counter-battery: radar holds a launch position this much longer (s)
 function fireMortar(e){const h=blockHalf()*0.85,v=R()<0.3?fcNear(e,520):null,sh=v?null:shArty(),tx=v?v.x+(R()-.5)*18:sh?sh.cx+(R()-.5)*30:(R()*2-1)*h,ty=v?v.y+(R()-.5)*18:sh?sh.cy+(R()-.5)*30:(R()*2-1)*h;e.rev=1.8+cbTrack();if(pk('cbfire'))G.artyT=Math.min(G.artyT,0.6);if(e.shots>=4)e.fwd=1;
   G.eshots.push({k:'mortar',x:e.x,y:e.y,tx,ty,t:0,dur:1.35,dmg:e.dmg,src:e.type,h:70,warn:1,dep:!!sh&&sh===G.depot,site:sh&&sh!==G.depot?sh:null});
@@ -3725,7 +3725,7 @@ function drawEShots(){const px=1/sc,t=G.time,lw=Math.max(1,1.4*px);let bp=0;
     if(since<0.2){ctx.globalCompositeOperation='lighter';blit(glowSprite('255,190,110'),e.x,e.y,e.r*3,1-since/0.2);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
     ctx.strokeStyle='#ff6a50';ctx.lineWidth=Math.max(1,1.5*px);ctx.beginPath();
     for(let i=0;i<4;i++){const cx=e.x+(i&1?r:-r),cy=e.y+(i&2?r:-r),sx=i&1?-1:1,sy=i&2?-1:1;ctx.moveTo(cx+sx*tk,cy);ctx.lineTo(cx,cy);ctx.lineTo(cx,cy+sy*tk)}ctx.stroke();
-    ctx.font=`800 ${(11*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle='#ff8a70';ctx.fillText(e.type==='mortar'?'MORTAR':'ROCKET ARTY',e.x,e.y-r-4*px)}}
+    ctx.font=`800 ${(11*px).toFixed(2)}px Oxanium,sans-serif`;ctx.textAlign='center';ctx.fillStyle='#ff8a70';ctx.fillText(e.type==='mortar'?'MORTAR':e.type==='samtel'?'SAM':'ROCKET ARTY',e.x,e.y-r-4*px)}}
 // burning hulks on Medium/Low (High keeps its baked wrecks in drawCorpses plus a smoke-and-fire emitter)
 const VWRECK_T=7,VEH_LEN={technical:[17,9],apc:[23,12],ifv:[20.4,11],mbt:[20.4,11.2],mlrs:[20,8.4],spaag:[20.4,11],samtel:[20,8.4]};
 function drawVWrecks(){const m=_hqBase||ctx.getTransform(),px=Math.hypot(m.a,m.b);   // hull + char overlay baked into one sprite (loWreckSpr)
@@ -4627,6 +4627,9 @@ function mkSite(id){const air=id==='hangar',l=L(id),n=bayN(l),H=laneOuter(),mx=M
 
 // ---- damage in ----
 function fcHit(o,d,src){const v=EVH[src]||EVH0;fcHurt(o,d*v[0]*FC_DMG,v[1])}
+// dedicated anti-aircraft fire (SPAAG flak, SAM, enemy fighters) also strips a slice p of the airframe's max HP per hit, the mirror of
+// your own flakPct/samPct: wall-sized damage alone would never dent an aircraft whose HP grows with your Armory levels
+function fcHitP(o,d,p,src){const v=EVH[src]||EVH0;if(o&&o.max)fcHurt(o,d*v[0]*FC_DMG+o.max*p,v[1])}
 function fcHurt(o,d,ap){if(!o||o.dead||o.hp==null||!(d>0))return;o.hp-=d*(1-o.arm*(1-ap));o.hitT=G.time;
   if(G.time-(o.spkT||-9)>0.12){o.spkT=G.time;const big=ap>0.5;spark(o.x+(R()-.5)*8,o.y+(R()-.5)*8,big?5:2,big?130:80,['#ffe9b8','#c9ccd0','#ffc04a'],0.2,1.2);if(big)light(o.x,o.y,26,'255,190,110',0.1);sfx('armor',o.x,o.y)}
   if(o.hp<=0){o.hp=0;fcDown(o)}}
@@ -7086,29 +7089,29 @@ function drawEnemyHQ(e,x,y){const B=_hqBase||ctx.getTransform(),a=eHd(e,x,y),k=e
 // pairs (8 baked gait frames + a standing pose, like the infantry walk cycle), a sensor head with a red eye, the faction's red ID
 // stripe, and the replaced unit's weapon on top (ROBO_ROLE) so its role still reads. One sprite per frame and zoom bucket.
 const ROBO_ROLE={grunt:'rifle',runner:'rifle',brute:'rifle',shooter:'rail',rpg:'pod',manpads:'pod',bomber:'charge',mortar:'mortar',technical:'mg',apc:'mg',ifv:'cannon',mbt:'cannon',boss:'cannon',mlrs:'rack'};
-const ROBO_BOX=[[26,22,10,11],[42,32,16,16]],ROBO_MZ={rifle:[9.6,3.2,.7],rail:[12.4,0,.8],pod:[5,-3.1,.9],mg:[12.4,0,1],cannon:[19.6,0,1.3],rack:[8,0,1.2]};
-function roboArt(hv,role,f){const S=hv?1.55:1,ph=f<8?f/8*TAU:0,st=f<8?1:0,dark='#24282c',frame='#3d4348',metal='#646c73',lite='#9aa3aa';
-  for(const[sx,sy,p]of[[-1,-1,1],[-1,1,0],[1,-1,0],[1,1,1]]){   // rear legs first; FL+BR and FR+BL step together
-    const q=ph+(p?Math.PI:0),sw=st*Math.sin(q)*2.3,lift=st*Math.max(0,Math.cos(q)),hx=sx*3.1*S,hy=sy*3*S,fx=(sx*6.5+sw)*S,fy=sy*(6.3+lift*.7)*S,kx=(hx+fx)/2+sx*.5*S,ky=sy*(Math.abs(fy)+1.5*S+lift*.5*S);
-    limb(hx,hy,kx,ky,1.9*S,dark);limb(kx,ky,fx,fy,1.6*S,dark);limb(hx,hy,kx,ky,1.15*S,metal);limb(kx,ky,fx,fy,.9*S,frame);
-    limb(hx-.15*S,hy-.15*S,kx-.15*S,ky-.15*S,.35*S,'rgba(255,255,255,.28)');limb((hx+kx)/2,(hy+ky)/2,(kx+fx)/2,(ky+fy)/2,.3*S,lite);   // lit edge, hydraulic ram
-    ell(kx,ky,1*S,1*S,dark);ell(kx,ky,.7*S,.7*S,metal);ell(kx-.2*S,ky-.2*S,.3*S,.3*S,'rgba(255,255,255,.45)');
-    const fr=(1+.22*lift)*S;ell(fx,fy,1.35*fr,1.1*fr,'#15181a');ell(fx-.2*S,fy-.2*S,.8*fr,.55*fr,lift>.3?'#5a6168':'#3a3f44')}
-  const P=[5,-2.3,3.2,-4,-3.6,-4,-5.1,-2.4,-5.1,2.4,-3.6,4,3.2,4,5,2.3].map(v=>v*S);
-  hqPoly(P,frame);const Q=P.map(v=>v*.86);hqPoly(Q,metal);hqClosed(Q);hqShadeV(-3.5*S,3.5*S);
-  hqPoly([2.6*S,-3.2*S,-2.9*S,-3.2*S,-2.9*S,3.2*S,2.6*S,3.2*S],'rgba(255,255,255,.07)');
-  ctx.strokeStyle='rgba(0,0,0,.4)';ctx.lineWidth=.18*S;ctx.beginPath();ctx.moveTo(-1*S,-3.4*S);ctx.lineTo(-1*S,3.4*S);ctx.moveTo(2.4*S,-3.3*S);ctx.lineTo(2.4*S,3.3*S);ctx.stroke();   // panel seams
-  for(let i=0;i<4;i++)box((-4.4+i*.55)*S,-1.6*S,.3*S,3.2*S,'rgba(0,0,0,.45)');                                          // rear cooling vents
-  hqRedStripe(-3.1*S,-3.45*S,.8*S,6.9*S);hqBolts([-4*S,-2.9*S,-4*S,2.9*S,3.4*S,-2.9*S,3.4*S,2.9*S]);
-  hqDome(4.6*S,0,1.7*S,1.5*S,'#2c3338',.35,-.5);ell(5.5*S,0,.55*S,.5*S,'#ff3b30');ell(5.35*S,-.15*S,.2*S,.18*S,'#ffd0c8');   // sensor head, red eye
+const ROBO_BOX=[[26,22,11,11],[44,32,17,16]],ROBO_MZ={rifle:[10.4,3,.7],rail:[12.4,0,.8],pod:[5,-3.1,.9],mg:[12.4,0,1],cannon:[19.6,0,1.3],rack:[8,0,1.2]};
+function roboArt(hv,role,f){const S=hv?1.55:1,ph=f<8?f/8*TAU:0,st=f<8?1:0,dark='#1f2326',frame='#3d4348',metal='#6f777e',lite='#a9b1b7',plate='#857a5a';
+  for(const[sx,sy,p]of[[-1,-1,1],[-1,1,0],[1,-1,0],[1,1,1]]){   // rear legs first; FL+BR and FR+BL step together. Legs reach fore and aft, knees arch out
+    const q=ph+(p?Math.PI:0),sw=st*Math.sin(q)*2.2,lift=st*Math.max(0,Math.cos(q)),hx=sx*3.6*S,hy=sy*2.9*S,fx=(sx*7.6+sw)*S,fy=sy*(5.9+lift*.5)*S,kx=hx+sx*1.5*S+sw*.4*S,ky=sy*(7.9+lift*.9)*S;
+    limb(hx,hy,kx,ky,2*S,dark);limb(kx,ky,fx,fy,1.6*S,dark);limb(hx,hy,kx,ky,1.25*S,metal);limb(kx,ky,fx,fy,.95*S,frame);
+    limb(hx-.15*S,hy-.15*S,kx-.15*S,ky-.15*S,.35*S,'rgba(255,255,255,.35)');limb(hx*.7+kx*.3,hy*.7+ky*.3,kx*.5+fx*.5,ky*.5+fy*.5,.32*S,lite);   // lit edge, hydraulic ram
+    ell(kx,ky,1.05*S,1.05*S,dark);ell(kx,ky,.72*S,.72*S,metal);ell(kx-.2*S,ky-.2*S,.3*S,.3*S,'rgba(255,255,255,.5)');
+    const fr=(1+.2*lift)*S;limb(fx,fy,fx+sx*1.5*fr,fy-sy*.55*fr,.55*S,dark);limb(fx,fy,fx+sx*1.5*fr,fy+sy*.65*fr,.55*S,dark);ell(fx,fy,.85*fr,.75*fr,lift>.3?'#565d63':'#2b2f33')}   // two-toed claw foot
+  const P=[6,-2,4.2,-3.5,-4.6,-3.5,-6.1,-2,-6.1,2,-4.6,3.5,4.2,3.5,6,2].map(v=>v*S);
+  hqPoly(P,frame);const Q=P.map(v=>v*.88);hqPoly(Q,metal);hqClosed(Q);hqShadeV(-3.2*S,3.2*S);
+  hqPoly([3.2*S,-2.4*S,-4*S,-2.4*S,-4*S,2.4*S,3.2*S,2.4*S],plate);hqClosed([3.2*S,-2.4*S,-4*S,-2.4*S,-4*S,2.4*S,3.2*S,2.4*S]);hqShadeV(-2.4*S,2.4*S);   // sand dorsal armour
+  ctx.strokeStyle='rgba(0,0,0,.45)';ctx.lineWidth=.18*S;ctx.beginPath();ctx.moveTo(-.6*S,-2.4*S);ctx.lineTo(-.6*S,2.4*S);ctx.stroke();
+  for(let i=0;i<4;i++)box((-5.5+i*.45)*S,-1.5*S,.25*S,3*S,'rgba(0,0,0,.5)');                                            // rear cooling vents
+  hqRedStripe(-3.4*S,-2.4*S,.8*S,4.8*S);hqBolts([-3.8*S,-2*S,-3.8*S,2*S,2.8*S,-2*S,2.8*S,2*S]);
+  hqPoly([5.2*S,-1.6*S,8.4*S,-.8*S,8.4*S,.8*S,5.2*S,1.6*S],'#2c3338');box(5.4*S,-1.5*S,3*S,.4*S,'rgba(255,255,255,.18)');ell(7.6*S,0,.6*S,.55*S,'#ff3b30');ell(7.45*S,-.15*S,.22*S,.2*S,'#ffd0c8');   // sensor head, red eye
   switch(role){
-  case'rifle':for(const y of[2.7,3.6]){hqCyl(.6,y-.35,8.6,.7,'#1d1f21')}hqRR(-.4,2.1,3.2,2.1,.4,'#33383c');box(-.4,2.1,3.2,.5,'#5b6268');break;   // twin MG pod
+  case'rifle':for(const y of[2.5,3.5]){hqCyl(.6,y-.45,9.4,.9,'#34383c')}hqRR(-.4,2.1,3.2,2.1,.4,'#33383c');box(-.4,2.1,3.2,.5,'#5b6268');break;   // twin MG pod
   case'rail':hqRR(-2.2,-1,4.4,2,.4,'#2b3034');hqCyl(1.2,-.45,11.2,.9,'#17191b');hqCyl(10.6,-.6,1.6,1.2,'#0e0f10');box(-1,-1.9,3.4,.8,'#111');ell(1.8,-1.5,.35,.35,'#5aa0c8');break;   // marksman rail gun + scope
   case'pod':hqRR(-1.4,-4.8,6,3.4,.5,'#3a4034');box(-1.4,-4.8,6,.6,'#5d6650');for(let r=0;r<2;r++)for(let c=0;c<3;c++){ell(4.1,-4.25+c*1.05+.0*r,.42,.42,'#0d0d0d');ell(4.25,-4.25+c*1.05,.2,.2,'#c62828')}break;   // missile pod
   case'charge':hqDrum(-2.2,0,1.9,'#7a3a22');box(-3.9,-.3,3.4,.6,'#d8b23a');break;   // demolition charge on the back
   case'mortar':ell(-2.6,0,1.9,1.9,'#23272a');ell(-2.6,0,1.25,1.25,'#0b0c0d');hqCyl(-2.6,-.7,3.4,1.4,'#2b3034');break;   // back-mounted mortar tube
-  case'cannon':hqDome(0,0,3.8,3.3,'#5b6369',.3,-.5);hqCyl(3,-.75,14,1.5,'#202326');hqCyl(15.4,-1,2.6,2,'#141618');hqHatch(-1.2,1.1,1.1,'#4d555b');box(-3,-2.6,1.6,1,'#111');break;   // main gun turret
-  case'mg':hqDome(0,0,3,2.7,'#5b6369',.3,-.5);for(const y of[-.55,.35])hqCyl(2,y-.25,10,.6,'#1a1c1e');hqRR(-7,-2.2,3.6,4.4,.5,'#3f464b');box(-7,-2.2,3.6,.6,'#5d656b');break;   // twin HMG + troop pod
+  case'cannon':hqDome(0,0,3.8,3.3,'#5b6369',.3,-.5);hqCyl(3,-.85,14,1.7,'#4a5157');hqCyl(15.4,-1.1,2.8,2.2,'#2a2e31');hqHatch(-1.2,1.1,1.1,'#4d555b');box(-3,-2.6,1.6,1,'#111');break;   // main gun turret
+  case'mg':hqDome(0,0,3,2.7,'#5b6369',.3,-.5);for(const y of[-.75,.45])hqCyl(2,y-.4,10,.85,'#34383c');hqRR(-7,-2.2,3.6,4.4,.5,'#3f464b');box(-7,-2.2,3.6,.6,'#5d656b');break;   // twin HMG + troop pod
   case'rack':hqRR(-6.2,-3.4,13,6.8,.6,'#4b5257');box(-6.2,-3.4,13,.8,'#6b737a');for(let r=0;r<4;r++)for(let c=0;c<2;c++){ell(6.2,-2.4+r*1.6,.55,.55,'#0d0d0b');ell(6.3,-2.4+r*1.6,.25,.25,'#c62828')}hqRedStripe(-3,-3.4,.9,6.8);break}}   // rocket rack
 const roboSpr=(hv,role,f,pk,hq)=>hqBake('rb'+(hq?'H':'L')+hv+role+f,pk,...ROBO_BOX[hv?1:0],()=>roboArt(hv,role,f),hq?.3:0,0);
 // gait frame: light walkers 8 frames per wob turn, heavy ones half the cadence; 8 = standing
@@ -7123,10 +7126,10 @@ function drawRobo(e,x,y){const B=_hqBase||ctx.getTransform(),hv=e.robo===2,a=eHd
   if(mz&&since<.06&&role!=='charge'&&role!=='mortar'){if(hq)hqMuzzle(mz[0],mz[1],mz[2]);else ell(mz[0],mz[1],1.6*mz[2],.9*mz[2],'#ffcf5a')}
   if(hq&&px*k>2.2){const l=hqLoc(-1.1,-1.1,a,1);hqGlint(1.2*sc2+l[0],l[1],2*sc2,.3)}
   if(role==='charge'&&Math.floor(G.time*6)%2)ell(-2.2,0,.6,.6,'#ff3b30');
-  if(DN.dk>.15){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=Math.min(1,DN.dk*1.2);ctx.drawImage(hqGlow('rbE',[[0,'rgba(255,90,70,.95)'],[.35,'rgba(255,60,40,.35)'],[1,'rgba(255,40,30,0)']]),5.5*sc2-2.2*sc2,-2.2*sc2,4.4*sc2,4.4*sc2);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}   // red eye glows at night
+  if(DN.dk>.15){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=Math.min(1,DN.dk*1.2);ctx.drawImage(hqGlow('rbE',[[0,'rgba(255,90,70,.95)'],[.35,'rgba(255,60,40,.35)'],[1,'rgba(255,40,30,0)']]),7.6*sc2-2.2*sc2,-2.2*sc2,4.4*sc2,4.4*sc2);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}   // red eye glows at night
   if(_hqBase)_hqDirty=true;else ctx.setTransform(B)}
 // knocked-out walker (High corpses / Medium-Low wrecks): standing pose, legs folded flat, charred
-const roboWreckSpr=(hv,role,pk)=>hqBake('rbX'+hv+role,pk,...ROBO_BOX[hv?1:0],()=>{roboArt(hv,role,8);ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(15,12,10,.66)';ctx.fillRect(-16,-16,42,32);hqSpeckle(-10,-8,20,16,40,'rgba(0,0,0,.45)',.5)},0,0);
+const roboWreckSpr=(hv,role,pk)=>hqBake('rbX'+hv+role,pk,...ROBO_BOX[hv?1:0],()=>{roboArt(hv,role,8);ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(15,12,10,.66)';ctx.fillRect(-18,-17,46,34);hqSpeckle(-10,-8,20,16,40,'rgba(0,0,0,.45)',.5)},0,0);
 function drawRoboWreck(c,fade,px){const hv=c.robo===2,k=c.r/6*(hv?.82:1),s=roboWreckSpr(hv,ROBO_ROLE[c.type]||(hv?'cannon':'rifle'),px*k);
   ctx.save();ctx.translate(c.x,c.y);ctx.rotate(c.a);ctx.scale(k,k);const l=hqLoc(1.1,1.5,c.a,1);hqShadow(s,l[0],l[1],.45*fade);ctx.globalAlpha=fade;hqDraw(s);ctx.globalAlpha=1;ctx.restore()}
 function corpse(e){(G.corpses||(G.corpses=[])).push({type:e.type,r:e.r,col:e.col,boss:e.boss||e.type==='mbt',veh:e.veh,robo:e.robo,x:e.x,y:e.y,a:eHd(e,e.x,e.y),t0:G.time,sp:(e.wob*97%2)-1});if(G.corpses.length>80)G.corpses.shift()}
@@ -8395,7 +8398,7 @@ const INTEL={
  ifv:['Light Tank',4,'Tracked fighting vehicle whose 30mm cannon shells your walls from range. Heavy armor (small arms do 45%): bring artillery, tanks, missiles and mines.'],
  mbt:['Main Battle Tank',5,'Line tanks now roll in with regular waves. Small arms do only 35%: artillery, tanks, missiles, airstrikes and mines.'],
  spaag:['Mobile Flak (SPAAG)',4,'Tracked anti-aircraft gun with a twin 35mm and its own radar. It only rolls in once you fly aircraft, and it shreds helicopters, jets and gunships with flak bursts, even from the fog (each burst gives it away). Against the walls the cannon only plinks. Artillery, missiles, tanks and mines kill it.'],
- samtel:['SAM Launcher',5,'Radar-guided missile launcher with a long reach: every few seconds a missile at your aircraft that flares cannot spoof (chaff fools some). It also swats down missiles you fire. Priority target: artillery, missiles, tanks or a manual lock-on.'],
+ samtel:['SAM Launcher',5,'Radar-guided missile launcher. It parks in the fog and reaches your aircraft from far out: flares cannot spoof its missiles (chaff fools some), and it swats down missiles you fire. Each launch gives it away and after a few it moves up into view. Priority target: artillery, missiles or a manual lock-on.'],
  robo_lt:['Light Walker',4,'From wave 60 the enemy fields robotic four-legged walkers in place of its infantry. Same role and weapons as the trooper it replaces, a little better plated (small arms do 88%). Grenades, frag and heavy guns still work.'],
  robo_hv:['Heavy Walker',5,'A four-legged armored walker in place of the enemy vehicle it replaces, with the same gun and role and slightly thicker plating. Artillery, tanks, missiles and mines bring it down.'],
  mlrs:['Rocket Artillery',5,'Launcher truck that parks in the fog and ripples a salvo of rockets onto the fort; red rings mark the impacts. The launch gives it away: kill it before the next salvo.']};
@@ -8783,9 +8786,9 @@ function aiFighter(e,dt,h){
   fly(e,u.x+vx*T,u.y+vy*T,EF_TURN*(1+0.25*Math.min(1,e.t/8)),e.spd*(d<120?0.85:1.08),dt);   // lead pursuit; throttles back in the merge, so it turns tighter
   flyby(e,'jet');const off=Math.abs(angTo(e.ang,Math.atan2(u.y-e.y,u.x-e.x)));
   e.gt-=dt;if(d<EF_GUN&&off<EF_CONE&&e.gt<=0){e.gt=0.09;e.fl=G.time;const[nx,ny]=noseOf(e,18),hit=R()<0.55,tx=u.x+(hit?0:(R()-.5)*26),ty=u.y+(hit?0:(R()-.5)*26);
-    G.fx.push({k:'tracer',x:nx,y:ny,x2:tx,y2:ty,life:0.05,max:0.05,c:'#ff9a5a',w:1.3});if(hit){spark(tx,ty,2,80,['#ffd08a','#fff'],0.2,1.1);fcHit(u,e.dmg*0.16,e.type)}
+    G.fx.push({k:'tracer',x:nx,y:ny,x2:tx,y2:ty,life:0.05,max:0.05,c:'#ff9a5a',w:1.3});if(hit){spark(tx,ty,2,80,['#ffd08a','#fff'],0.2,1.1);fcHitP(u,e.dmg*0.16,EFG_PCT,e.type)}
     if(G.time-(e.bt||0)>0.45){e.bt=G.time;sfx('cannon',e.x,e.y,0.6)}}
-  e.cd-=dt;if(e.cd<=0&&d>EF_MSL[0]&&d<EF_MSL[1]&&off<EF_MSL[2]){e.cd=EF_RLD*(0.85+0.3*R());const[nx,ny]=noseOf(e,6);seekerAt(e,u,e.dmg*4,false,nx,ny,300);sfx('launch',e.x,e.y)}}
+  e.cd-=dt;if(e.cd<=0&&d>EF_MSL[0]&&d<EF_MSL[1]&&off<EF_MSL[2]){e.cd=EF_RLD*(0.85+0.3*R());const[nx,ny]=noseOf(e,6);seekerAt(e,u,e.dmg*4,false,nx,ny,300,AAM_EPCT);sfx('launch',e.x,e.y)}}
 const SKY_AI={drone:aiDrone,gunheli:aiHeli,airboss:aiBoss,uav:aiUav,efighter:aiFighter,
   strikejet:(e,dt,h)=>aiPasses(e,dt,h,1.5,0.6,3,jetRun),heavybomber:(e,dt,h)=>aiPasses(e,dt,h,0.55,0.35,2,bomberRun)};
 // ---- per-tick update, driven from update() after the ground enemies -----------------------------------------------
