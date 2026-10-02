@@ -1891,18 +1891,23 @@ const RLINES={currency:'RP',rpCost:'rsCostAt(gate)',refit:{mul:REFIT_MUL,cost:'3
   {n:'Exo Squad',w:'Gauss carbines',g:60,mul:30,pen:0.65,sig:{pierce:[2,0.7]},art:'era4 exoframe'},
   {n:'Directed-Energy Squad',w:'HEL carbines',g:110,mul:36,pen:0.85,sig:{instant:1},art:'era5 beam'}]}]};
 // Campaign gates (see rsProg): RS_GATE[line][tier] = the progress point that opens the tier, (theater-1)*100 + wave. 100 researchable
-// tiers: Desert Outpost 13 (Rifleman at wave 1 for the tutorial), Mountain 12, Coastal 12, City 13, Arctic 12, Jungle 13, Island 13,
-// Capital 12, spread over their waves in the order the original wave gates rolled them out (.qa/gates.js). Vanguard Commander opens at
+// tiers: Desert Outpost 23 (Rifleman at wave 1 for the tutorial), Mountain 10, Coastal 8, City 12, Arctic 9, Jungle 13, Island 13,
+// Capital 12 (was 13/12/12/13/12/13/13/12 before every line's first tier moved early, see below). Vanguard Commander opens at
 // Capital Defense wave 94, so R&D runs out as the campaign ends. Tier 0 is the starting kit.
 // RS_GATE.squad opens nothing: the squad's tiers open with Infantry Kit tiers; its entries are the price points (RP + lab time) each
 // squad tier adds to the Infantry tier that brings it, so the merged line costs what Commander Kit + Squad Kit cost (.qa/rdtot.js).
 // The merge moved Drone-Teamed Squad's price from City (323) into Coastal (Smart-Rifle Operator, 294); F-15EX took its old City slot
 // (286 -> 323) so each theater's RP and lab hours stay where the phase 3 pacing put them.
-const RS_GATE={dmg:[0,1,6,52,158,294,458,616,709,794],squad:[0,1,26,84,186,323,486,716],walls:[0,10,60,165,303,465,623],nade:[0,15,68,172,309,472],
-  mines:[0,20,76,179,316,479],truck:[0,32,92,194,330,494,723],arty:[0,38,103,203,337,503,630],aagun:[0,45,109,209,351,509,637],turret:[0,116,216,358,516,651],
-  sniper:[0,123,223,365,523,730],apc:[0,130,230,372,530,658],air:[0,137,237,379,537,737],tank:[0,151,251,386,551,751],flame:[0,258,394,558,665],
-  sam:[0,265,403,565,758],mlaunch:[0,272,409,572,672],heli:[0,279,416,579,765],fighter:[0,323,423,586,679],tesla:[0,430,594,686,772],
-  silo:[0,437,603,694,779],gunship:[0,451,609,703,786]};
+// Owner 2026-10-02 ("the only thing I've been able to research is the infantry kit"): every line's FIRST tier now opens in the
+// Desert (or Mountain Pass for the three lines whose Armory item opens at wave 30+ of a theater), staggered behind the Armory wave
+// that unlocks the item: grenades 3, walls 5, mines 8, artillery 12, gun trucks 16, AA 20, MG nests 25, sniper 30, APCs 35, air 40,
+// tanks 50, flame 58, missiles 66, SAM 74, helicopters 82, fighters 88; point defense / silo / gunship at Mountain 30/35/40. Tier 2+
+// gates are unchanged. A first tier is priced at its new (earlier) gate: tree 107590 -> 101045 RP, 822.7 -> 774.1 lab hours.
+const RS_GATE={dmg:[0,1,6,52,158,294,458,616,709,794],squad:[0,1,26,84,186,323,486,716],walls:[0,5,60,165,303,465,623],nade:[0,3,68,172,309,472],
+  mines:[0,8,76,179,316,479],truck:[0,16,92,194,330,494,723],arty:[0,12,103,203,337,503,630],aagun:[0,20,109,209,351,509,637],turret:[0,25,216,358,516,651],
+  sniper:[0,30,223,365,523,730],apc:[0,35,230,372,530,658],air:[0,40,237,379,537,737],tank:[0,50,251,386,551,751],flame:[0,58,394,558,665],
+  sam:[0,74,403,565,758],mlaunch:[0,66,409,572,672],heli:[0,82,416,579,765],fighter:[0,88,423,586,679],tesla:[0,130,594,686,772],
+  silo:[0,135,603,694,779],gunship:[0,140,609,703,786]};
 // A tier's RP price and lab time both follow its gate: 20 RP and a minute in the Desert, over a thousand RP and most of a day at the
 // Capital. Anchors are the values at the start of each theater (and at the campaign's end), interpolated geometrically in between.
 // Prices track the lab's throughput for a daily player (about 4 short jobs a day early, one long one a day late) against RP income
