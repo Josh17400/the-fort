@@ -1,10 +1,73 @@
 # The Fort — Handoff
 
-Top-down modern-military roguelite fort defense. Tap/click enemies to shoot them, earn money per kill, die, then spend it on upgrades at base. Played on desktop and on iPhone as a home-screen web app.
+Top-down modern-military roguelite fort defense, headed for the iOS App Store. Tap enemies to shoot, earn cash per kill, die, spend cash (Armory) and Research Points (R&D lab, real-time timers), come back tomorrow. 8-map campaign.
 
-- **Live:** https://josh17400.github.io/the-fort/ (GitHub Pages, repo `Josh17400/the-fort`, branch `main`)
-- **Last pushed commit:** `cb7d790` "Desktop R&D stepper: tiers without a card (finished or two-plus ahead) are inert instead of dead buttons"
-- **Whole game = one file:** `index.html` (canvas 2D + optional WebGL, DOM menus, WebAudio). No build step. Pushing to `main` deploys.
+- **Live web build:** https://josh17400.github.io/the-fort/ (GitHub Pages from `main` of `Josh17400/the-fort`; a push goes live in ~1 min).
+- **Whole game = one file:** `index.html`. No build step for the web. `native/` is the Capacitor iOS wrapper built only by CI.
+- **Last pushed commit (2026-10-02):** `d6459e4` "Longer early research: Desert 30-60 min from wave 25, Mountain 2-4 h; War Chest 25 waves for 75 gems". `main` = everything; no open branches matter.
+
+---
+
+## START HERE (state on 2026-10-02)
+
+### Where things stand
+- The campaign (phases 1-4), iOS wrapper and every owner request through 2026-10-02 are **merged, pushed and on TestFlight**. The owner tests on an iPhone through TestFlight and sends screenshots; fix, push, ship a new TestFlight build.
+- Sections below are in build order; each feature has its own section with code names, numbers and QA scripts. The newest are at the bottom: STORE tab, lab ad, draw order, Infantry Kit + fort design, cash packs, base structures under raid.
+
+### How to ship
+1. Change `index.html` in the main checkout (`C:\Users\joshu\Documents\Code Stuff\the-fort`), or in an agent worktree branched from `main` and merged back.
+2. Run the regression tests (below), one at a time.
+3. `git push origin main` (web goes live).
+4. TestFlight: `"/c/Program Files/GitHub CLI/gh.exe" workflow run ios.yml --repo Josh17400/the-fort`, then `gh run watch <id> --exit-status`. A build takes ~6 min; Apple processes it in 10-30 min and testers get it automatically.
+   - `gh` is installed and logged in as Josh17400 on this PC (not on PATH in Git Bash: use the full path).
+   - "release" input unticked = Google TEST ads. Tick it only for the App Store submission build.
+   - A failed build: `gh run view <id> --log-failed | grep -i "error:"`, fix, push, re-run.
+
+### Regression tests (`.qa/`, gitignored, local to this PC)
+Run from `.qa/`, **one headless process at a time** (the owner's PC crashed when ~100 headless Edge processes ran at once): `python h.py dom <name> <file>.js` prints the result in the page title.
+- Must stay green: `t_core` 57, `t_econ` 82, `t_daily` 108, `t_adlab` 62, `t_merge` 45, `t_fort` 23, `t_tw` 20, `t_cash` 69, `t_store` 52 (its "tile scrolled into view" check flakes headless), `own.js` (owner decisions), `PRE=pre_seed.js HASH='#unit' ... t_basehp.js` 28.
+- Desert parity: `PRE=pre_seed.js VT=60000 python h.py dom par t_par.js` must print `curves=-2048449059` and midsim `w21 k896 hp-3646 ... bank1023409 ... ex-5889330`. A change to Desert wave curves or the Desert sim is a red flag.
+- Smoke: `MAP=<id> python smoke.py 'mid#7'` (or `fresh`/`maxed`), expect `cw=0 errbox=false`.
+- iPhone-accurate screenshots: Playwright WebKit is installed (`python -m playwright`, iPhone 13 profile; see `.qa/wk2.py`, `cash_shot.py`). Read the PNGs and iterate before shipping UI.
+- Native: `node native/test_shell.cjs`, `node native/check_game.cjs`.
+- Never run one shell command longer than ~150 s; background long jobs and poll.
+
+### Accounts and store setup (all done)
+- **App Store Connect:** "The Fort: Last Stand" (home-screen name "The Fort"), bundle `com.thefort.game`, Apple ID 6816787587, SKU thefort001.
+  - 7 IAPs created, priced (USD base, all 175 regions) and described: `fort_gems_80/500/1200/2600/7000` ($0.99/4.99/9.99/19.99/49.99, consumable), `fort_starter` ($2.99), `fort_noads` ($3.99) (non-consumable).
+  - They still need an App Review **screenshot** each (the in-game Store) before submission.
+- **TestFlight:** internal group "Internal" (all builds). Testers: the owner `joshua17400@icloud.com` and his wife `corriev10@yahoo.com` (a DEVELOPER team member; The Fort was added to her visible apps).
+- **App Store Connect API:** key `Z27KSNKHDB` (App Manager). Its `.p8` lives only in the owner's local folder `Documents\Code Stuff\pass\`. **Never commit it.** Python JWT pattern for API calls: ES256, `kid` = key id, `aud` = `appstoreconnect-v1`, issuer id = the `ASC_ISSUER_ID` repo secret.
+- **GitHub repo secrets** (all 6 set): `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`, `APPLE_TEAM_ID`, `IOS_CERT_P12_B64`, `CERT_EXPORT_PASS`.
+  - The distribution cert was minted by `ios-mint-cert.yml`, expires 2027-09.
+  - The p12 must be legacy 3DES/SHA-1, or macOS reports "MAC verification failed"; the Fastfile now exports that format.
+  - The owner's other apps (Euchre, Forgeborn) use 2 other distribution certs. Never revoke those.
+- **RevenueCat:** project "The Fort" (`e8402460`), app `app1bc41901fc`, 7 products, entitlement `no_ads` on `fort_noads`. Its public iOS key is in `PLAT_IDS`.
+- **AdMob:** iOS app `ca-app-pub-8913077727879528~2474795069`; rewarded `/5913234786`, interstitial `/3784007309` (in `PLAT_IDS` and Info.plist). It shows "Requires review" until the app is live and linked.
+
+### Before App Store submission (not done)
+- Add the IAP review screenshots.
+- Fill in the App Store listing: description, screenshots, privacy labels (AdMob collects data), age rating.
+- Run a `release` build.
+- Optional: a Game Center daily-challenge leaderboard (`PLAT_IDS.lbDaily` is empty, which is the one CI warning).
+- EU trader status is unset on the account (affects EU distribution only).
+
+### Owner decisions from 2026-09-28 to 10-02 (do not undo)
+- **Navigation:** the STORE tab replaces MEDALS in the nav. Medals are a collapsible tile on Base, styled like the Field Manual.
+- **Fort art:** the fort's look changes **only** when a Fort Walls R&D tier completes. Armory levels change stats and size only.
+- **Infantry Kit:** the Commander Kit and Squad Kit are **one line**. Each tier brings the squad tier of the same era.
+- **Draw order:** units draw **over** the fuel depot, airstrip, helipads and repair yards.
+- **Base structures:** the depot, motor pool and hangar must be destructible under pressure (see "Base structures under raid"). **The runway stays as is: no HP, no changes.**
+- **Cash packs:** gold, not gem violet (cash is gold everywhere). Supply Crate = 3 waves for **15 gems**; War Chest = **25 waves for 75 gems**; the cash ad = 1 wave a day. Limit 3 packs a day.
+- **Research lab times:**
+  - Desert: tutorial tiers (gate < 25) take minutes; from wave 25 they take 30 to 60 min.
+  - Mountain: 2 to 4 h.
+  - Coastal: 4 h and up.
+  - City and later: unchanged (5 h up to ~31 h).
+  - Total ~830 lab hours.
+- **Speed:** never sell battle speed for gems or ads.
+- **Ads:** reward ads only, plus rare interstitials (Remove Ads $3.99).
+- **Housekeeping:** about 13 old agent worktrees sit under `.claude/worktrees/`, all merged. They can be removed with `git worktree remove -f -f <path>` (their `.qa` folders hold old screenshots and scripts).
 
 ---
 
@@ -476,14 +539,14 @@ One seam between the game and the device. The web build has no ads or store; the
 ## iOS app (branch `ios-native`)
 Capacitor 8 wrapper in `native/`, built and uploaded to TestFlight by `.github/workflows/ios.yml`. Copied from Euchre Unleashed's setup: SPM plugins, manual signing with the team's one distribution cert (secrets copied from euchre-unleashed), fastlane `beta`, build number = run number, `macos-26`. Details: `native/README.md` (architecture, ids, products) and `CI_SETUP.md` (secrets, accounts, shipping, cert renewal).
 
-- App Store name "The Fort: Last Stand", home-screen name The Fort, bundle `com.thefort.game`, ASC Apple ID 6816787587. iPhone, portrait + landscape, status bar hidden, home indicator auto-hides, edge swipes deferred.
+- App Store name "The Fort: Last Stand", home-screen name The Fort, bundle `com.thefort.game`, ASC Apple ID 6816787587. iPhone, portrait + landscape, status bar hidden, edge swipes deferred (the home-indicator auto-hide override was removed: CAPBridgeViewController declares it public, not open).
 - `native/shell.js` = `window.Shell`, injected into `<head>` by `native/build_www.py` (with `capacitor.js`, the build stamp and the bundled fonts). The web page never loads it, so GitHub Pages behaves exactly as before.
 - Save seam: `save()` → `saveWrite(json)` → localStorage, plus `Shell.store.put` in the app (Preferences, sequence-numbered, debounced, flushed on background). `Plat.boot()` → `saveBoot()` restores the native copy when iOS purged localStorage; the splash stays up until then. No iCloud (Euchre has none).
 - Backgrounding: `bgPause()` (persist + pause) runs on `visibilitychange` and on the app's `appStateChange`.
 - Ads: ATT at launch, then UMP consent; non-personalized unless ATT is authorized and consent obtained/not required. Test units unless `--release`; the Settings build line says "test ads".
 - Tests: `node native/test_shell.cjs` (94, mocked plugins), `node native/check_game.cjs` (scripts compile, PLAT_IDS, fort_ ids, Shell contract), `node native/check_www.cjs` (built page), `python native/test_plat.py` (33, Plat against a scripted Shell in headless Edge, local only).
 - Art: `native/assets/art.html` + `render_art.py` draw the icon (gold star fort, green turret, muzzle flash) and the splash; `npx capacitor-assets generate --ios` puts them in the asset catalog.
-- Open: the seven IAP products, the Game Center leaderboard, AdMob approval of the listing, App Store privacy labels.
+- Open: IAP review screenshots, the Game Center leaderboard, AdMob approval of the listing, App Store privacy labels (see START HERE).
 
 ## STORE tab + medals on Base (branch `store-tab`)
 Owner request: STORE replaces MEDALS in the nav; medals move onto Base as a collapsible tile.
