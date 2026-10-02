@@ -2111,7 +2111,7 @@ const Plat=(()=>{let busy=false,booted=null;
 // Desert, ~40 at the Capital), so a full day of dailies is ~15% of one research tier. See handoff "Phase 4" for the campaign impact.
 const DAY_MS=86400e3,DY_RUNS=3,DY_BEST=6,DC_W=25,IA_RUNS=12,IA_DAYS=2,IA_EVERY=3,IA_GAP=4*60e3,IA_RW=3*60e3;
 const DQ_GEM=3,DQ_BONUS_GEM=5,DQ_BONUS_U=2,STREAK=[3,3,5,3,5,8,25],STREAK_U7=2;
-const AD_CAP={x2:3,sw:2,drop:2,reroll:3,gems:1,lab:2,cash:1},AD_GEMS=10,AD_LAB_MS=60*60e3,AD_LAB_MIN=2*60e3;
+const AD_CAP={x2:Infinity,sw:2,drop:2,reroll:3,gems:1,lab:2,cash:1},AD_GEMS=10,AD_LAB_MS=60*60e3,AD_LAB_MIN=2*60e3;   // x2: no daily cap (owner 2026-10-02), still once per campaign run end (lastAAR.x2), never in the challenge
 const SW_GEMS=25,SW_W=6,SW_HP=0.5,SW_WALL=0.5,SW_SHIELD=5,SW_RAPID=8,SW_ASK=10;
 // local calendar day number of a lab-clock time, the current one, and what is left of it
 const dayOf=t=>Math.floor((t-new Date(t).getTimezoneOffset()*60e3)/DAY_MS),today=()=>dayOf(labNow());
@@ -3016,7 +3016,7 @@ $('stWin').addEventListener('click',e=>{if(e.target.closest('[data-stx]')){close
   toast(`Day ${r.day} supply · +${r.g} gems${r.rp?' · +'+r.rp+' RP':''}`,'gem','gm');$('stBody').innerHTML=stHtml();setTimeout(closeStreak,1100)});
 // ---- after-action extras: 2x payout (rewarded ad) on campaign runs; the daily challenge's result and reward
 const x2Html=a=>a.x2?`<div class="aar2x done"><span class="adp">${ic('check',20)}</span><span><b>PAYOUT DOUBLED</b><small>Added to the ${mapCur().name} war chest</small></span><em>+$${fmtN(a.earned)}</em></div>`
-  :!a.dc&&a.map===S.map&&a.earned>0&&adLeft('x2')>0?`<button class="aar2x" data-x2><span class="adp">${ic('play',18)}</span><span><b>DOUBLE THE PAYOUT</b><small>Watch an ad · ${adLeft('x2')} left today</small></span><em>+$${fmtN(a.earned)}</em></button>`:'';
+  :!a.dc&&a.map===S.map&&a.earned>0&&adLeft('x2')>0?`<button class="aar2x" data-x2><span class="adp">${ic('play',18)}</span><span><b>DOUBLE THE PAYOUT</b><small>Watch an ad · adds this run's cash again</small></span><em>+$${fmtN(a.earned)}</em></button>`:'';
 function dcResHtml(a){const d=a.dc,g=d.got||{g:0,rp:0},nx=DC_TIERS.find(t=>t[0]>d.best);
   return`<div class="dcres">${ic('gem',20)}<span>${g.g||g.rp?`<b>Challenge reward</b> · <em>+${g.g} gems${g.rp?' · +'+g.rp+' RP':''}</em>`:`<b>Today's best: wave ${d.best}</b> · ${nx?'reach wave '+nx[0]+' for more':'top reward earned'}`}</span></div>`
     +(dcOn()?`<div class="aarb"><button class="btn" data-dcgo>${ic('play',16)}TRY AGAIN</button></div>`:'')}
