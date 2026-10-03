@@ -795,6 +795,7 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
 .rund .pperks{justify-content:flex-start}
 /* RUN STATS (AAR): gold like its panel (owner decision: the AAR stays gold) */
 .rstat .rs-t .tile b{font-size:16px}
+@media (max-width:600px){.tiles.t4.rs-t{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .rs-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:8px}
 .rs-h{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--rad-md);background:linear-gradient(90deg,rgba(227,181,60,.16),rgba(227,181,60,.04));border:1px solid rgba(227,181,60,.35);min-width:0}
 .rs-h>i{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:rgba(227,181,60,.14);color:var(--c-gold-hi)}
@@ -2554,7 +2555,7 @@ function statsHtml(a){const T=a.st;if(!T)return'';const fold=o=>{const r={};for(
   const pc=v=>tot>0?Math.round(100*v/tot):0,mx=rows.length?d[rows[0]]:1,shown=rows.slice(0,9),rest=rows.slice(9).reduce((s,k)=>s+d[k],0);
   const en=T.bt&&INTEL[T.bt]?INTEL[T.bt][0]:'',cls=Object.keys(STAT_CLS).filter(c=>T.k[c]>0);
   return`<details class="rund rstat"${_rsOpen?' open':''}><summary>${ic('chevR',14)}Run stats${top?' · top gun: '+nm(top):''}</summary><div class="rdx">`
-    +`<div class="tiles t4 rs-t">${[['WAVES HELD',fmtN(T.wc||0)],['TIME',m+'<small>m</small> '+sec+'<small>s</small>'],['CASH EARNED','$'+fmtN(a.earned)],['DAMAGE',fmtN(tot)]].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join('')}</div>`
+    +`<div class="tiles t4 rs-t">${[['WAVES HELD',fmtN(T.wc||0)],['TIME',m+'<small>m</small> '+sec+'<small>s</small>'],['CASH','$'+fmtN(a.earned)],['DAMAGE',fmtN(tot)]].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join('')}</div>`
     +(top||T.big>0?`<div class="rs-hero">`
       +(top?`<div class="rs-h"><i>${icn(top,22)}</i><div><span class="eyebrow">TOP KILLER</span><b>${nm(top)}</b><small>${fmtN(ks[top])} ${pl(ks[top],'kill')}${kTot?' · '+Math.round(100*ks[top]/kTot)+'% of kills':''}</small></div></div>`:'')
       +(T.big>0?`<div class="rs-h"><i>${ic('crit',22)}</i><div><span class="eyebrow">BIGGEST HIT</span><b>${fmtN(T.big)}</b><small>${nm(T.bs)}${en?' → '+en:''}</small></div></div>`:'')+`</div>`:'')
