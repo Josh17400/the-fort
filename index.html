@@ -3276,13 +3276,13 @@ const GUN={
   how:{dur:2.7,crack:1.3,nw:1.3,blast:0.014,blastA:1,body:[360,0.7,0.12,1],thump:[54,24,0.22,0.98],tail:[1500,180,0.75,1],roll:1,drive:3.6}};
 // name -> {v: variants, r: bake rate (default 32 kHz: 16 kHz of bandwidth is more than a phone speaker plays; 24 kHz for long low-heavy sounds), f: variant -> Float32Array}
 const SREC={};
-for(const k in GUN)SREC['g_'+k]={v:k==='mg'?5:k==='tnk'||k==='how'?2:k==='rail'?3:4,r:32000,f:()=>bGun(GUN[k])};
+for(const k in GUN)SREC['g_'+k]={v:k==='mg'?4:k==='tnk'||k==='how'?2:k==='rail'?3:4,r:32000,f:()=>bGun(GUN[k])};
 SREC.g_hel={v:4,f:()=>{const o=bBuf(0.32),n=o.length,j=jit(0.05);   // pulsed laser: FM chirp, sizzle, soft thump
   const s=bSin(n,2700*j,520,0.09);for(let i=0;i<n;i++)s[i]=Math.sin(s[i]*2.2+Math.sin(TW*i*1300/BSR)*0.6);bMix(o,bEnv(s,0,0.0015,0.05),1);
   let b=bNE(n,0,0,0.0005,0.02);bBq(b,'hp',5500,5500,0.7);bMix(o,b,0.35);bMix(o,bThud(n,0,120,60,0.035),0.5);
   b=bNE(n,'p',0.01,0.01,0.08);bBq(b,'bp',3000,900,1);bMix(o,b,0.18);return bFin(o)}};
 SREC.bm_s={v:3,r:32000,f:()=>bBlast(0.5)};SREC.bm_m={v:3,r:32000,f:()=>bBlast(1.1)};SREC.bm_l={v:3,r:24000,f:()=>bBlast(2.1)};SREC.bm_x={v:2,r:24000,f:()=>bBlast(3)};
-SREC.nuke={v:1,r:24000,f:()=>bNuke(1)};SREC.nuke2={v:1,r:24000,f:()=>bNuke(2)};SREC.rumb={v:2,r:24000,f:bRumb};
+SREC.nuke={v:1,r:24000,f:()=>bNuke(1)};SREC.nuke2={v:1,r:24000,f:()=>bNuke(2)};SREC.rumb={v:1,r:24000,f:bRumb};
 SREC.launch={v:3,r:32000,f:()=>bMotor(1.25,600,2600,0.8,900)};SREC.rocket={v:3,r:32000,f:()=>bMotor(0.75,800,2400,0.9,700)};
 SREC.silo={v:1,r:24000,f:()=>{const d=4.6,o=bBuf(d),n=o.length;let b;
   bMix(o,bBlast(0.9).subarray(0,n),0.7);
@@ -3291,7 +3291,7 @@ SREC.silo={v:1,r:24000,f:()=>{const d=4.6,o=bBuf(d),n=o.length;let b;
   b=bEnv(bDebris(n,0.1,9,2600,0,0,0.0012),0.1,0.6,1.1,1.1);bBq(b,'bp',t=>fc(t)*1.4,0,0.7);bMix(o,b,0.55);
   b=bSE(n,42,30,4,0.05,0.5,1.4,0.8);bRoll(b,6,0.4);bMix(o,b,0.8);
   b=bNE(n,'b',0.05,0.5,1.5,1);bBq(b,'lp',160,160,0.7);bMix(o,b,0.7);bNorm(o,1);bSat(o,1.6);return bFin(o)}};
-SREC.flare={v:3,r:32000,f:()=>{const o=bBuf(1.1),n=o.length;for(let i=0;i<3;i++){const st=i*0.085*jit(0.15);let b=bNE(n,0,st,0.0003,0.006);bBq(b,'hp',1500,1500,0.7);bMix(o,b,0.8);bMix(o,bThud(n,st,190,90,0.02),0.35)}
+SREC.flare={v:2,r:32000,f:()=>{const o=bBuf(1.1),n=o.length;for(let i=0;i<3;i++){const st=i*0.085*jit(0.15);let b=bNE(n,0,st,0.0003,0.006);bBq(b,'hp',1500,1500,0.7);bMix(o,b,0.8);bMix(o,bThud(n,st,190,90,0.02),0.35)}
   let b=bNE(n,0,0.15,0.08,0.45);bBq(b,'bp',3400,1900,0.9);bMix(o,b,0.35);bMix(o,bEnv(bDebris(n,0.15,0.5,700,2600,0.9,0.001),0,0.001,9),0.18);return bFin(o)}};
 // CIWS / gatling "brrrt": 66 rounds/s of short grains; played cut to the burst length, then a separate tail
 SREC.ciws={v:2,r:32000,f:()=>{const o=bBuf(1.15),n=o.length,rate=66*jit(0.04),gL=Math.round(0.03*BSR),gs=[];
@@ -3299,28 +3299,28 @@ SREC.ciws={v:2,r:32000,f:()=>{const o=bBuf(1.15),n=o.length,rate=66*jit(0.04),gL
   for(let t=0;t<1.12;t+=1/rate){const s=Math.round((t+(aR()-0.5)*0.0015)*BSR),g=gs[(aR()*3)|0],a=0.8+aR()*0.2;for(let i=0;i<gL&&s+i<n;i++)if(s+i>=0)o[s+i]+=g[i]*a}
   bNorm(o,1);bSat(o,2.2);return bFin(o)}};
 SREC.ciwsT={v:2,r:32000,f:()=>{const o=bBuf(0.8),n=o.length;let b=bNE(n,'p',0,0.003,0.18);bBq(b,'lp',2500,400,0.6);bMix(o,b,1);b=bNE(n,'b',0,0.01,0.25);bBq(b,'lp',200,200,0.7);bMix(o,b,0.6);return bFin(o)}};
-SREC.jet={v:2,r:24000,f:()=>bFly(2.6,240*jit(0.1),55,1.15,[3150,4720,6100],900,0)};
-SREC.plane={v:2,r:24000,f:()=>bFly(3.2,120*jit(0.1),70,1.5,[2200],520,68*jit(0.05))};
-SREC.mortar={v:4,r:32000,f:()=>{const o=bBuf(0.7),n=o.length,j=jit(0.06);bMix(o,bSE(n,215*j,118*j,0.06,0,0.002,0.055),1);
+SREC.jet={v:1,r:24000,f:()=>bFly(2.6,240*jit(0.1),55,1.15,[3150,4720,6100],900,0)};
+SREC.plane={v:1,r:24000,f:()=>bFly(3.2,120*jit(0.1),70,1.5,[2200],520,68*jit(0.05))};
+SREC.mortar={v:3,r:32000,f:()=>{const o=bBuf(0.7),n=o.length,j=jit(0.06);bMix(o,bSE(n,215*j,118*j,0.06,0,0.002,0.055),1);
   let b=bNE(n,0,0,0.001,0.05);bBq(b,'bp',390*j,300,3);bMix(o,b,0.7);b=bNE(n,0,0,0.0003,0.004);bBq(b,'hp',900,900,0.7);bMix(o,b,0.6);
   bMix(o,bThud(n,0,90,45,0.06),0.6);bNorm(o,1);bSat(o,2.2);b=bNE(n,'p',0.01,0.02,0.18);bBq(b,'lp',1400,400,0.6);bMix(o,b,0.35);return bFin(o)}};
-SREC.nade={v:4,f:()=>{const o=bBuf(0.45),n=o.length,j=jit(0.06);bMix(o,bSE(n,265*j,92,0.05,0,0.0015,0.035),1);
+SREC.nade={v:3,f:()=>{const o=bBuf(0.45),n=o.length,j=jit(0.06);bMix(o,bSE(n,265*j,92,0.05,0,0.0015,0.035),1);
   let b=bNE(n,0,0,0.001,0.03);bBq(b,'bp',520*j,380,1.5);bMix(o,b,0.6);bMix(o,bClank(n,0.004,1900,0.012),0.15);bNorm(o,1);bSat(o,2);
   b=bNE(n,'p',0.005,0.01,0.09);bBq(b,'lp',1600,500,0.6);bMix(o,b,0.25);return bFin(o)}};
 SREC.toss={v:2,f:()=>{const o=bBuf(0.5),n=o.length;bMix(o,bModal(n,0,[3100,4650,6900],[0.06,0.04,0.02],[1,0.5,0.3]),0.35);bMix(o,bModal(n,0.04,[4300,6400],[0.03,0.02],[1,0.5]),0.25);
   const b=bNE(n,0,0.07,0.06,0.12);bBq(b,'bp',500,1900,1.3);bMix(o,b,1);return bFin(o)}};
-SREC.whistle={v:3,r:32000,f:()=>{const o=bBuf(0.95),n=o.length,f0=1550*jit(0.06),f1=640*jit(0.06),s=new Float32Array(n);let ph=0;
+SREC.whistle={v:2,r:32000,f:()=>{const o=bBuf(0.95),n=o.length,f0=1550*jit(0.06),f1=640*jit(0.06),s=new Float32Array(n);let ph=0;
   for(let i=0;i<n;i++){const t=i/BSR,f=f0*Math.pow(f1/f0,Math.min(1,t/0.88))*(1+0.008*Math.sin(TW*7*t));ph+=f/BSR;s[i]=Math.sin(TW*ph)+0.25*Math.sin(2*TW*ph)}
   for(let i=0;i<n;i++){const t=i/BSR;s[i]*=Math.min(1,Math.pow(t/0.8,2))*(t>0.86?Math.exp(-(t-0.86)/0.02):1)}bMix(o,s,1);
   const b=bN(n);bBq(b,'bp',t=>f0*Math.pow(f1/f0,Math.min(1,t/0.88)),0,6);for(let i=0;i<n;i++)b[i]*=Math.abs(s[i]);bMix(o,b,0.3);return bFin(o)}};
-SREC.kill={v:4,f:()=>{const o=bBuf(0.28),n=o.length,j=jit(0.1);bMix(o,bThud(n,0,100*j,52,0.04),1);let b=bNE(n,0,0,0.001,0.03);bBq(b,'lp',600*j,250,0.7);bMix(o,b,0.6);
+SREC.kill={v:3,f:()=>{const o=bBuf(0.28),n=o.length,j=jit(0.1);bMix(o,bThud(n,0,100*j,52,0.04),1);let b=bNE(n,0,0,0.001,0.03);bBq(b,'lp',600*j,250,0.7);bMix(o,b,0.6);
   bMix(o,bEnv(bDebris(n,0.015,0.05,500,2800*j,2),0,0.001,9),0.22);return bFin(o)}};
 SREC.armor={v:4,f:v=>{const o=bBuf(0.5),n=o.length,r=jit(0.12);let b=bNE(n,0,0,0.0002,0.0025);bBq(b,'hp',2200,2200,0.7);bMix(o,b,0.8);bMix(o,bThud(n,0,130*r,70,0.02),0.35);
   if(v%2)bMix(o,bModal(n,0.0005,[1650,2890,4170,5600].map(f=>f*r),[0.07,0.05,0.035,0.02],[1,0.6,0.45,0.3]),0.55);   // ping off the plate
   else{const s=new Float32Array(n),f0=4400*r,f1=1900*r;let ph=0;for(let i=0;i<n;i++){const t=i/BSR,f=f0*Math.pow(f1/f0,Math.min(1,t/0.32))*(1+0.03*Math.sin(TW*31*t));ph+=f/BSR;s[i]=Math.sin(TW*ph)}
     bEnv(s,0.008,0.015,0.11);bMix(o,s,0.4);const h=bNE(n,0,0.008,0.02,0.08);bBq(h,'bp',t=>f0*Math.pow(f1/f0,Math.min(1,t/0.32)),0,5);bMix(o,h,0.25)}   // ricochet whine
   return bFin(o)}};
-SREC.wall={v:4,f:()=>{const o=bBuf(0.55),n=o.length,j=jit(0.08);let b=bNE(n,0,0,0.0003,0.004);bBq(b,'hp',1400,1400,0.7);bMix(o,b,0.8);bMix(o,bThud(n,0,125*j,60,0.05),1);
+SREC.wall={v:3,f:()=>{const o=bBuf(0.55),n=o.length,j=jit(0.08);let b=bNE(n,0,0,0.0003,0.004);bBq(b,'hp',1400,1400,0.7);bMix(o,b,0.8);bMix(o,bThud(n,0,125*j,60,0.05),1);
   b=bNE(n,0,0,0.002,0.03);bBq(b,'bp',900*j,500,1);bMix(o,b,0.5);bNorm(o,1);bSat(o,2);
   bMix(o,bEnv(bDebris(n,0.02,0.12,450,1900*j,1,0.004),0,0.001,9),0.4);b=bNE(n,'p',0.01,0.02,0.15);bBq(b,'lp',900,300,0.6);bMix(o,b,0.28);return bFin(o)}};
 SREC.hurt={v:3,r:32000,f:()=>{const o=bBuf(0.8),n=o.length,j=jit(0.08);bMix(o,bThud(n,0,82*j,38,0.1),1);let b=bNE(n,0,0,0.001,0.07);bBq(b,'lp',1300,300,0.7);bMix(o,b,0.7);
@@ -3330,16 +3330,16 @@ SREC.breach={v:1,r:24000,f:()=>{const o=bBuf(3.2),n=o.length;bMix(o,bBlast(1.4).
   let b=bNE(n,'b',0.05,0.1,1);bBq(b,'lp',160,120,0.7);bRoll(b,5,0.5);bMix(o,b,0.6);
   const s=new Float32Array(n);let ph=0;for(let i=0;i<n;i++){const t=i/BSR,f=140*Math.pow(0.62,Math.min(1,t/1.2))*(1+0.02*Math.sin(TW*5*t));ph+=f/BSR;s[i]=Math.tanh(3*Math.sin(TW*ph))}
   bEnv(s,0.3,0.15,0.45);bBq(s,'lp',900,900,0.7);bMix(o,s,0.22);return bFin(o)}};   // metal groan as the gate frame twists
-SREC.intercept={v:3,f:()=>{const o=bBuf(0.5),n=o.length;bNw(o,1,0.3);let b=bNE(n,0,0,0.0002,0.006);bBq(b,'hp',1800,1800,0.7);bMix(o,b,0.9);
+SREC.intercept={v:2,f:()=>{const o=bBuf(0.5),n=o.length;bNw(o,1,0.3);let b=bNE(n,0,0,0.0002,0.006);bBq(b,'hp',1800,1800,0.7);bMix(o,b,0.9);
   b=bNE(n,0,0,0.001,0.04);bBq(b,'bp',1700,700,1);bMix(o,b,0.5);bMix(o,bThud(n,0,140,60,0.04),0.5);bNorm(o,1);bSat(o,2.2);
   bMix(o,bEnv(bDebris(n,0.02,0.15,500,3000,1,0.0015),0,0.001,9),0.25);return bFin(o)}};
 SREC.emp={v:2,r:32000,f:()=>{const o=bBuf(1.1),n=o.length;bMix(o,bSE(n,1150,45,0.45,0,0.004,0.28),1);
   const w=bSE(n,62,55,1,0,0.01,0.4);for(let i=0;i<n;i++)w[i]*=0.6+0.4*Math.sin(TW*13*i/BSR);bMix(o,w,0.7);
   bMix(o,bEnv(bDebris(n,0,0.25,2200,3200,1.4,0.001),0,0.001,9),0.45);bNorm(o,1);bSat(o,1.8);return bFin(o)}};
-SREC.laser={v:3,f:SREC.g_hel.f};
-SREC.zap={v:3,f:()=>{const o=bBuf(0.32),n=o.length;bMix(o,bEnv(bDebris(n,0,0.07,7000,3300*jit(0.1),1.4,0.0008),0,0.001,9),1);
+SREC.laser={v:2,f:SREC.g_hel.f};
+SREC.zap={v:2,f:()=>{const o=bBuf(0.32),n=o.length;bMix(o,bEnv(bDebris(n,0,0.07,7000,3300*jit(0.1),1.4,0.0008),0,0.001,9),1);
   const s=new Float32Array(n);let ph=0;for(let i=0;i<n;i++){ph+=118/BSR;s[i]=2*(ph%1)-1}bEnv(s,0,0.002,0.07);bBq(s,'lp',2500,2500,0.7);bMix(o,s,0.35);return bFin(o)}};
-SREC.hatch={v:2,r:32000,f:()=>{const o=bBuf(0.7),n=o.length;for(const st of[0,0.14]){bMix(o,bClank(n,st,212*jit(0.05),0.09),0.6,0);const b=bNE(n,0,st,0.0003,0.006);bBq(b,'bp',1700,1200,1.5);bMix(o,b,0.4)}
+SREC.hatch={v:1,r:32000,f:()=>{const o=bBuf(0.7),n=o.length;for(const st of[0,0.14]){bMix(o,bClank(n,st,212*jit(0.05),0.09),0.6,0);const b=bNE(n,0,st,0.0003,0.006);bBq(b,'bp',1700,1200,1.5);bMix(o,b,0.4)}
   bMix(o,bThud(n,0.14,88,52,0.08),0.7);return bFin(o)}};
 // UI / battle cues
 SREC.alarm={v:1,r:32000,f:()=>{const o=bBuf(1.75),n=o.length,s=new Float32Array(n);let ph=0;
@@ -3432,7 +3432,7 @@ function sbIdle(ms){const t0=performance.now();while(SBQ.length&&performance.now
 // play a baked sound: o = {prio, rate, send (reverb), delay, bus, len (cut at s), lp (Hz), sweep (pan -1..1 flyby), pan}
 // x/y (world) pan, attenuate, darken (air absorbs highs with range) and wet the sound with distance from the fort.
 function pv(n,g,x,y,o){o=o||{};const c=AU.ctx;if(!c||!S.set.vol||c.state!=='running'&&!AU.off)return null;
-  if(!o.prio&&(sndCount>=AU_FRAME||AU.live>=AU_LIVE))return null;
+  if(o.prio!==2&&(!o.prio&&sndCount>=AU_FRAME||AU.live>=(o.prio?AU_LIVE+18:AU_LIVE)))return null;   // prio skips the per-frame cap and gets 18 more live slots; 2 = never dropped
   const bs=sbGet(n);if(!bs)return null;let i=(aR()*bs.length)|0;if(bs.length>1&&i===AU.lv[n])i=(i+1)%bs.length;AU.lv[n]=i;
   sndCount++;AU.live++;
   let pan=o.pan||0,send=o.send??0.2,u=0;
@@ -3465,7 +3465,7 @@ function duck(db,hold,rel,mus){const c=AU.ctx;if(!c||!AU.duck)return;const t=c.c
 // Minimum spacing (s) per sound so an 8-gun volley in one frame reads as one sharp report, not a smear.
 const SFX_GAP={flare:0.25,armor:0.07,mortar:0.08,hatch:0.2,shot2:0.03,mg:0.035,cannon:0.05,boom:0.03,kill:0.02,wall:0.06,hurt:0.08,nade:0.05,rocket:0.06,launch:0.1,laser:0.06,zap:0.07,intercept:0.08,emp:0.3,sniper:0.05,eshot:0.03};
 // per-sound playback gain (tuned by offline loudness renders: see handoff "Audio engine")
-const SG={eshot:0.6,storm:0.22,swarm:0.18,tone:3.807,shot:1.598,shot2:0.695,sniper:0.771,mg:0.736,cannon:0.805,nade:0.61,tank:1.057,howitzer:0.983,launch:0.28,rocket:0.272,flare:0.362,toss:0.176,whistle:0.132,kill:0.433,armor:0.366,wall:0.521,hurt:0.646,breach:0.92,alarm:0.216,wave:0.247,clear:0.142,cash:0.161,buy:0.066,deny:0.06,mortar:0.615,hatch:0.199,laser:0.88,zap:0.989,intercept:0.895,emp:0.348,die:0.363,boom:1.309,nuke:1.168,nuke2:1.545,silo:0.96,ciws:0.203,jet:0.8,plane:0.57};
+const SG={eshot:0.6,storm:0.22,swarm:0.18,tone:3.807,shot:1.598,shot2:0.695,sniper:0.771,mg:0.736,cannon:0.805,nade:0.61,tank:1.057,howitzer:0.983,launch:0.28,rocket:0.272,flare:0.362,toss:0.176,whistle:0.132,kill:0.433,armor:0.366,wall:0.521,hurt:0.646,breach:0.92,alarm:0.216,wave:0.247,clear:0.142,cash:0.161,buy:0.066,deny:0.06,mortar:0.615,hatch:0.199,laser:0.88,zap:0.6,intercept:0.895,emp:0.348,die:0.363,boom:1.309,nuke:1.168,nuke2:1.545,silo:0.96,ciws:0.203,jet:0.8,plane:0.57};
 // main rifle sound follows the Infantry Kit tier (pistol -> carbine -> DMR -> 6.8 battle rifle -> smart rifle -> gauss -> coilgun -> laser -> rail)
 const GUN_TIER=['pis','car','dmr','bat','bat','dmr','gau','coil','hel','rail'];
 const gunKey=()=>'g_'+GUN_TIER[Math.min(GUN_TIER.length-1,typeof rTier==='function'?rTier('dmg'):1)];
@@ -3488,9 +3488,9 @@ function sfx(n,x,y,k=1){
     if(s&&k>=1.6){duck(-2-1.5*k,0.12,0.5+0.2*k);const far=x!=null&&running?Math.min(1,Math.hypot(x,y)/Math.max(420,vision())):0;   // far thunder: a delayed low roll, later and longer with range
       pv('rumb',0.18+0.08*k,x,y,{delay:0.12+0.35*far,rate:jit(0.1),send:0.7,lp:400,bus:B})}break}
   case'nuke':{const sz=k>=2;sbWant('nuke2');duck(sz?-11:-8,sz?0.9:0.5,sz?3:2.2,true);
-    pv(sz?'nuke2':'nuke',sz?SG.nuke2:SG.nuke,x,y,{prio:1,send:0.55,bus:B,rj:0.05});
+    pv(sz?'nuke2':'nuke',sz?SG.nuke2:SG.nuke,x,y,{prio:2,send:0.55,bus:B,rj:0.05});
     pv('rumb',0.5,x,y,{prio:1,delay:0.45,send:0.9,lp:300,bus:B});if(sz)pv('rumb',0.4,x,y,{prio:1,delay:1.3,rate:0.8,send:1,lp:220,bus:B});break}
-  case'silo':sbWant('nuke2');pv('silo',SG.silo,x,y,{prio:1,send:0.5,bus:B});duck(-4,0.6,1.2);break;
+  case'silo':sbWant('nuke2');pv('silo',SG.silo,x,y,{prio:2,send:0.5,bus:B});duck(-4,0.6,1.2);break;
   case'launch':pv('launch',SG.launch*Math.min(1,Math.sqrt(k)),x,y,{send:0.3});break;
   case'rocket':pv('rocket',SG.rocket,x,y,{send:0.3});break;
   case'flare':pv('flare',SG.flare,x,y,{send:0.25});break;
@@ -3502,20 +3502,20 @@ function sfx(n,x,y,k=1){
   case'armor':pv('armor',SG.armor,x,y,{send:0.25});break;
   case'wall':pv('wall',SG.wall,null,null,{prio:1,send:0.25});break;
   case'hurt':pv('hurt',SG.hurt,null,null,{prio:1,send:0.3,bus:B});break;
-  case'breach':pv('breach',SG.breach,null,null,{prio:1,send:0.5,bus:B});duck(-6,0.4,1.5);break;
-  case'alarm':pv('alarm',SG.alarm,null,null,{prio:1,send:0.2,bus:AU.ui});break;
-  case'wave':pv('wave',SG.wave,null,null,{prio:1,send:0.3,bus:AU.ui});break;
-  case'clear':pv('clear',SG.clear,null,null,{prio:1,send:0.2,bus:AU.ui});break;
-  case'cash':pv('cash',SG.cash,null,null,{prio:1,send:0.12,bus:AU.ui});break;
-  case'buy':pv('buy',SG.buy,null,null,{prio:1,send:0.06,bus:AU.ui,rj:0.01});break;
-  case'deny':pv('deny',SG.deny,null,null,{prio:1,send:0.04,bus:AU.ui,rj:0.01});break;
+  case'breach':pv('breach',SG.breach,null,null,{prio:2,send:0.5,bus:B});duck(-6,0.4,1.5);break;
+  case'alarm':pv('alarm',SG.alarm,null,null,{prio:2,send:0.2,bus:AU.ui});break;
+  case'wave':pv('wave',SG.wave,null,null,{prio:2,send:0.3,bus:AU.ui});break;
+  case'clear':pv('clear',SG.clear,null,null,{prio:2,send:0.2,bus:AU.ui});break;
+  case'cash':pv('cash',SG.cash,null,null,{prio:2,send:0.12,bus:AU.ui});break;
+  case'buy':pv('buy',SG.buy,null,null,{prio:2,send:0.06,bus:AU.ui,rj:0.01});break;
+  case'deny':pv('deny',SG.deny,null,null,{prio:2,send:0.04,bus:AU.ui,rj:0.01});break;
   case'mortar':pv('mortar',SG.mortar,x,y,{send:0.3});break;
   case'hatch':pv('hatch',SG.hatch,x,y,{send:0.2});break;
   case'laser':pv('laser',SG.laser,x,y,{send:0.2});break;
   case'zap':pv('zap',SG.zap,x,y,{send:0.2});break;
   case'intercept':pv('intercept',SG.intercept,x,y,{send:0.25});break;
   case'emp':pv('emp',SG.emp,x,y,{prio:1,send:0.35,bus:B});break;
-  case'die':pv('die',SG.die,null,null,{prio:1,send:0.45,bus:AU.ui});break;
+  case'die':pv('die',SG.die,null,null,{prio:2,send:0.45,bus:AU.ui});break;
   case'storm':case'swarm':pv(n,SG[n],null,null,{prio:1,send:0.3,bus:AU.ui});break;
 }}
 // Persistent beds, driven once per rendered frame from loop(): pure scheduling, no per-frame node churn.
