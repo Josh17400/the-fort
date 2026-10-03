@@ -3353,6 +3353,14 @@ SREC.cash={v:2,f:()=>{const o=bBuf(0.5),n=o.length,j=jit(0.02);for(const[st,f]of
   const b=bNE(n,0,0,0.0003,0.003);bBq(b,'hp',4000,4000,0.7);bMix(o,b,0.25);return bFin(o)}};
 SREC.buy={v:1,f:()=>{const o=bBuf(0.32),n=o.length;const b=bNE(n,0,0,0.0002,0.0025);bBq(b,'bp',3500,3500,1);bMix(o,b,0.4);bPluck(o,660,0.004,0.06,0.8);bPluck(o,990,0.06,0.1,0.85);return bFin(o)}};
 SREC.deny={v:1,f:()=>{const o=bBuf(0.32),n=o.length;for(const st of[0,0.11]){const s=new Float32Array(n);let ph=0;for(let i=0;i<n;i++){ph+=150/BSR;s[i]=ph%1<0.5?1:-1}bEnv(s,st,0.004,0.035,0.035);bBq(s,'lp',800,800,0.7);bMix(o,s,0.8)}return bFin(o)}};
+// event stings: sandstorm front (a gust swells in and hisses away) and drone swarm (a cloud of small rotors whining up)
+SREC.storm={v:1,r:24000,f:()=>{const o=bBuf(3.4),n=o.length;let b=bNE(n,0,0,1.1,0.9,0.4);bBq(b,'bp',t=>260*Math.pow(2.7,Math.min(1,t/1.6)),0,0.7);bRoll(b,5,0.5);bMix(o,b,1);
+  b=bNE(n,0,0.4,1.2,0.8,0.3);bBq(b,'hp',t=>2600*Math.pow(1.6,Math.min(1,t/2)),0,0.5);bRoll(b,9,0.6);bMix(o,b,0.35);
+  b=bNE(n,'b',0,0.8,1,0.5);bBq(b,'lp',140,140,0.7);bMix(o,b,0.5);return bFin(o)}};
+SREC.swarm={v:1,r:24000,f:()=>{const o=bBuf(2.3),n=o.length;
+  for(const[f0,f1,am]of[[180,232,61],[186,241,67],[371,470,73],[176,226,59]]){const s=new Float32Array(n);let ph=0;for(let i=0;i<n;i++){const t=i/BSR,f=f0*Math.pow(f1/f0,Math.min(1,t/1.8));ph+=f/BSR;s[i]=(2*(ph%1)-1)*(0.75+0.25*Math.sin(TW*am*t))}
+    bEnv(s,0,0.5,0.6,1.2);bBq(s,'lp',1800,1800,0.7);bMix(o,s,0.3)}
+  const b=bNE(n,0,0,0.5,0.6,1);bBq(b,'bp',t=>1400*Math.pow(1.3,Math.min(1,t/1.8)),0,2);bMix(o,b,0.25);return bFin(o)}};
 SREC.die={v:1,r:24000,f:()=>{const o=bBuf(2.6),n=o.length;bMix(o,bBlast(0.9).subarray(0,n),0.5);
   for(const d of[1,1.007,0.497]){const s=new Float32Array(n);let ph=0;for(let i=0;i<n;i++){const t=i/BSR;ph+=220*d*Math.pow(0.25,Math.min(1,t/2))/BSR;s[i]=2*(ph%1)-1}bEnv(s,0.05,0.1,0.9);bBq(s,'lp',1200,250,0.7);bMix(o,s,0.35)}
   const b=bNE(n,'b',0,0.2,1);bBq(b,'lp',140,140,0.7);bMix(o,b,0.5);return bFin(o)}};
@@ -3397,7 +3405,11 @@ function auGraph(c){const P=(n,o)=>{for(const k in o)n[k].value=o[k];return n};
   AU.rev.connect(hp).connect(cv).connect(wet).connect(AU.mix);
   AU.mduck=c.createGain();AU.mduck.connect(c.destination);
   AU.nb=c.createBuffer(1,c.sampleRate*2,c.sampleRate);const a=AU.nb.getChannelData(0);let b=0;
-  for(let i=0;i<a.length;i++){const w=aR()*2-1;b=(b+0.02*w)/1.02;a[i]=w*0.7+b*3}}   // white plus a touch of brown, for the ambience beds
+  for(let i=0;i<a.length;i++){const w=Math.random()*2-1;b=(b+0.02*w)/1.02;a[i]=w*0.7+b*3}}   // white plus a touch of brown, for the ambience beds
+// PARITY NOTE: the bed noise above deliberately keeps drawing from Math.random (sampleRate*2 draws when the context is first made,
+// which happens in startRun), and auCompat() replays the draws the old live-synth event stings made. Both exist only so the seeded
+// Desert simulation (.qa t_par.js) stays bit-identical to its pre-overhaul baseline; every other audio random comes from aR().
+function auCompat(n){const c=AU.ctx;if(S.set.vol&&c&&c.state==='running')for(let i=0;i<n;i++)Math.random()}
 function setMasterVol(){if(AU.master)AU.master.gain.setTargetAtTime(volCurve(),AU.ctx.currentTime,0.03)}
 // iOS/Safari only lets audio start inside a user gesture: resume + play one silent sample on every gesture until running.
 function audioUnlock(){const c=audio();if(!c)return;if(c.state!=='running'&&!document.hidden)c.resume().catch(()=>{});
@@ -3452,7 +3464,7 @@ function duck(db,hold,rel,mus){const c=AU.ctx;if(!c||!AU.duck)return;const t=c.c
 // Minimum spacing (s) per sound so an 8-gun volley in one frame reads as one sharp report, not a smear.
 const SFX_GAP={flare:0.25,armor:0.07,mortar:0.08,hatch:0.2,shot2:0.03,mg:0.035,cannon:0.05,boom:0.03,kill:0.02,wall:0.06,hurt:0.08,nade:0.05,rocket:0.06,launch:0.1,laser:0.06,zap:0.07,intercept:0.08,emp:0.3,sniper:0.05};
 // per-sound playback gain (tuned by offline loudness renders: see handoff "Audio engine")
-const SG={tone:3.807,shot:1.382,shot2:0.607,sniper:0.838,mg:0.736,cannon:0.805,nade:0.61,tank:1.137,howitzer:0.914,launch:0.298,rocket:0.308,flare:0.362,toss:0.261,whistle:0.125,kill:0.475,armor:0.366,wall:0.48,hurt:0.62,breach:0.92,alarm:0.216,wave:0.247,clear:0.142,cash:0.161,buy:0.075,deny:0.06,mortar:0.615,hatch:0.185,laser:0.836,zap:0.779,intercept:0.895,emp:0.348,die:0.363,boom:1.309,nuke:1.168,nuke2:1.452,silo:0.96,ciws:0.223,jet:0.8,plane:0.607};
+const SG={storm:0.3,swarm:0.25,tone:3.807,shot:1.382,shot2:0.607,sniper:0.838,mg:0.736,cannon:0.805,nade:0.61,tank:1.137,howitzer:0.914,launch:0.298,rocket:0.308,flare:0.362,toss:0.261,whistle:0.125,kill:0.475,armor:0.366,wall:0.48,hurt:0.62,breach:0.92,alarm:0.216,wave:0.247,clear:0.142,cash:0.161,buy:0.075,deny:0.06,mortar:0.615,hatch:0.185,laser:0.836,zap:0.779,intercept:0.895,emp:0.348,die:0.363,boom:1.309,nuke:1.168,nuke2:1.452,silo:0.96,ciws:0.223,jet:0.8,plane:0.607};
 // main rifle sound follows the Infantry Kit tier (pistol -> carbine -> DMR -> 6.8 battle rifle -> smart rifle -> gauss -> coilgun -> laser -> rail)
 const GUN_TIER=['pis','car','dmr','bat','bat','dmr','gau','coil','hel','rail'];
 const gunKey=()=>'g_'+GUN_TIER[Math.min(GUN_TIER.length-1,typeof rTier==='function'?rTier('dmg'):1)];
@@ -3502,6 +3514,7 @@ function sfx(n,x,y,k=1){
   case'intercept':pv('intercept',SG.intercept,x,y,{send:0.25});break;
   case'emp':pv('emp',SG.emp,x,y,{prio:1,send:0.35,bus:B});break;
   case'die':pv('die',SG.die,null,null,{prio:1,send:0.45,bus:AU.ui});break;
+  case'storm':case'swarm':pv(n,SG[n],null,null,{prio:1,send:0.3,bus:AU.ui});break;
 }}
 // Persistent beds, driven once per rendered frame from loop(): pure scheduling, no per-frame node churn.
 function bedNoise(c,type,f,q,dest){const s=c.createBufferSource(),fl=c.createBiquadFilter(),g=c.createGain();s.buffer=AU.nb;s.loop=true;fl.type=type;fl.frequency.value=f;fl.Q.value=q;g.gain.value=0;s.connect(fl).connect(g).connect(dest);s.start();return{f:fl,g}}
@@ -8780,11 +8793,11 @@ function evWeights(p){const k=G&&G.ev;if(k!=='blitz'&&k!=='armor'&&k!=='barrage'
 function evClear(b){const E=EVENTS[G.ev],x=Math.round(b*E.bonus);medalBump(G.ev);dqAdd('event',1);(G.evDone||(G.evDone=[])).push(G.ev);G.ev=null;feed(E.name+(E.good?' COMPLETE':' REPELLED')+' · +$'+f1(x),E.col,'star');
   setTimeout(()=>tone(660,0.08,'square',0,0.04),120);setTimeout(()=>tone(990,0.14,'square',0,0.04),230);return x}
 function evSting(k){
-  if(k==='storm'){const v=voice(3.2,1,null,null,true);if(v){lNoise(v,'bandpass',260,700,0.7,0.26,1.1,2);lNoise(v,'highpass',2600,4200,0.5,0.07,1.4,1.6,0.4)}}
+  if(k==='storm'){auCompat(4);sfx('storm')}
   else if(k==='blitz')for(let i=0;i<3;i++)setTimeout(()=>tone(760-i*60,0.09,'square',-90,0.05),i*150)
   else if(k==='ambush'){sfx('mg');setTimeout(()=>sfx('mg'),120);setTimeout(()=>sfx('mg'),240)}
   else if(k==='convoy')for(let i=0;i<4;i++)setTimeout(()=>tone(520,0.14,'sawtooth',-160,0.04),i*260)   // horn blasts
-  else if(k==='swarm'){const v=voice(2.2,1,null,null,true);if(v){lOsc(v,'sawtooth',180,230,0.025,0.4,1.6);lOsc(v,'sawtooth',186,240,0.025,0.5,1.5,0.1);lNoise(v,'bandpass',1400,1800,2,0.05,0.5,1.4)}}   // rising rotor whine
+  else if(k==='swarm'){auCompat(2);sfx('swarm')}   // rising rotor whine
   else if(k==='barrage'){sfx('whistle');setTimeout(()=>sfx('whistle'),450)}}
 function paraType(w){const r=Math.random();return w>=15&&r<0.12?'brute':w>=8&&r<0.3?'bomber':r<0.58?'runner':'grunt'}
 // Each transport flies a straight line across the fort (offset o from centre) and spaces its stick over the two stretches of the
