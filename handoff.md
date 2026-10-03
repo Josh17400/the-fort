@@ -67,7 +67,7 @@ Run from `.qa/`, **one headless process at a time** (the owner's PC crashed when
   - Total ~830 lab hours.
 - **Speed:** never sell battle speed for gems or ads.
 - **Ads:** reward ads only, plus rare interstitials (Remove Ads $3.99).
-- **Housekeeping:** about 13 old agent worktrees sit under `.claude/worktrees/`, all merged. They can be removed with `git worktree remove -f -f <path>` (their `.qa` folders hold old screenshots and scripts).
+- **Housekeeping:** all old agent worktrees and merged branches were removed on 2026-10-02; only `main` remains. Remove each new agent worktree after merging (`git worktree remove -f -f <path>`, one at a time: some take ~50 s because of their `.qa` folders).
 
 ---
 
