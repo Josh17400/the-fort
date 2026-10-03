@@ -103,7 +103,7 @@ Run from `.qa/`, **one headless process at a time** (the owner's PC crashed when
 | Menus | `homeView` (`VIEWS` = base/armory/rd/store, keys 1-4) → `renderHome` → `renderBase` / `renderArmory` / `renderResearch` / `renderStore`; `renderAAR` on Base. Medals are the Base tile `#medTile` (`renderMedTile` → `renderMedals`); `setView('medals')` → `openMedals()` |
 | Battle HUD | `drawHud`, layout object `HL` (modes `port`/`land`/`desk`), `hudPanel()` (legacy alias `panel()`), `drawRepairHud`, `coachPlace`, `#intel`, `#armChip` |
 | Repair | Motor pool (vehicles) and hangar (aircraft) repair facilities |
-| Audio | `audioFrame()` is wrapped in try/catch in the frame loop. Cricket gains are `nk*0.6` / `nk*0.42` (turned down on request) |
+| Audio | Baked procedural sound bank (see "Audio engine"): DSP kit `b*` + recipes `SREC`/`GUN`, bank `SB`/`sbGet`/`sbIdle`, player `pv`, gains `SG`, `sfx(name,x,y,k)`, `tone()`, `duck()`, graph `auGraph`. `audioFrame()` is wrapped in try/catch in the frame loop. Cricket gains are `nk*0.6` / `nk*0.42` (turned down on request) |
 | Obstacles / pathfinding | `C.solids` (theater layout), `baseFoot`, `_pf`, `pfSync`, `pfStep`, `pfPush`, `pfSnap`, `eHd` (see "Obstacles & pathfinding") |
 | Errors | The first `<script>` installs an on-screen error box `#errbox`. A screenshot of it from the user's phone is the fastest way to debug a device crash |
 

@@ -3176,7 +3176,7 @@ function bNorm(x,p){const k=(p||1)/(bPk(x)||1);for(let i=0;i<x.length;i++)x[i]*=
 function bMix(o,x,g,off){const s=g/(bPk(x)||1),d=Math.round((off||0)*BSR);for(let i=0;i<x.length&&i+d<o.length;i++)o[i+d]+=x[i]*s;return o}
 function bSat(x,d){const n=Math.tanh(d);for(let i=0;i<x.length;i++)x[i]=Math.tanh(x[i]*d)/n;return x}
 // struck metal: damped partials (Hz, decay s, amp) starting at st
-function bModal(n,st,fs,taus,amps){const o=new Float32Array(n),s=Math.round(st*BSR);
+function bModal(n,st,fs,taus,amps){n=Math.min(n,Math.ceil((st+Math.max(...taus)*9.3)*BSR)+2);const o=new Float32Array(n),s=Math.round(st*BSR);
   for(let m=0;m<fs.length;m++){const w=TW*fs[m]/BSR,k=Math.exp(-1/(taus[m]*BSR));let g=amps[m];for(let i=s;i<n&&g>1e-4;i++){o[i]+=g*Math.sin(w*(i-s));g*=k}}return o}
 // debris / crackle: Poisson grains (density rate/s decaying with tau) of tiny noise bursts, then band-passed
 function bDebris(n,st,tau,rate,f,q,len){n=Math.min(n,Math.ceil((st+tau*6+0.02)*BSR));const o=new Float32Array(n),s=st*BSR,L0=(len||0.003)*BSR,tot=rate*tau;let lam=0;
@@ -3268,6 +3268,7 @@ const GUN={
   gau:{dur:0.55,crack:1,nw:0.35,blast:0.003,blastA:0.4,body:[1500,1.2,0.03,0.7],thump:[110,50,0.05,0.63],zing:[6800,1900,0.035,0.5],tail:[3400,700,0.13,0.45],drive:2.6},
   coil:{dur:0.6,crack:1,nw:0.35,blast:0.003,blastA:0.4,body:[1300,1.2,0.03,0.6],thump:[95,42,0.06,0.7],zing:[8200,1500,0.045,0.6],ring:[[3100,4720,6950],0.03,0.25],tail:[3200,600,0.15,0.5],drive:2.8},
   rail:{dur:0.9,crack:1.2,nw:0.8,blast:0.004,blastA:0.6,body:[900,1,0.05,0.8],thump:[80,34,0.09,0.77],zing:[9500,1200,0.07,0.6],ring:[[2400,3900,6100,8300],0.05,0.3],tail:[2600,400,0.28,0.6],roll:1,drive:3.2},
+  ak:{dur:0.5,crack:0.85,nw:0.45,blast:0.006,body:[1080,0.9,0.04,1],thump:[120,52,0.045,0.42],snap:0.45,tail:[3000,650,0.13,0.45],mech:0.14,mechT:0.04,drive:2.9},   // enemy riflemen: AK-pattern
   mg:{dur:0.42,crack:0.9,nw:0.55,blast:0.005,body:[950,1,0.04,1],thump:[105,50,0.045,0.45],snap:0.5,tail:[2800,600,0.12,0.45],drive:2.8},
   snp:{dur:1.15,crack:1.3,nw:0.9,blast:0.008,body:[760,0.8,0.06,1],thump:[85,38,0.09,0.77],tail:[2400,350,0.34,0.7],roll:1,mech:0.08,mechT:0.5,drive:3.2},
   can:{dur:0.95,crack:1,nw:0.7,blast:0.007,blastA:1,body:[650,0.8,0.06,1],thump:[80,40,0.08,0.77],ring:[[420,1130,2210],0.05,0.15],tail:[2200,400,0.28,0.6],roll:1,drive:3.2},
@@ -3365,10 +3366,10 @@ SREC.die={v:1,r:24000,f:()=>{const o=bBuf(2.6),n=o.length;bMix(o,bBlast(0.9).sub
   for(const d of[1,1.007,0.497]){const s=new Float32Array(n);let ph=0;for(let i=0;i<n;i++){const t=i/BSR;ph+=220*d*Math.pow(0.25,Math.min(1,t/2))/BSR;s[i]=2*(ph%1)-1}bEnv(s,0.05,0.1,0.9);bBq(s,'lp',1200,250,0.7);bMix(o,s,0.35)}
   const b=bNE(n,'b',0,0.2,1);bBq(b,'lp',140,140,0.7);bMix(o,b,0.5);return bFin(o)}};
 // ambience loops: helicopter rotor (blade slap + turbine) and enemy armour (diesel pulses + track clatter)
-SREC.rotorL={v:1,r:24000,f:()=>{const L=2,o=bBuf(L+0.1),n=o.length;for(let k=0;k<22;k++){const st=k/10.5;let b=bNE(n,0,st,0.004,0.028);bBq(b,'bp',480,300,0.8);bMix(o,b,0.9);bMix(o,bThud(n,st,72,55,0.03),0.7)}
+SREC.rotorL={v:1,r:24000,f:()=>{const L=2,o=bBuf(L+0.1),n=o.length;for(let k=0;k<22;k++){const st=k/10.5;let b=bNE(n,0,0,0.004,0.028);bBq(b,'bp',480,300,0.8);bMix(o,b,0.9,st);bMix(o,bThud(n,0,72,55,0.03),0.7,st)}
   let b=bN(n);bBq(b,'lp',420,420,0.6);bMix(o,b,0.25);bMix(o,bSin(n,1750,1750,1),0.04);return bNorm(bLoop(o,0.1),0.9)}};
-SREC.engL={v:1,r:24000,f:()=>{const L=2,o=bBuf(L+0.1),n=o.length;for(let k=0;k<55;k++){const b=bNE(n,0,k/26,0.002,0.012);bBq(b,'lp',260,260,1);bMix(o,b,0.5*(0.8+0.2*aR()))}
-  for(let k=0;k<16;k++)bMix(o,bClank(n,k/7.5+aR()*0.01,880*jit(0.1),0.02),0.12*(0.6+0.4*aR()));
+SREC.engL={v:1,r:24000,f:()=>{const L=2,o=bBuf(L+0.1),n=o.length;for(let k=0;k<55;k++){const b=bNE(n,0,0,0.002,0.012);bBq(b,'lp',260,260,1);bMix(o,b,0.5*(0.8+0.2*aR()),k/26)}
+  for(let k=0;k<16;k++)bMix(o,bClank(n,0,880*jit(0.1),0.02),0.12*(0.6+0.4*aR()),k/7.5+aR()*0.01);
   const b=bN(n,'b');bBq(b,'lp',110,110,0.8);bMix(o,b,0.6);return bNorm(bLoop(o,0.1),0.9)}};
 // ==AUDIO-DSP-END==
 // ---- runtime graph ----
@@ -3420,8 +3421,8 @@ document.addEventListener('visibilitychange',()=>{const c=AU.ctx;if(!c)return;if
 
 // ---- sound bank: bake on demand (one variant now, the rest queued) + a background queue drained a few ms per frame ----
 const SB={},SBQ=[];
-const SB_PRIME=['g_mg','kill','bm_s','bm_m','wall','armor','buy','deny','cash','g_can','nade','launch','rocket','wave','clear','g_tnk','bm_l','mortar','whistle','ciws','ciwsT','jet','plane','hurt','rumb','rotorL','engL',
-  'alarm','flare','intercept','toss','hatch','g_how','bm_x','nuke','silo','breach','die','emp','zap','laser','g_snp'];
+const SB_PRIME=['g_mg','g_ak','kill','bm_s','bm_m','wall','armor','buy','deny','cash','g_can','nade','launch','rocket','wave','clear','g_tnk','bm_l','mortar','whistle','ciws','ciwsT','jet','plane','hurt','rumb','engL','rotorL',
+  'alarm','flare','intercept','toss','hatch','g_how','bm_x','nuke','silo','breach','die','emp','zap','laser','g_snp','storm','swarm'];
 function sbBake(n){const r=SREC[n],c=AU.ctx;BSR=r.r||32000;const x=r.f((SB[n]||[]).length),b=c.createBuffer(1,x.length,BSR);b.getChannelData(0).set(x);return b}
 function sbGet(n){let a=SB[n];if(a&&a.length)return a;if(!SREC[n]||!AU.ctx)return null;if(!a){a=SB[n]=[];if(SREC[n].v>1)SBQ.unshift(n)}a.push(sbBake(n));return a}
 function sbWant(n){if(SREC[n]&&!SB[n]&&!SBQ.includes(n))SBQ.unshift(n)}   // prefetch: bake soon, in idle time
@@ -3462,9 +3463,9 @@ function tone(f,d,type='square',slide=0,gain=0.08){const v=voice(d+0.08,SG.tone,
 function duck(db,hold,rel,mus){const c=AU.ctx;if(!c||!AU.duck)return;const t=c.currentTime,g=Math.pow(10,db/20);if(t<AU.duckT&&g>=AU.duckG)return;AU.duckT=t+hold;AU.duckG=g;
   for(const p of mus?[AU.duck.gain,AU.mduck.gain]:[AU.duck.gain]){p.cancelScheduledValues(t);p.setValueAtTime(p.value,t);p.linearRampToValueAtTime(mus&&p!==AU.duck.gain?Math.sqrt(g):g,t+0.015);p.setTargetAtTime(1,t+0.015+hold,rel/3)}}
 // Minimum spacing (s) per sound so an 8-gun volley in one frame reads as one sharp report, not a smear.
-const SFX_GAP={flare:0.25,armor:0.07,mortar:0.08,hatch:0.2,shot2:0.03,mg:0.035,cannon:0.05,boom:0.03,kill:0.02,wall:0.06,hurt:0.08,nade:0.05,rocket:0.06,launch:0.1,laser:0.06,zap:0.07,intercept:0.08,emp:0.3,sniper:0.05};
+const SFX_GAP={flare:0.25,armor:0.07,mortar:0.08,hatch:0.2,shot2:0.03,mg:0.035,cannon:0.05,boom:0.03,kill:0.02,wall:0.06,hurt:0.08,nade:0.05,rocket:0.06,launch:0.1,laser:0.06,zap:0.07,intercept:0.08,emp:0.3,sniper:0.05,eshot:0.03};
 // per-sound playback gain (tuned by offline loudness renders: see handoff "Audio engine")
-const SG={storm:0.3,swarm:0.25,tone:3.807,shot:1.382,shot2:0.607,sniper:0.838,mg:0.736,cannon:0.805,nade:0.61,tank:1.137,howitzer:0.914,launch:0.298,rocket:0.308,flare:0.362,toss:0.261,whistle:0.125,kill:0.475,armor:0.366,wall:0.48,hurt:0.62,breach:0.92,alarm:0.216,wave:0.247,clear:0.142,cash:0.161,buy:0.075,deny:0.06,mortar:0.615,hatch:0.185,laser:0.836,zap:0.779,intercept:0.895,emp:0.348,die:0.363,boom:1.309,nuke:1.168,nuke2:1.452,silo:0.96,ciws:0.223,jet:0.8,plane:0.607};
+const SG={eshot:0.6,storm:0.22,swarm:0.18,tone:3.807,shot:1.598,shot2:0.695,sniper:0.771,mg:0.736,cannon:0.805,nade:0.61,tank:1.057,howitzer:0.983,launch:0.28,rocket:0.272,flare:0.362,toss:0.176,whistle:0.132,kill:0.433,armor:0.366,wall:0.521,hurt:0.646,breach:0.92,alarm:0.216,wave:0.247,clear:0.142,cash:0.161,buy:0.066,deny:0.06,mortar:0.615,hatch:0.199,laser:0.88,zap:0.989,intercept:0.895,emp:0.348,die:0.363,boom:1.309,nuke:1.168,nuke2:1.545,silo:0.96,ciws:0.203,jet:0.8,plane:0.57};
 // main rifle sound follows the Infantry Kit tier (pistol -> carbine -> DMR -> 6.8 battle rifle -> smart rifle -> gauss -> coilgun -> laser -> rail)
 const GUN_TIER=['pis','car','dmr','bat','bat','dmr','gau','coil','hel','rail'];
 const gunKey=()=>'g_'+GUN_TIER[Math.min(GUN_TIER.length-1,typeof rTier==='function'?rTier('dmg'):1)];
@@ -3475,6 +3476,7 @@ function sfx(n,x,y,k=1){
   switch(n){
   case'shot':pv(gunKey(),SG.shot,x,y,{send:0.22});break;                                       // commander rifle
   case'shot2':pv(gunKey(),SG.shot2,x,y,{rate:1.07,send:0.18});break;                            // squad / enemy riflemen: same era, lighter
+  case'eshot':pv('g_ak',SG.eshot,x,y,{send:0.2});break;
   case'sniper':pv('g_snp',SG.sniper,x,y,{send:0.35,bus:B});break;
   case'mg':pv('g_mg',SG.mg,x,y,{send:0.2});break;
   case'cannon':pv('g_can',SG.cannon*Math.min(1,Math.sqrt(k)),x,y,{rate:k<1?1.08:1,send:0.3,bus:B});break;
@@ -3520,11 +3522,10 @@ function sfx(n,x,y,k=1){
 function bedNoise(c,type,f,q,dest){const s=c.createBufferSource(),fl=c.createBiquadFilter(),g=c.createGain();s.buffer=AU.nb;s.loop=true;fl.type=type;fl.frequency.value=f;fl.Q.value=q;g.gain.value=0;s.connect(fl).connect(g).connect(dest);s.start();return{f:fl,g}}
 function bedLoop(c,n,dest){const s=c.createBufferSource(),g=c.createGain();s.buffer=sbGet(n)[0];s.loop=true;g.gain.value=0;s.connect(g).connect(dest);s.start();return{s,g}}
 function audioFrame(){const c=AU.ctx;if(!c||c.state!=='running')return;const t=c.currentTime,live=running&&!paused&&G;
-  sbIdle(live?2.5:6);
+  sbIdle(live?2.5:6);if(live)sbWant(gunKey());
   if(!AU.bed){AU.bed=bedNoise(c,'lowpass',320,0.6,AU.amb);AU.bed.g.gain.value=1;                  // wind: slow LFO wanders the cutoff,
     const l=c.createOscillator(),lg=c.createGain();l.frequency.value=0.07;lg.gain.value=160;l.connect(lg).connect(AU.bed.f.frequency);l.start();
     AU.gust=bedNoise(c,'bandpass',900,0.7,AU.amb);const gl=c.createOscillator(),gg=c.createGain();gl.frequency.value=0.043;gg.gain.value=0.11;gl.connect(gg).connect(AU.gust.g.gain);gl.start();   // plus slow gusts
-    AU.rotor=bedLoop(c,'rotorL',AU.amb);AU.eng=bedLoop(c,'engL',AU.amb);      // baked rotor (blade slap + turbine) and diesel/track loops
     const cricket=(f,buzz,pulse)=>{const b=bedNoise(c,'bandpass',f,9,AU.amb),am=c.createGain(),pg=c.createGain();b.g.disconnect();b.g.connect(am).connect(pg).connect(AU.amb);   // night: crickets,
       for(const[g,fr,ty]of[[am,buzz,'square'],[pg,pulse,'sine']]){const o=c.createOscillator(),og=c.createGain();g.gain.value=0.5;o.type=ty;o.frequency.value=fr;og.gain.value=0.5;o.connect(og).connect(g.gain);o.start()}return b};   // band noise gated into chirps
     AU.night=[cricket(4700,31,0.9),cricket(5600,38,1.37)]}
@@ -3532,11 +3533,12 @@ function audioFrame(){const c=AU.ctx;if(!c||c.state!=='running')return;const t=c
   const nk=live&&Number.isFinite(DN.nk)?Math.max(0,Math.min(1,DN.nk)):0;   // day/night crossfade: wind by day, crickets by night
   AU.night[0].g.gain.setTargetAtTime(nk*0.6,t,1.5);AU.night[1].g.gain.setTargetAtTime(nk*0.42,t,1.9);AU.bed.g.gain.setTargetAtTime(1-0.35*nk,t,1.5);AU.gust.g.gain.setTargetAtTime(0.12*(1-0.5*nk),t,1.5);
   const helis=live&&G.units?G.units.reduce((n,u)=>n+(u.k==='heli'&&(u.spin??1)>0.2),0):0;
-  AU.rotor.g.gain.setTargetAtTime(helis?0.7+0.3*Math.min(4,helis):0,t,0.4);AU.rotor.s.playbackRate.setTargetAtTime(1+Math.min(5,helis)*0.03,t,0.5);
+  if(!AU.rotor&&SB.rotorL&&SB.rotorL.length){AU.rotor=bedLoop(c,'rotorL',AU.amb);AU.eng=bedLoop(c,'engL',AU.amb)}   // baked rotor (blade slap + turbine) and diesel/track loops, once baked
+  if(AU.rotor){AU.rotor.g.gain.setTargetAtTime(helis?0.7+0.3*Math.min(4,helis):0,t,0.4);AU.rotor.s.playbackRate.setTargetAtTime(1+Math.min(5,helis)*0.03,t,0.5);
   const R2=live?Math.pow(vision()+80,2):0,armor=live?G.enemies.reduce((n,e)=>n+(e.veh&&e.moving&&e.x*e.x+e.y*e.y<R2?1:0),0):0;
-  AU.eng.g.gain.setTargetAtTime(armor?Math.min(1.5,0.6+0.18*armor):0,t,0.7);AU.eng.s.playbackRate.setTargetAtTime(0.92+Math.min(6,armor)*0.035,t,0.8);
+  AU.eng.g.gain.setTargetAtTime(armor?Math.min(1.5,0.6+0.18*armor):0,t,0.7);AU.eng.s.playbackRate.setTargetAtTime(0.92+Math.min(6,armor)*0.035,t,0.8)}
   if(live&&t>AU.farT){const first=!AU.farT;AU.farT=t+6+aR()*10;if(!first){const a=aR()*TW,p=Math.max(-0.7,Math.min(0.7,Math.cos(a)));   // the war beyond the map: far thumps and bursts
-    if(aR()<0.55)pv('rumb',0.1+aR()*0.08,null,null,{pan:p,rate:0.8+aR()*0.3,lp:350,send:0.9,bus:AU.sfx});
+    if(aR()<0.55)pv('rumb',0.035+aR()*0.03,null,null,{pan:p,rate:0.8+aR()*0.3,lp:350,send:0.9,bus:AU.sfx});
     else for(let i=0,m=3+(aR()*5|0);i<m;i++)pv('g_mg',0.05,null,null,{pan:p,delay:i*(0.09+aR()*0.03),lp:900,send:1,bus:AU.sfx})}}
   musFrame(c,t)}
 
@@ -3893,7 +3895,7 @@ const EFIRE={
   // MANPADS: a heat-seeker at an aircraft (reload 6.5s, launch gives the team away); anything else just gets the carbine.
   // The target's crew punches flares on a launch if its dispensers have recycled (FLARE_CD): most shots then lose lock.
   manpads(e,tx,ty,dep){const u=dep&&dep!==true&&!dep.bays&&FC[dep.ck]&&FC[dep.ck].air?dep:null;
-    if(!u){eTracer(e,tx,ty,'#ff6a5a',1.1);sfx('shot2',e.x,e.y);eHit(e,e.dmg,dep);return}
+    if(!u){eTracer(e,tx,ty,'#ff6a5a',1.1);sfx('eshot',e.x,e.y);eHit(e,e.dmg,dep);return}
     e.atk=6.5;e.fl=G.time;e.rev=1.5;const s={k:'sam',x:e.x,y:e.y,tx:u.x,ty:u.y,u,t:0,dur:Math.max(0.5,Math.hypot(u.x-e.x,u.y-e.y)/240),dmg:e.dmg*5,src:e.type};
     if(G.time>=(u.flR||0)){u.flR=G.time+FLARE_CD/(1+0.5*pk('aircrew'));s.flT=Math.min(0.35,s.dur*0.3);s.fl=R()<Math.min(0.95,(u.ck==='heli'?0.65:0.8)+0.05*pk('aircrew'))}
     G.eshots.push(s);puff(e.x,e.y,3,4,0.9,'200,196,186',18,0.45);light(e.x,e.y,30,'255,200,140',0.12);sfx('launch',e.x,e.y)}};
