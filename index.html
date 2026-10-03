@@ -3884,7 +3884,7 @@ const SM={t0:0,dur:0,k:1};
 function slowMo(dur=1,k=0.3){if(S.set.reduceMotion||!running||!G||G.over)return;const now=performance.now();
   if(SM.dur&&now<SM.t0+SM.dur*1000){const left=SM.t0+SM.dur*1000-now;if(left>=dur*1000*0.6&&SM.k<=k)return}
   SM.t0=now;SM.dur=Math.max(0.2,Math.min(3,dur));SM.k=Math.max(0.1,Math.min(1,k));try{duck(-3,SM.dur*0.5,0.6)}catch(e){}}
-function smK(now){if(!SM.dur)return 1;const u=(now-SM.t0)/(SM.dur*1000);if(u>=1||u<0){SM.dur=0;return 1}
+function smK(now){if(!SM.dur)return 1;const u=(now-SM.t0)/(SM.dur*1000);if(u<0)return 1;if(u>=1){SM.dur=0;return 1}   // u<0: a rAF stamp from just before the call
   const a=u<0.15?u/0.15:u>0.55?(1-u)/0.45:1,e=a*a*(3-2*a);return 1-(1-SM.k)*e}
 // Low-health warning: under LOWHP (25%) of the fort's own health (walls don't count) a red vignette closes in from the screen
 // edges, stronger as health falls, pulsing with a heartbeat (sfx 'heart', effects bus, so it dips under big blasts) that quickens
@@ -3908,7 +3908,7 @@ const STAT_SRC={rifle:['Your rifle','dmg'],squad:['Squad','squad'],nade:['Hand G
   arty:['Artillery','arty'],air:['Air Support','air'],mlaunch:['Missile Launcher','mlaunch'],silo:['Missile Silo','silo'],gunship:['Gunship','gunship'],fighter:['Fighter Jets','fighter'],
   aagun:['AA Guns','aagun'],sam:['SAM Sites','sam'],mines:['Minefield','mines'],wire:['Barbed Wire','wire'],ddef:['Depot Defenses','ddef'],other:['Other','threat']};
 const STAT_CLS={inf:'Infantry',veh:'Vehicles',armor:'Tanks',air:'Aircraft',boss:'Bosses',robo:'Walkers'};
-const statCls=e=>e.boss||e.mech||e.type==='airboss'?'boss':e.air?'air':e.robo?'robo':e.type==='mbt'?'armor':e.veh||e.lc||e.amph?'veh':'inf';
+const statCls=e=>e.boss||e.type==='airboss'?'boss':e.air?'air':e.robo?'robo':e.type==='mbt'?'armor':e.veh||e.lc||e.amph?'veh':'inf';
 function statHit(e,d,hp0){const T=G.st;if(!T||!(d>0))return;const k=_ds||'other';T.d[k]=(T.d[k]||0)+Math.min(d,Math.max(0,hp0));if(d>T.big){T.big=d;T.bs=k;T.bt=e.type}}
 function statKill(e){const T=G.st;if(!T)return;const k=_ds||'other',c=statCls(e);T.ks[k]=(T.ks[k]||0)+1;T.k[c]=(T.k[c]||0)+1}
 
