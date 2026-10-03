@@ -15,7 +15,10 @@
 //   haptic     kind -> Haptics call
 //   store      save mirror: nothing written before hydrate, purged localStorage restored, newer
 //              native copy wins, newer local copy mirrored out, debounce, flush on background
-//   gc         Game Center stays off without a leaderboard id; with one: sign-in, submitScore
+//   gc         Game Center stays off without a leaderboard id; with one: sign-in, submitScore; achievements (unlock,
+//              off without achievements:true, signed out = ok:false), the leaderboard / achievement screens
+//   review     the App Store review sheet goes through GameKit.requestReview; a failure resolves false
+//   cloud      iCloud key-value store: off unless configure({icloud:true}); get/put round trip, size cap, failures degrade
 //   splash     ready() hides once; the fallback timer hides it if the game never does; build stamp and ad mode
 //
 // Run:  node native/test_shell.cjs
@@ -182,9 +185,16 @@ function makeEnv(opts = {}) {
   }
   plugins.App = { addListener: on('App') };
   plugins.SplashScreen = { hide: (o) => { rec('splash.hide', o); return Promise.resolve(); } };
+  const gk = Object.assign({ signedIn: true, review: 'ok', cloud: new Map(), cloudFail: false }, P.GameKit || {});
   plugins.GameKit = {
-    signIn: () => { rec('gc.signIn'); return Promise.resolve({ playerId: 'G:1', displayName: 'Cmdr' }); },
-    submitScore: (o) => { rec('gc.submitScore', o); return Promise.resolve(); }
+    signIn: () => { rec('gc.signIn'); return gk.signedIn ? Promise.resolve({ playerId: 'G:1', displayName: 'Cmdr' }) : Promise.reject({ code: 'NOT_AUTHENTICATED', message: 'Not signed in' }); },
+    submitScore: (o) => { rec('gc.submitScore', o); return Promise.resolve(); },
+    unlockAchievement: (o) => { rec('gc.unlock', o); return Promise.resolve(); },
+    showLeaderboard: (o) => { rec('gc.showLeaderboard', o); return Promise.resolve(); },
+    showAchievements: () => { rec('gc.showAchievements'); return Promise.resolve(); },
+    requestReview: () => { rec('review'); return gk.review === 'ok' ? Promise.resolve() : Promise.reject({ code: 'NO_VIEW_CONTROLLER', message: 'No active window scene' }); },
+    cloudGet: (o) => { rec('cloud.get', o.key); return gk.cloudFail ? Promise.reject(new Error('no entitlement')) : Promise.resolve({ value: gk.cloud.has(o.key) ? gk.cloud.get(o.key) : null }); },
+    cloudPut: (o) => { rec('cloud.put', o.key); if (gk.cloudFail) return Promise.reject(new Error('no entitlement')); gk.cloud.set(o.key, o.value); return Promise.resolve({ synced: true }); }
   };
 
   const window = {
@@ -247,6 +257,10 @@ async function web() {
   S.store.put('k', '{}');
   check('web: hydrate resolves null', (await S.store.hydrate('k')) === null);
   check('web: gc resolves ok:false', (await S.gc.submitScore('lb', 5)).ok === false);
+  check('web: gc off, unlock ok:false', S.gc.available() === false && (await S.gc.unlock('a.b')).ok === false);
+  check('web: gc screens resolve false', (await S.gc.showLeaderboard('lb')) === false && (await S.gc.showAchievements()) === false);
+  check('web: no review sheet', S.review.available() === false && (await S.review.request()) === false);
+  check('web: no iCloud', S.cloud.available() === false && (await S.cloud.get('k')) === null && (await S.cloud.put('k', '{}')) === false);
   S.ready();
   check('web: made no plugin calls', env.calls.length === 0, env.names());
 }
@@ -576,6 +590,60 @@ async function gc() {
   const r = await env.Shell.gc.submitScore('fort.daily', 31.6);
   check('gc: score submitted, rounded', r.ok === true && JSON.stringify(env.args('gc.submitScore')) === '[{"leaderboardId":"fort.daily","score":32}]', env.args('gc.submitScore'));
   check('gc: an unknown board is refused', (await env.Shell.gc.submitScore('other', 1)).ok === false);
+  check('gc: available with a leaderboard', env.Shell.gc.available() === true);
+  check('gc: achievements off without achievements:true', (await env.Shell.gc.unlock('com.x.ach.a')).ok === false && env.count('gc.unlock') === 0);
+  check('gc: leaderboard screen', (await env.Shell.gc.showLeaderboard('fort.daily')) === true && JSON.stringify(env.args('gc.showLeaderboard')) === '[{"leaderboardId":"fort.daily"}]');
+  check('gc: unknown leaderboard screen refused', (await env.Shell.gc.showLeaderboard('other')) === false && env.count('gc.showLeaderboard') === 1);
+
+  // achievements alone switch Game Center on
+  env = makeEnv();
+  env.Shell.configure(cfg({ achievements: true }));
+  await env.advance(100);
+  check('gc: achievements alone sign in once', env.count('gc.signIn') === 1 && env.Shell.gc.available() === true);
+  const u = await env.Shell.gc.unlock('com.thefort.game.ach.clear_desert');
+  check('gc: achievement unlocked at 100%', u.ok === true && JSON.stringify(env.args('gc.unlock')) === '[{"achievementId":"com.thefort.game.ach.clear_desert","percent":100}]', env.args('gc.unlock'));
+  check('gc: empty achievement id refused', (await env.Shell.gc.unlock('')).ok === false && env.count('gc.unlock') === 1);
+  check('gc: achievements screen', (await env.Shell.gc.showAchievements()) === true && env.count('gc.showAchievements') === 1);
+  check('gc: leaderboard screen without a board refused', (await env.Shell.gc.showLeaderboard('fort.daily')) === false);
+
+  // signed out: everything resolves ok:false / false, nothing is reported
+  env = makeEnv({ plugins: { GameKit: { signedIn: false } } });
+  env.Shell.configure(cfg({ achievements: true, leaderboards: ['fort.daily'] }));
+  await env.advance(100);
+  check('gc: signed out = unlock ok:false', (await env.Shell.gc.unlock('a.b')).ok === false && env.count('gc.unlock') === 0);
+  check('gc: signed out = score ok:false', (await env.Shell.gc.submitScore('fort.daily', 5)).ok === false && env.count('gc.submitScore') === 0);
+  check('gc: signed out = no screen', (await env.Shell.gc.showAchievements()) === false && env.count('gc.showAchievements') === 0);
+}
+
+async function review() {
+  let env = makeEnv();
+  env.Shell.configure(cfg());
+  check('review: available on iOS', env.Shell.review.available() === true);
+  check('review: requests the sheet', (await env.Shell.review.request()) === true && env.count('review') === 1);
+  env = makeEnv({ plugins: { GameKit: { review: 'fail' } } });
+  check('review: a failure resolves false', (await env.Shell.review.request()) === false && env.count('review') === 1);
+  check('review: failure logged', env.Shell.log().some((l) => /review prompt failed/.test(l)));
+}
+
+async function cloud() {
+  let env = makeEnv();
+  env.Shell.configure(cfg());
+  check('cloud: off by default', env.Shell.cloud.available() === false && (await env.Shell.cloud.put('k', '{"a":1}')) === false && env.count('cloud.put') === 0);
+  check('cloud: get off = null', (await env.Shell.cloud.get('k')) === null && env.count('cloud.get') === 0);
+
+  env = makeEnv();
+  env.Shell.configure(cfg({ icloud: true }));
+  check('cloud: on with icloud:true', env.Shell.cloud.available() === true);
+  check('cloud: empty key = null', (await env.Shell.cloud.get('k')) === null && env.count('cloud.get') === 1);
+  check('cloud: put', (await env.Shell.cloud.put('k', '{"a":1}')) === true);
+  check('cloud: get round trip', (await env.Shell.cloud.get('k')) === '{"a":1}');
+  check('cloud: oversized value refused', (await env.Shell.cloud.put('k', 'x'.repeat(900001))) === false && env.count('cloud.put') === 1);
+  check('cloud: bad args refused', (await env.Shell.cloud.put('', 'x')) === false && (await env.Shell.cloud.put('k', 5)) === false && env.count('cloud.put') === 1);
+
+  env = makeEnv({ plugins: { GameKit: { cloudFail: true } } });
+  env.Shell.configure(cfg({ icloud: true }));
+  check('cloud: a failing read degrades to null', (await env.Shell.cloud.get('k')) === null);
+  check('cloud: a failing write resolves false', (await env.Shell.cloud.put('k', '{}')) === false);
 }
 
 async function splash() {
@@ -596,7 +664,7 @@ async function splash() {
 }
 
 (async () => {
-  for (const s of [web, att, rewarded, inter, iap, notify, haptic, store, gc, splash]) {
+  for (const s of [web, att, rewarded, inter, iap, notify, haptic, store, gc, review, cloud, splash]) {
     try { await s(); } catch (e) { failures.push(s.name + ' threw: ' + (e && e.stack || e)); }
   }
   console.log('test_shell: ' + pass + ' passed, ' + failures.length + ' failed');

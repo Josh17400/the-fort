@@ -12,12 +12,14 @@
  *   Preferences         @capacitor/preferences            the native copy of the save (Shell.store)
  *   App                 @capacitor/app                    background / foreground
  *   SplashScreen        @capacitor/splash-screen          held until the save is hydrated
- *   GameKit             plugins/capacitor-gamekit         Game Center leaderboard (off until an id is set)
+ *   GameKit             plugins/capacitor-gamekit         Game Center leaderboard + achievements (off until ids are set),
+ *                                                         the App Store review sheet, the iCloud key-value store (off until
+ *                                                         configure({ icloud: true }): it needs an entitlement first)
  *
  * The ids (ad units, RevenueCat key, SKUs, leaderboards) live in index.html PLAT_IDS and reach the
  * shell through Shell.configure(). Outside Capacitor, or with a plugin missing, nothing throws:
  * ads resolve { rewarded:false } / { shown:false }, iap rejects or resolves { ok:false }, store
- * and notify no-op, gc resolves { ok:false }.
+ * and notify no-op, gc resolves { ok:false }, review.request and cloud.put resolve false, cloud.get resolves null.
  *
  * Plain ES5, no bundler.
  */
@@ -675,7 +677,8 @@
   }
 
   // ---------- Game Center ----------
-  // Off until configure() gets a leaderboard id: no sign-in, no "Welcome back" banner.
+  // Off until configure() gets a leaderboard id or achievements: true: no sign-in, no "Welcome back" banner.
+  function gcOn() { return !!(GameKit && cfg && (cfg.leaderboards.length || cfg.achievements)); }
   var gcSignInPromise = null;
   function gcSignIn() {
     if (gcSignInPromise) return gcSignInPromise;
@@ -700,6 +703,64 @@
       .catch(function (e) { log('game center submit failed: ' + errText(e)); return { ok: false }; });
   }
 
+  // An achievement at 100%. Never rejects: { ok:true } once Game Center took it, else { ok:false } (signed out, no such id yet).
+  function gcUnlock(id) {
+    if (!GameKit || !cfg || !cfg.achievements || typeof id !== 'string' || !id) return Promise.resolve({ ok: false });
+    return gcSignIn()
+      .then(function (player) {
+        if (!player) return { ok: false };
+        return GameKit.unlockAchievement({ achievementId: id, percent: 100 }).then(function () { return { ok: true }; });
+      })
+      .catch(function (e) { log('game center achievement failed: ' + id + ' · ' + errText(e)); return { ok: false }; });
+  }
+
+  // The native Game Center screens. Resolve true once on screen, false when signed out or unavailable. Never reject.
+  function gcShow(call) {
+    if (!gcOn()) return Promise.resolve(false);
+    return gcSignIn()
+      .then(function (player) { return player ? call().then(function () { return true; }) : false; })
+      .catch(function (e) { log('game center screen failed: ' + errText(e)); return false; });
+  }
+  function gcShowLeaderboard(board) {
+    if (!board || !cfg || cfg.leaderboards.indexOf(board) < 0) return Promise.resolve(false);
+    return gcShow(function () { return GameKit.showLeaderboard({ leaderboardId: board }); });
+  }
+  function gcShowAchievements() {
+    if (!cfg || !cfg.achievements) return Promise.resolve(false);
+    return gcShow(function () { return GameKit.showAchievements(); });
+  }
+
+  // ---------- App Store review sheet ----------
+  // Apple's own prompt (AppStore.requestReview / SKStoreReviewController, through the GameKit plugin). iOS decides whether it really
+  // shows (at most 3 times a year; in TestFlight it never does); the game picks the moments (index.html rvTry). Resolves true once asked.
+  function reviewRequest() {
+    if (!GameKit) return Promise.resolve(false);
+    return Promise.resolve()
+      .then(function () { return GameKit.requestReview(); })
+      .then(function () { log('review prompt requested'); return true; }, function (e) { log('review prompt failed: ' + errText(e)); return false; });
+  }
+
+  // ---------- iCloud key-value store ----------
+  // Off unless configure() got icloud: true (the app needs the com.apple.developer.ubiquity-kvstore-identifier entitlement and the
+  // iCloud capability on its App ID first; see handoff "Retention"). One string value per key, at most CLOUD_MAX characters
+  // (Apple's limit is 1 MB per key and per app).
+  var CLOUD_MAX = 900000;
+  function cloudOn() { return !!(GameKit && cfg && cfg.icloud); }
+  function cloudGet(key) {
+    if (!cloudOn() || typeof key !== 'string' || !key) return Promise.resolve(null);
+    return Promise.resolve()
+      .then(function () { return GameKit.cloudGet({ key: key }); })
+      .then(function (r) { return r && typeof r.value === 'string' && r.value ? r.value : null; },
+        function (e) { log('icloud read failed: ' + errText(e)); return null; });
+  }
+  function cloudPut(key, value) {
+    if (!cloudOn() || typeof key !== 'string' || !key || typeof value !== 'string') return Promise.resolve(false);
+    if (value.length > CLOUD_MAX) { log('icloud write skipped: ' + value.length + ' chars'); return Promise.resolve(false); }
+    return Promise.resolve()
+      .then(function () { return GameKit.cloudPut({ key: key, value: value }); })
+      .then(function () { return true; }, function (e) { log('icloud write failed: ' + errText(e)); return false; });
+  }
+
   // ---------- configure ----------
   // Called once by the game's Plat.boot() with PLAT_IDS: starts ATT, consent, ad preloads,
   // RevenueCat and Game Center. Repeat calls are ignored.
@@ -711,7 +772,9 @@
       rcKey: c.rcKey || '',
       products: (c.products || []).slice(),
       nonConsumables: (c.nonConsumables || []).slice(),
-      leaderboards: (c.leaderboards || []).filter(Boolean)
+      leaderboards: (c.leaderboards || []).filter(Boolean),
+      achievements: c.achievements === true,
+      icloud: c.icloud === true
     };
     if (!isNative) return;
     var adsUp = Promise.resolve();
@@ -724,7 +787,7 @@
     }
     if (iapOn()) fetchProducts(cfg.products).catch(function (e) { log('products failed: ' + errText(e)); });
     // After ATT and consent: GameKit's sheet and those prompts share the root view controller.
-    if (cfg.leaderboards.length) adsUp.then(gcSignIn);
+    if (gcOn()) adsUp.then(gcSignIn);
   }
 
   // ---------- contract ----------
@@ -757,6 +820,14 @@
     notify: { schedule: noteSchedule, cancel: noteCancel, id: noteId },
     haptic: haptic,
     store: { put: storePut, hydrate: storeHydrate, flush: storeFlush },
-    gc: { submitScore: gcSubmitScore }
+    gc: {
+      available: gcOn,
+      submitScore: gcSubmitScore,
+      unlock: gcUnlock,
+      showLeaderboard: gcShowLeaderboard,
+      showAchievements: gcShowAchievements
+    },
+    review: { available: function () { return !!GameKit; }, request: reviewRequest },
+    cloud: { available: cloudOn, get: cloudGet, put: cloudPut }
   };
 })();

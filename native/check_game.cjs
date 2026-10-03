@@ -65,7 +65,16 @@ const CONTRACT = {
   store: /Shell\.store\b/,
   'store.put': /\.put\(SAVE_KEY,/,
   'store.hydrate': /\.hydrate\(SAVE_KEY\)/,
-  'gc.submitScore': /\.gc\.submitScore\(/
+  'gc.submitScore': /\.gc\.submitScore\(/,
+  'gc.available': /\.gc\.available\(\)/,
+  'gc.unlock': /\.gc\.unlock\(id\)/,
+  'gc.showLeaderboard': /\.gc\.showLeaderboard\(id\)/,
+  'gc.showAchievements': /\.gc\.showAchievements\(\)/,
+  'review.available': /\.review\.available\(\)/,
+  'review.request': /\.review\.request\(\)/,
+  'cloud.available': /\.cloud\.available\(\)/,
+  'cloud.get': /\.cloud\.get\(key\)/,
+  'cloud.put': /\.cloud\.put\(key,json\)/
 };
 
 // window.Shell as the web build sees it (no Capacitor): the object shape is the same everywhere.
@@ -86,9 +95,16 @@ function checkGame(html) {
   const ids = /const PLAT_IDS=\{([\s\S]*?)\n\};/.exec(html);
   if (!ids) fails.push('const PLAT_IDS={...}; not found');
   else {
-    for (const k of ['admobApp', 'rewarded', 'interstitial', 'testRewarded', 'testInterstitial', 'rcKey', 'lbDaily']) {
+    for (const k of ['admobApp', 'rewarded', 'interstitial', 'testRewarded', 'testInterstitial', 'rcKey', 'lbDaily', 'achPre', 'analytics']) {
       if (!new RegExp('^\\s*' + k + ":'[^']*'", 'm').test(ids[1])) fails.push('PLAT_IDS.' + k + ' missing');
     }
+    if (!/^\s*icloud:(true|false)\b/m.test(ids[1])) fails.push('PLAT_IDS.icloud missing (true or false)');
+    // iCloud needs the key-value-store entitlement (and the App ID's iCloud capability) or CI signing / the sync fails
+    const ent = path.join(__dirname, 'ios', 'App', 'App', 'App.entitlements');
+    const kvs = fs.existsSync(ent) && /com\.apple\.developer\.ubiquity-kvstore-identifier/.test(fs.readFileSync(ent, 'utf8'));
+    if (/^\s*icloud:true\b/m.test(ids[1]) && !kvs) fails.push('PLAT_IDS.icloud is true but App.entitlements has no ubiquity-kvstore-identifier');
+    const an = /^\s*analytics:'([^']*)'/m.exec(ids[1]);
+    if (an && an[1] && !/^https:\/\/\S+$/.test(an[1])) fails.push('PLAT_IDS.analytics must be empty or an https URL');
   }
   const skus = [...html.matchAll(/\bsku:'([^']+)'/g)].map((m) => m[1]);
   if (skus.length !== 7) fails.push('expected 7 store products (5 gem packs, starter, noads), found ' + skus.length + ': ' + skus.join(', '));
