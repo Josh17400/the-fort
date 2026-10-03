@@ -1372,8 +1372,9 @@ body.rm .adc::before{animation:none}@keyframes adSpin{to{transform:rotate(1turn)
   <div class="sh-head"><h2 id="setTitle">SETTINGS</h2><button class="icon-btn" id="setClose" aria-label="Close settings"><span data-ic="close" data-s="20"></span></button></div>
   <div class="sh-body">
     <div class="set-sec eyebrow">AUDIO</div>
-    <label class="set stk"><span class="st">Volume</span><input type="range" id="sVol" min="0" max="100"></label>
-    <label class="set"><span class="st">Music<small>Drum loop during waves</small></span><input type="checkbox" class="sw" id="sMusic"></label>
+    <label class="set stk"><span class="st">Effects volume</span><input type="range" id="sVol" min="0" max="100"></label>
+    <label class="set"><span class="st">Music<small>Menu theme and battle soundtrack</small></span><input type="checkbox" class="sw" id="sMusic"></label>
+    <label class="set stk"><span class="st">Music volume</span><input type="range" id="sMvol" min="0" max="100"></label>
     <div class="set-sec eyebrow">DISPLAY</div>
     <div class="set stk"><span class="st">Graphics quality<small>Lower it if big battles stutter</small></span><div class="seg" id="gfxSeg" role="group" aria-label="Graphics quality"><button data-v="high">HIGH</button><button data-v="medium">MEDIUM</button><button data-v="low">LOW</button></div>
       <select id="sGfx" hidden><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
@@ -1447,7 +1448,7 @@ IC.nade='M11 15m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M8.5 9.3V6.5h5v2.8M13.5 7.5c2
 const _p2={};function cIcon(n,x,y,s,c,lw=2){const p=_p2[n]||(_p2[n]=new Path2D(IC[n]));ctx.save();ctx.translate(x,y);ctx.scale(s/24,s/24);ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke(p);ctx.restore()}
 // ================= SAVE =================
 const PHONE=matchMedia('(pointer:coarse)').matches&&matchMedia('(hover:none)').matches,GFX_DEF=PHONE?'medium':'high';   // PHONE = MOBILE (defined later), usable at load
-const DEF_SET={vol:60,music:true,shake:true,dmgNums:true,callouts:true,ring:true,blurPause:true,dayNight:true,speed:1,prio:'near'};
+const DEF_SET={vol:60,music:true,mvol:60,shake:true,dmgNums:true,callouts:true,ring:true,blurPause:true,dayNight:true,speed:1,prio:'near'};
 let S;
 // Save storage seam: every write goes through saveWrite(). The web keeps the save in localStorage only. The iOS app also mirrors each
 // write to native storage (window.Shell.store: Capacitor Preferences), because iOS may purge a WKWebView's localStorage; at launch
@@ -3087,13 +3088,13 @@ function sheetDrag(id,close){const m=$(id),hd=m.querySelector('.sh-head'),pn=m.q
 sheetDrag('settings',closeSettings);sheetDrag('howto',closeHowto);
 $('howClose').onclick=$('howDone').onclick=closeHowto;$('howto').addEventListener('mousedown',e=>{if(e.target.id==='howto')closeHowto()});$('howBtn').onclick=openHowto;
 const segSync=(seg,v)=>{for(const b of $(seg).children)b.setAttribute('aria-pressed',b.dataset.v===String(v))};
-const volFill=()=>$('sVol').style.setProperty('--v',$('sVol').value+'%');
-function syncSettings(){$('devRow').hidden=Plat.native()||!S.set.dev&&_devTap<7;const vl=$('verLine');vl.hidden=!Plat.native();if(Plat.native()){const sh=window.Shell;vl.textContent='The Fort for iOS'+(sh.version?' · v'+sh.version:'')+' · build '+(sh.build||'local')+(sh.liveAds?'':' · test ads')}$('sDev').checked=!!S.set.dev;$('sVol').value=S.set.vol;volFill();$('sMusic').checked=S.set.music;$('sShake').checked=S.set.shake;$('sDmg').checked=S.set.dmgNums;$('sCall').checked=S.set.callouts!==false;$('sRing').checked=S.set.ring;$('sDay').checked=S.set.dayNight;$('sBlur').checked=S.set.blurPause;
+const volFill=()=>{for(const id of ['sVol','sMvol'])$(id).style.setProperty('--v',$(id).value+'%')};
+function syncSettings(){$('devRow').hidden=Plat.native()||!S.set.dev&&_devTap<7;const vl=$('verLine');vl.hidden=!Plat.native();if(Plat.native()){const sh=window.Shell;vl.textContent='The Fort for iOS'+(sh.version?' · v'+sh.version:'')+' · build '+(sh.build||'local')+(sh.liveAds?'':' · test ads')}$('sDev').checked=!!S.set.dev;$('sVol').value=S.set.vol;$('sMvol').value=S.set.mvol;volFill();$('sMusic').checked=S.set.music;$('sShake').checked=S.set.shake;$('sDmg').checked=S.set.dmgNums;$('sCall').checked=S.set.callouts!==false;$('sRing').checked=S.set.ring;$('sDay').checked=S.set.dayNight;$('sBlur').checked=S.set.blurPause;
   $('sSpeed').value=String(S.set.speed);$('sGfx').value=S.set.gfx;segSync('gfxSeg',S.set.gfx);segSync('spdSeg',S.set.speed);$('sRm').checked=!!S.set.reduceMotion;$('sLeft').checked=!!S.set.leftHand;
   const rb=$('resetBtn');rb.disabled=running;delete rb.dataset.arm;rb.textContent=running?'END RUN FIRST':'RESET'}
 for(const[seg,sel]of[['gfxSeg','sGfx'],['spdSeg','sSpeed']])$(seg).addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;e.preventDefault();const s=$(sel);if(s.value!==b.dataset.v){s.value=b.dataset.v;s.dispatchEvent(new Event('change'))}segSync(seg,b.dataset.v)});
 $('sVol').oninput=e=>{S.set.vol=+e.target.value;volFill();setMasterVol();save()};
-$('sMusic').onchange=e=>{S.set.music=e.target.checked;save()};$('sVol').onchange=()=>sfx('buy');
+$('sMusic').onchange=e=>{S.set.music=e.target.checked;save()};$('sMvol').oninput=e=>{S.set.mvol=+e.target.value;volFill();save()};$('sVol').onchange=()=>sfx('buy');
 $('sShake').onchange=e=>{S.set.shake=e.target.checked;save()};
 $('sDmg').onchange=e=>{S.set.dmgNums=e.target.checked;save()};
 $('sCall').onchange=e=>{S.set.callouts=e.target.checked;save()};
@@ -3147,7 +3148,7 @@ addEventListener('keydown',e=>{const how=$('howto').classList.contains('on'),set
 // ================= AUDIO =================
 // One AudioContext. Graph: voices ---> sfx bus --+
 //                          wind/rotor -> amb ----+--> compressor -> master (S.set.vol) -> speakers
-//                          drums/bass -> mus ----+
+//                          drums/bass -> mus ----+      music/*.mp3 -> track fade -> mbus (S.set.mvol) -> speakers
 // Every sound event is one "voice" (its layers share one gain/pan node), so the per-frame cap and the live-voice cap
 // keep 200-enemy fights cheap. Positioned sounds are panned and attenuated by distance from the fort.
 const AU={ctx:null,master:null,sfx:null,amb:null,mus:null,nb:null,live:0,last:{},bed:null,rotor:null,next:0,step:0,bar:0,musOn:0,unlocked:false};
@@ -3166,9 +3167,10 @@ function audio(){if(AU.ctx)return AU.ctx;const C=window.AudioContext||window.web
 function setMasterVol(){if(AU.master)AU.master.gain.setTargetAtTime(volCurve(),AU.ctx.currentTime,0.03)}
 // iOS/Safari only lets audio start inside a user gesture: resume + play one silent sample on every gesture until running.
 function audioUnlock(){const c=audio();if(!c)return;if(c.state!=='running'&&!document.hidden)c.resume().catch(()=>{});
+  if(MU.blocked){const b=MU.blocked;MU.blocked=null;if(b===MU.cur)musPlay(b)}
   if(!AU.unlocked){AU.unlocked=true;try{const s=c.createBufferSource();s.buffer=c.createBuffer(1,1,22050);s.connect(c.destination);s.start(0)}catch(e){}}}
 for(const ev of ['touchend','click','keydown'])addEventListener(ev,audioUnlock,{passive:true});
-document.addEventListener('visibilitychange',()=>{const c=AU.ctx;if(!c)return;if(document.hidden)c.suspend().catch(()=>{});else if(AU.unlocked)c.resume().catch(()=>{})});
+document.addEventListener('visibilitychange',()=>{const c=AU.ctx;if(!c)return;if(document.hidden){c.suspend().catch(()=>{});if(MU.cur)MU.cur.el.pause()}else if(AU.unlocked){c.resume().catch(()=>{});if(MU.cur)musPlay(MU.cur)}});
 
 // Opens a voice: returns [ctx, startTime, outputNode] or null when capped. x/y (world) pan + attenuate; prio skips the caps.
 function voice(dur,gain,x,y,prio){
@@ -3281,18 +3283,26 @@ function audioFrame(){const c=AU.ctx;if(!c||c.state!=='running')return;const t=c
   AU.rotor.g.gain.setTargetAtTime(helis?0.5+0.25*helis:0,t,0.4);AU.rotor.lfo.frequency.setTargetAtTime(10.5+helis*0.6,t,0.5);
   const R2=live?Math.pow(vision()+80,2):0,armor=live?G.enemies.reduce((n,e)=>n+(e.veh&&e.moving&&e.x*e.x+e.y*e.y<R2?1:0),0):0;
   AU.eng.g.gain.setTargetAtTime(armor?Math.min(1.1,0.45+0.14*armor):0,t,0.7);AU.eng.f.frequency.setTargetAtTime(95+Math.min(6,armor)*9,t,0.8);
-  const want=S.set.music&&live&&(G.spawnLeft>0||G.enemies.length>0||G.sky.length>0)?0.16:0;AU.mus.gain.setTargetAtTime(want,t,want?1.2:2.2);
-  if(want)AU.musOn=t+7;if(t>AU.musOn)return;                                                         // keep scheduling only while audible
-  const step=60/96/2;if(AU.next<t)AU.next=t+0.05;
-  const inten=live?Math.min(1,G.enemies.length/70+(G.wave%10===0?0.4:0)):0;
-  while(AU.next<t+0.2){playStep(c,AU.next,AU.step,inten);AU.next+=step;if(++AU.step>=16){AU.step=0;AU.bar++}}}
-// One 8th-note of the march: taiko-ish kick, field snare with rolls that fill in as the fight gets heavier, low pulse bass, brass-ish swell.
-function playStep(c,t,s,inten){const out=c.createGain(),v=[c,t,out];out.connect(AU.mus);setTimeout(()=>out.disconnect(),4000);
-  const kick=s===0||s===8||(inten>0.5&&(s===6||s===14)),snare=s===4||s===12,roll=inten>0.25&&(s>=13||(s===3&&inten>0.6)),ghost=inten>0.1&&(s===2||s===6||s===10||s===11);
-  if(kick){lOsc(v,'sine',68,36,0.9,0.003,0.38);lNoise(v,'lowpass',180,90,0.7,0.25,0.002,0.12)}
-  if(snare||roll||ghost){const a=snare?0.34:roll?0.16+0.04*(s-12):0.07;lNoise(v,'bandpass',1900,1500,0.8,a,0.001,snare?0.16:0.07);lOsc(v,'triangle',190,160,a*0.4,0.001,0.05)}
-  if(s%4===2){const root=AU.bar%4===3?(s<8?46.25:49):36.7*(AU.bar%8>=4?1.122:1);lOsc(v,'triangle',root*2,root*2,0.22,0.01,0.22)}
-  if(s===0&&AU.bar%4===0&&inten>0.35){lOsc(v,'sawtooth',73.4,73.4,0.045,1.2,2.2);lOsc(v,'sawtooth',110,110,0.03,1.2,2.2)}}
+  musFrame(c,t)}
+
+// ---- soundtrack: the menu theme at home, a random battle track during a run (never the same one twice in a row) ----
+// <audio> elements routed through Web Audio (iOS ignores HTMLMediaElement.volume): each track has a fade gain into the
+// music bus, which goes straight to the speakers so the Music volume slider is independent of the effects volume.
+const MUS_MENU='music/menu.mp3',MUS_FIGHT=['music/fight1.mp3','music/fight2.mp3','music/fight3.mp3','music/fight4.mp3','music/fight5.mp3'];
+const MU={cur:null,last:-1,blocked:null};
+const mvolCurve=()=>Math.pow(Math.max(0,Math.min(100,+S.set.mvol||0))/100,1.6);
+function musTrack(c,src,kind){const el=new Audio();el.preload='auto';el.src=src;el.loop=kind==='menu';
+  try{const g=c.createGain();g.gain.value=0;c.createMediaElementSource(el).connect(g).connect(AU.mbus);return{el,g,kind}}catch(e){return null}}
+function musPlay(tr){const p=tr.el.play();if(p&&p.catch)p.catch(()=>{MU.blocked=tr})}
+function musFade(tr,t){tr.g.gain.setTargetAtTime(0,t,0.45);setTimeout(()=>{tr.el.pause();tr.el.removeAttribute('src');tr.el.load();try{tr.g.disconnect()}catch(e){}},3000)}
+function musFrame(c,t){if(!AU.mbus){AU.mbus=c.createGain();AU.mbus.gain.value=0;AU.mbus.connect(c.destination)}
+  const on=S.set.music&&mvolCurve()>0;AU.mbus.gain.setTargetAtTime(on?mvolCurve():0,t,0.12);
+  if(!on){if(MU.cur){musFade(MU.cur,t);MU.cur=null}return}
+  const kind=running||(G&&G.swAsk)?'fight':'menu';
+  if(!MU.cur||MU.cur.kind!==kind||MU.cur.el.ended||MU.cur.el.error){if(MU.cur)musFade(MU.cur,t);let src=MUS_MENU;
+    if(kind==='fight'){let i;do i=Math.floor(Math.random()*MUS_FIGHT.length);while(i===MU.last);MU.last=i;src=MUS_FIGHT[i]}
+    MU.cur=musTrack(c,src,kind);if(!MU.cur)return;musPlay(MU.cur)}
+  MU.cur.g.gain.setTargetAtTime(kind==='fight'&&paused?0.4:1,t,0.5)}
 
 // ================= CANVAS =================
 const cv=$('cv');let ctx=cv.getContext('2d'),VW,VH,dpr,sc;   // ctx is briefly swapped to render sprite previews offscreen

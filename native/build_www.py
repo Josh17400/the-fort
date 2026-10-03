@@ -38,6 +38,8 @@ INFO_PLIST = NATIVE / "ios" / "App" / "App" / "Info.plist"
 PBXPROJ = NATIVE / "ios" / "App" / "App.xcodeproj" / "project.pbxproj"
 # Files next to index.html that the page loads by relative path.
 ROOT_FILES = ("apple-touch-icon.png",)
+# Folders next to index.html that the page loads from by relative path (the soundtrack).
+ROOT_DIRS = ("music",)
 WWW = NATIVE / "www"
 MARKER = "<head>"
 INJECTED = ('src="capacitor.js"', 'src="shell.js"', "window.FORT_BUILD", "window.FORT_ADS")
@@ -109,6 +111,9 @@ def validate() -> str:
     for name in ROOT_FILES:
         if not (ROOT / name).is_file():
             fail(f"not found: {ROOT / name}")
+    for name in ROOT_DIRS:
+        if not (ROOT / name).is_dir():
+            fail(f"not found: {ROOT / name}")
     html = GAME.read_text(encoding="utf-8")
     if html.count(MARKER) != 1:
         fail(f"{GAME} must contain exactly one {MARKER!r}, found {html.count(MARKER)}")
@@ -153,6 +158,8 @@ def main() -> None:
     shutil.copytree(FONTS, WWW / "fonts", ignore=shutil.ignore_patterns("*.md"))
     for name in ROOT_FILES:
         shutil.copyfile(ROOT / name, WWW / name)
+    for name in ROOT_DIRS:
+        shutil.copytree(ROOT / name, WWW / name)
 
     for f in sorted(p for p in WWW.rglob("*") if p.is_file()):
         print(f"wrote {f.relative_to(NATIVE).as_posix()} ({f.stat().st_size:,} bytes)")
