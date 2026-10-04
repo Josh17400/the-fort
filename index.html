@@ -3791,6 +3791,7 @@ function nextType(){const q=G.vq;return q&&q.length&&Math.random()<q.length/G.sp
 function startWave(){
   G.breakT=0;G.wave++;if(G.startBest>0&&G.wave===G.startBest+1){feed('NEW RECORD · WAVE '+G.wave,'120,230,140','trophy');[660,880,1175].forEach((f,i)=>setTimeout(()=>tone(f,i<2?0.09:0.22,'square',0,0.045),i*120))}   // first wave past your best: a moment, not just an AAR tag
   G.wHit=0;for(const k in G.threat)G.threat[k]*=0.6;G.spawnLeft=waveCount(G.wave);const tbo=tbWave(G.wave);G.waveTotal=G.spawnLeft+(G.wave%10===0||tbo?1:0);G.spawnInt=Math.max(0.05,waveWindow(G.wave)/G.spawnLeft);G.spawnT=0.5;
+  if(tbWave(G.wave+1)){sbWant('tbin');sbWant('tbph')}   // bake the boss stings a wave early (idle time), not on the spawn frame
   if(tbo)tbSpawn(tbForm(G.wave));   // theater boss (THEATER BOSSES): replaces the MBT on waves 50/100 and the gunship on 75
   else if(G.wave%10===0){spawn('boss');const b2=tw().boss2;if(b2&&G.wave>=b2){const t=spawn('boss');t.hp=t.max*=0.6;G.waveTotal++}}   // Capital: a second tank rides with it
   layMines();
