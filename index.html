@@ -3877,7 +3877,7 @@ function fire(s,e,mult=1){const m0=mult;
   let d=dmgAt(L('dmg'))*rMult(line)*mult*(1+0.125*pk('hollow'));const d0=d,crit=Math.random()<critChance()||s.main&&e===s.tgt&&sg('dmg','lockCrit')!=null;if(crit)d*=2.5+Math.max(0,L('crit')-15)*0.1;
   s.ang=Math.atan2(e.y-s.y,e.x-s.x);s.fl=G.time;
   {const p=wp?tbWpPos(e):null;sgTracer(line,s.x+Math.cos(s.ang)*6,s.y+Math.sin(s.ang)*6,p?p[0]:e.x,p?p[1]:e.y,crit||wp?'#ffd23f':'#fff2b0',big?1.8:1.2,0.07)}
-  const ex=e.x,ey=e.y;_mainHit=!!s.main;_dk=heat&&!e.air?'':'s';_pen=rPen(line);hurtEnemy(e,d,crit);_mainHit=false;_dk='s';if(wp)tbWpHit(e);
+  const ex=e.x,ey=e.y;_mainHit=!!s.main;_dk=heat&&!e.air?'':'s';_pen=rPen(line);_tbWp=wp;hurtEnemy(e,d,crit);_tbWp=false;_mainHit=false;_dk='s';if(wp)tbWpHit(e);
   if(big&&!e.air){const p=sg(line,'splash');sigSplash(ex,ey,p[0],d*p[1],e)}
   sigOnHit(line,s.x,s.y,e,d,'s',d0);
   const fl=L('frag');if(fl&&!e.air){const fr=Math.min(40,10+4*fl);for(const o of G.enemies)if(o!==e&&!o.dead&&within(o,ex,ey,fr+o.r))hurtEnemy(o,d*0.35,false);G.fx.push({k:'boom',x:ex,y:ey,r:fr,life:0.2,max:0.2})}
@@ -5137,7 +5137,8 @@ function fcSep(u,dt){for(const o of G._cg){if(o===u||o.dead)continue;const dx=u.
 // ---- enemies vs craft ----
 // A ground enemy with a craft inside its reach stops and fights it (RPG teams and sappers almost always; others half the time once
 // they are already on the walls). Returns true when it spent this tick on a craft.
-function vehEnemy(e,dt){if(e.stand||!G.fw||!visible(e))return false;   // only from inside your sight line: an unseen gunner duelling a craft at the leash edge could stall a wave forever
+function vehEnemy(e,dt){if(e.stand||e.tb||!G.fw||!visible(e))return false;   // (a theater boss never stops to duel: it drives on the walls)
+     // only from inside your sight line: an unseen gunner duelling a craft at the leash edge could stall a wave forever
   if((e.vtT=(e.vtT||0)-dt)<=0){e.vtT=0.3+R()*0.25;e.vt=pickCraft(e)}
   const u=e.vt;if(!u||u.dead){e.vt=null;return false}
   const reach=(e.type==='manpads'?ET.manpads.aa:e.range?e.range+10:e.r+8)+FC[u.ck].r;if(Math.hypot(u.x-e.x,u.y-e.y)>reach+8)return false;
@@ -8766,14 +8767,14 @@ function drawPreview(type){if(type.startsWith('tb_'))return tbPreview(type.slice
 // time; the ~1 s of slow motion only scales the real-time step in loop() (the sim and its RNG never see it) and is skipped with
 // Reduced Motion. Bonus: the kill pays TB.rew x an MBT bounty, plus TB.rp RP the first time each theater's boss falls at 50 / 100
 // (S.tbk). Killing the wave-100 boss routs whatever is left of that wave. Nothing here runs before wave 50: Desert parity untouched.
-const TB={on:1,sc:1.45,hp:[4.5,8,13],dmg:[1.2,1.4,1.7],rew:[3,5,9],rp:[0,2,3],fin:1.4,wp:2.5,pct:0.12,shK:0.4,ram:3,mg:0.045,rk:0.3,ar:0.6,lz:0.7,st:0.8,slow:0.3,slowT:1,warn:2};
+const TB={on:1,sc:1.45,run:2.2,cap:[0.04,0.033,0.025],capX:0.04,hp:[2.4,3.2,6],dmg:[1.1,1.2,1.35],rew:[3,5,9],rp:[0,2,3],fin:1.4,wp:2.5,pct:0.12,shK:0.4,ram:3,mg:0.035,rk:0.25,ar:0.5,lz:0.7,st:0.8,slow:0.3,slowT:1,warn:2};
 const tbForm=w=>!TB.on?-1:w===100?2:w===50?1:w===75?0:-1,tbWave=w=>tbForm(w)>=0&&!!TBOSS[S.map];
 // per theater: n name, tag, r radius, spd/rate/rng/hp/dm/arm vs the MBT, sky ('heli' | 'gunship' AI), sea (comes in off the sea arc),
 // wp weak point [x, y, r] in the boss's frame (+x = nose), call escort types, ph phases {t line, a {special: cooldown s}, s speed x, rt rate x, rng, core}
 const TBOSS={
  desert:{n:'SCORPION WAR-RIG',tag:'Armored convoy leader · tap the glowing fuel valve',art:'rig',r:30,spd:1,rate:2.4,rng:90,hp:1,dm:1,arm:0.6,wp:[-34,0,3.6],call:['technical','technical','apc'],
   ph:[{t:'Twin HMGs and rocket pods on the walls',a:{mg:3,rkt:9}},{t:'Calls up its convoy',a:{mg:2.6,call:11,rkt:8},s:1.2},{t:'Ramming speed',a:{rush:10,mg:2.2,rkt:6},s:1.3}]},
- mountain:{n:'VIPER ACE',tag:'Attack helicopter ace · tap the glowing turbine',art:'heli',sky:'heli',r:26,spd:1.5,rate:2.2,hp:0.75,dm:0.9,wp:[-12,0,3.4],
+ mountain:{n:'VIPER ACE',tag:'Attack helicopter ace · tap the glowing turbine',art:'heli',sky:'heli',r:26,spd:1.5,rate:2.2,hp:1,dm:0.7,wp:[-12,0,3.4],
   ph:[{t:'Gun runs and rocket ripples',a:{rkt:10}},{t:'Breaks hard, dumping flares',a:{dash:7,rkt:9,aa:6}},{t:'Calls in a drone pack',a:{dash:6,drn:12,rkt:7}}]},
  coastal:{n:'LEVIATHAN',tag:'Armored landing hovercraft · tap the glowing lift engine',art:'hover',sea:1,r:34,spd:1.25,rate:2.6,rng:70,hp:1.05,dm:1,arm:0.55,wp:[-37,0,3.6],call:['grunt','shooter','grunt','rpg'],
   ph:[{t:'Deck guns open up from the surf',a:{mg:2.6,rkt:10}},{t:'Ramp down: troops ashore',a:{call:8,mg:2.4,rkt:9}},{t:'Rocket deck salvo',a:{rkt:5,mg:2,call:12}}]},
@@ -8783,7 +8784,7 @@ const TBOSS={
   ph:[{t:'Howitzer barrage',a:{arty:6}},{t:'Rocket pods join the barrage',a:{arty:5,rkt:9}},{t:'Closes for direct fire',a:{arty:4,rkt:7,mg:3},s:1.5,rng:50}]},
  jungle:{n:'MARSH STALKER',tag:'Six-legged swamp walker · tap the glowing reactor',art:'walker',r:32,spd:1.15,rate:2.2,rng:60,hp:1.05,dm:1.05,arm:0.55,wp:[-13,0,4],call:['runner','grunt','runner'],
   ph:[{t:'Gun pods sweep the walls',a:{mg:2.4}},{t:'Drops a hunter pack from the canopy',a:{mg:2.2,call:9,drn:13}},{t:'Leaps at the walls',a:{rush:8,stomp:5,mg:2},s:1.3}]},
- island:{n:'NIGHTSHADE',tag:'Night gunship · tap the glowing engine',art:'gunship',sky:'gunship',r:40,spd:1,rate:3,hp:0.85,dm:1,wp:[2,-17,3.6],
+ island:{n:'NIGHTSHADE',tag:'Night gunship · tap the glowing engine',art:'gunship',sky:'gunship',r:40,spd:1,rate:3,hp:1,dm:1,wp:[2,-17,3.6],
   ph:[{t:'Side guns and the 105mm',a:{arty:9}},{t:'Searchlight up, paratroopers away',a:{para:10,arty:8},lamp:1},{t:'ECM screen and a drone swarm',a:{shd:11,drn:12,para:13,arty:7},lamp:1}]},
  capital:{n:'COLOSSUS',tag:'Titan war mech · tap the glowing reactor core',art:'titan',r:44,spd:0.75,rate:2,rng:80,hp:1.2,dm:1.15,arm:0.65,wp:[5,0,5],call:['brute','brute'],
   ph:[{t:'Arm cannons on the walls',a:{mg:2.6,stomp:7}},{t:'Missile pods and an energy shield',a:{rkt:7,shd:13,drn:14}},{t:'Core exposed: beam sweep',a:{laser:6,stomp:5,rkt:8},s:1.25,core:1}]}};
@@ -8803,7 +8804,7 @@ function tbSpawn(f){const id=S.map,T=TBOSS[id];if(!T)return null;let e;
   else{let at=null;const g=tw().arc;if(T.sea&&g&&g.sea!=null){const a=g.sea+(R()-.5)*0.5,d=vision()+110;at={x:Math.cos(a)*d,y:Math.sin(a)*d}}
     e=spawn('boss',at);e.robo=undefined;e.dep=undefined;e.fsite=undefined;e.arm=T.arm}   // never a walker / raider: it heads for the fort
   const k=TB.hp[f]*T.hp*(id==='capital'&&f===2?TB.fin:1);e.hp=e.max=e.max*k;e.dmg*=TB.dmg[f]*T.dm;e.rew=ET.boss.rew*waveRew(G.wave)*TB.rew[f];e.r=T.r*TB.sc*bS();e.rate=T.rate;e.spd*=T.spd;
-  e.tb=id;e.tbN=T.n;e.tbS={f,ph:0,nph:f?3:2,a:{},spd0:e.spd,rate0:e.rate,mg:0,mgT:0,shT:0,rushT:0,lzT:0,lzA:0,close:0,dashT:0,core:0,t0:G.time};
+  e.tb=id;e.tbN=T.n;e.tbS={f,ph:0,nph:f?3:2,a:{},cw:-1,cd:0,spd0:e.spd,rate0:e.rate,mg:0,mgT:0,shT:0,rushT:0,lzT:0,lzA:0,close:0,dashT:0,core:0,t0:G.time};
   if(!T.sky)e.range=T.rng;tbArm(e);sbWant('tbph');sbWant('tbin');setTimeout(()=>{if(running&&G&&!G.over)sfx('tbin')},250);
   if(G.wave===100&&id==='capital')setTimeout(()=>{if(running&&G&&!G.over)feed('FINAL BATTLE · THE CAPITAL STANDS OR FALLS','255,207,90','threat','FINAL BATTLE')},2600);
   return e}
@@ -8816,7 +8817,8 @@ function tbTick(e,dt,h){const s=e.tbS,T=tbT(e),d=hyp(e.x,e.y)||1,cheb=Math.max(M
   const q=e.hp/e.max,want=s.nph===3?(q<1/3?2:q<2/3?1:0):(q<0.5?1:0);if(want>s.ph){s.ph=want;tbPhase(e);if(!running)return}
   if(!e.air){const P=tbPh(e),rng=s.close||s.rushT>G.time?6:P.rng||T.rng;e.range=Math.max(24,Math.min(rng,sight()-h-e.r*2));
     if(s.rushT>G.time){e.spd=s.spd0*(P.s||1)*2.6;if(cheb<=h+e.r+14){s.rushT=0;s.close=1;e.spd=s.spd0*(P.s||1);tbRam(e,h);if(!running)return}}
-    else if(s.rushT){s.rushT=0;e.spd=s.spd0*(P.s||1)}}
+    else if(s.rushT){s.rushT=0;e.spd=s.spd0*(P.s||1)}
+    else e.spd=s.spd0*(P.s||1)*(d>sight()+e.r?TB.run:1)}   // closes at speed until it is in sight, so it always reaches the fight
   else if(s.dashT&&s.dashT<G.time){s.dashT=0;e.spd=s.spd0*(tbPh(e).s||1)}
   const near=e.air?d<sight()+40:cheb<=h+e.range+e.r+140,inV=d<vision()+20;
   // machine-gun burst in progress
@@ -8826,7 +8828,7 @@ function tbTick(e,dt,h){const s=e.tbS,T=tbT(e),d=hyp(e.x,e.y)||1,cheb=Math.max(M
   if(s.lzT>G.time){s.lzA+=dt*0.9;const a=Math.atan2(e.y,e.x)+Math.sin(s.lzA)*0.9,[wx,wy]=wallPt(Math.cos(a)*400,Math.sin(a)*400,h,0);s.lzX=wx;s.lzY=wy;
     if(R()<dt*20)spark(wx,wy,2,90,['#e6fbff','#9fe4ff'],0.25,1.3);damageFort(e.dmg*TB.lz*dt,'boss');if(!running)return}
   if(!inV)return;
-  const P=tbPh(e);for(const k in P.a){s.a[k]-=dt;if(s.a[k]>0)continue;if(!near&&(k==='mg'||k==='rkt'||k==='arty'||k==='stomp'||k==='laser'||k==='rush')){s.a[k]=0.5;continue}
+  const P=tbPh(e);for(const k in P.a){s.a[k]-=dt;if(s.a[k]>0)continue;if(!near&&(k==='mg'||k==='stomp'||k==='laser'||k==='rush')){s.a[k]=0.5;continue}
     s.a[k]=P.a[k]*(0.85+0.3*R());TBX[k](e,h,s);if(!running)return}}
 const TBX={
  mg(e,h,s){s.mg=10+2*s.f;s.mgT=0},
@@ -8856,7 +8858,11 @@ function tbPhase(e){const T=tbT(e),s=e.tbS,P=tbPh(e);tbArm(e);
 // flight AI for the air bosses, then the shared specials
 function tbSky(e,dt,h){(tbT(e).sky==='heli'?aiHeli:aiBoss)(e,dt,h);if(running&&!e.dead)tbTick(e,dt,h)}
 // shield: incoming damage x TB.shK while up (the weak point still takes its bonus on top)
-const tbHurt=(e,d)=>e.tbS.shT>G.time?d*TB.shK:d;
+// damage cap: past TB.cap[form] of max HP in one second only TB.capX of the excess lands, so an overbuilt fort (or a sky boss caught
+// by a full SAM / launcher battery) still gets a fight of half a minute or more, while a fort on the edge never feels it
+let _tbWp=false;   // set by fire() around a weak-point hit: that damage always lands in full (the cap never eats the player's reward)
+function tbHurt(e,d){const s=e.tbS;if(s.shT>G.time)d*=TB.shK;const t=Math.floor(G.time);if(s.cw!==t){s.cw=t;s.cd=0}
+  if(_tbWp){s.cd+=d;return d}const room=Math.max(0,e.max*TB.cap[s.f]-s.cd),x=d<=room?d:room+(d-room)*TB.capX;s.cd+=x;return x}
 // ---- weak point -------------------------------------------------------------------------------------------------------------
 function tbWpPos(e){const T=tbT(e),w=T.wp,k=e.r/T.r,a=e.air?e.ang:eHd(e,e.x,e.y),c=Math.cos(a),s=Math.sin(a);_tbw[0]=e.x+(w[0]*c-w[1]*s)*k;_tbw[1]=e.y+(w[0]*s+w[1]*c)*k;_tbw[2]=w[2]*k*(e.tbS.core?1.5:1);return _tbw}const _tbw=[0,0,0];
 const tbSlack=()=>Math.max(4,(MOBILE?22:12)/sc);
