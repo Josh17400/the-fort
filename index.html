@@ -8855,7 +8855,7 @@ const TBX={
 function tbRam(e,h){damageFort(e.dmg*TB.ram,'boss');const[wx,wy]=wallPt(e.x,e.y,h,0);explode(wx,wy,40,0);shake(10);sfx('breach')}
 function tbPhase(e){const T=tbT(e),s=e.tbS,P=tbPh(e);tbArm(e);
   banner(T.n+' · PHASE '+(s.ph+1),P.t,'255,138,112','crit');if(!S.set.reduceMotion)shake(12);Plat.haptic('heavy');sfx('tbph',e.x,e.y);
-  ring(e.x,e.y,e.r*2.6,0.6,'255,190,120',4);spark(e.x,e.y,22,170,['#fff6d0','#ffc04a','#ff7a1a'],0.6,1.8);puff(e.x,e.y,6,e.r*.7,1.6,'48,44,40',26,0.55);light(e.x,e.y,e.r*5,'255,170,80',0.35)}
+  ring(e.x,e.y,e.r*2.6,0.6,'255,190,120',4);spark(e.x,e.y,22,170,['#fff6d0','#ffc04a','#ff7a1a'],0.6,1.8);puff(e.x,e.y,6,e.r*.7,1.6,'48,44,40',26,0.55);light(e.x,e.y,Math.min(160,e.r*2.5),'255,170,80',0.3)}
 // flight AI for the air bosses, then the shared specials
 function tbSky(e,dt,h){(tbT(e).sky==='heli'?aiHeli:aiBoss)(e,dt,h);if(running&&!e.dead)tbTick(e,dt,h)}
 // shield: incoming damage x TB.shK while up (the weak point still takes its bonus on top)
@@ -8879,7 +8879,7 @@ function tbDown(e){const T=tbT(e),s=e.tbS,f=s.f,fin=e.tb==='capital'&&f===2,a=e.
   const key=e.tb+'_'+(f===2?100:f===1?50:75),k=S.tbk||(S.tbk={});let rp=0;if(!k[key]&&!G.dc){k[key]=1;rp=TB.rp[f]*(fin?2:1);if(rp)rpGain(rp)}
   const cash=Math.round(money(e.rew)*streakMul());if(!S.set.reduceMotion)G.slowT=TB.slowT;
   banner(T.n+' DESTROYED','+$'+f1(cash)+(rp?' · +'+rp+' RP':'')+(f===2?(fin?' · THE CAPITAL HOLDS':' · THEATER HELD'):''),'255,207,90');
-  Plat.haptic('heavy');sfx('tbph',e.x,e.y);spark(e.x,e.y,30,200,['#fff6d0','#ffc04a','#ff7a1a'],0.7,2);light(e.x,e.y,e.r*7,'255,170,80',0.5);if(!S.set.reduceMotion)shake(12);
+  Plat.haptic('heavy');sfx('tbph',e.x,e.y);spark(e.x,e.y,30,200,['#fff6d0','#ffc04a','#ff7a1a'],0.7,2);light(e.x,e.y,Math.min(200,e.r*3),'255,170,80',0.45);if(!S.set.reduceMotion)shake(12);
   if(f===2)tbRout()}
 function tbRout(){G.spawnLeft=0;G.vq=[];G.drops.length=0;G.uavT=0;let n=0;
   for(const o of G.enemies)if(!o.dead&&!o.tb){o.rout=1;o.rev=Math.max(o.rev||0,4);n++}
@@ -8891,7 +8891,7 @@ function tbFx(dt){const D=G.tbD;
   if(D){D.t+=dt;if(D.air){D.x+=D.vx*dt;D.y+=D.vy*dt;D.a+=D.spin*dt;D.alt=Math.max(0,D.alt-dt*D.alt*1.2)}
     const T=1.35+(D.big?0.35:0);if(D.t<T&&D.t>=D.n*0.13){D.n++;const a=R()*TAU,o=R()*D.r*0.8;boomFx(D.x+Math.cos(a)*o,D.y+Math.sin(a)*o,14+R()*14+(D.big?8:0),D.n%2===0);puff(D.x,D.y,2,D.r*.5,1.6,'40,36,32',18,0.5)}
     if(D.t>=T){G.tbD=null;const k=D.fin?2:1;boomFx(D.x,D.y,D.r*1.6,true);fireball(D.x,D.y,D.r*2.6,0.9);fireball(D.x,D.y,D.r*1.6,1.3);ring(D.x,D.y,D.r*6,0.8,'255,225,170',6);ring(D.x,D.y,D.r*3.5,0.6,'255,200,140',4);
-      spark(D.x,D.y,60,260,['#fff6d0','#ffc04a','#ff7a1a'],0.9,2.4);gib(D.x,D.y,24,180,'#2e2c28',1.2,3);puff(D.x,D.y,14,D.r*1.2,3,'40,36,32',40,0.65);decal(D.x,D.y,'scorch',D.r*2.4);light(D.x,D.y,D.r*10,'255,170,80',0.9);
+      spark(D.x,D.y,60,260,['#fff6d0','#ffc04a','#ff7a1a'],0.9,2.4);gib(D.x,D.y,24,180,'#2e2c28',1.2,3);puff(D.x,D.y,14,D.r*1.2,3,'40,36,32',40,0.65);decal(D.x,D.y,'scorch',D.r*2.4);light(D.x,D.y,Math.min(320,D.r*4),'255,170,80',0.8);
       G.flashT=S.set.reduceMotion?0.15:0.4;if(!S.set.reduceMotion)G.shake=Math.max(G.shake,S.set.shake?16:0);sfx('nuke',D.x,D.y,k);
       G.tbWr.push({id:D.id,x:D.x,y:D.y,a:D.a,air:D.air,r:D.r,t0:G.time})}}
   for(const w of G.tbWr)if(G.time-w.t0<60&&R()<dt*3)puff(w.x+(R()-.5)*20,w.y+(R()-.5)*20,1,10,2.2,'34,32,30',10,0.5)}
@@ -11295,7 +11295,7 @@ function hudBosses(o,x,y,w){const bs=G.bosses||[];let hintOn=false;if(!bs.length
   for(const b of list){const e=b.e,name=e.tbN||BOSS_NAME[e.type],long=bossHint(e,false),short=bossHint(e,true),warn=b.t<BOSS_WARN+(short?2:0)+(e.tb?TB.warn:0)&&!e.dead;
     if(!b.said){b.said=1;srSay('Warning: '+name.toLowerCase()+' inbound')}
     if(warn&&short&&prio()!=='threat')hintOn=true;
-    const h=warn?(desk?(short?62:44):land?(short?64:40):(short?54:40)):e.tb?(desk?60:land?46:52):(desk?44:land?36:38);
+    const h=warn?(desk?(short?62:44):land?(short?64:40):(short?54:40)):e.tb?(desk?60:land?54:54):(desk?44:land?36:38);
     ctx.globalAlpha=e.dead?Math.max(0,1-b.gone/BOSS_FADE):Math.min(1,b.t*5);
     if(warn)hudBossWarn(o,x,yy,w,h,b,name,long,short);else if(e.tb)hudTbBar(o,x,yy,w,h,b,name,more);else hudBossBar(o,x,yy,w,h,b,name,more);
     yy+=h+gap}
@@ -11313,7 +11313,7 @@ function hudTbBar(o,x,y,w,h,b,name,more){const e=b.e,s=e.tbS,desk=o.mode==='desk
   if(r>0){const g=ctx.createLinearGradient(bx,0,bx+bw,0);g.addColorStop(0,'#b8322a');g.addColorStop(1,e.flash>0?'#ffb0a0':e.tbS.shT>G.time?'#8fd0ff':'#ef5a4f');hTrack(bx,by,Math.max(bh,bw*r),bh,bh/2,g)}
   ctx.fillStyle='rgba(10,12,8,.85)';for(let i=1;i<s.nph;i++)ctx.fillRect(Math.round(bx+bw*i/s.nph)-1,by-1,2,bh+2);
   const lf=`700 ${desk?12:11}px Oxanium,sans-serif`,tip=!e.dead&&(G.time-s.t0<16||(s.wpN||0)<6),ln=e.dead?'':tip?'WEAK POINT ×'+TB.wp+' · '+(MOBILE?'TAP':'CLICK')+' THE GLOW':tbPh(e).t.toUpperCase();
-  if(ln)hText(fitText(ln,bw,lf),bx,y+h-(desk?9:land?6:8),lf,tip?'#ffcf5a':'#c9cfbd')}
+  if(ln)hText(fitText(ln,bw,lf),bx,y+h-(desk?9:8),lf,tip?'#ffcf5a':'#c9cfbd')}
 function hudBossWarn(o,x,y,w,h,b,name,long,short){hRec(x,y,w,h,'bosswarn');if(o.mode==='land')name=name.replace(/^(ENEMY|HEAVY) /,'');const desk=o.mode==='desk',land=o.mode==='land',p=o.rm?1:0.5+0.5*Math.sin(b.t*12),off=o.rm?0:(b.t*28)%18;
   ctx.fillStyle=HT.redBg;ctx.beginPath();ctx.roundRect(x,y,w,h,10);ctx.fill();
   ctx.save();ctx.beginPath();ctx.roundRect(x,y,w,h,10);ctx.clip();ctx.fillStyle='rgba(227,181,60,.13)';
