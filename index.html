@@ -8931,7 +8931,7 @@ const TBART={
     ell(16.4,0,1.6,1.6,'#222');box(17.4,-.4,4.4,.8,'#111');for(const x of[-18,-24])hqPoly([x,-1.7,x+3,0,x,1.7,x-1.3,1.7,x+1.7,0,x-1.3,-1.7],'#b3261e');
     for(let i=0;i<6;i++)box(-1.5-i*1.4,4.4,.7,1.4,'#e6e0c8');ell(-26,0,1.6,1.6,'#d8b13a');ell(-26,0,.8,.8,'#b3261e')}],
   over(e,px,a,dy){const t=G.time;if(dy>0.6)return;ctx.save();ctx.translate(-1,0);ctx.globalAlpha=.16;ell(0,0,31,31,'#1a1d17');ctx.globalAlpha=.7;
-    for(let i=0;i<5;i++){const q=t*26+i*TAU/5;limb(0,0,Math.cos(q)*31,Math.sin(q)*31,1.7,'#1b1d18')}ctx.globalAlpha=1;hqDome(0,0,2.4,2.4,'#3b4234',.3,-.5);ctx.restore();
+    for(let i=0;i<5;i++){const q=t*26+i*TAU/5;limb(0,0,Math.cos(q)*31,Math.sin(q)*31,1.7,'#1b1d18')}ctx.globalAlpha=1;ell(0,0,2.4,2.4,'#3b4234');ell(-.7,-.7,.9,.9,'rgba(255,255,255,.18)');ctx.restore();
     ctx.globalAlpha=.3;ell(-38,2.6,1.2,4.6,'#1b1d18');ctx.globalAlpha=1},
   lamps:[[-38,0],[0,-18],[0,18]],nav:1},
  // Coastal: LCAC-style hovercraft; skirt, cargo well with troops, bridge, rocket box, bow ramp, twin stern fans (live), twin-30mm turret
@@ -8948,7 +8948,7 @@ const TBART={
     hqBolts([-33,-16,-33,16,30,-16,30,16])}],
   top:[24,12,6,6,()=>{hqDome(0,0,5,5,'#5d656b',.3,-.5);hqRR(-3.5,-3.8,7,7.6,1.4,'#596166');for(const s of[-1.4,1.4]){hqBar(2.4,s-.5,11,1,'#141516');box(13,s-.7,1.4,1.4,'#080808')}box(-1,-1,2.6,2,'#1b2a33')}],piv:[20,0],muz:[33,0],
   under(e,px,a,dy){if(dy)return;const B=ctx.getTransform(),sea=seaIn(e.x,e.y);if(sea>0||e.moving){ctx.globalAlpha=sea>0?.45:.25;ell(-36,0,9,19,'rgba(235,240,240,.7)');ell(38,0,4,14,'rgba(235,240,240,.6)');ctx.globalAlpha=1}},
-  over(e,px,a,dy){const t=G.time*(dy?2:24);for(const s of[-1,1]){ctx.save();ctx.translate(-33,s*11);ctx.rotate(t*s);for(let i=0;i<4;i++){ctx.rotate(TAU/4);hqPoly([0,-.7,7.2,-1.5,7.2,1.5,0,.7],'#3a3f43')}hqDome(0,0,1.8,1.8,'#555b60',.3,-.5);ctx.restore()}},
+  over(e,px,a,dy){const t=G.time*(dy?2:24);for(const s of[-1,1]){ctx.save();ctx.translate(-33,s*11);ctx.rotate(t*s);for(let i=0;i<4;i++){ctx.rotate(TAU/4);limb(.8,0,6.6,0,2.4,'#3a3f43')}ell(0,0,1.8,1.8,'#555b60');ell(-.5,-.5,.7,.7,'rgba(255,255,255,.2)');ctx.restore()}},   // (live parts use only lines, rects and ellipses: ChaosGL draws those without dropping the layer to Canvas2D)
   lamps:[[34,-8],[34,8],[-38,0]]},
  // City: super-heavy tank, wide tracks (live), ERA skirts, main turret + front MG turret
  tank:{hull:[70,48,36,24,()=>{const c='#6e7378';
@@ -8977,7 +8977,7 @@ const TBART={
     hqBar(11,-1.8,34,3.6,'#3a3f43');for(let x=16;x<30;x+=3)box(x,-2,.6,4,'#2a2e31');hqRR(43,-2.8,4.6,5.6,.8,'#202326');box(44,-2.8,.6,5.6,'#0a0a0a');
     hqHatch(-7,-5,2.4,'#9aa3a8');hqHatch(-7,5,2.4,'#9aa3a8');box(-15,-1,3,2,'#3d4348');hqRedStripe(2,-10.5,1.2,21);box(-1,-10.5,1.4,21,'#2e6da4')}],piv:[2,0],muz:[47,0],
   under(e,px,a,dy){const W=hqTrack('tbtrC',px,20,6.4,2.2,0),o=(e.odo||0);for(const[x,y]of[[13,-23.8],[13,17.4],[-33,-23.8],[-33,17.4]])hqTrackDraw(W,x,y,20,6.4,o,2.2)},
-  over(e,px,a,dy){ctx.save();ctx.translate(-22,-8);ctx.rotate(dy?0:G.time*2.2);hqRR(-1,-5,2,10,.6,'#d5dbde');box(-1.2,-5,.6,10,'#8e979c');ctx.restore()},
+  over(e,px,a,dy){ctx.save();ctx.translate(-22,-8);ctx.rotate(dy?0:G.time*2.2);box(-1,-5,2,10,'#d5dbde');box(-1.2,-5,.6,10,'#8e979c');ctx.restore()},
   lamps:[[26,-10.8],[26,10.8]]},
  // Jungle: six-legged swamp walker (legs live, alternating tripods), gun pods, sensor head, reactor on the back
  walker:{hull:[56,40,28,20,()=>{const c='#4e5b3c';
@@ -9009,7 +9009,8 @@ const TBART={
     hqRR(16,-5.5,10,11,3,'#43484e');box(24,-3.4,1.5,6.8,'#9fe4ff');box(24.2,-3,.4,2.4,'#ffffff');for(let y=-15;y<16;y+=3.6)box(-24,y,4.2,1.6,'#25282c');hqRedStripe(-8,-21,1.6,42);
     hqBolts([-16,-18,-16,18,8,-20,8,20,18,-10,18,10]);ctx.globalAlpha=.2;hqSpeckle(-22,-20,42,40,70,'#1c1e20',.5);ctx.globalAlpha=1}],
   under(e,px,a,dy){const ph=(e.odo||0)*0.075;for(const s of[-1,1]){const w=Math.sin(ph+(s>0?Math.PI:0))*(e.moving&&!dy?1:0.5),fx=-2+w*27,fy=s*21,lift=Math.max(0,w);
-      limb(-4,s*13,fx,fy,8,'#2f3338');limb(-4,s*13,fx,fy,5,'#454a50');ctx.save();ctx.translate(fx,fy);const k=1+lift*.1;ctx.scale(k,k);ctx.globalAlpha=.35;ell(2,2.5,12,7,'#000');ctx.globalAlpha=1;hqRR(-11,-6.5,22,13,3.5,'#2c3035');hqRR(-10,-5.6,20,11.2,3,'#4b5056');box(-6,-5.6,1.2,11.2,'#b3261e');for(const y of[-3.6,0,3.6])hqPoly([10,y-1.2,14.5,y,10,y+1.2],'#25282c');ctx.restore()}},
+      limb(-4,s*13,fx,fy,8,'#2f3338');limb(-4,s*13,fx,fy,5,'#454a50');ctx.save();ctx.translate(fx,fy);const k=1+lift*.1;ctx.scale(k,k);ctx.globalAlpha=.35;ell(2,2.5,12,7,'#000');ctx.globalAlpha=1;hqDraw(tbSpr('titan','foot',px*k));ctx.restore()}},
+  foot:[27,14,11.5,7,()=>{hqRR(-11,-6.5,22,13,3.5,'#2c3035');hqRR(-10,-5.6,20,11.2,3,'#4b5056');box(-6,-5.6,1.2,11.2,'#b3261e');for(const y of[-3.6,0,3.6])hqPoly([10,y-1.2,14.5,y,10,y+1.2],'#25282c')}],
   lamps:[[25,-2.6],[25,2.6]],eye:1}};
 function tbSpr(art,part,px){const P=TBART[art][part];return hqBake('tb'+art+part,px,P[0],P[1],P[2],P[3],P[4],0.36,0)}
 // e: a live boss, or the pseudo-boss of a dying (dy 0..1) / wrecked (dy 1) one. Ground and air bosses both come through here.
@@ -9047,7 +9048,7 @@ function tbBeams(e){const s=e.tbS;if(!s||e.dead)return;
     for(const[w,c]of[[7,'rgba(90,200,255,.25)'],[3.2,'rgba(160,235,255,.7)'],[1.2,'rgba(255,255,255,.95)']]){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(s.lzX,s.lzY);ctx.stroke()}
     blit(glowSprite('150,230,255'),s.lzX,s.lzY,16,.9);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
   if(e.tb==='island'&&tbPh(e).lamp){const nk=Math.max(.35,G.nightK||0),a=Math.atan2(-e.y,-e.x)+Math.sin(G.time*.7)*.35,d=Math.min(hyp(e.x,e.y)*.85,260),tx=e.x+Math.cos(a)*d,ty=e.y+Math.sin(a)*d;
-    ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.16*nk;ctx.fillStyle='rgb(255,246,214)';const nx=-Math.sin(a),ny=Math.cos(a);ctx.beginPath();ctx.moveTo(e.x+nx*2,e.y+ny*2);ctx.lineTo(tx+nx*26,ty+ny*26);ctx.lineTo(tx-nx*26,ty-ny*26);ctx.lineTo(e.x-nx*2,e.y-ny*2);ctx.closePath();ctx.fill();
+    ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.16*nk;const ca=Math.cos(a),sa=Math.sin(a);ell(e.x+ca*d*.62,e.y+sa*d*.62,d*.42,20,'rgb(255,246,214)',a);ell(e.x+ca*d*.32,e.y+sa*d*.32,d*.3,8,'rgb(255,246,214)',a);   // the beam as two soft ellipses (a polygon fill would drop the sky layer out of ChaosGL)
     ctx.globalAlpha=.5*nk;ctx.drawImage(glowSprite('255,246,214'),tx-30,ty-30,60,60);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}}
 // sky bosses' ground shadow (drawSkyGround)
 function tbShadowSky(e){const T=TBOSS[e.tb],B=ctx.getTransform(),ks=e.r/T.r,px=Math.hypot(B.a,B.b)*ks,a=e.ang,c=Math.cos(a)*ks,n=Math.sin(a)*ks,hull=tbSpr(T.art,'hull',px);
