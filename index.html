@@ -8769,7 +8769,7 @@ function drawPreview(type){if(type.startsWith('tb_'))return tbPreview(type.slice
 // time; the ~1 s of slow motion only scales the real-time step in loop() (the sim and its RNG never see it) and is skipped with
 // Reduced Motion. Bonus: the kill pays TB.rew x an MBT bounty, plus TB.rp RP the first time each theater's boss falls at 50 / 100
 // (S.tbk). Killing the wave-100 boss routs whatever is left of that wave. Nothing here runs before wave 50: Desert parity untouched.
-const TB={on:1,sc:1.45,run:2.2,cap:[0.04,0.033,0.025],capX:0.04,hp:[2.4,3.2,6],dmg:[1.1,1.2,1.35],rew:[3,5,9],rp:[0,2,3],fin:1.4,wp:2.5,pct:0.12,shK:0.4,ram:3,mg:0.035,rk:0.25,ar:0.5,lz:0.7,st:0.8,slow:0.3,slowT:1,warn:2};
+const TB={on:1,sc:1.45,run:2.2,cap:[0.04,0.033,0.025],capX:0.04,hp:[2.4,3.2,6],dmg:[1.1,1.05,1.35],rew:[3,5,9],rp:[0,2,3],fin:1.4,wp:2.5,pct:0.12,shK:0.4,ram:3,mg:0.035,rk:0.25,ar:0.5,lz:0.7,st:0.8,slow:0.3,slowT:1,warn:2};
 const tbForm=w=>!TB.on?-1:w===100?2:w===50?1:w===75?0:-1,tbWave=w=>tbForm(w)>=0&&!!TBOSS[S.map];
 // per theater: n name, tag, r radius, spd/rate/rng/hp/dm/arm vs the MBT, sky ('heli' | 'gunship' AI), sea (comes in off the sea arc),
 // wp weak point [x, y, r] in the boss's frame (+x = nose), call escort types, ph phases {t line, a {special: cooldown s}, s speed x, rt rate x, rng, core}
