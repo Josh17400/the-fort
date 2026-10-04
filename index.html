@@ -3881,12 +3881,13 @@ function hapt(kind,key,gap){const now=performance.now();if(key){if(now-(_hapT[ke
 // inside update(), so the sim stays deterministic and the headless harness (which calls update() directly) never sees it.
 // Ease in over the first 15%, hold k, ease back out over the last 45%. A call during an active one only extends/deepens it.
 // Skipped with Reduce motion. smK() <= 1 always: it can only slow the player's battle speed, never add to it.
-const SM={t0:0,dur:0,k:1};
-function slowMo(dur=1,k=0.3){if(S.set.reduceMotion||!running||!G||G.over)return;const now=performance.now();
-  if(SM.dur&&now<SM.t0+SM.dur*1000){const left=SM.t0+SM.dur*1000-now;if(left>=dur*1000*0.6&&SM.k<=k)return}
-  SM.t0=now;SM.dur=Math.max(0.2,Math.min(3,dur));SM.k=Math.max(0.1,Math.min(1,k));try{duck(-3,SM.dur*0.5,0.6)}catch(e){}}
-function smK(now){if(!SM.dur)return 1;const u=(now-SM.t0)/(SM.dur*1000);if(u<0)return 1;if(u>=1){SM.dur=0;return 1}   // u<0: a rAF stamp from just before the call
-  const a=u<0.15?u/0.15:u>0.55?(1-u)/0.45:1,e=a*a*(3-2*a);return 1-(1-SM.k)*e}
+const SM={t0:0,dur:0,k:1,k0:1};   // k0: the factor the ease-in starts from (1, or wherever an active slow-mo was when a new call took over)
+function slowMo(dur=1,k=0.3){if(S.set.reduceMotion||!running||!G||G.over)return;const now=performance.now();k=Math.max(0.1,Math.min(1,k));let k0=1;
+  if(SM.dur&&now<SM.t0+SM.dur*1000){const left=SM.t0+SM.dur*1000-now;if(left>=dur*1000*0.6&&SM.k<=k)return;k0=smK(now);k=Math.min(k,SM.k)}   // take over smoothly, never shallower
+  SM.t0=now;SM.dur=Math.max(0.2,Math.min(3,dur));SM.k=k;SM.k0=k0;try{duck(-3,SM.dur*0.5,0.6)}catch(e){}}
+function smK(now){if(!SM.dur)return 1;let u=(now-SM.t0)/(SM.dur*1000);if(u>=1){SM.dur=0;return 1}if(u<0)u=0;   // u<0: a rAF stamp from just before the call
+  if(u<0.15){const a=u/0.15,e=a*a*(3-2*a);return SM.k0+(SM.k-SM.k0)*e}
+  const a=u>0.55?(1-u)/0.45:1,e=a*a*(3-2*a);return 1-(1-SM.k)*e}
 // Low-health warning: under LOWHP (25%) of the fort's own health (walls don't count) a red vignette closes in from the screen
 // edges, stronger as health falls, pulsing with a heartbeat (sfx 'heart', effects bus, so it dips under big blasts) that quickens
 // from 1.0 s to 0.55 s a beat. Wall-clock, driven from draw(): never touches the sim. Paused / perk menu: no beats; the run
