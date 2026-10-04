@@ -795,7 +795,7 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
 .rund .pperks{justify-content:flex-start}
 /* RUN STATS (AAR): gold like its panel (owner decision: the AAR stays gold) */
 .rstat .rs-t .tile b{font-size:16px}
-@media (max-width:600px){.tiles.t4.rs-t{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tiles.rs-t{grid-template-columns:repeat(2,minmax(0,1fr))}
 .rs-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:8px}
 .rs-h{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--rad-md);background:linear-gradient(90deg,rgba(227,181,60,.16),rgba(227,181,60,.04));border:1px solid rgba(227,181,60,.35);min-width:0}
 .rs-h>i{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:rgba(227,181,60,.14);color:var(--c-gold-hi)}
@@ -2116,6 +2116,8 @@ const PLAT_IDS={
   rcKey:'appl_CoLlGppaiooTIcoxtSShLvmUqxA',                // RevenueCat project "The Fort", public App Store SDK key
   lbDaily:'com.thefort.game.lb.daily',                     // Game Center recurring (daily) leaderboard: the daily challenge's wave. Empty = off
   achPre:'com.thefort.game.ach.',                          // Game Center achievement ids = achPre + ACH id (clear_desert, wave_25, kills_2500...). Empty = off
+  gameCenter:false,                                        // Game Center master switch: false = no sign-in at launch, no scores/achievements, LEADERBOARD +
+                                                           //   ACHIEVEMENTS buttons hidden. Flip to true once the leaderboard + 16 achievements exist in App Store Connect
   icloud:false,                                            // iCloud save sync (cloudPull/cloudPush). Needs the App ID's iCloud capability + entitlement first
   analytics:''                                             // anonymous event receiver (https URL of tools/analytics). Empty = off: nothing stored or sent
 };
@@ -2136,7 +2138,7 @@ const Plat=(()=>{let busy=false,booted=null;
       return booted=saveBoot(s.store).catch(()=>{}).then(()=>{
         const live=s.liveAds===true;
         s.configure({rewarded:live?PLAT_IDS.rewarded:PLAT_IDS.testRewarded,interstitial:live?PLAT_IDS.interstitial:PLAT_IDS.testInterstitial,rcKey:PLAT_IDS.rcKey,products:SHOP_SKUS(),
-          nonConsumables:[SHOP_ONE.starter.sku,SHOP_ONE.noads.sku],leaderboards:[PLAT_IDS.lbDaily],achievements:!!PLAT_IDS.achPre,icloud:PLAT_IDS.icloud===true,
+          nonConsumables:[SHOP_ONE.starter.sku,SHOP_ONE.noads.sku],leaderboards:PLAT_IDS.gameCenter===true?[PLAT_IDS.lbDaily]:[],achievements:PLAT_IDS.gameCenter===true&&!!PLAT_IDS.achPre,icloud:PLAT_IDS.icloud===true,
           preloadInterstitial:!S.shop.noAds&&(S.runs|0)>=IA_RUNS});
         gcSync();cloudPull();
         if(!running)renderHome();   // the store is on now: the Base screen can show the Starter Pack and the gem shop
@@ -2154,13 +2156,13 @@ const Plat=(()=>{let busy=false,booted=null;
     notify(when,title,body,id){P.log.push({when,title,body,id});if(P.log.length>20)P.log.shift();const s=sh();if(s)s.notify.schedule({id,at:when,title,body})},
     cancel(id){P.log=P.log.filter(n=>n.id!==id);const s=sh();if(s)s.notify.cancel(id)},
     haptic(kind){try{if(S.set.haptics===false)return;const s=sh();if(s)s.haptic(kind);else if(navigator.vibrate&&S.set.shake)navigator.vibrate(kind==='success'?[12,40,18]:10)}catch(e){}},
-    score(board,n){const s=sh(),id=board==='daily'?PLAT_IDS.lbDaily:'';if(s&&id)s.gc.submitScore(id,n)},
+    score(board,n){const s=sh(),id=board==='daily'&&PLAT_IDS.gameCenter===true?PLAT_IDS.lbDaily:'';if(s&&id)s.gc.submitScore(id,n)},
     // phase 5 (see RETENTION): Apple's review sheet, Game Center achievements + screens, iCloud key-value store. All no-ops on the web
     reviewOn(){const s=sh();return!!s&&!!s.review&&s.review.available()},
     review(){const s=sh();return s&&s.review?s.review.request():Promise.resolve(false)},
-    gcOn(){const s=sh();return!!s&&!!s.gc.available&&s.gc.available()},
+    gcOn(){const s=sh();return PLAT_IDS.gameCenter===true&&!!s&&!!s.gc.available&&s.gc.available()},
     ach(id){const s=sh();return s&&id&&s.gc.unlock?s.gc.unlock(id).then(r=>!!(r&&r.ok),()=>false):Promise.resolve(false)},
-    board(board){const s=sh(),id=board==='daily'?PLAT_IDS.lbDaily:'';if(s&&id&&s.gc.showLeaderboard)s.gc.showLeaderboard(id)},
+    board(board){const s=sh(),id=board==='daily'&&PLAT_IDS.gameCenter===true?PLAT_IDS.lbDaily:'';if(s&&id&&s.gc.showLeaderboard)s.gc.showLeaderboard(id)},
     achShow(){const s=sh();if(s&&s.gc.showAchievements)s.gc.showAchievements()},
     cloudOn(){const s=sh();return PLAT_IDS.icloud===true&&!!s&&!!s.cloud&&s.cloud.available()},
     cloudGet(key){const s=sh();return P.cloudOn()?s.cloud.get(key):Promise.resolve(null)},
@@ -2722,11 +2724,11 @@ let _rsOpen=false;$('lastRun').addEventListener('toggle',e=>{const t=e.target;if
 function statsHtml(a){const T=a.st;if(!T)return'';const fold=o=>{const r={};for(const k in o){const q=STAT_SRC[k]?k:'other';r[q]=(r[q]||0)+(o[k]||0)}return r};
   const d=fold(T.d),ks=fold(T.ks),rows=Object.keys(d).filter(k=>d[k]>=1).sort((x,y)=>d[y]-d[x]),tot=rows.reduce((s,k)=>s+d[k],0);
   const kTot=Object.values(ks).reduce((s,v)=>s+v,0);let top='';for(const k in ks)if(ks[k]>0&&(!top||ks[k]>ks[top]||ks[k]===ks[top]&&(d[k]||0)>(d[top]||0)))top=k;
-  const m=Math.floor(a.time/60),sec=Math.floor(a.time%60),nm=k=>(STAT_SRC[k]||STAT_SRC.other)[0],icn=(k,z)=>ic((STAT_SRC[k]||STAT_SRC.other)[1],z);
+  const nm=k=>(STAT_SRC[k]||STAT_SRC.other)[0],icn=(k,z)=>ic((STAT_SRC[k]||STAT_SRC.other)[1],z);
   const pc=v=>tot>0?Math.round(100*v/tot):0,mx=rows.length?d[rows[0]]:1,shown=rows.slice(0,9),rest=rows.slice(9).reduce((s,k)=>s+d[k],0);
   const en=T.bt&&INTEL[T.bt]?INTEL[T.bt][0]:'',cls=Object.keys(STAT_CLS).filter(c=>T.k[c]>0);
   return`<details class="rund rstat"${_rsOpen?' open':''}><summary>${ic('chevR',14)}Run stats${top?' · top gun: '+nm(top):''}</summary><div class="rdx">`
-    +`<div class="tiles t4 rs-t">${[['WAVES HELD',fmtN(T.wc||0)],['TIME',m+'<small>m</small> '+sec+'<small>s</small>'],['CASH','$'+fmtN(a.earned)],['DAMAGE',fmtN(tot)]].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join('')}</div>`
+    +`<div class="tiles rs-t">${[['WAVES HELD',fmtN(T.wc||0)],['DAMAGE',fmtN(tot)]].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join('')}</div>`
     +(top||T.big>0?`<div class="rs-hero">`
       +(top?`<div class="rs-h"><i>${icn(top,22)}</i><div><span class="eyebrow">TOP KILLER</span><b>${nm(top)}</b><small>${fmtN(ks[top])} ${pl(ks[top],'kill')}${kTot?' · '+Math.round(100*ks[top]/kTot)+'% of kills':''}</small></div></div>`:'')
       +(T.big>0?`<div class="rs-h"><i>${ic('crit',22)}</i><div><span class="eyebrow">BIGGEST HIT</span><b>${fmtN(T.big)}</b><small>${nm(T.bs)}${en?' → '+en:''}</small></div></div>`:'')+`</div>`:'')
@@ -4052,7 +4054,7 @@ function layMines(){const ml=L('mines');if(!ml)return;const half=fortHalf()+wall
   for(let i=0;i<n&&G.mines.length<n*3;i++){const a=Math.random()*7,r=half+18+Math.random()*(Math.max(50,vision()*0.95-half-18));G.mines.push(pfSnap(landPt({x:Math.cos(a)*r,y:Math.sin(a)*r,blink:Math.random()*3})))}}
 // ---- boss contacts (enemy MBT, heavy gunship): klaxon + WARNING strip on spawn, then a top-of-screen HP bar until it dies
 const BOSS_NAME={boss:'ENEMY MBT',airboss:'HEAVY GUNSHIP',samtel:'ENEMY SAM LAUNCHER'},BOSS_WARN=3,BOSS_FADE=1.6;
-function trackBoss(e){(G.bosses||(G.bosses=[])).push({e,t:0,ghost:1,gone:0});sfx('alarm');hapt('warning','boss',1500)}
+function trackBoss(e){(G.bosses||(G.bosses=[])).push({e,t:0,ghost:1,gone:0});sfx('alarm');if(e.tb||e.type==='boss'||e.type==='airboss')hapt('warning','boss',1500)}   // haptic only for real bosses (MBT / heavy gunship boss waves, theater bosses), not SAM launchers
 function updateBosses(dt){const bs=G.bosses;if(!bs||!bs.length)return;
   for(const b of bs){b.t+=dt;const r=Math.max(0,b.e.hp/b.e.max);b.ghost=b.ghost>r?Math.max(r,b.ghost-dt*Math.max(0.15,(b.ghost-r)*2.5)):r;if(b.e.dead)b.gone+=dt}
   for(const b of bs)if(b.gone>=BOSS_FADE){G.bosses=bs.filter(b=>b.gone<BOSS_FADE);break}}
@@ -4081,6 +4083,9 @@ const SM={t0:0,dur:0,k:1,k0:1};   // k0: the factor the ease-in starts from (1, 
 function slowMo(dur=1,k=0.3){if(S.set.reduceMotion||!running||!G||G.over)return;const now=performance.now();k=Math.max(0.1,Math.min(1,k));let k0=1;
   if(SM.dur&&now<SM.t0+SM.dur*1000){const left=SM.t0+SM.dur*1000-now;if(left>=dur*1000*0.6&&SM.k<=k)return;k0=smK(now);k=Math.min(k,SM.k)}   // take over smoothly, never shallower
   SM.t0=now;SM.dur=Math.max(0.2,Math.min(3,dur));SM.k=k;SM.k0=k0;try{duck(-3,SM.dur*0.5,0.6)}catch(e){}}
+// silo strikes: slow-mo only on the first impact of a wave, and at most once per 60 real seconds (owner: a maxed silo made it ~1/min)
+let _smSilo=-1e9;
+function siloSlow(){const now=performance.now();if(!G||G.smSiloW===G.wave||now-_smSilo<60000)return;G.smSiloW=G.wave;_smSilo=now;slowMo(1.1,0.3)}
 function smK(now){if(!SM.dur)return 1;let u=(now-SM.t0)/(SM.dur*1000);if(u>=1){SM.dur=0;return 1}if(u<0)u=0;   // u<0: a rAF stamp from just before the call
   if(u<0.15){const a=u/0.15,e=a*a*(3-2*a);return SM.k0+(SM.k-SM.k0)*e}
   const a=u>0.55?(1-u)/0.45:1,e=a*a*(3-2*a);return 1-(1-SM.k)*e}
@@ -4159,8 +4164,8 @@ function fire(s,e,mult=1){const m0=mult;
 // src = attacker type; G.threat keeps a decaying tally (x0.6 per wave) so the after-action report names what actually broke you
 function damageFort(d,src){d*=fortPress(G.wave);if(src)G.threat[src]=(G.threat[src]||0)+d;G.wHit=1;
   if(G.shT>0){sgShieldHit();return}   // EM Armor Screen up over a fresh breach
-  if(wallsUp()){G.wallHitT=G.time;if(L('repair')&&G.wallHp<G.wallMax*0.7&&!seen().ev_wallhold)spotted('ev_wallhold');G.wallHp-=d*(1-Math.min(0.5,0.05*L('armor')));sfx('wall');hapt('light','fort',250);shSpill(d);if(G.wallHp<=0){G.wallHp=0;G.breachW=G.wave;banner('WALLS BREACHED!','','','crit');sfx('breach');shake(8);hapt('heavy','breach',600);sgBreach();if(!G.lastStand){G.lastStand=1;slowMo(0.9,0.35);G.rapidT=Math.max(G.rapidT,10);setTimeout(()=>{if(running)feed('LAST STAND · RAPID FIRE 10s','255,120,90','threat')},700)}}}
-  else{if(shGuard(d)){G.hurtT=0.15;shake(2);return}G.hp-=d;G.hurtT=0.3;sfx('hurt');shake(3);hapt('medium','fort',250);if(G.hp<=0&&!G.over)endRun()}}
+  if(wallsUp()){G.wallHitT=G.time;if(L('repair')&&G.wallHp<G.wallMax*0.7&&!seen().ev_wallhold)spotted('ev_wallhold');G.wallHp-=d*(1-Math.min(0.5,0.05*L('armor')));sfx('wall');hapt('light','fort',1000);shSpill(d);if(G.wallHp<=0){G.wallHp=0;G.breachW=G.wave;banner('WALLS BREACHED!','','','crit');sfx('breach');shake(8);hapt('heavy','breach',600);sgBreach();if(!G.lastStand){G.lastStand=1;slowMo(0.9,0.35);G.rapidT=Math.max(G.rapidT,10);setTimeout(()=>{if(running)feed('LAST STAND · RAPID FIRE 10s','255,120,90','threat')},700)}}}
+  else{if(shGuard(d)){G.hurtT=0.15;shake(2);return}G.hp-=d;G.hurtT=0.3;sfx('hurt');shake(3);hapt('medium','fort',1000);if(G.hp<=0&&!G.over)endRun()}}
 // ================= ENEMY ARMOR & SUPPORT WEAPONS =================
 // Vehicle guns fire from the muzzle end of the hull toward the aim point (a wall face, or the depot). dep: hit the depot, not the fort.
 const eHit=(e,d,dep)=>dep===true?hitDepot(d):dep&&dep.bays?hitSite(dep,d):dep?fcHit(dep,d,e.type):damageFort(d,e.type);
@@ -4395,7 +4400,7 @@ function update(dt){
     if(e.tb){tbTick(e,dt,half);if(!running)return}
     const d=hyp(e.x,e.y)||1,cheb=Math.max(Math.abs(e.x),Math.abs(e.y)),stop=half+e.range+e.r;
     let spd=e.slT>G.time?e.spd*(1-e.slF):e.spd;if(e.veh&&pk('barriers')&&cheb<wireR+40)spd*=0.9;if(twS&&G.fogK)spd*=1-twS*G.fogK;   // Vehicle Barriers: jersey blocks outside the wire; blizzards slow the ground advance
-    if(wl&&cheb<wireR){if(e.veh)spd*=(1+slow)/2;else{spd*=slow;e.hp-=2*wl*dt;if(e.hp<=0){_ds='wire';kill(e);_ds='other';continue}}}   // tracks and tyres crush the wire
+    if(wl&&cheb<wireR){if(e.veh)spd*=(1+slow)/2;else{spd*=slow;const wd=2*wl*dt;if(G.st){const k=_ds;_ds='wire';statHit(e,wd,e.hp);_ds=k}e.hp-=wd;if(e.hp<=0){_ds='wire';kill(e);_ds='other';continue}}}   // tracks and tyres crush the wire
     if(e.lc&&lcTick(e,dt))continue;
     if(e.aaT!==undefined)aavTick(e,dt);   // SPAAG / SAM TEL: air-defence fire on the move
     if(vehEnemy(e,dt)||depotEnemy(e,spd,dt)||siteEnemy(e,spd,dt))continue;
@@ -5910,7 +5915,7 @@ function siloImpact(n){const r=siloR(),x=n.x,y=n.y;explode(x,y,r,siloDmg(L('silo
   puff(x,y,40,r*.42,7,'64,56,48',r*.75,.7);puff(x,y,18,r*.28,11,'38,34,30',22,.62);   // the blast cloud, then the slow dark column that hangs
   light(x,y,r*6,'255,200,120',1.8);decal(x,y,'scorch',r*1.5);for(let i=0;i<4;i++){const a=R()*TAU,d=r*(.5+R()*.4);decal(x+Math.cos(a)*d,y+Math.sin(a)*d,'scorch',r*.45)}
   if(HQ){const h=hx();for(let i=0;i<3&&h.emit.length<9;i++){const a=R()*TAU,d=r*R()*.45;h.emit.push({x:x+Math.cos(a)*d,y:y+Math.sin(a)*d,life:9,t:0})}h.flash=Math.max(h.flash,.45)}
-  G.flashT=0.5;if(S.set.shake)G.shake=Math.max(G.shake,22);hapt('heavy','silo',300);slowMo(1.1,0.3);sfx('nuke',x,y,2);
+  G.flashT=0.5;if(S.set.shake)G.shake=Math.max(G.shake,22);hapt('heavy','silo',300);siloSlow();sfx('nuke',x,y,2);
   (G.siloAft||(G.siloAft=[])).push({x,y,t:1.6})}
 // aftermath: the ground keeps rumbling and the cloud keeps boiling up for a second and a half
 function siloAft(dt){const a=G.siloAft;for(const f of a){f.t-=dt;if(f.t<=0)continue;if(S.set.shake)G.shake=Math.max(G.shake,7*f.t);

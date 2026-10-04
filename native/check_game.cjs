@@ -99,6 +99,8 @@ function checkGame(html) {
       if (!new RegExp('^\\s*' + k + ":'[^']*'", 'm').test(ids[1])) fails.push('PLAT_IDS.' + k + ' missing');
     }
     if (!/^\s*icloud:(true|false)\b/m.test(ids[1])) fails.push('PLAT_IDS.icloud missing (true or false)');
+    // Game Center master switch: false until the leaderboard + achievements exist in App Store Connect (no sign-in, buttons hidden)
+    if (!/^\s*gameCenter:(true|false)\b/m.test(ids[1])) fails.push('PLAT_IDS.gameCenter missing (true or false)');
     // iCloud needs the key-value-store entitlement (and the App ID's iCloud capability) or CI signing / the sync fails
     const ent = path.join(__dirname, 'ios', 'App', 'App', 'App.entitlements');
     const kvs = fs.existsSync(ent) && /com\.apple\.developer\.ubiquity-kvstore-identifier/.test(fs.readFileSync(ent, 'utf8'));

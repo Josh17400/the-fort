@@ -66,6 +66,7 @@ def plat_ids(html: str) -> dict:
     if not m:
         fail("const PLAT_IDS={...}; not found in index.html")
     ids = dict(re.findall(r"^\s*(\w+):'([^']*)'", m.group(1), re.M))
+    ids.update(re.findall(r"^\s*(\w+):(true|false)\b", m.group(1), re.M))   # flags: icloud, gameCenter
     for key in ("admobApp", "rewarded", "interstitial", "testRewarded", "testInterstitial", "rcKey", "lbDaily"):
         if key not in ids:
             fail(f"PLAT_IDS.{key} not found in index.html")
@@ -101,6 +102,8 @@ def check_ids(ids: dict, release: bool) -> None:
     if not ids["lbDaily"]:
         # Game Center is optional: an empty leaderboard id never blocks a build.
         warn("PLACEHOLDER: PLAT_IDS.lbDaily is empty (no Game Center leaderboard)")
+    # gameCenter:false (until the leaderboard + achievements exist in App Store Connect) is a plain note, not a CI warning
+    print("game center: " + ("on" if ids.get("gameCenter") == "true" else "off (PLAT_IDS.gameCenter false: no sign-in, buttons hidden)"))
     print("ads: " + ("LIVE AdMob units (release build)" if release else "Google's test units (pass --release for the live units)"))
 
 
