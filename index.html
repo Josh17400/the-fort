@@ -2374,16 +2374,17 @@ setInterval(()=>{if(!document.hidden&&!_retHid&&S.ret)S.ret.last=Date.now()},30e
 // when the last line does or on its x.
 let _wb=null;   // {away ms, keys: the lines found when the card was raised}
 const awayTxt=ms=>{const m=Math.round(ms/60e3);return m<60?m+' min':m<48*60?Math.round(m/60)+' h':Math.round(m/1440)+' days'};
-function wbLive(){const out=[],y=S.dy,news=S.lab.news;
+function wbLive(scan){   // scan = {day: the lab-clock day the player was last here}: raise lines; without it, which lines are still true
+  const out=[],y=S.dy,news=S.lab.news;
   if(news.length)out.push({k:'rs',ic:'research',go:'rd',t:news.length>1?news.length+' research projects complete':'Research complete',s:news.slice(-2).map(labName).join(' · ')+' · deploys with your next run'});
   const fr=labFree(),rn=rsAffordN();if(fr>0&&rn>0)out.push({k:'idle',ic:'clock',go:'rd',t:'Lab idle',s:`${fr} ${pl(fr,'slot')} free · RP for ${rn} ${pl(rn,'tier')}`});
   if(y&&dyOn()&&y.d===today()){
     const n=stNext();if(n.can)out.push({k:'st',ic:'gift',go:'st',t:`Day ${n.day} supply ready`,s:n.reset?'Your streak restarted · claim to start a new one':`Claim +${STREAK[n.day-1]} gems`+(n.day===7?' · the big one':'')});
-    if(y.seen!==today()&&y.m.length)out.push({k:'dq',ic:'cal',go:'dops',t:'New daily missions',s:`${y.m.length} missions · +${DQ_GEM} gems and RP each`});
+    if(y.m.some(q=>!q.c)&&(!scan||today()>scan.day))out.push({k:'dq',ic:'cal',go:'dops',t:'New daily missions',s:`${y.m.length} missions · +${DQ_GEM} gems and RP each`});
     if(dcOn()&&!(y.dc.d===today()&&y.dc.n>0)){const c=dcToday();out.push({k:'dc',ic:'flag',go:'dch',t:'Daily challenge ready',s:mapOf(c.map).name+' · '+DC_MB[c.mod].name})}
     if(adLeft('gems')>0)out.push({k:'ad',ic:'play',go:'dops',t:'Free gems',s:`Watch an ad · +${AD_GEMS} gems`})}
   return out}
-function wbScan(away,boot){_wb=null;if(S.ret.n<=1||!boot&&away<RET_GAP||!S.lab)return;labTick();dyTick();const it=wbLive();if(!it.length)return;
+function wbScan(away,boot){_wb=null;if(S.ret.n<=1||!boot&&away<RET_GAP||!S.lab)return;labTick();dyTick();const it=wbLive({day:dayOf(labNow()-away)});if(!it.length)return;
   _wb={away,keys:new Set(it.map(i=>i.k))};AN.track('wb_show',{n:it.length,keys:it.map(i=>i.k).join(','),away_m:Math.round(away/60e3)})}
 function renderWb(){const el=$('wbCard');if(!el)return;const it=_wb?wbLive().filter(i=>_wb.keys.has(i.k)):[];if(!it.length){_wb=null;el.innerHTML='';return}
   el.innerHTML=`<div class="panel wb"><div class="sec-h"><div class="eyebrow">WELCOME BACK</div>${_wb.away>=60e3?`<span class="wbaw">${ic('clock',13)}Away ${awayTxt(_wb.away)}</span>`:''}`
