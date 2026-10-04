@@ -2385,7 +2385,8 @@ function wbLive(scan){   // scan = {day: the lab-clock day the player was last h
     if(dcOn()&&!(y.dc.d===today()&&y.dc.n>0)){const c=dcToday();out.push({k:'dc',ic:'flag',go:'dch',t:'Daily challenge ready',s:mapOf(c.map).name+' · '+DC_MB[c.mod].name})}
     if(adLeft('gems')>0)out.push({k:'ad',ic:'play',go:'dops',t:'Free gems',s:`Watch an ad · +${AD_GEMS} gems`})}
   return out}
-function wbScan(away,boot){_wb=null;if(S.ret.n<=1||!boot&&away<RET_GAP||!S.lab)return;labTick();dyTick();const it=wbLive({day:dayOf(labNow()-away)});if(!it.length)return;
+function wbScan(away,boot){_wb=null;if(S.ret.n<=1||!boot&&away<RET_GAP||!S.lab)return;if(!running){labLand();dyTick()}   // labLand, not labTick: keep the 'Research complete' toasts; never mid-run (a run lands them at its end)
+  const it=wbLive({day:dayOf(labNow()-away)});if(!it.length)return;
   _wb={away,keys:new Set(it.map(i=>i.k))};AN.track('wb_show',{n:it.length,keys:it.map(i=>i.k).join(','),away_m:Math.round(away/60e3)})}
 function renderWb(){const el=$('wbCard');if(!el)return;const it=_wb?wbLive().filter(i=>_wb.keys.has(i.k)):[];if(!it.length){_wb=null;el.innerHTML='';return}
   el.innerHTML=`<div class="panel wb"><div class="sec-h"><div class="eyebrow">WELCOME BACK</div>${_wb.away>=60e3?`<span class="wbaw">${ic('clock',13)}Away ${awayTxt(_wb.away)}</span>`:''}`
