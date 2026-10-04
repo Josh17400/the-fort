@@ -810,3 +810,43 @@ The old engine drew from `Math.random` in two places the seeded Desert sim hits:
 | Impacts | enemy death -24, ricochet/armor -21, wall hit -19, fort hit -14, breach -9.4, APS intercept -20 | -18 to -1 |
 | Ambience (battle) | one heli rotor -30, 3 tanks -26, wind -29, far-off war -28 to -30 | -18 |
 | Stress | 60 MG/rifle shots + 8 shells in 4 s: -7.2, peak -1.1; that + silo strike + 6 heavy booms: -6.2, peak -0.9 (no clipping) | |
+
+## Theater bosses (branch `worktree-wf_27825535-dcf-1`)
+Owner-approved: one signature boss per theater. Code: `// ================= THEATER BOSSES =================` (just before BATTLEFIELD EVENTS): table `TBOSS`, knobs `TB`, `tbSpawn`/`tbArm`/`tbTick`/`TBX` (specials)/`tbPhase`/`tbSky`/`tbHurt`/`tbWpPos`/`tbTap`/`tbHold`/`tbWpHit`/`tbDown`/`tbRout`/`tbFlee`/`tbFleeSky`/`tbFx`; art `TBART`/`tbSpr`/`drawTb`/`tbChar`/`tbWpDraw`/`tbLamps`/`tbBeams`/`tbShadowSky`/`drawTbDead`/`tbPreview`; HUD `hudTbBar`; sounds `SREC.tbin`/`SREC.tbph` (`SG.tbin`/`SG.tbph`). Hooks: `startWave` (spawn + banner + sting prefetch a wave early), `skyWaveStart` (no gunship on 75), `vehWave` (half escort on 75), `kill` (`tbDown` instead of airDown/fxKill/MBT banner/corpse), `hurtEnemy` (`tbHurt`), `fire` (weak point), enemy loop / `updateSky` (rout, `tbTick`/`tbSky`, intel key `tb_<id>`), canvas mousedown (`tbTap`), `loop()` (slow motion), `vehEnemy` (a boss never stops to duel your vehicles), SAM `focus` (a capped boss doesn't soak the whole salvo), AA max-HP `pct` x`TB.pct` vs bosses. New declared fields on enemies/aircraft: `tb, tbN, tbS, rout`.
+
+### Who, when
+| Theater | Boss | Type | Phases (50/100; the 75 light form = phase 1 + phase 3) | Weak point |
+|---|---|---|---|---|
+| Desert | SCORPION WAR-RIG (tractor + fuel trailer, ram plow) | ground | HMGs + rocket pods / calls its convoy / ramming speed | rear fuel valve |
+| Mountain | VIPER ACE (attack heli, shark mouth, kill marks) | air (`aiHeli`) | gun runs + rockets / dashes + flares + flak at your aircraft / drone pack | turbine |
+| Coastal | LEVIATHAN (hovercraft, comes off the sea arc) | ground | deck guns + rockets / troops ashore / rocket deck | stern lift engine |
+| City | GOLIATH (super-heavy twin turret) | ground | turrets / smoke + reactive armor (shield) / overdrive charge | engine deck |
+| Arctic | GLACIER (4-track artillery crawler) | ground | howitzer barrage / + rockets / closes for direct fire | magazine hatch |
+| Jungle | MARSH STALKER (hexapod) | ground | gun pods / hunter pack + drones / leaps at the walls + stomps | back reactor |
+| Island | NIGHTSHADE (night gunship, searchlight) | air (`aiBoss`) | side guns + 105mm / searchlight + paratroopers / ECM shield + drones | hot engine |
+| Capital | COLOSSUS (titan mech) | ground | arm cannons + stomp / missile pods + shield + drones / core exposed: beam sweep | chest reactor (x1.5 in phase 3) |
+- Waves (`tbForm`): 50 = full 3 phases (replaces the MBT), 75 = light 2 phases (replaces the heavy gunship), 100 = climax and the theater's clear (Capital 100 = finale: x`TB.fin` 1.4 HP, "FINAL BATTLE" feed). Ground bosses ride type `'boss'` (MBT rules, Tank Hunter, daily tank/vehicle missions), air ones `'airboss'` (AA, Giant Killer). Nothing runs before wave 50: **Desert parity untouched** (`t_par` identical).
+- Phases at 2/3 and 1/3 HP (1/2 on 75): crit banner `<NAME> · PHASE n` + the phase line, shake (none with Reduced Motion), haptic, sting `tbph`. Entrance: wave banner `WAVE n — <NAME> INBOUND` + tag line, the WARNING strip held `TB.warn` 2 s longer, sting `tbin` (war horns over drums), intel card `tb_<id>` on first sighting.
+- Weak point: tap / hold the glow (`tbTap`, 22 px slack on phones) → the commander's rifle does x`TB.wp` 2.5 for 1.2 s (holding refreshes it); gold tracer to the glow, "WEAK POINT ×2.5" float. Auto-fire / bot never gets it.
+- Death: chain blasts 1.35 s (+0.35 on 100), then the big one (`sfx('nuke')`, flash, scorch) and a charred wreck (`G.tbWr`, smokes 60 s, fades by 90 s). Slow motion: `G.slowT` 1 s of REAL time at `TB.slow` 0.3x on the accumulator in `loop()` (sim steps and RNG unchanged), skipped with Reduced Motion. Wave-100 kill = `tbRout`: spawns cancelled, the rest of the wave flees (bounty only if you shoot them; a router pinned on a building melts after 12 s).
+- Reward: bounty `TB.rew` [3,5,9] x an MBT bounty; RP `TB.rp` [0,2,3] (x2 for Capital 100) only the FIRST time per theater + wave (`S.tbk`), never in the daily challenge. Medal **Titan Slayer** (`st:'tboss'`, ranks at 4 / 12).
+
+### Balance (`TB`)
+HP = `TB.hp` [2.4, 3.2, 6] (75/50/100) x theater `hp` x the MBT's (air: the gunship's) wave HP; damage `TB.dmg` [1.1,1.2,1.35] x MBT; specials `mg` 0.035 / `rk` 0.25 / `ar` 0.5 / `lz` 0.7 / `st` 0.8 / `ram` 3 of boss dmg. Damage cap (`tbHurt`): past `TB.cap` [4%, 3.3%, 2.5%] of max HP in one sim second only `capX` 4% of the excess lands (weak-point hits always land in full), so an overbuilt fort or a full SAM battery still gets a ~30-45 s fight. `TB.run` 2.2x speed until in sight. Drawn `TB.sc` 1.45 x `bS()` (towers over line tanks).
+Bot (t_tb sims: auto-fire only, every Armory line at f of the theater cap, deployed the wave before):
+| Fort | Without (MBT / gunship) | With the boss |
+|---|---|---|
+| Desert f0.55 w50 (clears ~w57) | MBT ~30 s | killed 32-38 s (96.5M HP), phases ~17/31 s, walls min 0.35-0.84 |
+| Desert f0.50 w50 (falls ~w51 anyway) | holds w50 | falls at w50, boss at 72% (1 wave earlier) |
+| Desert f0.95 w100 (f0.9 falls at w100 even without) | MBT 25 s, walls 0.99 | killed 56-59 s (38.8B), phases ~36/50 s, walls 0.81-0.89; f0.92: 1 of 2 holds (98 s, breached) |
+| Mountain f0.6 w50 (Viper, air) | walls 0.97 | killed 25-26 s, walls 0.77-0.83 |
+| Mountain f0.975 w100 (f0.95 falls) | MBT 57-67 s, walls 0.93 | killed 31-35 s (511B, cap-bound), walls 0.72-0.92 |
+| City f0.7 w50 (f0.65 falls at w49) | MBT 45 s, walls 0.99 | killed 72-79 s, walls 0.48-0.78 |
+| Capital f0.75 w50 (f0.7 barely holds) | - | killed 48-50 s, walls 0.89-0.95; f0.7 falls at w50 |
+City/Capital w100 can't be cleared by the bot even at the caps (it never uses airstrikes / grenades), so no w100 bot numbers there.
+
+### QA (`.qa/`, gitignored)
+- `t_tb.js` (PRE=pre_seed.js): `HASH=#unit` 195 checks (spawn on 50/75/100 in all 8 theaters, air/ground, names, no MBT/gunship beside it, every preset draws, intel preview, HP scale, phases, weak point x2.5 + tap rule, shield, damage cap + weak point bypass, bounty/RP once/medal/slow motion/reduced motion, wreck, wave-100 rout, air death, 40 s live per theater). `HASH=#sim~<map>~<f>~<w0>~<seeds>[~<w1>[~off[~knobs]]]` = the bot table (`off` = TB.on 0; knobs like `hp1=3,dmg2=1.2,mg=0.03`); keep 2 seeds per call (<150 s).
+- `wk_tb.py <maps|all> [gfx] [hour|off] [zoom] [port|land] [bar|warn|phase3|dead] [wave]` (env ANG = placement angle) and `wk_tbgal.py [night] [dead]` (art gallery of all 8). Checked 390x844 / 844x390: the bar (54 px) sits under the status card, clear of the controls.
+- `au_test.py tbin tbph` (spec lines added to the local copy): tbin ~-14.8 dB (50 ms), tbph ~-12.3.
+- Regression unchanged: t_core 57, t_econ 82, t_daily 110, t_adlab 62, t_merge 45, t_fort 23, t_tw 20, t_cash 69, t_store 52, own OK, t_basehp 38, t_par identical. Smoke Desert maxed w104 (all three bosses down), Island / Capital maxed kill the w50 boss, cw=0.
