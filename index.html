@@ -1028,7 +1028,7 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
 @media (max-width:899px),(max-height:500px) and (orientation:landscape){
   .bgrid{display:flex;flex-direction:column;gap:12px}
   .bcol{display:contents}
-  #lastRun{order:1}#mission{order:2}#picks{order:3}#rdSum{order:4}#nextUnl{order:5}#medTile{order:5}#manual{order:6}
+  #wbCard{order:0}#lastRun{order:1}#mission{order:2}#picks{order:3}#rdSum{order:4}#nextUnl{order:5}#medTile{order:5}#manual{order:6}
   .panel{padding:16px}.manual{padding:2px 16px}.manual[open]{padding-bottom:16px}
   .deploy{gap:14px}.deploy h2{font-size:22px;margin-top:8px}.deploy .mdesc{font-size:13px}
   .mkit{gap:12px;padding:10px}.por{width:64px;height:64px;border-radius:10px}.kb .kn{font-size:16px;margin-top:2px}.kb .kw{font-size:12px;margin-bottom:6px}
@@ -1061,6 +1061,25 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
 .toast.gm .ic{color:var(--c-gem)}
 .ni .dot.vio{background:var(--c-gem);box-shadow:0 0 0 2px var(--c-bar),0 0 8px rgba(185,140,255,.85)}
 #daily:empty{display:none}#daily{display:flex;flex-direction:column;gap:inherit}
+/* ---- phase 5: welcome-back card (#wbCard): the Base tile shell, olive accent, one tappable row per thing that happened while away ---- */
+#settings .set[hidden],#natSet[hidden]{display:none}
+#wbCard:empty{display:none}#wbCard{width:100%;min-width:0;max-width:100%}
+.wb{display:flex;flex-direction:column;gap:10px;border-color:var(--c-line-2);background:linear-gradient(180deg,rgba(127,211,90,.07),rgba(127,211,90,0) 110px),var(--c-s1)}
+body.mobile #home .panel.wb{background:linear-gradient(180deg,rgba(127,211,90,.07),rgba(127,211,90,0) 110px),rgba(22,27,18,.8)}
+.wb>.sec-h{margin:0;gap:8px}.wb>.sec-h .eyebrow{color:var(--c-green)}.wb>.sec-h .eyebrow::before{background:var(--c-green)}
+.wbaw{display:inline-flex;align-items:center;gap:5px;margin-left:auto;font:600 12px var(--f-display);letter-spacing:.06em;color:var(--c-dim);white-space:nowrap}
+.wbx{flex:none;display:grid;place-items:center;width:44px;height:44px;margin:-10px -10px -10px 0;border:0;background:transparent;color:var(--c-dim);cursor:pointer;touch-action:manipulation;border-radius:10px}
+.wbx:hover,.wbx:focus-visible{color:var(--c-text);background:rgba(255,255,255,.05)}
+.wbl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;min-width:0}
+.wbi{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:6px 12px 6px 8px;border-radius:12px;border:1px solid var(--c-line);background:rgba(0,0,0,.18);color:var(--c-text);
+  font:inherit;text-align:left;cursor:pointer;touch-action:manipulation;transition:border-color var(--d-1)}
+.wbi:hover,.wbi:focus-visible{border-color:var(--c-line-3)}
+.wbic{flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:var(--t-green);color:var(--c-green)}
+.wbic.k-rs,.wbic.k-idle{background:var(--t-blue);color:var(--c-blue)}.wbic.k-st,.wbic.k-dq,.wbic.k-ad{background:var(--t-gem);color:var(--c-gem)}.wbic.k-dc{background:rgba(255,122,74,.12);color:var(--c-orange)}
+.wbt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.wbt b{font:700 13px/1.25 var(--f-display);letter-spacing:.04em}
+.wbt small{font:400 12px/1.3 var(--f-body);color:var(--c-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wbi .chev{flex:none;color:var(--c-dim)}
+.dclb{align-self:flex-start}
 /* phones (iOS WKWebView): never let a Daily Ops / Challenge row widen the panel past the column */
 #daily{width:100%;min-width:0;max-width:100%}#daily>.panel{width:100%;min-width:0;max-width:100%}
 .dops>*,.dql,.dq,.dqx,.dad,.dstk,.dch>*{min-width:0;max-width:100%}.dops>.sec-h{flex-wrap:wrap;row-gap:4px}.dlock>span{min-width:0}
@@ -1364,6 +1383,7 @@ body.rm .adc::before{animation:none}@keyframes adSpin{to{transform:rotate(1turn)
         <details class="panel manual medt" id="medTile"><summary><span class="eyebrow">MEDALS</span><span class="msum" id="medSum"></span><i class="dot gold" data-d="medals" aria-hidden="true"></i><span class="cv" data-ic="chevR" data-s="16"></span></summary><div id="medals"></div></details>
       </div>
       <div class="bcol">
+        <div id="wbCard"></div>
         <div id="lastRun"></div>
         <div id="daily"></div>
         <div id="rdSum"></div>
@@ -1408,6 +1428,11 @@ body.rm .adc::before{animation:none}@keyframes adSpin{to{transform:rotate(1turn)
     <div class="set-sec eyebrow">CONTROLS</div>
     <label class="set tonly"><span class="st">Left-handed controls<small>Mirrors the battle buttons</small></span><input type="checkbox" class="sw" id="sLeft"></label>
     <label class="set"><span class="st">Pause on focus loss<small>Pauses when you switch apps or tabs</small></span><input type="checkbox" class="sw" id="sBlur"></label>
+    <div id="natSet" hidden>
+    <div class="set-sec eyebrow">NOTIFICATIONS</div>
+    <label class="set"><span class="st">Reminders<small>Research complete, lab idle, new daily missions, a streak about to end</small></span><input type="checkbox" class="sw" id="sNotif"></label>
+    <div class="set" id="gcRow"><span class="st">Game Center<small>Achievements and the daily challenge leaderboard</small></span><button class="btn sm" id="gcBtn">ACHIEVEMENTS</button></div>
+    </div>
     <div class="set stk"><span class="st">Slow-motion assist<small>Slows the whole battle. The in-battle speed button runs 1× and 2×, and 3× once Desert Outpost is cleared.</small></span><div class="seg" id="spdSeg" role="group" aria-label="Slow-motion assist"><button data-v="0.75">0.75×</button><button data-v="1">OFF</button></div>
       <select id="sSpeed" hidden><option value="0.75">0.75×</option><option value="1">1×</option></select></div>
     <div class="set-sec eyebrow">HELP</div>
@@ -2027,13 +2052,13 @@ function labTick(){const now=labNow(),out=[];let ch=false;
   for(const j of S.lab.q.slice()){const r=RLINES[j.id],bad=!r||(j.rf?!rsDone(j.id)||(S.rf[j.id]|0)>=j.k:j.k>=r.t.length||rsOwned(j.id)>=j.k);
     if(!bad&&j.end>now)continue;S.lab.q.splice(S.lab.q.indexOf(j),1);ch=true;if(bad)continue;
     if(j.rf)S.rf[j.id]=j.k;else{S.rs[j.id]=j.k;const q=r.rides;if(q&&j.sq>0)S.rs[q.id]=Math.max(rsOwned(q.id),Math.min(q.t.length-1,j.sq|0))}   // job.sq: the squad tier this Infantry tier paid for
-    Plat.cancel('lab:'+j.id);const n={id:j.id,k:j.k};if(j.rf)n.rf=1;S.lab.news.push(n);out.push(n)}
+    Plat.cancel('lab:'+j.id);const n={id:j.id,k:j.k};if(j.rf)n.rf=1;S.lab.news.push(n);out.push(n);AN.track('research_done',{id:j.id,k:j.k,rf:!!j.rf})}
   if(S.lab.news.length>8)S.lab.news.splice(0,S.lab.news.length-8);if(ch)save();return out}
 // A ride line (the squad) is never started on its own; a squad job from before the merge still finishes (labTick lands any line).
 function labStart(id){const r=RLINES[id];if(!r||r.on||!S.lab)return false;labTick();if(labOf(id)||!labFree())return false;const now=labNow();
   if(rsDone(id)){const n=S.rf[id]|0,c=refitCost(n);if(S.rp<c)return false;S.rp-=c;S.lab.q.push({id,k:n+1,rf:1,t0:now,end:now+refitMs(n)})}
   else{const k=rsOwned(id)+1;if(rsWhy(id,k))return false;const p=rsPrice(id,k),j={id,k,t0:now,end:now+p.ms};if(p.sq)j.sq=p.sq;S.rp-=p.rp;S.lab.q.push(j)}
-  labNote(S.lab.q[S.lab.q.length-1]);dqAdd('research',1);save();return true}
+  const nj=S.lab.q[S.lab.q.length-1];if(S.ret&&!S.ret.nt){S.ret.nt=1;ntPlan()}labNote(nj);dqAdd('research',1);AN.track('research_start',{id,k:nj.k,rf:!!nj.rf,rp:S.rp,min:Math.round((nj.end-nj.t0)/60e3)});AN.once('research1',{id});save();return true}
 // finish a running job with gems now; false (nothing spent) when there is no such job or the gems fall short
 function labSkip(id){const j=labOf(id);if(!j)return false;const c=labSkipCost(labLeft(j));if(c&&!gemSpend(c,'skip'))return false;j.end=labNow();labTick();Plat.cancel('lab:'+id);return true}
 function labBuySlot(){if(S.lab.slots>=LAB_SLOTS_MAX||!gemSpend(labSlotCost(),'slot'))return false;S.lab.slots++;if(S.shop&&S.shop.voucher===1)S.shop.voucher=2;save();return true}   // Starter Pack voucher: this slot at half price
@@ -2089,7 +2114,10 @@ const PLAT_IDS={
   testRewarded:'ca-app-pub-3940256099942544/1712485313',   // Google's public iOS test units: every non-release build
   testInterstitial:'ca-app-pub-3940256099942544/4411468910',
   rcKey:'appl_CoLlGppaiooTIcoxtSShLvmUqxA',                // RevenueCat project "The Fort", public App Store SDK key
-  lbDaily:''                                               // PLACEHOLDER Game Center leaderboard id (recurring, daily). Empty = off
+  lbDaily:'com.thefort.game.lb.daily',                     // Game Center recurring (daily) leaderboard: the daily challenge's wave. Empty = off
+  achPre:'com.thefort.game.ach.',                          // Game Center achievement ids = achPre + ACH id (clear_desert, wave_25, kills_2500...). Empty = off
+  icloud:false,                                            // iCloud save sync (cloudPull/cloudPush). Needs the App ID's iCloud capability + entitlement first
+  analytics:''                                             // anonymous event receiver (https URL of tools/analytics). Empty = off: nothing stored or sent
 };
 const Plat=(()=>{let busy=false,booted=null;
   const sh=()=>window.Shell&&window.Shell.native?window.Shell:null;
@@ -2104,26 +2132,39 @@ const Plat=(()=>{let busy=false,booted=null;
     iapOn:()=>nIap()||dev(),
     price(sku,usd){const s=sh(),p=s&&s.iap.price(sku);return p||'$'+usd.toFixed(2)},
     boot(){if(booted)return booted;const s=sh();if(!s)return booted=Promise.resolve();
-      s.app.onState(on=>{if(!on)bgPause()});
+      s.app.onState(on=>{if(!on)bgPause();else retBack()});
       return booted=saveBoot(s.store).catch(()=>{}).then(()=>{
         const live=s.liveAds===true;
         s.configure({rewarded:live?PLAT_IDS.rewarded:PLAT_IDS.testRewarded,interstitial:live?PLAT_IDS.interstitial:PLAT_IDS.testInterstitial,rcKey:PLAT_IDS.rcKey,products:SHOP_SKUS(),
-          nonConsumables:[SHOP_ONE.starter.sku,SHOP_ONE.noads.sku],leaderboards:[PLAT_IDS.lbDaily],preloadInterstitial:!S.shop.noAds&&(S.runs|0)>=IA_RUNS});
+          nonConsumables:[SHOP_ONE.starter.sku,SHOP_ONE.noads.sku],leaderboards:[PLAT_IDS.lbDaily],achievements:!!PLAT_IDS.achPre,icloud:PLAT_IDS.icloud===true,
+          preloadInterstitial:!S.shop.noAds&&(S.runs|0)>=IA_RUNS});
+        gcSync();cloudPull();
         if(!running)renderHome();   // the store is on now: the Base screen can show the Starter Pack and the gem shop
         if(s.iap.available())s.iap.owned().then(ids=>{if(shopOwn(ids))gemRefresh()}).catch(()=>{})}).finally(()=>s.ready())},
     async ad(kind){if(busy||!P.adsOn())return false;busy=true;try{const s=sh();if(!s)return await sim('ad',kind);
-        const r=await full(()=>s.ads.showRewarded());if(r&&r.reason==='nofill')toast('No ad available right now · try again in a minute','play');return!!(r&&r.rewarded)}
+        const r=await full(()=>s.ads.showRewarded());if(r&&r.reason==='nofill')toast('No ad available right now · try again in a minute','play');AN.track('ad',{k:kind,ok:!!(r&&r.rewarded),why:r&&r.reason||''});return!!(r&&r.rewarded)}
       catch(e){return false}finally{busy=false}},
     async interstitial(){if(busy||!P.adsOn())return false;busy=true;try{const s=sh();if(!s)return await sim('ia');
-        const r=await full(()=>s.ads.showInterstitial());return!!(r&&r.shown)}catch(e){return false}finally{busy=false}},
+        const r=await full(()=>s.ads.showInterstitial());AN.track('ad',{k:'ia',ok:!!(r&&r.shown)});return!!(r&&r.shown)}catch(e){return false}finally{busy=false}},
     async buy(sku){if(busy||!P.iapOn())return false;busy=true;try{const s=sh();if(!s)return await sim('buy',sku);
-        const r=await s.iap.purchase(sku);if(r&&!r.ok&&!r.cancelled)toast('Purchase failed · '+String(r.error||'try again later').slice(0,80),'close');return!!(r&&r.ok)}
+        const r=await s.iap.purchase(sku);if(r&&!r.ok&&!r.cancelled)toast('Purchase failed · '+String(r.error||'try again later').slice(0,80),'close');
+        AN.track('iap',{sku,ok:!!(r&&r.ok),cancel:!!(r&&r.cancelled)});return!!(r&&r.ok)}
       catch(e){return false}finally{busy=false}},
     async restore(){const s=sh();return s&&s.iap.available()?await s.iap.restore():[]},
     notify(when,title,body,id){P.log.push({when,title,body,id});if(P.log.length>20)P.log.shift();const s=sh();if(s)s.notify.schedule({id,at:when,title,body})},
     cancel(id){P.log=P.log.filter(n=>n.id!==id);const s=sh();if(s)s.notify.cancel(id)},
     haptic(kind){try{if(S.set.haptics===false)return;const s=sh();if(s)s.haptic(kind);else if(navigator.vibrate&&S.set.shake)navigator.vibrate(kind==='success'?[12,40,18]:10)}catch(e){}},
-    score(board,n){const s=sh(),id=board==='daily'?PLAT_IDS.lbDaily:'';if(s&&id)s.gc.submitScore(id,n)}};
+    score(board,n){const s=sh(),id=board==='daily'?PLAT_IDS.lbDaily:'';if(s&&id)s.gc.submitScore(id,n)},
+    // phase 5 (see RETENTION): Apple's review sheet, Game Center achievements + screens, iCloud key-value store. All no-ops on the web
+    reviewOn(){const s=sh();return!!s&&!!s.review&&s.review.available()},
+    review(){const s=sh();return s&&s.review?s.review.request():Promise.resolve(false)},
+    gcOn(){const s=sh();return!!s&&!!s.gc.available&&s.gc.available()},
+    ach(id){const s=sh();return s&&id&&s.gc.unlock?s.gc.unlock(id).then(r=>!!(r&&r.ok),()=>false):Promise.resolve(false)},
+    board(board){const s=sh(),id=board==='daily'?PLAT_IDS.lbDaily:'';if(s&&id&&s.gc.showLeaderboard)s.gc.showLeaderboard(id)},
+    achShow(){const s=sh();if(s&&s.gc.showAchievements)s.gc.showAchievements()},
+    cloudOn(){const s=sh();return PLAT_IDS.icloud===true&&!!s&&!!s.cloud&&s.cloud.available()},
+    cloudGet(key){const s=sh();return P.cloudOn()?s.cloud.get(key):Promise.resolve(null)},
+    cloudPut(key,json){const s=sh();return P.cloudOn()?s.cloud.put(key,json):Promise.resolve(false)}};
   return P})();
 // ================= DAILIES (phase 4: missions, streak, daily challenge, ad caps, Second Wind, shop) =================
 // The loop this serves: play -> die -> a little RP -> research timer -> come back tomorrow. Everything keys on the local calendar day
@@ -2197,7 +2238,7 @@ function dyTick(){const y=S.dy;if(!y||!S.lab)return;const d=today();if(y.ads.d!=
   if(!(running&&G&&G.dc)){dcPay();if(y.dc.d!==d)y.dc={d,best:0,g:0,u:0,n:0}}   // dcPay settles a challenge the app died in (it pays only what is still due)
   if(!dyOn()||y.d===d)return;let g=0,u=0;
   if(y.d){for(const q of y.m)if(!q.c&&q.p>=q.n){q.c=1;g+=DQ_GEM;u++}if(!y.b&&y.m.length&&y.m.every(q=>q.p>=q.n)){y.b=1;g+=DQ_BONUS_GEM;u+=DQ_BONUS_U}}
-  if(!y.hi){y.hi=1;setTimeout(()=>toast('Daily Ops unlocked · missions and a login streak on the Base screen','star','gm'),600)}
+  if(!y.hi){y.hi=1;AN.once('dailies');setTimeout(()=>toast('Daily Ops unlocked · missions and a login streak on the Base screen','star','gm'),600)}
   y.d=d;y.m=dqRoll(d);y.b=0;dqSync();if(g){gemAdd(g,'daily');S.rp+=u*rpU();toast(`Yesterday's missions banked · +${g} gems`,'gem','gm')}save()}
 // live tracking: _dqK = stats one of today's open missions still counts (null = nothing to count, so the battle hooks return at once)
 let _dqK=null;
@@ -2220,7 +2261,7 @@ function stNext(){const s=S.dy.st,d=today(),gap=s.last?d-s.last:99;
   if(gap<=0)return{can:false,day:s.n,d};if(!s.n||s.n>=7)return{can:true,day:1,d};
   if(gap===1)return{can:true,day:s.n+1,d};if(gap===2&&!s.gr)return{can:true,day:s.n+1,d,grace:true};return{can:true,day:1,d,reset:true}}
 function stClaim(){const n=stNext();if(!n.can||!dyOn())return null;const s=S.dy.st;if(n.day===1)s.gr=0;if(n.grace)s.gr=1;s.n=n.day;s.last=n.d;
-  const g=STREAK[n.day-1],rp=n.day===7?STREAK_U7*rpU():0;gemAdd(g,'streak');if(rp)S.rp+=rp;save();return{g,rp,day:n.day,grace:!!n.grace}}
+  const g=STREAK[n.day-1],rp=n.day===7?STREAK_U7*rpU():0;gemAdd(g,'streak');if(rp)S.rp+=rp;if(n.day===7)rvMoment('streak7');AN.track('streak',{day:n.day,grace:!!n.grace,reset:!!n.reset});save();return{g,rp,day:n.day,grace:!!n.grace}}
 // ---- rewarded ads: capped per day (AD_CAP); every watch also holds interstitials off for IA_RW
 const adLeft=k=>dyOn()&&Plat.adsOn()?Math.max(0,AD_CAP[k]-(S.dy.ads.d===today()?S.dy.ads[k]|0:0)):0;
 function adUse(k){const y=S.dy,d=today();if(y.ads.d!==d)y.ads={d};y.ads[k]=(y.ads[k]|0)+1;S.ia.rw=labNow();save()}
@@ -2301,15 +2342,16 @@ function dcLeave(){if(dcRestore()){mapSync();_armFreeze=null;_fpW=-1;save();idle
 let _dcRnd=null;   // the real Math.random while a seeded challenge run is live
 function dcStart(){if(running||!dcOn())return false;dyTick();const c=dcToday();dcEnter(c);S.dy.dc.n++;_dcRnd=Math.random;Math.random=dyRng(c.seed);
   startRun();G.dc=c;if(c.mod==='hazard')G.pk.hazard=(G.pk.hazard||0)+1;else if(c.mod==='hot')G.dcEv=2.5;else if(c.mod==='armor')G.dcVeh=1.5;else if(c.mod==='lean')G.dcCr=2;
-  for(const id of c.dirs){const p=PERKS.find(q=>q.id===id);if(p&&(!p.ok||p.ok())){G.pk[id]=(G.pk[id]||0)+1;if(p.go)p.go()}}syncDirBtn();return true}
+  for(const id of c.dirs){const p=PERKS.find(q=>q.id===id);if(p&&(!p.ok||p.ok())){G.pk[id]=(G.pk[id]||0)+1;if(p.go)p.go()}}syncDirBtn();AN.track('dc_start',{map:c.map,mod:c.mod,n:S.dy.dc.n});return true}
 function dcPay(){const c=S.dy.dc,due=dcReward(c.best),g=due.g-c.g,u=due.u-c.u;if(g<=0&&u<=0)return{g:0,rp:0};const rp=Math.max(0,u)*rpU();
   if(g>0)gemAdd(g,'challenge');if(rp)S.rp+=rp;c.g=Math.max(c.g,due.g);c.u=Math.max(c.u,due.u);save();return{g:Math.max(0,g),rp}}
 function dcEnd(){if(_dcRnd){Math.random=_dcRnd;_dcRnd=null}const c=S.dy.dc,w=G.wave;if(c.d!==G.dc.d)Object.assign(c,{d:G.dc.d,best:0,g:0,u:0,n:1});
   const prev=c.best;c.best=Math.max(c.best,w);dcLeave();const got=dcPay();Plat.score('daily',w);return{prev,best:c.best,got}}
 // ---- notifications: research timers ping when they land; one daily reminder, scheduled for tomorrow evening on each day's first visit
-function labNote(j){if(j)Plat.notify(Date.now()+Math.max(0,j.end-labNow()),j.rf?'Refit complete':'Research complete',labName(j)+' is ready. It deploys with your next run.','lab:'+j.id)}
-function dyRemind(){const y=S.dy;if(!y||!dyOn()||y.rem===today())return;y.rem=today();const t=new Date();t.setDate(t.getDate()+1);t.setHours(19,0,0,0);
-  Plat.notify(t.getTime(),'Daily Ops','New missions are up and your streak reward is waiting.','daily');save()}
+function labNote(j){if(j)ntSend(Date.now()+Math.max(0,j.end-labNow()),j.rf?'Refit complete':'Research complete',labName(j)+' is ready. It deploys with your next run.','lab:'+j.id)}
+function dyRemind(){const y=S.dy;if(!y||!dyOn()||!ntOn()||y.rem===today())return;y.rem=today();const t=new Date();t.setDate(t.getDate()+1);t.setHours(19,0,0,0);
+  const s=y.st,keep=s.n>0&&s.n<7&&s.last===today()&&s.gr;   // claimed today with the grace day spent: tomorrow is the last day to keep it
+  ntSend(t.getTime(),'Daily Ops',keep?`New missions are up. Report in today to keep your ${s.n}-day streak.`:'New missions are up and your streak reward is waiting.','daily');save()}
 // ---- shop: gem packs (consumable), the one-time Starter Pack (first SHOP_ONE.starter.hrs after Daily Ops opens) and Remove Ads
 const SHOP_PACKS=[{sku:'fort_gems_80',n:80,usd:0.99,name:'Pouch'},{sku:'fort_gems_500',n:500,usd:4.99,name:'Satchel'},{sku:'fort_gems_1200',n:1200,usd:9.99,name:'Crate',hot:'POPULAR'},
   {sku:'fort_gems_2600',n:2600,usd:19.99,name:'Pallet'},{sku:'fort_gems_7000',n:7000,usd:49.99,name:'Convoy',hot:'BEST VALUE'}];
@@ -2331,8 +2373,137 @@ async function shopRestore(){return shopOwn(await Plat.restore())}
 function tempoRefund(){const pay=(lv,mul)=>{let c=0;for(let l=0;l<(lv|0);l++)c+=Math.round(150*Math.pow(2.3,l))*mul;return Math.round(c)};
   if('speed' in S.lv){S.bank+=pay(S.lv.speed,MAPM.cost);delete S.lv.speed}
   for(const m of MAPS){const r=mapRec(m.id);if(r.lv&&'speed' in r.lv){r.bank=(r.bank||0)+pay(r.lv.speed,m.rewMul);delete r.lv.speed}}}
+// ================= RETENTION (phase 5: welcome back, review prompt, reminders, Game Center achievements, iCloud, analytics) =================
+// S.ret = {n sessions (an app open, or a return after RET_GAP away), last (wall-clock ms the app was last seen active), rst (wall-clock ms of
+// the last RESET: an iCloud copy older than it never wins), nt (1 once the first research was started: local notifications may ask for
+// permission from then on), rv: {t (lab clock) of the last review ask, n asks, p: {why, t} a happy moment waiting for a calm spot}}.
+// RESET keeps S.ret, like S.runs: it describes the install, not the campaign.
+const RET_GAP=30*60e3,RV_DAYS=60,RV_SES=3,RV_W=15,RV_CALM=60e3,RV_AD=3*60e3,RV_KEEP=3*DAY_MS,NT_IDLE=3*3600e3,NT_STREAK_H=20;
+function retInit(){const o=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},r=S.ret=o(S.ret);r.n=Math.max(0,Math.floor(+r.n||0));r.last=+r.last>0?+r.last:0;r.rst=+r.rst>0?+r.rst:0;
+  r.rv=o(r.rv);r.rv.t=+r.rv.t>0?+r.rv.t:0;r.rv.n=Math.max(0,r.rv.n|0);if(r.rv.p&&(typeof r.rv.p!=='object'||typeof r.rv.p.why!=='string'))delete r.rv.p;
+  r.nt=r.nt||S.lab.q.length||Object.values(S.rs||{}).some(v=>(v|0)>0)?1:0}   // a save that has researched already asked (the old labStart scheduled at once)
+// ---- sessions: retBoot at launch, retLeave when the app goes to the background (bgPause), retBack when it returns
+let _retHid=0,_retEnd=-1e12;   // wall-clock ms the app went to the background (0 = in front); when the last run ended (RV_CALM)
+function retSession(away,boot){S.ret.n++;AN.session(boot,away);wbScan(away,boot);setTimeout(()=>{if(!running)rvTry()},1500)}
+function retBoot(){const r=S.ret,away=r.last?Math.max(0,Date.now()-r.last):0;retSession(away,true);r.last=Date.now();save()}
+function retLeave(){if(_retHid||!S.ret)return;_retHid=Date.now();S.ret.last=_retHid;try{ntPlan();AN.end();cloudPush()}catch(e){}}
+function retBack(){if(!_retHid||!S.ret)return;const away=Date.now()-_retHid;_retHid=0;S.ret.last=Date.now();
+  if(away>=RET_GAP){retSession(away,false);cloudPull();if(!running)renderHome()}}
+setInterval(()=>{if(!document.hidden&&!_retHid&&S.ret)S.ret.last=Date.now()},30e3);
+// ---- welcome back: a compact Base card (#wbCard, renderWb) after time away. Never on the very first launch. Each line stays only while
+// it is still true (research news unseen, lab idle, missions unseen, streak claimable, challenge unplayed, ad gems left); the card goes
+// when the last line does or on its x.
+let _wb=null;   // {away ms, keys: the lines found when the card was raised}
+const awayTxt=ms=>{const m=Math.round(ms/60e3);return m<60?m+' min':m<48*60?Math.round(m/60)+' h':Math.round(m/1440)+' days'};
+function wbLive(scan){   // scan = {day: the lab-clock day the player was last here}: raise lines; without it, which lines are still true
+  const out=[],y=S.dy,news=S.lab.news;
+  if(news.length)out.push({k:'rs',ic:'research',go:'rd',t:news.length>1?news.length+' research projects complete':'Research complete',s:news.slice(-2).map(labName).join(' · ')+' · deploys with your next run'});
+  const fr=labFree(),rn=rsAffordN();if(fr>0&&rn>0)out.push({k:'idle',ic:'clock',go:'rd',t:'Lab idle',s:`${fr} ${pl(fr,'slot')} free · RP for ${rn} ${pl(rn,'tier')}`});
+  if(y&&dyOn()&&y.d===today()){
+    const n=stNext();if(n.can)out.push({k:'st',ic:'gift',go:'st',t:`Day ${n.day} supply ready`,s:n.reset?'Your streak restarted · claim to start a new one':`Claim +${STREAK[n.day-1]} gems`+(n.day===7?' · the big one':'')});
+    if(y.m.some(q=>!q.c)&&(!scan||today()>scan.day))out.push({k:'dq',ic:'cal',go:'dops',t:'New daily missions',s:`${y.m.length} missions · +${DQ_GEM} gems and RP each`});
+    if(dcOn()&&!(y.dc.d===today()&&y.dc.n>0)){const c=dcToday();out.push({k:'dc',ic:'flag',go:'dch',t:'Daily challenge ready',s:mapOf(c.map).name+' · '+DC_MB[c.mod].name})}
+    if(adLeft('gems')>0)out.push({k:'ad',ic:'play',go:'dops',t:'Free gems',s:`Watch an ad · +${AD_GEMS} gems`})}
+  return out}
+function wbScan(away,boot){_wb=null;if(S.ret.n<=1||!boot&&away<RET_GAP||!S.lab)return;if(!running){labLand();dyTick()}   // labLand, not labTick: keep the 'Research complete' toasts; never mid-run (a run lands them at its end)
+  const it=wbLive({day:dayOf(labNow()-away)});if(!it.length)return;
+  _wb={away,keys:new Set(it.map(i=>i.k))};AN.track('wb_show',{n:it.length,keys:it.map(i=>i.k).join(','),away_m:Math.round(away/60e3)})}
+function renderWb(){const el=$('wbCard');if(!el)return;const it=_wb?wbLive().filter(i=>_wb.keys.has(i.k)):[];if(!it.length){_wb=null;el.innerHTML='';return}
+  el.innerHTML=`<div class="panel wb"><div class="sec-h"><div class="eyebrow">WELCOME BACK</div>${_wb.away>=60e3?`<span class="wbaw">${ic('clock',13)}Away ${awayTxt(_wb.away)}</span>`:''}`
+    +`<button class="wbx" data-wbx aria-label="Dismiss welcome back">${ic('close',16)}</button></div><ul class="wbl">`
+    +it.map(i=>`<li><button class="wbi" ${i.go==='rd'?'data-view-go="rd"':'data-wbgo="'+i.go+'"'} data-wbk="${i.k}"><span class="wbic k-${i.k}">${ic(i.ic,18)}</span><span class="wbt"><b>${i.t}</b><small>${i.s}</small></span><span class="chev">→</span></button></li>`).join('')+'</ul></div>'}
+// ---- App Store rating prompt (Apple's own sheet, through Shell.review). Only at happy moments: a new best on a theater from wave RV_W
+// (endRun), a theater's first clear (campHold) or day 7 of the login streak (stClaim). The moment waits in S.ret.rv.p (for RV_KEEP) until
+// a calm spot: the player navigates the Base screens, closes the debrief or streak card, or opens the app. Never in the first RV_SES-1
+// sessions, never within RV_DAYS of the last ask, never within RV_CALM of a run's end (a death), RV_AD of an ad, in a run or over a modal.
+// iOS itself shows the sheet at most 3 times a year. Web build: Plat.reviewOn() is false, so nothing is even queued.
+function rvMoment(why){const r=S.ret&&S.ret.rv;if(!r||!Plat.reviewOn())return;r.p={why,t:labNow()};save()}
+function rvBlock(){const r=S.ret.rv,now=labNow();return!Plat.reviewOn()?'off':!r.p?'none':S.ret.n<RV_SES?'early':r.t&&now-r.t<RV_DAYS*DAY_MS?'recent':running||Plat.busy()?'busy'
+  :document.querySelector('.modal.on')?'modal':Date.now()-_retEnd<RV_CALM?'death':now-Math.max(+S.ia.rw||0,+S.ia.t||0)<RV_AD?'ad':''}
+function rvTry(){const r=S.ret&&S.ret.rv;if(!r||!r.p)return false;if(labNow()-r.p.t>RV_KEEP){delete r.p;save();return false}if(rvBlock())return false;
+  const why=r.p.why;r.t=labNow();r.n++;delete r.p;save();AN.track('review_ask',{why,ses:S.ret.n,n:r.n});Plat.review();return true}
+// ---- local notifications (Plat.notify; the iOS app asks for permission on the first one). Nothing is scheduled before the first research
+// is started (S.ret.nt, set in labStart: the permission sheet comes right after that tap, never at launch) or with Settings → Reminders
+// off (S.set.notif). ids: 'lab:<line>' research/refit done (labNote), 'labidle' the lab idle NT_IDLE after it ran out of work while RP
+// waits, 'daily' new missions tomorrow 19:00 (dyRemind), 'streak' 20:00 on the last day a grace-day streak can still be kept. ntPlan()
+// re-plans the last three each time the app goes to the background; the same id replaces, so nothing piles up.
+const ntOn=()=>!!S.ret&&!!S.ret.nt&&S.set.notif!==false;
+function ntSend(when,title,body,id){if(ntOn())Plat.notify(when,title,body,id)}
+// wall-clock ms of local hour h on lab-clock day d
+const dayWall=(d,h)=>{const t=d*DAY_MS;return t+new Date(t).getTimezoneOffset()*60e3+h*3600e3-(labNow()-Date.now())};
+function ntPlan(){if(!S.ret||!S.lab)return;const on=ntOn(),y=S.dy;let at=0;
+  if(on&&rsAffordN()>0){const now=labNow(),free=labFree()>0?now:Math.min(...S.lab.q.map(j=>j.end));at=Date.now()+Math.max(0,free-now)+NT_IDLE}
+  if(at)Plat.notify(at,'Lab idle','Your research lab is idle and RP is waiting. Start the next project in R&D.','labidle');else Plat.cancel('labidle');
+  let st=0;if(on&&y&&dyOn()&&y.st.n>0&&y.st.n<7&&!y.st.gr&&y.st.last){const t=dayWall(y.st.last+2,NT_STREAK_H);if(t>Date.now()+60e3)st=t}
+  if(st)Plat.notify(st,'Streak ending tonight',`Your ${y.st.n}-day supply streak ends at midnight. Report in to keep it going.`,'streak');else Plat.cancel('streak');
+  if(on&&y)y.rem=0;dyRemind()}   // re-send 'daily' (same id replaces): its text must see a streak claimed after the day's first visit
+// Settings → Reminders: off cancels everything scheduled, on puts it back
+function ntToggle(){if(ntOn()){if(S.dy)S.dy.rem=0;for(const j of S.lab.q)labNote(j);ntPlan()}else{for(const j of S.lab.q)Plat.cancel('lab:'+j.id);for(const id of['labidle','streak','daily'])Plat.cancel(id)}}
+// ---- Game Center: the daily challenge's leaderboard (Plat.score in dcEnd) and achievements for milestones the game already tracks.
+// The App Store Connect ids are PLAT_IDS.achPre + ACH id (com.thefort.game.ach.clear_desert, ...); an empty achPre turns them off. Reported
+// achievements are remembered per install in localStorage 'fortGc' (a failed report, e.g. signed out of Game Center, is retried at the next
+// launch or run end). gcSync runs once Shell.configure is done (Plat.boot) and after every run.
+const ACH=[...MAPS.map(m=>({id:'clear_'+m.id,ok:()=>!!(S.maps&&S.maps[m.id]&&S.maps[m.id].cleared)})),
+  ...[['wave_5','baptism'],['wave_25','hold'],['wave_50','iron'],['wave_75','unbroken'],['wave_100','legend']].map(([id,md])=>({id,ok:()=>MG()[md]!=null})),
+  ...[2500,25000,250000].map(n=>({id:'kills_'+n,ok:()=>(S.tkills|0)>=n}))];
+let _gcBusy=false;
+function gcSync(){if(_gcBusy||!PLAT_IDS.achPre||!Plat.gcOn()||S.dcHold)return false;let done={};try{done=JSON.parse(localStorage.getItem('fortGc'))||{}}catch(e){}
+  // once per app build everything earned is reported again (a re-report at 100% is a no-op for Game Center): an id accepted before it
+  // existed in App Store Connect, or a report lost on Apple's side, is healed by the next build
+  const bld=String(window.Shell&&window.Shell.build||'');try{if(localStorage.getItem('fortGcB')!==bld){done={};localStorage.setItem('fortGcB',bld)}}catch(e){}
+  const due=ACH.filter(a=>!done[a.id]&&a.ok());if(!due.length)return false;_gcBusy=true;
+  Promise.all(due.map(a=>Plat.ach(PLAT_IDS.achPre+a.id).then(ok=>{if(ok)done[a.id]=1}))).then(()=>{try{localStorage.setItem('fortGc',JSON.stringify(done))}catch(e){}}).finally(()=>{_gcBusy=false});return true}
+// ---- iCloud save sync (off until PLAT_IDS.icloud: it needs the iCloud capability on the App ID and the key-value-store entitlement,
+// see handoff "Retention"). One key-value-store entry holds the whole save. Pulled at launch (Plat.boot, after saveBoot) and on a return
+// after RET_GAP; pushed when the app goes to the background. Conflict rule, which never loses progress: the copy with MORE progress wins
+// (cloudRank: theaters cleared, then research tiers + refits, then the sum of best waves, then career kills; a tie keeps this device's).
+// A copy older than this device's last RESET never wins. When the cloud copy wins, this device's save is kept in localStorage
+// 'theFortSave.bak', and money that cannot be re-earned rides over: the larger gem balance, and Remove Ads / Starter Pack flags.
+const CLOUD_KEY='theFortSave.cloud';
+function cloudRank(s){const o=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},maps=o(s.maps),act=s.dcHold&&s.dcHold.map||s.map;let cl=0,bs=0,rs=0;
+  for(const k in maps){const r=o(maps[k]);if(r.cleared)cl++;bs+=k===act?Math.max(+r.best||0,+(s.dcHold?s.dcHold.best:s.best)||0):+r.best||0}
+  if(!maps[act])bs+=+(s.dcHold?s.dcHold.best:s.best)||0;for(const t of[o(s.rs),o(s.rf)])for(const k in t)rs+=Math.max(0,t[k]|0);return[cl,rs,bs,Math.max(0,+s.tkills||0)]}
+function cloudBetter(a,b){const ra=+(a.ret&&a.ret.rst)||0,rb=+(b.ret&&b.ret.rst)||0;if(ra!==rb)return ra>rb;const x=cloudRank(a),y=cloudRank(b);
+  for(let i=0;i<x.length;i++)if(x[i]!==y[i])return x[i]>y[i];return false}
+let _cloudBusy=false;
+function cloudPull(){if(_cloudBusy||!Plat.cloudOn())return Promise.resolve(false);_cloudBusy=true;
+  return Plat.cloudGet(CLOUD_KEY).then(j=>{let r=null;try{r=j?JSON.parse(j):null}catch(e){}
+    if(!r||typeof r!=='object'||Array.isArray(r)||running||!cloudBetter(r,S)){if(!running)cloudPush();return false}
+    let cur='';try{cur=JSON.stringify(S)}catch(e){}try{if(cur)localStorage.setItem(SAVE_KEY+'.bak',cur)}catch(e){}
+    r.gems=Math.max(Math.floor(+r.gems||0),S.gems|0);const sh=r.shop=r.shop&&typeof r.shop==='object'&&!Array.isArray(r.shop)?r.shop:{},mine=S.shop||{};
+    if(mine.noAds)sh.noAds=1;if(mine.starter){sh.starter=1;if(!sh.voucher)sh.voucher=mine.voucher||1}
+    saveWrite(JSON.stringify(r));loadSave();medalSync();applyUiPrefs();applyGfx();if(!running)renderHome();toast('Progress synced from iCloud','star');AN.track('cloud_pull',{});return true})
+    .catch(()=>false).finally(()=>{_cloudBusy=false})}
+function cloudPush(){if(!Plat.cloudOn()||running&&G&&G.dc)return;let j;try{j=JSON.stringify(S)}catch(e){return}Plat.cloudPut(CLOUD_KEY,j)}
+// ---- analytics: an anonymous event log, OFF while PLAT_IDS.analytics is empty (then nothing is stored or sent). No personal data, no
+// device or advertising ids: a random install id made here (localStorage 'fortAn', outside the save, so a backup code or an iCloud copy
+// never carries it), a random id per session, the app version/build and the platform. Events queue in localStorage (at most 300) and go
+// out in batches as text/plain JSON (a CORS "simple" request, no preflight): fetch once 20 have queued and at each session start,
+// navigator.sendBeacon when the app goes to the background. The receiver is tools/analytics (a Cloudflare Worker + D1, not deployed).
+// session_end is logged at every trip to the background with the session's running length (a receiver keeps the last one per session).
+const AN=(()=>{const K='fortAn',MAX=300,BATCH=20,SEND=100;let st=null,sid='',t0=0,busy=false;const seen={};
+  const on=()=>typeof PLAT_IDS.analytics==='string'&&/^https:\/\/\S+$/.test(PLAT_IDS.analytics);
+  const rid=()=>{const a=new Uint8Array(12);try{crypto.getRandomValues(a)}catch(e){let h=dyHash(Date.now(),performance.now());for(let i=0;i<12;i++){h=Math.imul(h^h>>>13,2654435761)>>>0;a[i]=h&255}}return Array.from(a,b=>b.toString(16).padStart(2,'0')).join('')};
+  function load(){if(st)return st;try{st=JSON.parse(localStorage.getItem(K))}catch(e){}if(!st||typeof st!=='object'||Array.isArray(st))st={};
+    if(typeof st.id!=='string'||!/^[0-9a-f]{24}$/.test(st.id))st.id=rid();if(!Array.isArray(st.q))st.q=[];if(!st.f||typeof st.f!=='object')st.f={};return st}
+  const keep=()=>{try{localStorage.setItem(K,JSON.stringify(st))}catch(e){}};
+  const clean=p=>{const o={};if(p&&typeof p==='object')for(const k of Object.keys(p).slice(0,12)){const v=p[k],kk=k.slice(0,16);
+    if(typeof v==='number'&&isFinite(v))o[kk]=Math.round(v*100)/100;else if(typeof v==='boolean')o[kk]=v;else if(typeof v==='string')o[kk]=v.slice(0,40)}return o};
+  function track(n,p){if(!on())return false;const s=load();if(!sid)sid=rid();s.q.push({n:String(n).slice(0,32),p:clean(p),t:Date.now(),s:sid});
+    if(s.q.length>MAX)s.q.splice(0,s.q.length-MAX);keep();if(s.q.length>=BATCH)flush();return true}
+  function flush(bg){if(!on()||busy)return false;const s=load();if(!s.q.length)return false;const ev=s.q.slice(0,SEND),url=PLAT_IDS.analytics,sh=window.Shell,nat=Plat.native();
+    const b=JSON.stringify({v:1,iid:s.id,plat:nat?sh.platform||'ios':'web',app:nat&&sh.version||'',build:nat&&sh.build||'',ev});
+    const drop=()=>{const sent=new Set(ev);s.q=s.q.filter(e=>!sent.has(e));keep()};
+    if(bg&&navigator.sendBeacon){let ok=false;try{ok=navigator.sendBeacon(url,new Blob([b],{type:'text/plain'}))}catch(e){}if(ok){drop();return true}}
+    if(typeof fetch!=='function')return false;busy=true;
+    fetch(url,{method:'POST',body:b,headers:{'Content-Type':'text/plain'},keepalive:b.length<60000,credentials:'omit'}).then(r=>{if(r&&r.ok)drop()}).catch(()=>{}).finally(()=>{busy=false});return true}
+  function session(boot,away){if(!on())return;sid=rid();t0=Date.now();track('session_start',{boot:!!boot,away_m:Math.round((away||0)/60e3),n:S.ret.n,runs:S.runs|0,best:careerBest(),gems:S.gems|0});flush()}
+  function end(){if(!on()||!t0)return;track('session_end',{dur_s:Math.round((Date.now()-t0)/1000)});flush(true)}
+  function once(k,p){if(!on())return;const s=load();if(s.f[k])return;s.f[k]=1;track('funnel',Object.assign({step:k},p||{}))}
+  function offer(k,ev='ad_offer'){if(!on()||seen[sid+ev+k])return;seen[sid+ev+k]=1;track(ev,{k})}   // once per session: an ad button shown, the shop opened
+  return{on,track,flush,session,end,once,offer,state:()=>load()}})();
 // runs at the end of every loadSave() (the first one, before this code exists, is caught up here)
-function econInit(){labInit();gemInit();tempoRefund();dyInit()}
+function econInit(){labInit();gemInit();tempoRefund();dyInit();retInit()}
 _econReady=true;econInit();
 // ---- Research Points ----
 // Per wave held: see rpWave; +1 per wave beyond the theater's previous best (from wave 10); +3 per medal. A checkpoint start pays
@@ -2435,7 +2606,7 @@ applyUiPrefs();document.body.classList.add('at-home');
 let _icDone=false;
 function fillIcons(){if(_icDone)return;_icDone=true;for(const el of document.querySelectorAll('[data-ic]'))el.innerHTML=ic(el.dataset.ic,+el.dataset.s||20)}
 function setView(v,user){if(v==='medals'){openMedals(user);return}if(!VIEWS.includes(v))v='base';const ch=v!==homeView;homeView=v;if(ch||user){$('home').scrollTop=0;_armFreeze=null;_rsScroll=true}
-  renderHome();if(user&&ch)sfx('buy')}
+  renderHome();if(user&&ch)sfx('buy');if(user)rvTry()}
 function renderHome(){fillIcons();labLand();const h=$('home');if(h.dataset.view!==homeView)h.dataset.view=homeView;
   for(const b of document.querySelectorAll('.nv,.dk'))if(b.dataset.view===homeView)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
   renderHdr();({base:renderBase,armory:renderArmory,rd:renderResearch,store:renderStore})[homeView]();_nar=narrow()}
@@ -2474,7 +2645,7 @@ function renderStartSel(){const c=checkpoints(),el=$('startSel');
     +c.map(w=>`<button data-start="${w}" aria-pressed="${w===cur}">${ph||c.length>5?'W':'WAVE '}${w}</button>`).join('')+'</div>'
     +`<p class="cpx">${cpText(cur)}</p>`}
 const cpText=w=>{const n=Math.min(8,Math.floor(w/10));return w<=1?'Full run from the first wave.':`Skips ${w-1} waves · ${n} directive ${pl(n,'pick')} · back-pay of $${fmtN(cpCash(w))} and ${cpRp(w)} RP once you hold ${CP_HOLD} waves`};
-function renderBase(){renderTheater();renderStartSel();renderMission();renderAAR();renderDaily();$('picks').hidden=true;$('picks').innerHTML='';renderRdSum();$('nextUnl').hidden=true;$('nextUnl').innerHTML='';renderMedTile();renderManual();
+function renderBase(){renderTheater();renderStartSel();renderMission();renderAAR();renderDaily();renderWb();$('picks').hidden=true;$('picks').innerHTML='';renderRdSum();$('nextUnl').hidden=true;$('nextUnl').innerHTML='';renderMedTile();renderManual();
   // desktop balance: next unlocks sit under the picks while the After-Action card fills the right column, else on the right
   const nu=$('nextUnl'),aar=!!(lastAAR&&lastRunMsg),col=aar?$('picks').parentNode:$('rdSum').parentNode;if(nu.parentNode!==col)col.insertBefore(nu,aar?null:$('manual'));
   if(S.campWin&&!_thWin&&!running)openThWin()}
@@ -2537,7 +2708,7 @@ function openThWin(){const id=S.campWin;if(!MAPB[id]){delete S.campWin;return}co
     +`<div class="thw-b">${nx?`<button class="btn pri lg" data-thgo>MOVE OUT · ${nx.name}</button><button class="btn ghost" data-thstay>STAY AT ${m.name}</button>`:'<button class="btn pri lg" data-thstay>CARRY ON</button>'}</div></div>`;
   $('thWin').classList.add('on');setTimeout(()=>{const b=$('thWinBody').querySelector('.btn');if(b)b.focus({preventScroll:true})},30)}
 function closeThWin(go){const nx=mapNext(S.campWin);$('thWin').classList.remove('on');_thWin=false;delete S.campWin;save();
-  if(go&&nx&&switchMap(nx.id)){sfx('buy');toast('Now defending '+nx.name,'map')}else renderHome()}
+  if(go&&nx&&switchMap(nx.id)){sfx('buy');toast('Now defending '+nx.name,'map')}else renderHome();setTimeout(()=>{if(!running)rvTry()},900)}
 function renderMission(){const r=RLINES.dmg,k=rTier('dmg'),t=r.t[k];
   $('kit').innerHTML=`<div class="por" style="${rsEraVars(t)}"><canvas data-th="dmg:${k}" width="192" height="192"></canvas></div>`
     +`<div class="kb"><div class="eyebrow">INFANTRY KIT</div><div class="kn">${t.n}</div><div class="kw">${t.w}${L('squad')?' · squad: '+r.rides.t[rTier('squad')].n:''}</div><button class="chip-btn rd" data-rsgo="dmg">${ic('research',14)}Tier ${rank(k+1)} of ${r.t.length} · R&amp;D<span class="chev">→</span></button></div>`;
@@ -2625,7 +2796,7 @@ const CAT_IC={WEAPONS:'dmg',FORT:'walls',SQUAD:'squad',SUPPORT:'arty',EMPLACEMEN
 let armCat='ALL',_armFreeze=null;const _open=new Set();
 if(S.set.affFirst==null)S.set.affFirst=true;
 function buyUpgrade(id){const u=UB[id];if(!u)return false;const l=L(id),c=costOf(u,l);
-  if(l<u.max&&S.bank>=c&&!lockWhy(u)){S.bank-=c;S.lv[id]=l+1;save();sfx('buy');hapt('medium','buy',60);return true}sfx('deny');return false}
+  if(l<u.max&&S.bank>=c&&!lockWhy(u)){S.bank-=c;S.lv[id]=l+1;save();sfx('buy');hapt('medium','buy',60);AN.track('armory_buy',{id,lv:l+1,map:S.map});AN.once('buy1',{id});return true}sfx('deny');return false}
 function rdLink(id){const r=RLINES[id];if(!r)return'';const k=rTier(id),h=r.on&&RLINES[r.on],hk=h&&rTier(h.id);   // the squad card points at the Infantry Kit that equips it
   return`<button class="chip-btn rd rdl2" data-rsgo="${h?h.id:id}">${ic('research',12)}${r.t[k].n} · ${h?h.label+' T'+(hk+1)+'/'+h.t.length:'T'+(k+1)+'/'+r.t.length}<span class="chev">→</span></button>`}
 function cardHtml(u,rec){const l=L(u.id),c=costOf(u,l),mx=l>=u.max,ok=affordable(u),isRec=rec.has(u.id),why=rec.get(u.id)||'',fin=isFinite(u.max);
@@ -2741,7 +2912,7 @@ function skipBtn(j,cls){const c=labSkipCost(labLeft(j)),ok=(S.gems|0)>=c;
   return`<button class="rbt gm${ok?'':' short'}" data-rsskip="${j.id}" aria-label="Finish ${labName(j)} now for ${c} gems"><span class="t">FINISH NOW</span>${skipTxt(c)}</button>`}
 // the lab speed-up ad (labAd): a pill beside the job in the lab strip, or a full-width button under FINISH NOW on the tier card.
 // data-st carries labAdSt so the ticker can tell when it must change ('cut' -> 'fin' -> gone) or a new day brings the cap back.
-function labAdBtn(j,pill){const st=labAdSt(j);if(!st)return'';const n=adLeft('lab'),fin=st==='fin',cut='−'+durTxt(AD_LAB_MS).toUpperCase(),nm=labName(j);
+function labAdBtn(j,pill){const st=labAdSt(j);if(!st)return'';AN.offer('lab');const n=adLeft('lab'),fin=st==='fin',cut='−'+durTxt(AD_LAB_MS).toUpperCase(),nm=labName(j);
   const a=`data-labad="${j.id}" data-st="${st}" aria-label="Watch an ad to ${fin?'finish '+nm+' now':'take '+durTxt(AD_LAB_MS)+' off '+nm} (${n} left today)"`;
   if(pill)return`<button class="lad" ${a}><span class="adp">${ic('play',11)}</span><b>${fin?'FINISH':cut}</b></button>`;
   return`<button class="rbt rad" ${a}><span class="adp">${ic('play',11)}</span><span class="t">WATCH AD · ${fin?'FINISH':cut}</span><small>${n} LEFT</small></button>`}
@@ -3009,7 +3180,7 @@ function renderStore(){$('shop').innerHTML=gemHtml();shopSeen()}
 const spOffer=()=>!S.shop.starter&&dyOn()&&Plat.iapOn()&&(!S.shop.stT||spLeft()>0);
 // STORE nav dot: a Starter Pack not seen yet, or (once a day, until the shop is opened) free gems waiting: today's ad gems or the streak supply
 function storeDot(){const h=S.shop;return spOffer()&&!h.spSeen||h.seen!==today()&&(adLeft('gems')>0||dyOn()&&!!S.dy&&stNext().can)}
-function shopSeen(){const h=S.shop,d=today();let c=0;if(h.seen!==d){h.seen=d;c=1}if(!h.spSeen&&spLeft()>0){h.spSeen=1;c=1}if(c){save();renderHdr()}}
+function shopSeen(){const h=S.shop,d=today();let c=0;AN.offer('store','shop_view');if(h.seen!==d){h.seen=d;c=1}if(!h.spSeen&&spLeft()>0){h.spSeen=1;c=1}if(c){save();renderHdr()}}
 // ---------------- Daily Ops (Base), daily challenge card, streak sheet, AAR extras, Second Wind, simulated ads (phase 4) ----------------
 Object.assign(IC,{clock:'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0M12 7v5l3 2',check:'M5 12l5 5 9-10',cal:'M4 5h16v16H4zM4 10h16M9 3v4M15 3v4M8 14h2M14 14h2M8 17h2',
   flag:'M5 21V4M5 4h11l-2 4 2 4H5',gift:'M3 8h18v4H3zM5 12v9h14v-9M12 8v13M12 8C10 4 6.5 4 7 6.5 7.4 8 12 8 12 8zM12 8c2-4 5.5-4 5-1.5C16.6 8 12 8 12 8z'});
@@ -3025,7 +3196,7 @@ function dailyHtml(){const y=S.dy,u=rpU(),st=stNext(),s=y.st,cyc=st.can?st.day-1
         +(ok&&!q.c?`<button class="dqc" data-dq="${i}" aria-label="Claim ${DQ_GEM} gems and ${u} RP">${ic('gem',14)}CLAIM</button>`:`<span class="dqr">${q.c?'CLAIMED':`<span>${ic('gem',12)} +${DQ_GEM}</span><small>+${u} RP</small>`}</span>`)+'</li>'}).join('')+'</ul>'
     +`<div class="dqx${y.b?' got':all?' can':''}">${ic(y.b?'check':'gift',20)}<span><b>All three</b> · <em>+${DQ_BONUS_GEM} gems · +${DQ_BONUS_U*u} RP</em></span>`
     +(y.b?'<span class="dqn">CLAIMED</span>':all?`<button class="dqc" data-dqb>${ic('gem',14)}CLAIM</button>`:`<span class="dqn">${done}/3</span>`)+'</div>';
-  if(ag)h+=`<button class="dad" data-adgems><span class="adp">${ic('play',12)}</span><span>Watch an ad for free gems</span><b>+${AD_GEMS} ${ic('gem',14)}</b></button>`;
+  if(ag){AN.offer('gems');h+=`<button class="dad" data-adgems><span class="adp">${ic('play',12)}</span><span>Watch an ad for free gems</span><b>+${AD_GEMS} ${ic('gem',14)}</b></button>`}
   if(!dcOn())h+=`<p class="dlock">${ic('lock',12)}<span>Daily Challenge opens once Desert Outpost holds wave ${DC_W}</span></p>`;
   return h+'</div>'}
 function dchHtml(){if(!dcOn())return'';const c=dcToday(),m=mapOf(c.map),md=DC_MB[c.mod],dc=S.dy.dc,best=dc.d===c.d?dc.best:0,rw=dcReward(best),u=rpU(),nx=DC_TIERS.find(t=>t[0]>best),top=DC_TIERS[DC_TIERS.length-1];
@@ -3036,7 +3207,8 @@ function dchHtml(){if(!dcOn())return'';const c=dcToday(),m=mapOf(c.map),md=DC_MB
     +`<div class="dchr"><div class="tile"><span>TODAY'S BEST</span><b>${best?'Wave '+best:'None yet'}</b><small>${dc.n?dc.n+' '+pl(dc.n,'attempt'):'Unlimited attempts'}</small></div>`
     +`<div class="tile"><span>${best&&rw.g?'EARNED TODAY':'REWARD'}</span><b>${best&&rw.g?`${ic('gem',15)} ${rw.g} · ${rw.u*u} RP`:`Up to ${ic('gem',15)} ${top[1]} · ${top[2]*u} RP`}</b>`
     +`<small>${nx?`Wave ${nx[0]}: ${nx[1]} gems · ${nx[2]*u} RP in total`:'Top reward earned today'}</small></div></div>`
-    +`<button class="btn dcgo" data-dcgo>${ic('play',18)}${dc.n&&dc.d===c.d?'TRY AGAIN':'PLAY CHALLENGE'}</button></div>`}
+    +`<button class="btn dcgo" data-dcgo>${ic('play',18)}${dc.n&&dc.d===c.d?'TRY AGAIN':'PLAY CHALLENGE'}</button>`
+    +(PLAT_IDS.lbDaily&&Plat.gcOn()?`<button class="btn ghost sm dclb" data-dclb>${ic('trophy',14)}LEADERBOARD</button>`:'')+'</div>'}
 // Base: the Daily Ops + challenge panels, the "seen today" mark for the nav dot, and the streak sheet on the day's first visit
 function renderDaily(){const el=$('daily');dyTick();if(!dyOn()){el.innerHTML='';return}el.innerHTML=dailyHtml()+dchHtml();const d=today();
   if(homeView==='base'&&S.dy.seen!==d){S.dy.seen=d;save()}dyRemind();
@@ -3048,7 +3220,14 @@ $('daily').addEventListener('click',e=>{const q=s=>e.target.closest(s);let b;
   if(q('[data-dqb]')){const rp=dqBonus();if(rp){claimFx();toast(`All three · +${DQ_BONUS_GEM} gems · +${rp} RP`,'gem','gm');renderHome()}return}
   if(q('[data-streak]')){openStreak();return}
   if(b=q('[data-adgems]')){b.disabled=true;adGems().then(ok=>{if(ok){claimFx();toast(`+${AD_GEMS} gems`,'gem','gm')}renderHome()});return}
+  if(q('[data-dclb]')){Plat.board('daily');return}
   if(q('[data-dcgo]'))dcGo()});
+// welcome-back card: rows jump to what they name (R&D rows go through #home's data-view-go), x dismisses
+$('wbCard').addEventListener('click',e=>{const q=s=>e.target.closest(s);let b;
+  if(q('[data-wbx]')){_wb=null;renderWb();AN.track('wb_close',{});return}
+  if(b=q('[data-wbk]'))AN.track('wb_tap',{k:b.dataset.wbk});if(!(b=q('[data-wbgo]')))return;const go=b.dataset.wbgo;
+  if(go==='st'){openStreak();return}const t=$('daily').querySelector(go==='dch'?'.dch':'.dops');
+  if(t){t.scrollIntoView({behavior:S.set.reduceMotion?'auto':'smooth',block:'start'});flash(t)}});
 // Daily Ops countdown; a new day re-renders the Base (fresh missions, streak, challenge)
 setInterval(()=>{if(running||!S.dy||!$('home').classList.contains('on')||!dyOn())return;if(S.dy.d&&S.dy.d!==today()){renderHome();return}
   const e=document.querySelector('#home [data-dyleft]');if(e){const t=ic('clock',13)+'New in '+durTxt(dayLeft());if(e._t!==t){e._t=t;e.innerHTML=t}}},1000);
@@ -3060,14 +3239,14 @@ function stHtml(){const n=stNext(),s=S.dy.st,cyc=n.can?n.day-1:s.n,u=rpU();
     +`<div class="stw-b">${n.can?`<button class="btn pri lg" data-stclaim>CLAIM +${STREAK[n.day-1]} GEMS${n.day===7?' · +'+STREAK_U7*u+' RP':''}</button>`:`<button class="btn lg" disabled>NEXT SUPPLY IN ${durTxt(dayLeft()).toUpperCase()}</button>`}<button class="btn ghost" data-stx>${n.can?'LATER':'CLOSE'}</button></div>`}
 let _stFrom=null;
 function openStreak(){if(!dyOn())return;fillIcons();$('stBody').innerHTML=stHtml();_stFrom=document.activeElement;$('stWin').classList.add('on');setTimeout(()=>{const b=$('stBody').querySelector('.btn:not([disabled])');if(b)b.focus({preventScroll:true})},30)}
-function closeStreak(){if(!$('stWin').classList.contains('on'))return;$('stWin').classList.remove('on');const f=_stFrom;_stFrom=null;if(f&&f.focus&&document.contains(f)&&f.offsetParent)f.focus({preventScroll:true});if(!running)renderHome()}
+function closeStreak(){if(!$('stWin').classList.contains('on'))return;$('stWin').classList.remove('on');const f=_stFrom;_stFrom=null;if(f&&f.focus&&document.contains(f)&&f.offsetParent)f.focus({preventScroll:true});if(!running){renderHome();setTimeout(()=>{if(!running)rvTry()},900)}}
 $('stWin').addEventListener('mousedown',e=>{if(e.target.id==='stWin')closeStreak()});
 $('stWin').addEventListener('click',e=>{if(e.target.closest('[data-stx]')){closeStreak();return}if(!e.target.closest('[data-stclaim]'))return;const r=stClaim();if(!r)return;
   sfx('buy');Plat.haptic('success');[784,988,1319].forEach((f,i)=>setTimeout(()=>tone(f,i<2?0.08:0.2,'square',0,0.04),i*100));
   toast(`Day ${r.day} supply · +${r.g} gems${r.rp?' · +'+r.rp+' RP':''}`,'gem','gm');$('stBody').innerHTML=stHtml();setTimeout(closeStreak,1100)});
 // ---- after-action extras: 2x payout (rewarded ad) on campaign runs; the daily challenge's result and reward
 const x2Html=a=>a.x2?`<div class="aar2x done"><span class="adp">${ic('check',20)}</span><span><b>PAYOUT DOUBLED</b><small>Added to the ${mapCur().name} war chest</small></span><em>+$${fmtN(a.earned)}</em></div>`
-  :!a.dc&&a.map===S.map&&a.earned>0&&adLeft('x2')>0?`<button class="aar2x" data-x2><span class="adp">${ic('play',18)}</span><span><b>DOUBLE THE PAYOUT</b><small>Watch an ad · adds this run's cash again</small></span><em>+$${fmtN(a.earned)}</em></button>`:'';
+  :!a.dc&&a.map===S.map&&a.earned>0&&adLeft('x2')>0?(AN.offer('x2'),`<button class="aar2x" data-x2><span class="adp">${ic('play',18)}</span><span><b>DOUBLE THE PAYOUT</b><small>Watch an ad · adds this run's cash again</small></span><em>+$${fmtN(a.earned)}</em></button>`):'';
 function dcResHtml(a){const d=a.dc,g=d.got||{g:0,rp:0},nx=DC_TIERS.find(t=>t[0]>d.best);
   return`<div class="dcres">${ic('gem',20)}<span>${g.g||g.rp?`<b>Challenge reward</b> · <em>+${g.g} gems${g.rp?' · +'+g.rp+' RP':''}</em>`:`<b>Today's best: wave ${d.best}</b> · ${nx?'reach wave '+nx[0]+' for more':'top reward earned'}`}</span></div>`
     +(dcOn()?`<div class="aarb"><button class="btn" data-dcgo>${ic('play',16)}TRY AGAIN</button></div>`:'')}
@@ -3075,7 +3254,7 @@ $('lastRun').addEventListener('click',e=>{let b;if(e.target.closest('[data-dcgo]
   adWatch('x2').then(ok=>{const a=lastAAR;if(ok&&a&&!a.x2&&a.map===S.map){a.x2=1;const from=S.bank;S.bank+=a.earned;save();tweenBank(from,S.bank);claimFx();toast('Payout doubled · +$'+fmtN(a.earned),'coin')}renderHome()})});
 // ---- Second Wind: the fallen fort's revive offer (the run is frozen as G.over until the player decides or SW_ASK runs out)
 let _swT=0;
-function swOpen(){const g=G;g.swAsk=1;g.over=true;running=false;paused=false;mouse.down=false;closePerks();g.choosing=null;sfx('die');Plat.haptic('heavy');const ad=adLeft('sw')>0,gm=(S.gems|0)>=SW_GEMS;fillIcons();
+function swOpen(){const g=G;g.swAsk=1;g.over=true;running=false;paused=false;mouse.down=false;closePerks();g.choosing=null;sfx('die');Plat.haptic('heavy');const ad=adLeft('sw')>0,gm=(S.gems|0)>=SW_GEMS;if(ad)AN.offer('sw');fillIcons();
   $('swBody').innerHTML=`<div class="sw-top"><div class="eyebrow">THE FORT HAS FALLEN · WAVE ${g.wave}</div><h2 id="swT">Second Wind</h2><p>Rally the garrison for one more stand. Once a run.</p></div>`
     +`<ul class="thw-rules"><li>${ic('hp',16)}<span>Health and walls back to half</span></li><li>${ic('armor',16)}<span>An EM screen stops every hit for ${SW_SHIELD}s</span></li><li>${ic('rate',16)}<span>Rapid fire, and the enemy at the walls is thrown back</span></li></ul><div class="swbar"><i></i></div>`
     +`<div class="sw-b">${ad?`<button class="btn pri lg" data-swad>${ic('play',18)}WATCH AD · REVIVE</button>`:''}${gm?`<button class="btn gm lg" data-swgem>REVIVE · ${ic('gem',16)}${SW_GEMS}</button>`:''}<button class="btn ghost" data-swno>END RUN</button></div>`;
@@ -3089,11 +3268,11 @@ $('swWin').addEventListener('click',e=>{const g=G,q=s=>e.target.closest(s);if(!g
   if(q('[data-swad]')){$('swWin').classList.add('hold');clearTimeout(_swT);adWatch('sw').then(ok=>{if(G!==g||!g.swAsk)return;if(ok){swClose();swRevive()}})}});   // a failed or skipped ad leaves the choice (and the paused timer) with the player
 // ---- in battle: the free supply drop (pause menu) and the directive reroll (directive modal), both rewarded ads, never in the challenge
 const dropCan=()=>running&&!!G&&!G.dc&&!G.dropUsed&&G.wave>=3&&adLeft('drop')>0;
-function dropUi(){$('pauseAd').innerHTML=dropCan()?`<button class="pad">${ic('play',16)}<span>FREE SUPPLY DROP<small>Watch an ad: munitions, repairs and an air strike land now · ${adLeft('drop')} left today</small></span>${ic('scav',20)}</button>`:''}
+function dropUi(){if(dropCan())AN.offer('drop');$('pauseAd').innerHTML=dropCan()?`<button class="pad">${ic('play',16)}<span>FREE SUPPLY DROP<small>Watch an ad: munitions, repairs and an air strike land now · ${adLeft('drop')} left today</small></span>${ic('scav',20)}</button>`:''}
 $('pauseAd').addEventListener('click',e=>{if(!e.target.closest('.pad')||!dropCan())return;const g=G;
   adWatch('drop').then(ok=>{if(!ok||G!==g||!running){dropUi();return}g.dropUsed=1;$('pauseAd').innerHTML='';setPause(false);for(const k of['ammo','fix',g.wave>=8?'strike':'cash'])dropCrate(k);
     feed('SUPPLY DROP INBOUND · GRAB THE CRATES','140,220,150','scav','SUPPLY DROP');Plat.haptic('medium')})});
-function perkReUi(){const el=$('perkRe'),n=G&&G.choosing&&G.rrOk&&!G.dc?adLeft('reroll'):0;el.innerHTML=n?`<button class="prr" data-rr>${ic('play',14)}NEW OPTIONS <small>watch an ad · ${n} left today</small></button>`:''}
+function perkReUi(){const el=$('perkRe'),n=G&&G.choosing&&G.rrOk&&!G.dc?adLeft('reroll'):0;if(n)AN.offer('reroll');el.innerHTML=n?`<button class="prr" data-rr>${ic('play',14)}NEW OPTIONS <small>watch an ad · ${n} left today</small></button>`:''}
 $('perkRe').addEventListener('click',e=>{if(!e.target.closest('[data-rr]')||!G||!G.choosing)return;const g=G,cur=g.choosing;$('perkRe').innerHTML='';
   adWatch('reroll').then(ok=>{if(G!==g||g.choosing!==cur)return;if(ok)offerPerks(cur.map(p=>p.id));else perkReUi()})});
 // ---- simulated ad / purchase sheet (web dev builds only; the App Store build shows AdMob / StoreKit instead). res(true) = rewarded / bought
@@ -3130,13 +3309,16 @@ $('howClose').onclick=$('howDone').onclick=closeHowto;$('howto').addEventListene
 const segSync=(seg,v)=>{for(const b of $(seg).children)b.setAttribute('aria-pressed',b.dataset.v===String(v))};
 const volFill=()=>{for(const id of ['sVol','sMvol'])$(id).style.setProperty('--v',$(id).value+'%')};
 function syncSettings(){$('devRow').hidden=Plat.native()||!S.set.dev&&_devTap<7;const vl=$('verLine');vl.hidden=!Plat.native();if(Plat.native()){const sh=window.Shell;vl.textContent='The Fort for iOS'+(sh.version?' · v'+sh.version:'')+' · build '+(sh.build||'local')+(sh.liveAds?'':' · test ads')}$('sDev').checked=!!S.set.dev;$('sVol').value=S.set.vol;$('sMvol').value=S.set.mvol;volFill();$('sMusic').checked=S.set.music;$('sShake').checked=S.set.shake;$('sHap').checked=S.set.haptics!==false;$('hapRow').hidden=!Plat.native()&&!navigator.vibrate;$('sDmg').checked=S.set.dmgNums;$('sCall').checked=S.set.callouts!==false;$('sRing').checked=S.set.ring;$('sDay').checked=S.set.dayNight;$('sBlur').checked=S.set.blurPause;
+  $('natSet').hidden=!Plat.native();$('sNotif').checked=S.set.notif!==false;$('gcRow').hidden=!Plat.gcOn()||!PLAT_IDS.achPre;
   $('sSpeed').value=String(S.set.speed);$('sGfx').value=S.set.gfx;segSync('gfxSeg',S.set.gfx);segSync('spdSeg',S.set.speed);$('sRm').checked=!!S.set.reduceMotion;$('sLeft').checked=!!S.set.leftHand;
   const rb=$('resetBtn');rb.disabled=running;delete rb.dataset.arm;rb.textContent=running?'END RUN FIRST':'RESET'}
 for(const[seg,sel]of[['gfxSeg','sGfx'],['spdSeg','sSpeed']])$(seg).addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;e.preventDefault();const s=$(sel);if(s.value!==b.dataset.v){s.value=b.dataset.v;s.dispatchEvent(new Event('change'))}segSync(seg,b.dataset.v)});
 $('sVol').oninput=e=>{S.set.vol=+e.target.value;volFill();setMasterVol();save()};
-$('sMusic').onchange=e=>{S.set.music=e.target.checked;save()};$('sMvol').oninput=e=>{S.set.mvol=+e.target.value;volFill();save()};$('sVol').onchange=()=>sfx('buy');
-$('sShake').onchange=e=>{S.set.shake=e.target.checked;save()};
-$('sHap').onchange=e=>{S.set.haptics=e.target.checked;save();if(e.target.checked)Plat.haptic('medium')};
+$('sMusic').onchange=e=>{S.set.music=e.target.checked;save();AN.track('setting',{k:'music',v:S.set.music})};$('sMvol').oninput=e=>{S.set.mvol=+e.target.value;volFill();save()};$('sVol').onchange=()=>sfx('buy');
+$('sShake').onchange=e=>{S.set.shake=e.target.checked;save();AN.track('setting',{k:'shake',v:S.set.shake})};
+$('sHap').onchange=e=>{S.set.haptics=e.target.checked;save();if(S.set.haptics)Plat.haptic('medium');AN.track('setting',{k:'haptics',v:S.set.haptics})};
+$('sNotif').onchange=e=>{S.set.notif=e.target.checked;ntToggle();save();AN.track('setting',{k:'notif',v:S.set.notif})};
+$('gcBtn').onclick=()=>Plat.achShow();
 $('sDmg').onchange=e=>{S.set.dmgNums=e.target.checked;save()};
 $('sCall').onchange=e=>{S.set.callouts=e.target.checked;save()};
 $('sRing').onchange=e=>{S.set.ring=e.target.checked;save()};
@@ -3163,9 +3345,9 @@ $('bakRestore').onclick=e=>{if(running)return;const b=e.currentTarget,raw=($('ba
 $('resetBtn').onclick=e=>{if(running)return;const b=e.currentTarget;
   if(!b.dataset.arm){b.dataset.arm=1;b.textContent='TAP AGAIN TO WIPE';clearTimeout(b._t);b._t=setTimeout(()=>{delete b.dataset.arm;b.textContent='RESET'},4000);return}
   clearTimeout(b._t);delete b.dataset.arm;b.textContent='RESET';
-  const set=S.set,keep={gems:S.gems|0,gemT:S.gemT,gemv:1,shop:S.shop,dy:S.dy,runs:S.runs,born:S.born,ia:S.ia};set.startWave=1;S=Object.assign({bank:0,best:0,tkills:0,lv:{},set,rp:0,rs:{},rf:{}},keep);campInit();econInit();migrateRS();
+  const set=S.set,keep={gems:S.gems|0,gemT:S.gemT,gemv:1,shop:S.shop,dy:S.dy,runs:S.runs,born:S.born,ia:S.ia,ret:S.ret};if(S.ret)S.ret.rst=Date.now();set.startWave=1;S=Object.assign({bank:0,best:0,tkills:0,lv:{},set,rp:0,rs:{},rf:{}},keep);campInit();econInit();migrateRS();
   medalSync();S.set.medalSeen=0;save();lastRunMsg='';lastCause=null;lastAAR=null;_armFreeze=null;_manSet=false;   // gems, purchases and the daily calendar survive a reset
-  toast('Progress wiped','close');renderHome()};
+  toast('Progress wiped','close');renderHome();cloudPush();AN.track('reset',{})};
 // theaters sheet + cleared debrief
 $('theater').onclick=openTheaters;$('thClose').onclick=$('thDone').onclick=closeTheaters;
 $('thList').addEventListener('mousedown',e=>{if(e.target.id==='thList')closeTheaters()});sheetDrag('thList',closeTheaters);
@@ -3704,6 +3886,7 @@ function startRun(){
   G.st={d:{},ks:{},k:{},big:0,bs:'',bt:'',wc:0,w0:G.wave};SM.dur=0;_ds='other';G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=speedOpts().filter(v=>v<=(S.set.lastSpeed||1)).pop()||1;syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;G.tbWr=[];G.tbD=null;G.wpE=null;G.wpT=0;initLogi();
   pfSync();skyInit();sigInit();fcInit();syncPrioBtn();syncNadeBtn(true);$('hud').classList.toggle('air',L('air')>0);
   running=true;paused=false;mouse.down=false;$('overlay').classList.remove('on');showScreen('game');
+  AN.track('run_start',{map:S.map,w0:G.startWave,best:S.best,runs:S.runs|0});if(!(S.runs|0))AN.once('run1');
 }
 // vision() is hit thousands of times a frame via visible(); levels can't change mid-run, so memoise it per sim tick.
 const TAU=Math.PI*2;
@@ -4163,6 +4346,9 @@ function endRun(retreat){if(G.over)return;   // several hits in one frame can ea
     +(perkList().length?`<div class="stat" style="grid-column:1/-1"><span>DIRECTIVES</span><div class="pperks" style="justify-content:flex-start;margin-top:6px">${perkChips()}</div></div>`:'')
     +(G.medals?`<div class="stat" style="grid-column:1/-1"><span>MEDALS EARNED</span><div class="pperks medal" style="justify-content:flex-start;margin-top:6px">${[...new Set(G.medals)].map(id=>{const m=MEDALS.find(q=>q.id===id),r=m.tiers?medalRank(m):0;return`<span>${ic(m.ic,14)}${m.name}${r>1?' '+'★'.repeat(r):''}</span>`}).join('')}</div></div>`:'');
   snapAAR();S.runs=(S.runs|0)+1;if(G.dc){lastCause=null;lastAAR.dc=dcEnd()}lastAAR.map=S.map;dqSync();save();iaAfterRun();
+  _retEnd=Date.now();if(!G.dc&&G.wave>G.startBest&&G.wave>=RV_W)rvMoment('best');
+  AN.track('run_end',{map:lastAAR.map,dc:!!G.dc,w0:G.startWave||1,wave:G.wave,cause:retreat?'retreat':lastCause?lastCause.top[0]:'fort',dur_s:Math.round(G.time),kills:G.kills,rec:G.wave>G.startBest,sw:!!G.swUsed,spd:G.simSpeed||1});
+  if(S.runs===1)AN.once('run1_end',{wave:G.wave});for(const w of[5,10,25,50,100])if(careerBest()>=w)AN.once('w'+w,{runs:S.runs});gcSync();
   homeView='base';$('home').scrollTop=0;showScreen('home');
 }
 
@@ -11464,7 +11650,7 @@ const COACH={frag:['nadeBtn','FRAG: tap, then touch the ground to throw.','Press
   dir:['dirBtn','Your directives live here.','Hover to see your directives.']};
 let coachCur=null,coachAt=0,coachLast=-1e9;
 const hudTips=()=>S.set.tips||(S.set.tips={});
-function coachDone(id,mark){if(coachCur===id){coachCur=null;$('coach').classList.remove('on')}if(mark!==false&&!hudTips()[id]){hudTips()[id]=1;save()}}
+function coachDone(id,mark){if(coachCur===id){coachCur=null;$('coach').classList.remove('on')}if(mark!==false&&!hudTips()[id]){hudTips()[id]=1;save();AN.track('tip',{id,runs:S.runs|0})}}
 function coachTick(o,now){if(coachCur){const c=coachCur;
     if(paused||G.choosing){coachDone(c,false);return}
     const done=c==='frag'?G.nadeArmed||G.nadeT>0:c==='air'?G.airArmed||G.airT>0:c==='zoom'?(G.uZoom||1)!==1:c==='dir'?$('dirPop').classList.contains('on'):false;
@@ -11569,7 +11755,7 @@ const starTxt=n=>'★'.repeat(n)+'☆'.repeat(3-n);
 function campHold(w){if(!G||G.dc)return;const m=mapCur(),r=mapRec(m.id),was=r.stars;let gm=0;
   if(w>=STAR1_W&&r.stars<1)r.stars=1;
   if(w>=CLEAR_W){r.stars=Math.max(r.stars,2);if(!G.lastStand&&G.wallMax>0&&(G.startWave||1)<CLEAR_W)r.stars=3;
-    if(!r.cleared){r.cleared=true;S.campWin=m.id;gm+=GEM_FREE.clear(m.ord);const nx=mapNext(m.id);banner('THEATER CLEARED',nx?nx.name.toUpperCase()+' UNLOCKED':'EVERY THEATER HELD','255,207,90');
+    if(!r.cleared){r.cleared=true;S.campWin=m.id;gm+=GEM_FREE.clear(m.ord);rvMoment('clear');AN.track('theater_clear',{map:m.id,runs:S.runs|0,w0:G.startWave||1});const nx=mapNext(m.id);banner('THEATER CLEARED',nx?nx.name.toUpperCase()+' UNLOCKED':'EVERY THEATER HELD','255,207,90');
       [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>tone(f,i<4?0.1:0.36,'square',0,0.05),300+i*130))}}
   for(let i=was+1;i<=r.stars;i++)gm+=GEM_FREE.star[i];if(gm)gemAdd(gm,'theater');   // stars and the first clear pay gems (GEM_FREE)
   if(r.stars>was){const n=r.stars,why=n===3?(was<2?'Theater cleared · walls never breached':'Wave 100 with the walls never breached'):n===2?'Held wave 100 · theater cleared':'Held wave '+STAR1_W;
@@ -11636,8 +11822,8 @@ addEventListener('keydown',e=>{if(!running||e.repeat)return;
 addEventListener('blur',()=>{mouse.down=false;if(S.set.blurPause)setPause(true)});
 // persist mid-run earnings (phones kill backgrounded apps without warning)
 function persist(){if(G&&running&&G.wave>S.best)S.best=G.wave;save()}
-function bgPause(){persist();if(running&&S.set.blurPause)setPause(true)}
-document.addEventListener('visibilitychange',()=>{if(document.hidden)bgPause()});
+function bgPause(){retLeave();persist();if(running&&S.set.blurPause)setPause(true)}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)bgPause();else retBack()});
 addEventListener('pagehide',persist);
 setInterval(()=>{if(running&&!paused)persist()},10000);
 
@@ -11647,7 +11833,7 @@ function loop(now){acc+=Math.min((now-last)/1000,0.25)*S.set.speed*(G&&running?(
   if(running&&!paused&&!G.choosing){while(acc>=STEP&&running&&!G.choosing){update(STEP);acc-=STEP}}else acc=0;
   if(running)draw();else if(G&&G.over&&!G.srEnd){G.srEnd=1;srSay('Fort fell at wave '+G.wave)}try{audioFrame()}catch(err){if(!loop._aw){loop._aw=1;console.warn('audio',err)}}requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
-medalSync();renderHome();Plat.boot();
+medalSync();retBoot();renderHome();Plat.boot();
 </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 {
   "name": "capacitor-gamekit",
   "version": "0.1.0",
-  "description": "Project-owned Capacitor 8 bridge to iOS GameKit (Game Center) (the same plugin Euchre Unleashed ships, copied in).",
+  "description": "Project-owned Capacitor 8 bridge to iOS GameKit (Game Center), plus the StoreKit review sheet and the iCloud key-value store (started from the plugin Euchre Unleashed ships).",
   "private": true,
   "main": "dist/plugin.js",
   "types": "dist/index.d.ts",

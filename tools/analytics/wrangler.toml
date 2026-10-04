@@ -1,0 +1,13 @@
+# Cloudflare Worker for The Fort's anonymous analytics (see README.md). Not deployed yet.
+name = "fort-analytics"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+# Never log request details (IP, headers) in Workers Logs.
+[observability]
+enabled = false
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fort-analytics"
+database_id = "PASTE-THE-ID-FROM-wrangler-d1-create"

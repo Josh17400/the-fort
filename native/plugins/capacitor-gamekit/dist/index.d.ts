@@ -15,6 +15,11 @@ export interface GameKitPlugin {
   unlockAchievement(options: { achievementId: string; percent?: number }): Promise<void>;
   /** Resolves once the native achievements screen is on screen. */
   showAchievements(): Promise<void>;
+  /** Asks StoreKit for the App Store rating sheet (iOS decides whether it shows). */
+  requestReview(): Promise<void>;
+  /** iCloud key-value store (needs the ubiquity-kvstore-identifier entitlement to sync). */
+  cloudGet(options: { key: string }): Promise<{ value: string | null }>;
+  cloudPut(options: { key: string; value: string }): Promise<{ synced: boolean }>;
   /** Fires on every Game Center auth change (sign-out, account switch). */
   addListener(
     eventName: 'playerChanged',

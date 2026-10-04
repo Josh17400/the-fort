@@ -24,7 +24,10 @@
     submitScore: unavailable,
     showLeaderboard: unavailable,
     unlockAchievement: unavailable,
-    showAchievements: unavailable
+    showAchievements: unavailable,
+    requestReview: unavailable,
+    cloudGet: unavailable,
+    cloudPut: unavailable
   };
 
   return {

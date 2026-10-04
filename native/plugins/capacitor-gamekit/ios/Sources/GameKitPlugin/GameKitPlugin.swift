@@ -1,12 +1,18 @@
 import Capacitor
 import Foundation
 import GameKit
+import StoreKit
 import UIKit
 
 /// Project-owned GameKit bridge behind `window.Shell.gc` (native/shell.js):
 /// sign-in, leaderboard scores, achievements and the two native Game Center
 /// screens. iOS only - there is no Android source, so the shell keeps its
 /// degrade path everywhere else.
+///
+/// It also carries two small Apple calls that need no plugin of their own:
+/// the App Store review sheet (`Shell.review`) and the iCloud key-value store
+/// (`Shell.cloud`, which the game only uses once the app has the
+/// com.apple.developer.ubiquity-kvstore-identifier entitlement).
 ///
 /// Every method settles its call exactly once. UIKit and the GameKit
 /// authenticate handler are only ever touched on the main queue.
@@ -19,7 +25,10 @@ public class GameKitPlugin: CAPPlugin, CAPBridgedPlugin, GKGameCenterControllerD
         CAPPluginMethod(name: "submitScore", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "showLeaderboard", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "unlockAchievement", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "showAchievements", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "showAchievements", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "requestReview", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "cloudGet", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "cloudPut", returnType: CAPPluginReturnPromise)
     ]
 
     private static let notAuthenticated = "NOT_AUTHENTICATED"
@@ -159,6 +168,72 @@ public class GameKitPlugin: CAPPlugin, CAPBridgedPlugin, GKGameCenterControllerD
 
     public func gameCenterViewControllerDidFinish(_ gameCenterViewController: GKGameCenterViewController) {
         gameCenterViewController.dismiss(animated: true)
+    }
+
+    // MARK: - App Store review sheet
+
+    /// Asks StoreKit for the rating sheet in the app's active window scene.
+    /// iOS decides whether it really appears (at most three times a year, never
+    /// in TestFlight); the call resolves as soon as the request is made.
+    @objc func requestReview(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            guard let scene = self.activeScene() else {
+                call.reject("No active window scene for the review prompt", GameKitPlugin.noViewController)
+                return
+            }
+            if #available(iOS 16.0, *) {
+                Task { @MainActor in
+                    AppStore.requestReview(in: scene)
+                }
+            } else {
+                SKStoreReviewController.requestReview(in: scene)
+            }
+            call.resolve()
+        }
+    }
+
+    private func activeScene() -> UIWindowScene? {
+        if let scene = bridge?.viewController?.view.window?.windowScene {
+            return scene
+        }
+        return UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive }
+    }
+
+    // MARK: - iCloud key-value store
+
+    /// `{ value }` for `key`, or `{ value: null }`. Without the key-value-store
+    /// entitlement the store is simply empty (and writes stay on the device).
+    @objc func cloudGet(_ call: CAPPluginCall) {
+        guard let key = call.getString("key"), !key.isEmpty else {
+            call.reject("key is required", GameKitPlugin.invalidArgument)
+            return
+        }
+        let store = NSUbiquitousKeyValueStore.default
+        store.synchronize()
+        if let value = store.string(forKey: key) {
+            call.resolve(["value": value])
+        } else {
+            call.resolve(["value": NSNull()])
+        }
+    }
+
+    /// Stores `value` under `key` and asks iCloud to sync; `synced` is false
+    /// when the store could not even queue the write (no iCloud account, or no
+    /// entitlement).
+    @objc func cloudPut(_ call: CAPPluginCall) {
+        guard let key = call.getString("key"), !key.isEmpty else {
+            call.reject("key is required", GameKitPlugin.invalidArgument)
+            return
+        }
+        guard let value = call.getString("value") else {
+            call.reject("value is required", GameKitPlugin.invalidArgument)
+            return
+        }
+        let store = NSUbiquitousKeyValueStore.default
+        store.set(value, forKey: key)
+        call.resolve(["synced": store.synchronize()])
     }
 
     // MARK: - presentation
