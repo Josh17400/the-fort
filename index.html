@@ -1042,6 +1042,7 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
 .ni .dot.vio{background:var(--c-gem);box-shadow:0 0 0 2px var(--c-bar),0 0 8px rgba(185,140,255,.85)}
 #daily:empty{display:none}#daily{display:flex;flex-direction:column;gap:inherit}
 /* ---- phase 5: welcome-back card (#wbCard): the Base tile shell, olive accent, one tappable row per thing that happened while away ---- */
+#settings .set[hidden],#natSet[hidden]{display:none}
 #wbCard:empty{display:none}#wbCard{width:100%;min-width:0;max-width:100%}
 .wb{display:flex;flex-direction:column;gap:10px;border-color:var(--c-line-2);background:linear-gradient(180deg,rgba(127,211,90,.07),rgba(127,211,90,0) 110px),var(--c-s1)}
 body.mobile #home .panel.wb{background:linear-gradient(180deg,rgba(127,211,90,.07),rgba(127,211,90,0) 110px),rgba(22,27,18,.8)}
@@ -2414,7 +2415,7 @@ function ntPlan(){if(!S.ret||!S.lab)return;const on=ntOn(),y=S.dy;let at=0;
   if(at)Plat.notify(at,'Lab idle','Your research lab is idle and RP is waiting. Start the next project in R&D.','labidle');else Plat.cancel('labidle');
   let st=0;if(on&&y&&dyOn()&&y.st.n>0&&y.st.n<7&&!y.st.gr&&y.st.last){const t=dayWall(y.st.last+2,NT_STREAK_H);if(t>Date.now()+60e3)st=t}
   if(st)Plat.notify(st,'Streak ending tonight',`Your ${y.st.n}-day supply streak ends at midnight. Report in to keep it going.`,'streak');else Plat.cancel('streak');
-  dyRemind()}
+  if(on&&y)y.rem=0;dyRemind()}   // re-send 'daily' (same id replaces): its text must see a streak claimed after the day's first visit
 // Settings → Reminders: off cancels everything scheduled, on puts it back
 function ntToggle(){if(ntOn()){if(S.dy)S.dy.rem=0;for(const j of S.lab.q)labNote(j);ntPlan()}else{for(const j of S.lab.q)Plat.cancel('lab:'+j.id);for(const id of['labidle','streak','daily'])Plat.cancel(id)}}
 // ---- Game Center: the daily challenge's leaderboard (Plat.score in dcEnd) and achievements for milestones the game already tracks.
@@ -2426,6 +2427,9 @@ const ACH=[...MAPS.map(m=>({id:'clear_'+m.id,ok:()=>!!(S.maps&&S.maps[m.id]&&S.m
   ...[2500,25000,250000].map(n=>({id:'kills_'+n,ok:()=>(S.tkills|0)>=n}))];
 let _gcBusy=false;
 function gcSync(){if(_gcBusy||!PLAT_IDS.achPre||!Plat.gcOn()||S.dcHold)return false;let done={};try{done=JSON.parse(localStorage.getItem('fortGc'))||{}}catch(e){}
+  // once per app build everything earned is reported again (a re-report at 100% is a no-op for Game Center): an id accepted before it
+  // existed in App Store Connect, or a report lost on Apple's side, is healed by the next build
+  const bld=String(window.Shell&&window.Shell.build||'');try{if(localStorage.getItem('fortGcB')!==bld){done={};localStorage.setItem('fortGcB',bld)}}catch(e){}
   const due=ACH.filter(a=>!done[a.id]&&a.ok());if(!due.length)return false;_gcBusy=true;
   Promise.all(due.map(a=>Plat.ach(PLAT_IDS.achPre+a.id).then(ok=>{if(ok)done[a.id]=1}))).then(()=>{try{localStorage.setItem('fortGc',JSON.stringify(done))}catch(e){}}).finally(()=>{_gcBusy=false});return true}
 // ---- iCloud save sync (off until PLAT_IDS.icloud: it needs the iCloud capability on the App ID and the key-value-store entitlement,
