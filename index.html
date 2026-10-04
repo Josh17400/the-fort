@@ -2116,9 +2116,9 @@ const PLAT_IDS={
   rcKey:'appl_CoLlGppaiooTIcoxtSShLvmUqxA',                // RevenueCat project "The Fort", public App Store SDK key
   lbDaily:'com.thefort.game.lb.daily',                     // Game Center recurring (daily) leaderboard: the daily challenge's wave. Empty = off
   achPre:'com.thefort.game.ach.',                          // Game Center achievement ids = achPre + ACH id (clear_desert, wave_25, kills_2500...). Empty = off
-  gameCenter:false,                                        // Game Center master switch: false = no sign-in at launch, no scores/achievements, LEADERBOARD +
+  gameCenter:true,                                         // Game Center master switch: false = no sign-in at launch, no scores/achievements, LEADERBOARD +
                                                            //   ACHIEVEMENTS buttons hidden. Flip to true once the leaderboard + 16 achievements exist in App Store Connect
-  icloud:false,                                            // iCloud save sync (cloudPull/cloudPush). Needs the App ID's iCloud capability + entitlement first
+  icloud:true,                                             // iCloud save sync (cloudPull/cloudPush). Needs the App ID's iCloud capability + entitlement first
   analytics:''                                             // anonymous event receiver (https URL of tools/analytics). Empty = off: nothing stored or sent
 };
 const Plat=(()=>{let busy=false,booted=null;
@@ -2381,7 +2381,7 @@ function tempoRefund(){const pay=(lv,mul)=>{let c=0;for(let l=0;l<(lv|0);l++)c+=
 // permission from then on), rv: {t (lab clock) of the last review ask, n asks, p: {why, t} a happy moment waiting for a calm spot}}.
 // RESET keeps S.ret, like S.runs: it describes the install, not the campaign.
 const RET_GAP=30*60e3,RV_DAYS=60,RV_SES=3,RV_W=15,RV_CALM=60e3,RV_AD=3*60e3,RV_KEEP=3*DAY_MS,NT_IDLE=3*3600e3,NT_STREAK_H=20;
-function retInit(){const o=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},r=S.ret=o(S.ret);r.n=Math.max(0,Math.floor(+r.n||0));r.last=+r.last>0?+r.last:0;r.rst=+r.rst>0?+r.rst:0;
+function retInit(){const o=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},r=S.ret=o(S.ret);r.n=Math.max(0,Math.floor(+r.n||0));r.last=+r.last>0?+r.last:0;r.rst=+r.rst>0?+r.rst:0;if(typeof r.cid!=='string'||!r.cid)r.cid=cloudNewCid();
   r.rv=o(r.rv);r.rv.t=+r.rv.t>0?+r.rv.t:0;r.rv.n=Math.max(0,r.rv.n|0);if(r.rv.p&&(typeof r.rv.p!=='object'||typeof r.rv.p.why!=='string'))delete r.rv.p;
   r.nt=r.nt||S.lab.q.length||Object.values(S.rs||{}).some(v=>(v|0)>0)?1:0}   // a save that has researched already asked (the old labStart scheduled at once)
 // ---- sessions: retBoot at launch, retLeave when the app goes to the background (bgPause), retBack when it returns
@@ -2457,16 +2457,22 @@ function gcSync(){if(_gcBusy||!PLAT_IDS.achPre||!Plat.gcOn()||S.dcHold)return fa
   Promise.all(due.map(a=>Plat.ach(PLAT_IDS.achPre+a.id).then(ok=>{if(ok)done[a.id]=1}))).then(()=>{try{localStorage.setItem('fortGc',JSON.stringify(done))}catch(e){}}).finally(()=>{_gcBusy=false});return true}
 // ---- iCloud save sync (off until PLAT_IDS.icloud: it needs the iCloud capability on the App ID and the key-value-store entitlement,
 // see handoff "Retention"). One key-value-store entry holds the whole save. Pulled at launch (Plat.boot, after saveBoot) and on a return
-// after RET_GAP; pushed when the app goes to the background. Conflict rule, which never loses progress: the copy with MORE progress wins
-// (cloudRank: theaters cleared, then research tiers + refits, then the sum of best waves, then career kills; a tie keeps this device's).
-// A copy older than this device's last RESET never wins. When the cloud copy wins, this device's save is kept in localStorage
+// after RET_GAP; pushed when the app goes to the background. Every save carries a campaign id (S.ret.cid); RESET starts a new one.
+// Conflict rule, which never loses progress: the cloud copy replaces this device's only when it is the SAME campaign with MORE progress
+// (cloudRank: theaters cleared, then research tiers + refits, then the sum of best waves, then career kills), or when this device is a
+// fresh install (never reset, next to no progress). So a RESET on one device never spreads to another, and a push never overwrites a
+// better copy of the same campaign (cloudPush reads the cloud first). When the cloud copy wins, this device's save is kept in localStorage
 // 'theFortSave.bak', and money that cannot be re-earned rides over: the larger gem balance, and Remove Ads / Starter Pack flags.
 const CLOUD_KEY='theFortSave.cloud';
+function cloudNewCid(){let c='';try{const a=new Uint32Array(2);crypto.getRandomValues(a);c=a[0].toString(36)+a[1].toString(36)}catch(e){c=Date.now().toString(36)}return c}
 function cloudRank(s){const o=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},maps=o(s.maps),act=s.dcHold&&s.dcHold.map||s.map;let cl=0,bs=0,rs=0;
   for(const k in maps){const r=o(maps[k]);if(r.cleared)cl++;bs+=k===act?Math.max(+r.best||0,+(s.dcHold?s.dcHold.best:s.best)||0):+r.best||0}
   if(!maps[act])bs+=+(s.dcHold?s.dcHold.best:s.best)||0;for(const t of[o(s.rs),o(s.rf)])for(const k in t)rs+=Math.max(0,t[k]|0);return[cl,rs,bs,Math.max(0,+s.tkills||0)]}
-function cloudBetter(a,b){const ra=+(a.ret&&a.ret.rst)||0,rb=+(b.ret&&b.ret.rst)||0;if(ra!==rb)return ra>rb;const x=cloudRank(a),y=cloudRank(b);
-  for(let i=0;i<x.length;i++)if(x[i]!==y[i])return x[i]>y[i];return false}
+const cloudCid=s=>s&&s.ret&&typeof s.ret.cid==='string'?s.ret.cid:'';
+function cloudAhead(a,b){const x=cloudRank(a),y=cloudRank(b);for(let i=0;i<x.length;i++)if(x[i]!==y[i])return x[i]>y[i];return false}
+function cloudFresh(s){const k=cloudRank(s);return!(+(s.ret&&s.ret.rst)>0)&&k[0]===0&&k[1]<=2&&k[2]<=20}
+// a = the cloud copy, b = this device's save: true when a should replace b
+function cloudBetter(a,b){if(!cloudAhead(a,b))return false;return cloudCid(a)!==''&&cloudCid(a)===cloudCid(b)||cloudFresh(b)}
 let _cloudBusy=false;
 function cloudPull(){if(_cloudBusy||!Plat.cloudOn())return Promise.resolve(false);_cloudBusy=true;
   return Plat.cloudGet(CLOUD_KEY).then(j=>{let r=null;try{r=j?JSON.parse(j):null}catch(e){}
@@ -2476,7 +2482,8 @@ function cloudPull(){if(_cloudBusy||!Plat.cloudOn())return Promise.resolve(false
     if(mine.noAds)sh.noAds=1;if(mine.starter){sh.starter=1;if(!sh.voucher)sh.voucher=mine.voucher||1}
     saveWrite(JSON.stringify(r));loadSave();medalSync();applyUiPrefs();applyGfx();if(!running)renderHome();toast('Progress synced from iCloud','star');AN.track('cloud_pull',{});return true})
     .catch(()=>false).finally(()=>{_cloudBusy=false})}
-function cloudPush(){if(!Plat.cloudOn()||running&&G&&G.dc)return;let j;try{j=JSON.stringify(S)}catch(e){return}Plat.cloudPut(CLOUD_KEY,j)}
+function cloudPush(){if(!Plat.cloudOn()||running&&G&&G.dc)return;Promise.resolve(Plat.cloudGet(CLOUD_KEY)).then(c=>{let r=null;try{r=c?JSON.parse(c):null}catch(e){}
+  if(r&&typeof r==='object'&&!Array.isArray(r)&&cloudCid(r)===cloudCid(S)&&cloudAhead(r,S))return;let j;try{j=JSON.stringify(S)}catch(e){return}Plat.cloudPut(CLOUD_KEY,j)}).catch(()=>{})}
 // ---- analytics: an anonymous event log, OFF while PLAT_IDS.analytics is empty (then nothing is stored or sent). No personal data, no
 // device or advertising ids: a random install id made here (localStorage 'fortAn', outside the save, so a backup code or an iCloud copy
 // never carries it), a random id per session, the app version/build and the platform. Events queue in localStorage (at most 300) and go
@@ -3347,7 +3354,7 @@ $('bakRestore').onclick=e=>{if(running)return;const b=e.currentTarget,raw=($('ba
 $('resetBtn').onclick=e=>{if(running)return;const b=e.currentTarget;
   if(!b.dataset.arm){b.dataset.arm=1;b.textContent='TAP AGAIN TO WIPE';clearTimeout(b._t);b._t=setTimeout(()=>{delete b.dataset.arm;b.textContent='RESET'},4000);return}
   clearTimeout(b._t);delete b.dataset.arm;b.textContent='RESET';
-  const set=S.set,keep={gems:S.gems|0,gemT:S.gemT,gemv:1,shop:S.shop,dy:S.dy,runs:S.runs,born:S.born,ia:S.ia,ret:S.ret};if(S.ret)S.ret.rst=Date.now();set.startWave=1;S=Object.assign({bank:0,best:0,tkills:0,lv:{},set,rp:0,rs:{},rf:{}},keep);campInit();econInit();migrateRS();
+  const set=S.set,keep={gems:S.gems|0,gemT:S.gemT,gemv:1,shop:S.shop,dy:S.dy,runs:S.runs,born:S.born,ia:S.ia,ret:S.ret};if(S.ret){S.ret.rst=Date.now();S.ret.cid=cloudNewCid()}set.startWave=1;S=Object.assign({bank:0,best:0,tkills:0,lv:{},set,rp:0,rs:{},rf:{}},keep);campInit();econInit();migrateRS();
   medalSync();S.set.medalSeen=0;save();lastRunMsg='';lastCause=null;lastAAR=null;_armFreeze=null;_manSet=false;   // gems, purchases and the daily calendar survive a reset
   toast('Progress wiped','close');renderHome();cloudPush();AN.track('reset',{})};
 // theaters sheet + cleared debrief
