@@ -5644,7 +5644,8 @@ function bestCluster(R,list){let best=null,bc=-1;for(let i=0,nc=Math.min(30,list
 function updateAir(dt,ph){
   const vis=G.air.length?visInto(_airVis,G.enemies):null;   // only read inside the G.air loop
   for(const u of G.air){u.cd-=dt;_ds=u.k;
-    if(u.k==='mlaunch'&&(vis.length||G.sky.length&&skyTargets().length)){if(u.aimT>0)u.aimT-=dt;const t=u.aimT>0&&!u.aimE.dead?u.aimE:nearestTo(u);u.ang+=Math.max(-5*dt,Math.min(5*dt,angTo(u.ang,Math.atan2(t.y-u.y,t.x-u.x))));
+    if(u.k==='mlaunch'&&(vis.length||G.sky.length&&skyTargets().length)){if(u.aimT>0)u.aimT-=dt;const t=(u.aimT>0&&u.aimE&&!u.aimE.dead?u.aimE:nearestTo(u))||(G.sky.length?skyTargets()[0]:null);   // only aircraft left: track one of them
+      if(t)u.ang+=Math.max(-5*dt,Math.min(5*dt,angTo(u.ang,Math.atan2(t.y-u.y,t.x-u.x))));
       if(u.cd<=0){u.cd=2.8;mlVolley(u,vis)}}
     if(u.k==='silo'&&u.cd<=0){const all=G.enemies.filter(e=>!e.dead&&visible(e));if(all.length<4){u.cd=1;continue}
       const c=bestCluster(SILO_R*0.8,all),T=sg('silo','instant')?0.45:3;u.cd=siloCd(L('silo'));G.nukes.push(siloNew(u,c,T));banner('MISSILE AWAY','','','feed');sfx('silo',u.x,u.y)}
