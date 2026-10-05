@@ -2119,7 +2119,7 @@ const PLAT_IDS={
   gameCenter:true,                                         // Game Center master switch: false = no sign-in at launch, no scores/achievements, LEADERBOARD +
                                                            //   ACHIEVEMENTS buttons hidden. Flip to true once the leaderboard + 16 achievements exist in App Store Connect
   icloud:true,                                             // iCloud save sync (cloudPull/cloudPush). Needs the App ID's iCloud capability + entitlement first
-  analytics:''                                             // anonymous event receiver (https URL of tools/analytics). Empty = off: nothing stored or sent
+  analytics:'https://fort-analytics.fort-analytics.workers.dev/e', // anonymous event receiver (https URL of tools/analytics). Empty = off: nothing stored or sent
 };
 const Plat=(()=>{let busy=false,booted=null;
   const sh=()=>window.Shell&&window.Shell.native?window.Shell:null;
@@ -2491,7 +2491,8 @@ function cloudPush(){if(!Plat.cloudOn()||running&&G&&G.dc)return;Promise.resolve
 // navigator.sendBeacon when the app goes to the background. The receiver is tools/analytics (a Cloudflare Worker + D1, not deployed).
 // session_end is logged at every trip to the background with the session's running length (a receiver keeps the last one per session).
 const AN=(()=>{const K='fortAn',MAX=300,BATCH=20,SEND=100;let st=null,sid='',t0=0,busy=false;const seen={};
-  const on=()=>typeof PLAT_IDS.analytics==='string'&&/^https:\/\/\S+$/.test(PLAT_IDS.analytics);
+  // never from local copies (file:// test harnesses, http://localhost servers): only the live site and the app send; window.AN_TEST lets t_ret opt in
+  const on=()=>typeof PLAT_IDS.analytics==='string'&&/^https:\/\/\S+$/.test(PLAT_IDS.analytics)&&(window.AN_TEST===true||!/^(file|http):$/.test(location.protocol));
   const rid=()=>{const a=new Uint8Array(12);try{crypto.getRandomValues(a)}catch(e){let h=dyHash(Date.now(),performance.now());for(let i=0;i<12;i++){h=Math.imul(h^h>>>13,2654435761)>>>0;a[i]=h&255}}return Array.from(a,b=>b.toString(16).padStart(2,'0')).join('')};
   function load(){if(st)return st;try{st=JSON.parse(localStorage.getItem(K))}catch(e){}if(!st||typeof st!=='object'||Array.isArray(st))st={};
     if(typeof st.id!=='string'||!/^[0-9a-f]{24}$/.test(st.id))st.id=rid();if(!Array.isArray(st.q))st.q=[];if(!st.f||typeof st.f!=='object')st.f={};return st}

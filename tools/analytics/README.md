@@ -1,4 +1,4 @@
-# The Fort analytics receiver (not deployed)
+# The Fort analytics receiver (deployed 2026-10-05: https://fort-analytics.fort-analytics.workers.dev/e)
 
 A free Cloudflare Worker + D1 database that stores the game's anonymous event log. The game sends nothing until
 `PLAT_IDS.analytics` in `index.html` holds this Worker's URL.
