@@ -228,7 +228,8 @@
   // ---------- ads ----------
   // ATT runs at launch, where App Review looks for it (a 2.1 rejection otherwise). A request made
   // before the app is fully active completes with no sheet and leaves 'notDetermined', so the
-  // status is re-checked and the request retried with backoff and on re-foreground. Never rejects.
+  // status is re-checked and the request retried with backoff (about a minute, which also covers
+  // the player sitting on the sheet AppDelegate raises) and on re-foreground. Never rejects.
   var attPromise = null;
   var attStatus = platform === 'ios' ? 'unknown' : 'n/a';
   function ensureAtt() {
@@ -237,6 +238,7 @@
     attPromise = new Promise(function (resolve) {
       var attempts = 0;
       var settled = false;
+      var inFlight = false; // one request at a time: re-foreground and the backoff timer can both fire
       function finish() {
         if (settled) return;
         settled = true;
@@ -245,31 +247,36 @@
       }
       function retry() {
         attempts++;
-        if (attempts >= 6) return finish();
-        setTimeout(attempt, 500 * attempts);
+        if (attempts >= 30) return finish();
+        setTimeout(attempt, Math.min(500 * attempts, 2000));
       }
       function attempt() {
-        if (settled) return;
+        if (settled || inFlight) return;
         if (document.visibilityState === 'hidden') return retry();
+        inFlight = true;
         AdMob.trackingAuthorizationStatus()
           .then(function (t) {
             if (t && t.status) attStatus = t.status;
-            if (!t || t.status !== 'notDetermined') return finish();
+            if (!t || t.status !== 'notDetermined') return 'done';
             return AdMob.requestTrackingAuthorization()
               .catch(function () {})
               .then(function () { return AdMob.trackingAuthorizationStatus(); })
               .then(function (t2) {
                 if (t2 && t2.status) attStatus = t2.status;
-                if (t2 && t2.status === 'notDetermined') return retry();
-                finish();
+                return t2 && t2.status === 'notDetermined' ? 'retry' : 'done';
               });
           })
-          .catch(finish);
+          .catch(function () { return 'done'; })
+          .then(function (next) {
+            inFlight = false;
+            if (next === 'retry') retry(); else finish();
+          });
       }
       function onVis() {
         if (!settled && document.visibilityState === 'visible') attempt();
       }
       document.addEventListener('visibilitychange', onVis);
+      appActive.on(function (active) { if (active) onVis(); });
       attempt();
     });
     return attPromise;
