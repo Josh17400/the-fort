@@ -1,0 +1,71 @@
+[
+ {
+  "name": "fresh fort: deploy and, locking on every 0.5 s, kill wave 1",
+  "seed": 1,
+  "scene": "fresh",
+  "input": "action:lock@1, action:lock@1.5, action:lock@2, action:lock@2.5, action:lock@3, action:lock@3.5, action:lock@4, action:lock@4.5, action:lock@5, action:lock@5.5, action:lock@6, action:lock@6.5, action:lock@7, action:lock@7.5, action:lock@8, action:lock@8.5, action:lock@9, action:lock@9.5, action:lock@10, action:lock@10.5, action:lock@11, action:lock@11.5, action:lock@12, action:lock@12.5, action:lock@13, action:lock@13.5, action:lock@14, action:lock@14.5, action:lock@15, action:lock@15.5, action:lock@16, action:lock@16.5, action:lock@17, action:lock@17.5, action:lock@18, action:lock@18.5, action:lock@19, action:lock@19.5, action:lock@20, action:lock@20.5, action:lock@21, action:lock@21.5, action:lock@22, action:lock@22.5, action:lock@23, action:lock@23.5, action:lock@24, action:lock@24.5, action:lock@25, action:lock@25.5, action:lock@26, action:lock@26.5, action:lock@27, action:lock@27.5, action:lock@28, action:lock@28.5, action:lock@29, action:lock@29.5, action:lock@30, action:lock@30.5, action:lock@31, action:lock@31.5, action:lock@32, action:lock@32.5, action:lock@33, action:lock@33.5, action:lock@34, action:lock@34.5, action:lock@35, action:lock@35.5, action:lock@36, action:lock@36.5, action:lock@37, action:lock@37.5, action:lock@38, action:lock@38.5, action:lock@39, action:lock@39.5",
+  "steps": [
+   {
+    "at": 0.2,
+    "expect": [
+     "state.screen == 'base'",
+     "state.wave == 0"
+    ]
+   },
+   {
+    "at": 0.3,
+    "call": [
+     "deploy"
+    ],
+    "expect": "state.screen == 'battle'"
+   },
+   {
+    "at": 20,
+    "expect": [
+     "state.kills > 0"
+    ],
+    "shot": "fresh-20s.png",
+    "match": "fresh-20s"
+   },
+   {
+    "from": 0.4,
+    "to": 40,
+    "always": "state.player.hp >= 0",
+    "eventually": "state.wave >= 2"
+   }
+  ]
+ },
+ {
+  "name": "fresh fort left alone falls in wave 1 (the commander only fires at what you lock)",
+  "seed": 1,
+  "scene": "fresh",
+  "params": {
+   "run": true
+  },
+  "steps": [
+   {
+    "from": 0.1,
+    "to": 40,
+    "eventually": "state.dead && state.wave == 1 && state.kills == 0"
+   }
+  ]
+ },
+ {
+  "name": "mid fort holds a minute",
+  "seed": 3,
+  "scene": "mid",
+  "params": {
+   "run": true
+  },
+  "steps": [
+   {
+    "at": 60,
+    "expect": [
+     "!state.dead",
+     "state.kills > 10"
+    ],
+    "match": "mid-60s"
+   }
+  ]
+ }
+]

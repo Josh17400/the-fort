@@ -11849,5 +11849,6 @@ function loop(now){acc+=Math.min((now-last)/1000,0.25)*S.set.speed*(G&&running?(
 requestAnimationFrame(loop);
 medalSync();retBoot();renderHome();Plat.boot();
 </script>
+<script type="module">/* Witness test harness: loads only for ?witness= / ?witness_record= (never in normal play) */if(/[?&]witness(_record)?=/.test(location.search))import("./witness/fort.js")</script>
 </body>
 </html>

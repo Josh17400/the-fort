@@ -1,0 +1,5 @@
+shots/
+replays/
+playtests/
+movies/*
+!movies/.gdignore
