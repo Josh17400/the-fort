@@ -40,10 +40,20 @@ function freshAudio() {
   SBQ.length = 0;
 }
 
+// Who hit the fort last, for the harness's death lines and report (state.lastHit). Every hit goes through the game's
+// damageFort(d, src) with src = the attacker's type (shells and bombs carry the type that fired them); wrap it.
+let lastHit = null, hitN = 0;
+const damageFort0 = damageFort;
+globalThis.damageFort = function (d, src) {
+  const k = src || "unknown";
+  lastHit = { by: (INTEL[k] && INTEL[k][0]) || k, type: k, n: ++hitN };
+  return damageFort0.apply(this, arguments);
+};
+
 function reset({ seed, scene, params = {} }) {
   if (G && G.swAsk) swClose();
   running = false; paused = false; G = null; mouse.down = false;
-  ids = new WeakMap(); nextId = 1; runNo = 0;
+  ids = new WeakMap(); nextId = 1; runNo = 0; lastHit = null; hitN = 0;
   const s = profile(scene || "fresh", seed);
   if (params.map) { s.map = params.map; s.maps = {}; for (const m of MAPS) { if (m.id === params.map) break; s.maps[m.id] = { stars: 2, cleared: true }; } }
   freshAudio();
@@ -88,6 +98,7 @@ function snapshot() {
   if (g && g.over && !g.swAsk && !g.retreated) say.push(`FORT FELL at wave ${g.wave}` + (lastCause && lastCause.top.length ? " · most damage from: " + lastCause.top.join(", ") : ""));
   if (say.length) st.notice = say.join(" | ");
   // screen = (world - pos) * zoom + the canvas centre: the game's own mapping (toWorld), so tap:target lands on the enemy
+  st.lastHit = lastHit;
   if (inRun) st.camera = { pos: [0, 0], zoom: sc, center: true };   // only in battle: off it, sc keeps the last run's zoom
   if (g) {
     st.player = { id: 0, type: "Fort", pos: [0, 0], hp: r1(g.hp), maxHp: r1(g.maxHp), walls: r1(g.wallHp), wallsMax: r1(g.wallMax),
