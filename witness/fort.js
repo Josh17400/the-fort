@@ -54,6 +54,12 @@ function reset({ seed, scene, params = {} }) {
   lastRunMsg = ""; lastCause = null; lastAAR = null;
   showScreen("home"); renderHome();
   resize();   // resets the zoom (sc) the last run's camera left behind, and clears the battle canvas
+  // Bake the ground, fog and fort for this save now. The game's own idleBake() runs on a 2 s setInterval made at boot, before
+  // Witness took over the clock, so it fires on REAL time: a run could start on the previous save's ground (maxed vs fresh).
+  if (hiGfx()) { const k = _ter && _ter.key; terrainBake(); fogBake(vision()); fortBake(fortHalf(), L("walls"), true); if (_ter.key !== k) rasterNow(_ter.c); }
+  // the intel card queue, the medal toast queue and the HUD lane's busy clock outlive a run (module-level in the game): start clean
+  _mtQ.length = 0; clearTimeout(_mtW); clearTimeout(_mtHide); _mtOn = false; _mtCur = null; $("medalToast").classList.remove("on");
+  intelG = null; intelQ = []; intelCur = null; intelEnd = 0; intelLast = 0; $("intel").classList.remove("on"); HL.busyT = 0;
   last = performance.now(); acc = 0;   // the loop's clock: the real one ran before Witness took over
   if (params.run) { startRun(); runNo = 1; }
 }
@@ -75,7 +81,12 @@ function snapshot() {
     goal: inRun ? "Hold the fort: survive as many waves as you can" : "At base: spend cash and research, then deploy",
   };
   // the NEW CONTACT intel card is HTML (not on the canvas): pass its words on
-  if (inRun && $("intel").classList.contains("on")) st.notice = "NEW CONTACT: " + $("intelName").textContent + ". " + $("intelTip").textContent;
+  // banners (WAVE 5, THEATER CLEARED, boss warnings) are drawn on the canvas, the intel card is HTML: pass both on as words
+  const say = [];
+  if (inRun && g.bq && g.bq.cur) say.push(g.bq.cur.t + (g.bq.cur.sub ? " · " + g.bq.cur.sub : ""));
+  if (inRun && $("intel").classList.contains("on")) say.push("NEW CONTACT: " + $("intelName").textContent + ". " + $("intelTip").textContent);
+  if (g && g.over && !g.swAsk && !g.retreated) say.push(`FORT FELL at wave ${g.wave}` + (lastCause && lastCause.top.length ? " · most damage from: " + lastCause.top.join(", ") : ""));
+  if (say.length) st.notice = say.join(" | ");
   // screen = (world - pos) * zoom + the canvas centre: the game's own mapping (toWorld), so tap:target lands on the enemy
   if (inRun) st.camera = { pos: [0, 0], zoom: sc, center: true };   // only in battle: off it, sc keeps the last run's zoom
   if (g) {

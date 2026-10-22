@@ -67,5 +67,24 @@
     "match": "mid-60s"
    }
   ]
+ },
+ {
+  "name": "maxed fort: the ground and battle look the same every run (no leftovers from the last save)",
+  "seed": 2,
+  "scene": "maxed",
+  "params": {
+   "run": true
+  },
+  "steps": [
+   {
+    "at": 12,
+    "expect": [
+     "!state.dead",
+     "state.kills > 0"
+    ],
+    "shot": "maxed-12s.png",
+    "match": "maxed-12s"
+   }
+  ]
  }
 ]

@@ -11,7 +11,8 @@
     "size": [
       430,
       932
-    ]
+    ],
+    "inject": true
   },
   "build": null,
   "tests": "witness",
