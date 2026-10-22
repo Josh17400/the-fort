@@ -98,7 +98,8 @@ function snapshot() {
     for (const c of g.crates) if (c.life > 0) ents.push({ id: idOf(c), type: "Crate", pos: [r1(c.x), r1(c.y)], item: true, hostile: false, kind: c.k || "cash" });
     st.entities = ents;
     st.dialogue = g.choosing ? { speaker: "Command", text: "Field commendation: pick one directive for this run",
-      options: g.choosing.map((p) => p.name + ": " + p.desc) } : null;
+      options: g.choosing.map((p) => p.name + ": " + p.desc),
+      ready: performance.now() - perkOpenT >= 650 } : null;   // pickPerk() ignores picks for 650 ms after the card opens (anti-misclick)
   } else st.entities = [];
   return st;
 }
