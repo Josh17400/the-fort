@@ -20,6 +20,11 @@
 const G = globalThis;
 const BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const NODE = typeof process !== "undefined" && !!(process.versions && process.versions.node);
+
+// One adapter per page: the first copy to run builds it and keeps it in globalThis.__witnessApi; any later copy (the
+// page's own import after Witness injected the adapter before every page script: launch.inject, GUIDE.md §1b; or a
+// bundler's duplicate) hands out that same instance instead of taking the page over a second time.
+function createWitness() {
 const DEFAULT_ADDR = "127.0.0.1:7357";
 const VERSION = "1.0.0";
 
@@ -47,7 +52,8 @@ function readConfig() {
     if (c.record == null && q.has("witness_record")) c.record = q.get("witness_record") || "1";
     if (c.seed == null && q.has("witness_seed")) c.seed = +q.get("witness_seed");
     if (c.audioUnlock == null && q.has("witness_audio_unlock")) c.audioUnlock = q.get("witness_audio_unlock") !== "0";
-    for (const k of ["takeover", "raf", "timers", "webaudio", "console"]) {
+    if (c.epoch == null && q.has("witness_epoch")) c.epoch = q.get("witness_epoch");
+    for (const k of ["takeover", "raf", "timers", "webaudio", "console", "animations", "videos", "virtualEnded"]) {
       if (c[k] == null && q.has(`witness_${k}`)) c[k] = q.get(`witness_${k}`) !== "0";
     }
   }
@@ -57,6 +63,7 @@ function readConfig() {
     if (c.addr == null && (process.argv || []).includes("--witness")) c.addr = DEFAULT_ADDR;
     if (c.record == null && e.WITNESS_RECORD) c.record = e.WITNESS_RECORD;
     if (c.seed == null && e.WITNESS_SEED) c.seed = +e.WITNESS_SEED;
+    if (c.epoch == null && e.WITNESS_EPOCH) c.epoch = e.WITNESS_EPOCH;
   }
   return c;
 }
@@ -213,8 +220,20 @@ function captureErrors() {
 // has been running. That is what makes two runs byte-identical.
 
 const TICK = 1024;
+// The virtual Date's start (ms since 1970): WITNESS_CONFIG.epoch / ?witness_epoch= / WITNESS_EPOCH, an ISO date, a
+// number of ms, or "today" (this run's date, 00:00 UTC). Default 2026-01-01T00:00:00Z. The CLI sends witness.json's
+// clock.epoch (resolved and pinned once per run) here and with every reset, and records it in replays.
+function epochMs(v) {
+  if (v == null || v === "") return null;
+  if (typeof v === "number" || /^-?\d+(\.\d+)?$/.test(String(v))) return Math.floor(+v);
+  if (String(v).toLowerCase() === "today") { const d = new real.Date(); return real.Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()); }
+  const t = +new real.Date(String(v));
+  return Number.isFinite(t) ? t : null;
+}
+const DEFAULT_EPOCH = real.Date.UTC(2026, 0, 1);
 const clock = {
-  ticks: Math.round(real.now() * TICK),
+  // witness mode starts the clock at 0, so performance.now() and rAF timestamps read the same in every run
+  ticks: MODE === "witness" ? 0 : Math.round(real.now() * TICK),
   dateBase: 0,
   now() { return this.ticks / TICK; },
   date() { return Math.floor(this.dateBase + this.ticks / TICK); },
@@ -224,7 +243,8 @@ const clock = {
   /** Line Date.now() up on a whole millisecond, so its integer steps repeat identically after every reset. */
   align() { const n = this.ticks / TICK; this.dateBase = Math.ceil(this.dateBase + n) - n; },
 };
-clock.dateBase = (CFG.epoch != null ? +new real.Date(CFG.epoch) : real.Date.UTC(2026, 0, 1)) - clock.now();
+clock.epoch = epochMs(CFG.epoch) ?? DEFAULT_EPOCH;
+clock.dateBase = clock.epoch - clock.now();
 
 const sched = {
   on: false, raf: false, timers: false,
@@ -293,6 +313,90 @@ function runFrame(dt) {
     try { H.step(dt, sim.frame); } catch (e) { reportError(e, "step handler"); }
   }
   if (sched.raf) runRafs();
+  if (anim.on) syncAnimations();
+}
+
+// ------------------------------------------------------------------ CSS animations / transitions on the virtual clock
+//
+// The Web Animations timeline runs on real time: a CSS transition or keyframe animation would be wherever the real
+// clock put it when a screenshot is taken. Every frame each animation of the document (CSS transitions, CSS
+// animations, element.animate()) is held at playbackRate 0 and its currentTime set from the virtual clock, counted
+// from the frame Witness first saw it. Past its end it is finished (rate restored, finish()), so animationend /
+// transitionend still fire; those events (and the start / iteration ones) are dispatched by the browser's next
+// rendering update, so a frame that started, finished or wrapped an animation waits for one real display frame before
+// the next frame runs: the game's handlers run at the same virtual time in every run. Infinite animations are moved
+// along too, and <video> elements are paused (they play on real time). Off: WITNESS_CONFIG.animations = false.
+const anim = { on: false, state: new WeakMap(), flush: false, videos: true };
+
+function syncAnimations() {
+  let list;
+  try { list = G.document.getAnimations(); } catch { return; }   // also flushes style: new transitions exist from here
+  const now = clock.now(), tl = G.document.timeline;
+  for (const a of list) {
+    try {
+      if (a.timeline && tl && a.timeline !== tl) continue;   // scroll-driven: not a clock
+      let st = anim.state.get(a);
+      const ps = a.playState;
+      if (ps === "idle") continue;
+      if (!st) {
+        st = { t0: now, rate: a.playbackRate > 0 ? a.playbackRate : 1, done: ps === "finished", iter: null };
+        anim.state.set(a, st);
+        if (st.done) continue;   // already over (fill: forwards): it stays where it ended
+        anim.flush = true;   // start events (animationstart, transitionrun/start) go out with the next rendering update
+      }
+      if (ps === "paused") { st.t0 = now - (+a.currentTime || 0) / st.rate; continue; }   // the game paused it: resume from there
+      if (st.done) {
+        if (ps === "finished") continue;
+        st.done = false; st.t0 = now - (+a.currentTime || 0) / st.rate;   // played again (a.play() after the end)
+      }
+      const t = (now - st.t0) * st.rate;
+      const timing = a.effect ? a.effect.getComputedTiming() : null;
+      const end = timing ? timing.endTime : Infinity;
+      if (Number.isFinite(end) && t >= end) {
+        a.playbackRate = st.rate;
+        a.finish();
+        st.done = true;
+        anim.flush = true;
+        continue;
+      }
+      if (a.playbackRate !== 0) a.playbackRate = 0;
+      a.currentTime = t;
+      if (G.CSSAnimation && a instanceof G.CSSAnimation && a.effect) {
+        const it = a.effect.getComputedTiming().currentIteration;
+        if (st.iter != null && it !== st.iter) anim.flush = true;   // animationiteration
+        st.iter = it;
+      }
+    } catch (e) { warnOnce("css-anim", `a CSS / Web Animation could not be put on the virtual clock: ${e && e.message}`); }
+  }
+  if (anim.videos) for (const v of G.document.querySelectorAll("video")) if (!v.paused) { try { v.pause(); } catch { /* gone */ } }
+}
+
+/** One real rendering update, so animation events queued by this frame are dispatched before the next one. */
+function renderingUpdate() {
+  anim.flush = false;
+  return new Promise((r) => {
+    let done = false;
+    const fin = () => { if (!done) { done = true; r(); } };
+    if (real.requestAnimationFrame) real.requestAnimationFrame(() => fin());
+    real.setTimeout(fin, 120);   // a hidden page gets no rendering updates
+  });
+}
+
+/** Finite animations still running (0 when the screen has settled): globalThis.__witnessAnimating(). */
+function animatingCount() {
+  if (!BROWSER || !G.document.getAnimations) return 0;
+  let n = 0;
+  const tl = G.document.timeline;
+  for (const a of G.document.getAnimations()) {
+    if (a.timeline && tl && a.timeline !== tl) continue;
+    const ps = a.playState;
+    if (ps === "idle" || ps === "finished" || ps === "paused") continue;
+    const st = anim.state.get(a);
+    if (st && st.done) continue;
+    const end = a.effect ? a.effect.getComputedTiming().endTime : Infinity;
+    if (Number.isFinite(end)) n++;
+  }
+  return n;
 }
 
 /** A frame driven by real time (before the hello, after a detach, and in record mode). */
@@ -350,9 +454,18 @@ function startRealPump(hook) {
     const dt = last == null ? 1 / fps : Math.min(Math.max((t - last) / 1000, 0.0001), 0.25);
     last = t;
     try { pumpHook(dt); } catch (e) { reportError(e, "frame"); }
-    if (real.requestAnimationFrame && BROWSER) real.requestAnimationFrame(tick); else real.setTimeout(tick, 1000 / fps);
+    next();
   };
-  if (real.requestAnimationFrame && BROWSER) real.requestAnimationFrame(tick); else real.setTimeout(tick, 1000 / fps);
+  // the display's frames, with a timer as a fallback: headless Chromium can stop giving a page animation frames (a
+  // compositor-run CSS animation, e.g. an infinite spinner, next to a rAF loop), and the boot must go on regardless
+  const next = () => {
+    if (!(real.requestAnimationFrame && BROWSER)) { real.setTimeout(tick, 1000 / fps); return; }
+    let done = false;
+    const once = (ts) => { if (!done) { done = true; tick(ts); } };
+    real.requestAnimationFrame(once);
+    real.setTimeout(() => once(null), 100);
+  };
+  next();
 }
 
 // ------------------------------------------------------------------ audio: WebAudio tap + game-side mixer
@@ -442,14 +555,114 @@ function frameTime(t, rate) {
   return (n + 0.5) / rate;
 }
 
+// "ended" of a source node (AudioBufferSourceNode, OscillatorNode, ConstantSourceNode) on the virtual clock. The offline
+// renderer posts its ended events whenever the render and the main thread get there: a frame early or late, not the
+// same one each run, so a game counting live voices with src.onended = () => live-- dropped a different set of
+// sounds each run (The Fort). Witness swallows the browser's event and fires its own, after the frame's render, for
+// every source whose end (start time + the buffer's playable length over its playbackRate/detune, or its stop time) is
+// at or before the render quantum the context's virtual clock is in: the same frame every run, never before the sound
+// was rendered (a handler that disconnects the voice can't cut its tail). WITNESS_CONFIG.virtualEnded = false: off.
+const endedQueue = new Map();   // node -> {node, tap, at, stopAt, off, dur, seq}
+let endedSeq = 0;
+const taps = new WeakMap();     // a captured context -> its tap
+let tapRate = 0;                // a captured context's default rate (the capture's rate before any context exists)
+function endOf(v) {
+  const n = v.node;
+  let e = v.stopAt;
+  if (n.buffer && (!n.loop || v.dur != null) && n.playbackRate) {
+    const r = n.playbackRate.value * Math.pow(2, (n.detune ? n.detune.value : 0) / 1200);
+    const left = n.loop ? v.dur : Math.min(v.dur != null ? v.dur : Infinity, Math.max(0, n.buffer.duration - v.off));
+    if (r > 0) e = Math.min(e, v.at + left / r);
+  }
+  return Math.max(v.at, e);   // stopped before it started: ends when it would have started
+}
+function fireEnded() {
+  const due = [];
+  for (const v of endedQueue.values()) {
+    const by = v.tap.endedBy();
+    if (by == null) { endedQueue.delete(v.node); continue; }   // closed context: its sources never end
+    const e = endOf(v);
+    if (e <= by + 1e-9) due.push([e, v]);
+  }
+  due.sort((a, b) => a[0] - b[0] || a[1].seq - b[1].seq);
+  for (const [, v] of due) {
+    endedQueue.delete(v.node);
+    try { v.node.dispatchEvent(new Event("ended")); } catch (e) { reportError(e, "onended"); }
+  }
+}
+function installVirtualEnded() {
+  const SSN = G.AudioScheduledSourceNode && G.AudioScheduledSourceNode.prototype;
+  if (!SSN || CFG.virtualEnded === false || !G.EventTarget) return;
+  // the game's ended handlers are wrapped to ignore the browser's own (trusted) event: only Witness's reaches them
+  // (a capture listener calling stopImmediatePropagation doesn't do it: Chrome runs an onended set earlier first)
+  const ours = (n) => { try { return taps.has(n.context); } catch { return false; } };
+  const skipTrusted = (fn, self) => function (e) { if (e && e.isTrusted) return; return typeof fn === "function" ? fn.call(self || this, e) : fn.handleEvent(e); };
+  const od = Object.getOwnPropertyDescriptor(SSN, "onended");
+  if (od && od.set) {
+    const handlers = new WeakMap();
+    Object.defineProperty(SSN, "onended", { configurable: true, enumerable: od.enumerable,
+      get() { return handlers.has(this) ? handlers.get(this) : od.get.call(this); },
+      set(fn) {
+        if (!ours(this)) return od.set.call(this, fn);
+        handlers.set(this, typeof fn === "function" ? fn : null);
+        od.set.call(this, typeof fn === "function" ? skipTrusted(fn) : null);
+      } });
+  }
+  const nAdd = G.EventTarget.prototype.addEventListener, nRemove = G.EventTarget.prototype.removeEventListener;
+  const wrapped = new WeakMap();   // node -> Map(listener -> [wrapper per capture flag])
+  const cap = (o) => (typeof o === "boolean" ? o : !!(o && o.capture));
+  SSN.addEventListener = function (type, fn, opts) {
+    if (type !== "ended" || !fn || !ours(this)) return nAdd.call(this, type, fn, opts);
+    let m = wrapped.get(this);
+    if (!m) wrapped.set(this, (m = new Map()));
+    const ws = m.get(fn) || [null, null], c = +cap(opts);
+    if (ws[c]) return;   // already added, as addEventListener does
+    const once = opts && typeof opts === "object" && opts.once;
+    const node = this, inner = skipTrusted(fn);
+    ws[c] = function (e) { if (e && e.isTrusted) return; if (once) node.removeEventListener("ended", fn, { capture: !!c }); return inner.call(this, e); };
+    m.set(fn, ws);
+    return nAdd.call(this, type, ws[c], typeof opts === "object" && opts ? { ...opts, once: false } : opts);
+  };
+  SSN.removeEventListener = function (type, fn, opts) {
+    const m = type === "ended" && fn ? wrapped.get(this) : null, ws = m && m.get(fn), c = +cap(opts);
+    if (!ws || !ws[c]) return nRemove.call(this, type, fn, opts);
+    nRemove.call(this, type, ws[c], opts);
+    ws[c] = null;
+  };
+  const ABS = G.AudioBufferSourceNode && G.AudioBufferSourceNode.prototype;
+  for (const P of [SSN, ABS]) {
+    if (!P || !Object.prototype.hasOwnProperty.call(P, "start")) continue;
+    const nStart = P.start;
+    P.start = function (when, offset, duration) {
+      const r = nStart.apply(this, arguments);
+      const tap = taps.get(this.context);
+      if (tap) {
+        const ab = P === ABS;
+        endedQueue.set(this, { node: this, tap, at: Math.max(+when || 0, tap.nowRendered()), stopAt: Infinity,
+          off: ab ? Math.max(0, +offset || 0) : 0, dur: ab && duration != null ? Math.max(0, +duration) : null, seq: endedSeq++ });
+      }
+      return r;
+    };
+  }
+  const nStop = SSN.stop;
+  SSN.stop = function (when) {
+    const r = nStop.apply(this, arguments);
+    const v = endedQueue.get(this);
+    if (v) v.stopAt = Math.max(+when || 0, v.tap.nowRendered());   // a later stop() replaces the earlier one, as in WebAudio
+    return r;
+  };
+}
+
 /** In witness mode every AudioContext the game creates is an OfflineAudioContext rendered in step with simulated time. */
 function installWebAudioTap() {
   const Native = G.OfflineAudioContext;
   if (!Native || !G.AudioWorkletNode) return;
+  tapRate = +CFG.audioRate || 24000;
   const nSuspend = Native.prototype.suspend, nResume = Native.prototype.resume;
   const destGet = Object.getOwnPropertyDescriptor(G.BaseAudioContext ? G.BaseAudioContext.prototype : Native.prototype, "destination").get;
   const timeGet = Object.getOwnPropertyDescriptor(G.BaseAudioContext ? G.BaseAudioContext.prototype : Native.prototype, "currentTime").get;
   const seconds = +CFG.audioSeconds || 300;
+  installVirtualEnded();
   function WitnessAudioContext(opts = {}) {
     const rate = (opts && opts.sampleRate) || +CFG.audioRate || 24000;
     const ctx = new Native({ numberOfChannels: 1, length: Math.ceil(rate * seconds), sampleRate: rate });
@@ -486,7 +699,7 @@ function installWebAudioTap() {
     if (webReg()) webReg().track(entry);
     Object.defineProperties(ctx, {
       destination: { get: () => bus },
-      currentTime: { get: () => frameTime(timeGet.call(ctx), rate) },
+      currentTime: { get: () => (tap.full ? frameTime(timeGet.call(ctx) + (entry.st === "running" ? audioClock.t - tap.fullAt : 0), rate) : frameTime(timeGet.call(ctx), rate)) },
       state: { get: () => entry.st },
       resume: { value: () => {
         entry.resumes++;
@@ -511,6 +724,12 @@ function installWebAudioTap() {
     tap.frozenAt = (o) => { let f = tap.frozenBase; for (const [g0, g1] of gaps) { if (g0 >= o) break; f += Math.min(o, g1) - g0; } return f; };
     tap.ctxAt = (o) => o - tap.frozenAt(o);
     tap.read = Math.round(audioReadSince * rate);   // created mid-run: start reading where the capture is
+    // the context's clock in seconds: as rendered (where a start "now" lands), and the render quantum simulated time
+    // is in (sources ending by then fire "ended" this frame; null: closed, they never end)
+    tap.nowRendered = () => (tap.full ? timeGet.call(ctx) + (entry.st === "running" ? audioClock.t - tap.fullAt : 0) : timeGet.call(ctx));
+    tap.endedBy = () => (entry.st === "closed" ? null : tap.dead ? tap.nowRendered() : (Math.floor(tap.ctxAt(tap.outNow()) / 128) * 128) / rate);
+    tap.closed = () => entry.st === "closed";
+    taps.set(ctx, tap);
     tap.prepare = () => {
       if (!tap.ready) {
         tap.ready = (async () => {
@@ -527,16 +746,20 @@ function installWebAudioTap() {
     // WebAudio renders in 128-frame quanta and ctx.currentTime moves in those steps. A sound a game starts "now"
     // lands on the last quantum boundary, so where the boundaries fall relative to a reset must not depend on how
     // long the process ran before it: every reset anchors the capture on a boundary (tap.anchor), and from there
-    // simulated time maps to anchor + since x rate.
-    tap.anchor = null;
+    // simulated time maps to anchor + since x rate. A context made mid-run is anchored on the time since the reset
+    // too (since is summed from 0 at each reset: the same floats every run), not on the clock since the page loaded:
+    // its quanta then line up with the frames the same way every run (with 400 samples a frame, every 8th frame ends
+    // exactly on a quantum and float noise in t - born floored it either side: a frame's render, currentTime and
+    // the frame a source's "ended" fired at differed between runs).
+    tap.anchor = -Math.round(audioClock.since * rate);
     tap.render = async (ceil) => {
       if (tap.dead) return;
       const pos = tap.ctxAt(tap.outNow()) / 128;
       await tap.renderTo((ceil ? Math.ceil(pos) : Math.floor(pos)) * 128);
     };
-    tap.realign = async () => {
+    tap.realign = async (prevSince) => {   // prevSince: the run's since just before the reset zeroed it
       if (tap.dead) return;
-      const o = (audioClock.t - tap.born) * rate;
+      const o = tap.anchor != null && prevSince != null ? tap.anchor + prevSince * rate : (audioClock.t - tap.born) * rate;
       const open = gaps.length && gaps[gaps.length - 1][1] === Infinity;
       if (open) { tap.anchor = Math.round(o); return; }   // frozen: nothing renders, the output timeline just goes on
       const target = Math.ceil(tap.ctxAt(o) / 128) * 128;
@@ -548,7 +771,10 @@ function installWebAudioTap() {
       try {
         await tap.prepare();
         if (target <= tap.rendered) return;
-        if (target >= ctx.length) { tap.dead = true; warnOnce("audio-full", `audio capture is full (${seconds}s per AudioContext; set WITNESS_CONFIG.audioSeconds)`); return; }
+        // the offline context's length is fixed when it is made: past it nothing more can be rendered. The context's
+        // clock keeps following simulated time (below), so the game runs on unchanged; only a read of audio from past
+        // the end says so (a play session never reads audio: no warning there)
+        if (target >= ctx.length) { tap.dead = true; tap.full = true; tap.fullAt = audioClock.t; return; }
         const reached = nSuspend.call(ctx, target / rate);
         if (!tap.started) { tap.started = true; ctx.startRendering().catch(() => {}); } else nResume.call(ctx);
         await reached;
@@ -602,8 +828,11 @@ async function renderAudio(ceil) {
 
 async function readAudio() {
   await renderAudio(true);
+  for (const s of sources) if (s.full) warnOnce("audio-full", `audio capture is full (${+CFG.audioSeconds || 300}s per AudioContext; set WITNESS_CONFIG.audioSeconds): later audio reads are silent`);
   for (const s of sources) if (s.settle) await s.settle();
-  const rate = sources.length ? sources[0].rate : 22050;
+  // no source yet: the rate a captured context would have, so a read before the game opens its audio (in the first
+  // run) is as long as the same read once an earlier run's context exists (was 22050 vs 24000 Hz: 4410 vs 4800 frames)
+  const rate = sources.length ? sources[0].rate : tapRate || 22050;
   const t1 = audioClock.t;
   // every read covers [what was read before, all of the time since the epoch): consecutive replies tile exactly
   const total = (r) => Math.max(0, Math.round(audioClock.since * r));
@@ -1012,7 +1241,8 @@ function recordLine(obj) { rec.lines.push(JSON.stringify(obj)); if (rec.sink && 
 function beginRecording() {
   rec.on = true;
   rec.frame = 0;
-  rec.header = { replay: 1, name: H.name || "game", seed: currentSeed, fps, started: new real.Date().toISOString() };
+  // epoch: what Date.now() read when the recording began, so a replay's reset restarts the Date exactly there
+  rec.header = { replay: 1, name: H.name || "game", seed: currentSeed, fps, epoch: clock.date(), started: new real.Date().toISOString() };
   recordLine(rec.header);
 }
 
@@ -1216,7 +1446,7 @@ function detectEngine() {
   if (G.BABYLON && G.BABYLON.Engine) libs.push(`Babylon.js ${G.BABYLON.Engine.Version || ""}`.trim());
   if (BROWSER && G.navigator && /Electron\//.test(G.navigator.userAgent)) libs.push("Electron");
   if (G.__TAURI__ || G.__TAURI_INTERNALS__) libs.push("Tauri");
-  return libs.length ? libs.join(" + ") : BROWSER ? "browser (canvas)" : `node ${process.versions.node}`;
+  return libs.length ? libs.join(" + ") : BROWSER ? (dom.canvases().length ? "browser (canvas)" : "browser (DOM)") : `node ${process.versions.node}`;
 }
 
 function hello() {
@@ -1258,6 +1488,8 @@ async function doStep(m) {
     applyInputs(sim.frame);
     runFrame(dt);
     if (sources.length) await renderAudio(false);
+    if (endedQueue.size) fireEnded();   // sources that ended in what this frame rendered (see endedQueue)
+    if (anim.flush) await renderingUpdate();
     sim.frame++;
     sim.time += dt;
     if (yieldEach) await macrotask();
@@ -1270,20 +1502,32 @@ async function doStep(m) {
 async function doReset(m) {
   releaseAllInput();
   reseed(m.seed ?? 1);
-  clock.align();
+  // an epoch with the reset (witness.json clock.epoch, or the replay's): Date restarts there exactly; without one the
+  // Date goes on from where it was, lined up on a whole millisecond (what older replays were made with)
+  const ep = epochMs(m.epoch);
+  if (ep != null) { clock.epoch = ep; clock.dateBase = ep - clock.now(); } else clock.align();
   // the audio epoch first, so sounds the game's reset starts (music...) belong to the new run
   audioMark = audioEpoch = audioClock.t;
+  const prevSince = audioClock.since;
   audioClock.since = 0;
   audioReadSince = 0;
   // a reset starts silent: tails still ringing from the previous run must not leak into this one
   // (WebAudio nodes the game scheduled are its own: its reset should stop them)
+  // a context the game closed before the reset never sounds again: leave it out (a game that opens a fresh context
+  // per run would otherwise pile up 300 s offline contexts, the first of them setting the capture's rate)
+  for (let i = sources.length - 1; i >= 0; i--) if (sources[i].closed && sources[i].closed()) sources.splice(i, 1);
   for (const s of sources) {
     s.read = 0;
-    if (s.realign) await s.realign();
+    if (s.realign) await s.realign(prevSince);
     const a = epochIndex(s);
     if (s.clear) s.clear(a); else s.drop(a);
   }
-  await H.reset({ seed: currentSeed, scene: m.scene, params: m.params || {} });
+  // m.reloaded: the CLI just reloaded the page for this reset (launch.reset "reload"): it is fresh, there is nothing
+  // of a previous run to clear, so a game without a reset handler is fine
+  if (H.reset) await H.reset({ seed: currentSeed, scene: m.scene, params: m.params || {} });
+  // CSS animations / transitions still running restart at the reset: where they were depended on what ran before
+  // (and on how many frames a page's boot took)
+  if (anim.on) { anim.state = new WeakMap(); syncAnimations(); anim.flush = false; }
   sim.frame = 0;
   sim.time = 0;
   frameEvents = [];
@@ -1293,7 +1537,7 @@ async function doReset(m) {
 async function handle(m) {
   switch (m.cmd) {
     case "reset":
-      if (!H.reset) throw new Error("this game has no reset handler (pass reset() to witness.start)");
+      if (!H.reset && !m.reloaded) throw new Error("this game has no reset handler (pass reset() to witness.start, or let the CLI reload the page: launch.reset \"reload\")");
       return doReset(m);
     case "input": queueInput(m.events); return {};
     case "step": return doStep(m);
@@ -1358,6 +1602,136 @@ function onClose() {
   else detach();
 }
 
+// ------------------------------------------------------------------ page boot helpers (browser)
+
+const withTimeout = (p, ms) => Promise.race([p, new Promise((r) => real.setTimeout(r, ms))]);
+
+/**
+ * Wait until the page's pictures and fonts are ready: every <img> and every CSS background-image url() decoded, and
+ * document.fonts.ready; then `frames` real display frames (default 2) and `ms` more real milliseconds (default 0).
+ * start() calls it in witness mode (start({ ready: false }) skips it, start({ ready: { ms: 300 } }) tunes it).
+ * At most `timeout` ms (default 10000) for the decoding.
+ */
+async function ready({ frames = 2, ms = 0, timeout = 10000 } = {}) {
+  if (!BROWSER) return;
+  const work = (async () => {
+    const urls = new Set();
+    for (const img of Array.from(G.document.images || [])) if (img.currentSrc || img.src) urls.add(img.currentSrc || img.src);
+    for (const el of Array.from(G.document.querySelectorAll("*"))) {
+      let bg = "";
+      try { bg = G.getComputedStyle(el).backgroundImage; } catch { /* detached */ }
+      if (bg && bg !== "none") for (const m of bg.matchAll(/url\(\s*(['"]?)(.*?)\1\s*\)/g)) if (m[2]) urls.add(m[2]);
+    }
+    await Promise.all([...urls].map((u) => { const im = new G.Image(); im.src = u; return im.decode ? im.decode().catch(() => {}) : null; }));
+    for (const img of Array.from(G.document.images || [])) if (img.decode) await img.decode().catch(() => {});
+    if (G.document.fonts && G.document.fonts.ready) await G.document.fonts.ready.catch(() => {});
+  })();
+  await withTimeout(work, timeout);
+  for (let i = 0; i < frames; i++) await withTimeout(new Promise((r) => (real.requestAnimationFrame ? real.requestAnimationFrame(() => r()) : real.setTimeout(r, 16))), 100);
+  if (ms > 0) await new Promise((r) => real.setTimeout(r, ms));
+}
+
+/**
+ * Run the page's deferred classic scripts, in document order, now that the takeover is in place: every
+ * <script type="text/witness"> (or any <script data-witness-deferred>) is replaced by a real classic script with the
+ * same attributes and code (an src one is awaited until it has run; data-type="…" becomes its type). For pages whose
+ * inline scripts would otherwise start their timers before witness.js is imported (GUIDE.md §1b; the CLI's
+ * launch.inject is the other way). Module scripts run before DOMContentLoaded, so the scripts' own DOMContentLoaded
+ * handlers still run. Returns how many scripts ran. Works in every mode (the page plays the same without Witness).
+ */
+async function boot({ selector = 'script[type="text/witness"], script[data-witness-deferred]' } = {}) {
+  if (!BROWSER) return 0;
+  let n = 0;
+  for (const old of Array.from(G.document.querySelectorAll(selector))) {
+    const el = G.document.createElement("script");
+    for (const a of Array.from(old.attributes)) if (a.name !== "type" && a.name !== "data-witness-deferred" && a.name !== "data-type") el.setAttribute(a.name, a.value);
+    const type = old.getAttribute("data-type");
+    if (type) el.type = type;
+    if (old.src) {
+      el.async = false;
+      const loaded = new Promise((r) => { el.onload = el.onerror = () => r(); });
+      old.replaceWith(el);
+      await loaded;
+    } else {
+      el.text = old.textContent;
+      old.replaceWith(el);
+    }
+    n++;
+  }
+  return n;
+}
+
+function describeEl(el, plain = false) {
+  const text = (el.innerText || "").trim().replace(/\s+/g, " ");
+  const img = !text && el.querySelector ? el.querySelector("img[alt]") : null;
+  const label = text || el.getAttribute("aria-label") || el.getAttribute("title") || (img && img.alt) || (el.tagName === "IMG" && el.alt)
+    || (el.tagName === "INPUT" && el.value ? String(el.value) : "") || (el.id ? `#${el.id}` : `<${el.tagName.toLowerCase()}>`);
+  return plain ? label : `"${label}"`;
+}
+
+// DOM games: tap an element (touch-type pointer events, compatibility mouse events, click; a user gesture for the
+// audio policy), and list what can be tapped. Meant for the game's calls, so a replay repeats them:
+//   witness.start({ calls: { tap: (sel) => witness.dom.tap(sel) }, snapshot: () => ({ choices: witness.dom.tappables() }) })
+const domHelpers = {
+  /** Tap el (an Element or a CSS selector) at its centre. Returns "ok", or "blocked by <what is on top>" (warned). */
+  tap(el) {
+    if (!BROWSER) return "no page";
+    const target = typeof el === "string" ? G.document.querySelector(el) : el;
+    if (!target) return `not found: ${el}`;
+    let r = target.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > G.innerHeight || r.right < 0 || r.left > G.innerWidth) { try { target.scrollIntoView({ block: "center", inline: "center" }); } catch { /* old engine */ } r = target.getBoundingClientRect(); }
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const hit = G.document.elementFromPoint(cx, cy);
+    if (!hit || !(hit === target || target.contains(hit) || hit.contains(target))) {
+      const what = !hit ? "nothing (off screen)" : hit.id ? `#${hit.id}` : describeEl(hit);
+      warnOnce(`tap-blocked-${what}`, `dom.tap: ${describeEl(target)} is covered by ${what}`);
+      return `blocked by ${what}`;
+    }
+    const base = { bubbles: true, cancelable: true, composed: true, view: G, clientX: cx, clientY: cy, screenX: cx, screenY: cy, button: 0 };
+    const p = { ...base, pointerId: TOUCH_POINTER_ID, pointerType: "touch", isPrimary: true, width: 1, height: 1 };
+    const w = webReg();
+    gestureDepth++;
+    if (w) w.begin();
+    try {
+      if (G.PointerEvent) hit.dispatchEvent(new PointerEvent("pointerdown", { ...p, buttons: 1, pressure: 1 }));
+      hit.dispatchEvent(new MouseEvent("mousedown", { ...base, buttons: 1 }));
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) && target.focus) target.focus();
+      if (G.PointerEvent) hit.dispatchEvent(new PointerEvent("pointerup", { ...p, buttons: 0, pressure: 0 }));
+      hit.dispatchEvent(new MouseEvent("mouseup", { ...base, buttons: 0 }));
+      hit.dispatchEvent(new (G.PointerEvent || MouseEvent)("click", { ...p, buttons: 0 }));
+    } finally { gestureDepth--; if (w) w.end(); }
+    return "ok";
+  },
+  /** What can be tapped under root (default the document): [{label, id}], in view first; repeated labels get " #2". */
+  tappables(root) {
+    if (!BROWSER) return [];
+    const scope = root ? (typeof root === "string" ? G.document.querySelector(root) : root) : G.document;
+    if (!scope) return [];
+    const els = Array.from(scope.querySelectorAll('button, [role="button"], a[href], input:not([type="hidden"]), select, textarea, [onclick]'));
+    const visible = (el) => {
+      if (el.closest("[hidden]") || el.disabled) return false;
+      const r = el.getBoundingClientRect();
+      if (r.width <= 0 || r.height <= 0) return false;
+      const cs = G.getComputedStyle(el);
+      return cs.visibility !== "hidden" && cs.display !== "none" && +cs.opacity !== 0;
+    };
+    const shown = els.filter(visible);
+    const kept = shown.filter((el) => !shown.some((o) => o !== el && o.contains(el)));   // nested tappables: the outer one
+    const inView = (el) => { const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < G.innerHeight && r.right > 0 && r.left < G.innerWidth ? 1 : 0; };
+    kept.sort((a, b) => inView(b) - inView(a));   // stable: document order within each group
+    const seen = new Map();
+    return kept.map((el) => {
+      let label = describeEl(el, true);
+      if (el.classList.contains("sel") || el.getAttribute("aria-pressed") === "true" || el.getAttribute("aria-selected") === "true") label += " (selected)";
+      label = label.slice(0, 56);
+      const k = (seen.get(label) || 0) + 1;
+      seen.set(label, k);
+      if (k > 1) label = `${label.slice(0, 52)} #${k}`;
+      return { label, id: el.id || null };
+    });
+  },
+};
+
 // ------------------------------------------------------------------ public API
 
 /**
@@ -1381,6 +1755,8 @@ async function start(options = {}) {
   }
   // witness mode
   for (const m of options.mixers || []) if (!(m instanceof Mixer)) throw new Error("witness.start: mixers must come from witness.createMixer()");
+  // pictures and fonts still decoding on real time would make the first screenshots differ from run to run
+  if (BROWSER && options.ready !== false) await ready(isObj(options.ready) ? options.ready : {});
   try {
     conn = await connect(CFG.addr, onMessage, onClose);
   } catch (e) {
@@ -1454,6 +1830,12 @@ const api = {
   /** Keys / mouse / touches (finger id -> {x, y, pressure} while down) / pad / actions as injected by Witness. */
   input: inputState,
   createMixer: (opts) => new Mixer(opts),
+  ready,
+  boot,
+  /** DOM games: dom.tap(elementOrSelector) -> "ok" | "blocked by …"; dom.tappables(root?) -> [{label, id}]. */
+  dom: domHelpers,
+  /** Finite CSS / Web Animations still running (0 = settled): also globalThis.__witnessAnimating(). */
+  animating: () => animatingCount(),
   get frame() { return sim.frame; },
   get time() { return sim.time; },
   /** The real (un-virtualized) timers and clocks, for code that must not be frozen. */
@@ -1473,6 +1855,11 @@ if (MODE === "witness") {
     if (CFG.webaudio !== false) installWebAudioTap();
     // Until the hello, frames follow the display so the engine can boot and load, but each one
     // advances exactly 1/fps: engines that average recent dts (Phaser) then never hold odd values.
+    if (sched.on && CFG.animations !== false && G.document && typeof G.document.getAnimations === "function") {
+      anim.on = true;
+      anim.videos = CFG.videos !== false;
+    }
+    G.__witnessAnimating = () => animatingCount();
     if (sched.on) startRealPump(() => runFrame(1 / fps));
   } else if (CFG.takeover) {
     takeover({ raf: CFG.raf, timers: CFG.timers !== false });
@@ -1486,7 +1873,18 @@ if (MODE === "witness") {
   }
 }
 
-export { api as witness, start, takeover, recordFrame, Mixer, MODE as mode };
+api.Mixer = Mixer;
+return api;
+}
+
+const api = G.__witnessApi || (G.__witnessApi = createWitness());
+// ---- module exports (cut off when the CLI injects this file as a classic script: src/core/browser.js)
+export { api as witness };
+export const start = api.start;
+export const takeover = api.takeover;
+export const recordFrame = api.recordFrame;
+export const Mixer = api.Mixer;
+export const mode = api.mode;
 export const active = api.active;
 export const seed = api.seed;
 export const random = api.random;
@@ -1494,4 +1892,6 @@ export const log = api.log;
 export const mark = api.mark;
 export const sound = api.sound;
 export const createMixer = api.createMixer;
+export const ready = api.ready;
+export const boot = api.boot;
 export default api;

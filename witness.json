@@ -17,9 +17,9 @@
   "tests": "witness",
   "seed": 1,
   "play": {
-    "profile": "topdown",
+    "profile": "defense",
     "controls": {
-      "attack": "action:lock",
+      "attack": "tap:target",
       "interact": "action:grab",
       "heal": "action:strike",
       "frag": "action:frag",
@@ -29,13 +29,7 @@
       "pause": "p",
       "choose": "numbers",
       "confirm": "enter",
-      "cancel": "escape",
-      "move": {
-        "up": "key:F13",
-        "down": "key:F14",
-        "left": "key:F15",
-        "right": "key:F16"
-      }
+      "cancel": "escape"
     },
     "allowCalls": true,
     "stats": [
@@ -61,17 +55,7 @@
       }
     ],
     "map": false,
-    "autofight": false,
-    "guard": false,
-    "alert": 12,
     "cell": 20,
-    "brief": "THE FORT is a top-down fort-defense game for phones. You never move: the fort sits at the centre and enemies (infantry, vehicles, aircraft, bosses) close in from every side in waves. Your commander only fires at the enemy you lock onto; squad, artillery and other defences (once bought) fire on their own. BATTLE RHYTHM: once enemies are listed near you, send 'fight enemies for 25s' (it keeps locking on for you and only stops for low hp, death, a directive or the time cap; 'fight still going after 25s' just means the cap was reached). Between orders use 'press grab' (nearest supply crate: cash and repairs), 'press frag' (grenade), 'press strike' (airstrike, once owned), 'press t' (cycle what lock-on picks). If nothing is near yet, 'press lock' then 'fight enemies for 25s' again. Every few waves a FIELD COMMENDATION offers 3 directives (dialogue): 'choose 1', 'choose 2' or 'choose 3'. When the fort falls the run ends ('call decline' if a Second Wind offer shows). At the BASE the 'game says' line lists Armory ids and prices (x = cannot afford). Calls: 'call base', 'call buy <id>', 'call research <id>', 'call deploy', 'call retreat', 'call speed <n>', 'call theater <id>'. Calls reply in words when something cannot be done. The loop is fight, fall, spend, deploy again. Judge it as a player would.",
-    "reach": {
-      "attack": 40,
-      "interact": 40,
-      "pickup": 40
-    },
-    "attackEvery": 0.3,
-    "leash": 0
+    "brief": "THE FORT is a top-down fort-defense game for phones. The fort sits at the centre and enemies (infantry, vehicles, aircraft, bosses) close in from every side in waves. You fight by tapping enemies: your commander fires at what you tap; squad, artillery, aircraft and other defences fire on their own. BATTLE RHYTHM: 'fight enemies for 25s' (it taps targets for you, waits for the next wave on an empty field, and ends on its time). Between fights: 'press grab' (nearest supply crate: cash and repairs), 'press frag' (grenade), 'press strike' (airstrike), 'press lock' (lock onto the nearest enemy), 'press t' (cycle the target doctrine). 'wait 10 quiet' lets battle play out. Every few waves a FIELD COMMENDATION offers 3 directives (dialogue): 'choose 1|2|3'. When the fort falls the run ends ('call decline' if a Second Wind offer shows). At the BASE: 'call base' (Armory upgrades and research with costs), 'call buy <id>', 'call research <id>', 'call deploy', 'call retreat', 'call speed <n>' (during battle), 'call theater <id>' (switch map at the base; clearing wave 100 unlocks the next). Judge it as a player would."
   }
 }

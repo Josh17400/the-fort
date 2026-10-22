@@ -4,8 +4,6 @@
 import witness from "./witness.js";
 
 const VIEW = [innerWidth, innerHeight];
-// CSS transitions and animations run on the browser's real clock, which Witness can't step; freeze them so screenshots repeat.
-document.head.insertAdjacentHTML("beforeend", "<style>*,*::before,*::after{transition:none!important;animation:none!important}</style>");
 const r1 = (v) => Math.round(v * 10) / 10;
 
 // Stable ids for the game's plain enemy/crate objects (they have none of their own).
@@ -29,10 +27,6 @@ function profile(name, seed) {
   } else if (name !== "fresh") throw new Error(`unknown scene "${name}" (fresh | mid | maxed)`);
   return s;
 }
-
-// The engine caps live voices with a counter that "ended" callbacks count down. Offline rendering delivers those callbacks at
-// uneven moments, so the cap would drop a different set of sounds each run: under Witness the counter always reads 0 (no cap).
-Object.defineProperty(AU, "live", { get: () => 0, set() {} });
 
 // A new AudioContext per reset: the ambience LFOs, gain ramps and the audio RNG would otherwise carry over from the previous
 // run, and audio() draws Math.random for its noise bed when it builds a context (in startRun), so the first run must look like any other.
@@ -59,7 +53,7 @@ function reset({ seed, scene, params = {} }) {
   for (const m of document.querySelectorAll(".modal.on")) m.classList.remove("on");
   lastRunMsg = ""; lastCause = null; lastAAR = null;
   showScreen("home"); renderHome();
-  cv.getContext("2d").clearRect(0, 0, cv.width, cv.height);   // the battle canvas keeps its last frame after a run otherwise
+  resize();   // resets the zoom (sc) the last run's camera left behind, and clears the battle canvas
   last = performance.now(); acc = 0;   // the loop's clock: the real one ran before Witness took over
   if (params.run) { startRun(); runNo = 1; }
 }
@@ -80,11 +74,10 @@ function snapshot() {
     scene: inRun || (g && g.over) ? "run " + runNo : "base",
     goal: inRun ? "Hold the fort: survive as many waves as you can" : "At base: spend cash and research, then deploy",
   };
-  // At the base, the shop as one short line (the harness shows state.notice as "game says:"; call results get cut short)
   // the NEW CONTACT intel card is HTML (not on the canvas): pass its words on
   if (inRun && $("intel").classList.contains("on")) st.notice = "NEW CONTACT: " + $("intelName").textContent + ". " + $("intelTip").textContent;
-  if (!inRun && !(g && g.swAsk)) st.notice = "ARMORY " + U.filter((u) => !lockWhy(u) && L(u.id) < u.max)
-    .map((u) => { const c = Math.ceil(costOf(u, L(u.id))); return u.id + " $" + c + (S.bank >= c ? "" : "x"); }).join(" ") + " (x = can't afford)";
+  // screen = (world - pos) * zoom + the canvas centre: the game's own mapping (toWorld), so tap:target lands on the enemy
+  if (inRun) st.camera = { pos: [0, 0], zoom: sc, center: true };   // only in battle: off it, sc keeps the last run's zoom
   if (g) {
     st.player = { id: 0, type: "Fort", pos: [0, 0], hp: r1(g.hp), maxHp: r1(g.maxHp), walls: r1(g.wallHp), wallsMax: r1(g.wallMax),
       target: g.sold[0].tgt && g.sold[0].tgt.hp > 0 ? idOf(g.sold[0].tgt) : null };
@@ -118,22 +111,22 @@ const calls = {
     return `cash $${Math.floor(S.bank)} · RP ${S.rp | 0} · best wave ${S.best} · theater ${S.map} | ARMORY: ${arm.join("; ")} | RESEARCH: ${res.join(", ")}`;
   } },
   buy: { args: "id", help: "buy one Armory level (ids from base)", run: (id) => {
-    const u = UB[id]; if (!u) return `no upgrade "${id}" (ids are in the ARMORY list)`;
-    if (running) return "the Armory is closed during battle";
-    const why = lockWhy(u); if (why) return `${id} is locked: ${typeof why === "string" ? why : JSON.stringify(why)}`;
-    if (L(id) >= u.max) return `${id} is maxed`;
-    const c = Math.ceil(costOf(u, L(id))); if (S.bank < c) return `can't afford ${id}: costs $${c}, you have $${Math.floor(S.bank)}`;
+    const u = UB[id]; if (!u) return { error: `no upgrade "${id}" (ids are in the ARMORY list of call base)` };
+    if (running) return { error: "the Armory is closed during battle" };
+    const why = lockWhy(u); if (why) return { error: `${id} is locked: ${typeof why === "string" ? why : JSON.stringify(why)}` };
+    if (L(id) >= u.max) return { error: `${id} is maxed` };
+    const c = Math.ceil(costOf(u, L(id))); if (S.bank < c) return { error: `can't afford ${id}: costs $${c}, you have $${Math.floor(S.bank)}` };
     buyUpgrade(id); renderHome(); return `bought ${id}: now Lv${L(id)}, $${Math.floor(S.bank)} left`; } },
   research: { args: "id", help: "start researching the next tier (ids from base)", run: (id) => {
-    if (!RLINES[id]) return `no research line "${id}"`;
-    const ok = buyResearch(id); renderHome(); return ok ? `research ${id} started` : `can't start ${id} now (not enough RP, lab busy, or not unlocked)`; } },
-  deploy: { help: "start a run from the base", run: () => { if (running) return "already in battle"; if (G && G.swAsk) swDecline(); showScreen("home"); startRun(); runNo++; return `deployed: run ${runNo}, first wave ${G.wave + 1}`; } },
-  retreat: { help: "end the current run now", run: () => { if (!running) return "not in battle"; G.retreated = true; endRun(true); return `retreated at wave ${G.wave}`; } },
-  decline: { help: "on the Second Wind offer: end the run", run: () => { if (G && G.swAsk) { swDecline(); return true; } return false; } },
-  theater: { args: "id", help: "switch theater at the base (desert, ...)", run: (id) => switchMap(id) ? `now in ${id}` : `can't switch to "${id}" (unknown, locked, already there, or in battle)` },
+    if (!RLINES[id]) return { error: `no research line "${id}"` };
+    const ok = buyResearch(id); renderHome(); return ok ? `research ${id} started` : { error: `can't start ${id} now (not enough RP, lab busy, or not unlocked)` }; } },
+  deploy: { help: "start a run from the base", run: () => { if (running) return { error: "already in battle" }; if (G && G.swAsk) swDecline(); showScreen("home"); startRun(); runNo++; return `deployed: run ${runNo}, first wave ${G.wave + 1}`; } },
+  retreat: { help: "end the current run now", run: () => { if (!running) return { error: "not in battle" }; G.retreated = true; endRun(true); return `retreated at wave ${G.wave}`; } },
+  decline: { help: "on the Second Wind offer: end the run", run: () => { if (G && G.swAsk) { swDecline(); return "run ended"; } return { error: "no Second Wind offer is open" }; } },
+  theater: { args: "id", help: "switch theater at the base (desert, ...)", run: (id) => switchMap(id) ? `now in ${id}` : { error: `can't switch to "${id}" (unknown, locked, already there, or in battle); theaters: ${MAPS.map((m) => m.id + (mapOpen(m.id) ? "" : " (locked)")).join(", ")}` } },
   speed: { args: "n", help: "battle speed (the speeds this save has unlocked)", run: (n) => {
-    if (!G || !running) return "speed is set during battle";
-    const ok = speedOpts(); if (!ok.includes(+n)) return `speed ${n} isn't available: ${ok.join("/")}`;
+    if (!G || !running) return { error: "speed is set during battle" };
+    const ok = speedOpts(); if (!ok.includes(+n)) return { error: `speed ${n} isn't available: ${ok.join("/")}` };
     G.simSpeed = +n; syncSpeedBtn(); return `speed ${n}x`; } },
 };
 
