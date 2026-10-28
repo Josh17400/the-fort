@@ -86,5 +86,44 @@
     "match": "maxed-12s"
    }
   ]
+ },
+ {
+  "name": "rookie opening: a brand-new player who keeps tapping clears wave 3 (softer waves 1-3 until the first upgrade)",
+  "seed": 1,
+  "scene": "fresh",
+  "params": {
+   "run": true
+  },
+  "input": "action:lock@0.6, action:lock@1.2, action:lock@1.8, action:lock@2.4, action:lock@3, action:lock@3.6, action:lock@4.2, action:lock@4.8, action:lock@5.4, action:lock@6, action:lock@6.6, action:lock@7.2, action:lock@7.8, action:lock@8.4, action:lock@9, action:lock@9.6, action:lock@10.2, action:lock@10.8, action:lock@11.4, action:lock@12, action:lock@12.6, action:lock@13.2, action:lock@13.8, action:lock@14.4, action:lock@15, action:lock@15.6, action:lock@16.2, action:lock@16.8, action:lock@17.4, action:lock@18, action:lock@18.6, action:lock@19.2, action:lock@19.8, action:lock@20.4, action:lock@21, action:lock@21.6, action:lock@22.2, action:lock@22.8, action:lock@23.4, action:lock@24, action:lock@24.6, action:lock@25.2, action:lock@25.8, action:lock@26.4, action:lock@27, action:lock@27.6, action:lock@28.2, action:lock@28.8, action:lock@29.4, action:lock@30, action:lock@30.6, action:lock@31.2, action:lock@31.8, action:lock@32.4, action:lock@33, action:lock@33.6, action:lock@34.2, action:lock@34.8, action:lock@35.4, action:lock@36, action:lock@36.6, action:lock@37.2, action:lock@37.8, action:lock@38.4, action:lock@39, action:lock@39.6, action:lock@40.2, action:lock@40.8, action:lock@41.4, action:lock@42, action:lock@42.6, action:lock@43.2, action:lock@43.8, action:lock@44.4, action:lock@45, action:lock@45.6, action:lock@46.2, action:lock@46.8, action:lock@47.4, action:lock@48, action:lock@48.6, action:lock@49.2, action:lock@49.8, action:lock@50.4, action:lock@51, action:lock@51.6, action:lock@52.2, action:lock@52.8, action:lock@53.4, action:lock@54, action:lock@54.6, action:lock@55.2, action:lock@55.8, action:lock@56.4, action:lock@57, action:lock@57.6, action:lock@58.2, action:lock@58.8, action:lock@59.4, action:lock@60, action:lock@60.6, action:lock@61.2, action:lock@61.8, action:lock@62.4, action:lock@63, action:lock@63.6, action:lock@64.2, action:lock@64.8, action:lock@65.4, action:lock@66, action:lock@66.6, action:lock@67.2, action:lock@67.8, action:lock@68.4, action:lock@69, action:lock@69.6, action:lock@70.2, action:lock@70.8, action:lock@71.4, action:lock@72, action:lock@72.6, action:lock@73.2, action:lock@73.8, action:lock@74.4, action:lock@75, action:lock@75.6, action:lock@76.2, action:lock@76.8, action:lock@77.4, action:lock@78, action:lock@78.6, action:lock@79.2, action:lock@79.8, action:lock@80.4, action:lock@81, action:lock@81.6, action:lock@82.2, action:lock@82.8, action:lock@83.4, action:lock@84, action:lock@84.6, action:lock@85.2, action:lock@85.8, action:lock@86.4, action:lock@87, action:lock@87.6, action:lock@88.2, action:lock@88.8, action:lock@89.4, action:lock@90, action:lock@90.6, action:lock@91.2, action:lock@91.8, action:lock@92.4, action:lock@93, action:lock@93.6, action:lock@94.2, action:lock@94.8, action:lock@95.4, action:lock@96, action:lock@96.6, action:lock@97.2, action:lock@97.8, action:lock@98.4, action:lock@99, action:lock@99.6, action:lock@100.2, action:lock@100.8, action:lock@101.4, action:lock@102, action:lock@102.6, action:lock@103.2, action:lock@103.8, action:lock@104.4, action:lock@105, action:lock@105.6, action:lock@106.2, action:lock@106.8, action:lock@107.4, action:lock@108, action:lock@108.6, action:lock@109.2, action:lock@109.8, action:lock@110.4, action:lock@111, action:lock@111.6, action:lock@112.2, action:lock@112.8, action:lock@113.4, action:lock@114, action:lock@114.6, action:lock@115.2, action:lock@115.8, action:lock@116.4, action:lock@117, action:lock@117.6, action:lock@118.2, action:lock@118.8, action:lock@119.4, action:lock@120, action:lock@120.6, action:lock@121.2, action:lock@121.8, action:lock@122.4, action:lock@123, action:lock@123.6, action:lock@124.2, action:lock@124.8, action:lock@125.4, action:lock@126, action:lock@126.6, action:lock@127.2, action:lock@127.8, action:lock@128.4, action:lock@129, action:lock@129.6, action:lock@130.2, action:lock@130.8, action:lock@131.4, action:lock@132, action:lock@132.6, action:lock@133.2, action:lock@133.8, action:lock@134.4, action:lock@135, action:lock@135.6, action:lock@136.2, action:lock@136.8, action:lock@137.4, action:lock@138, action:lock@138.6, action:lock@139.2, action:lock@139.8, action:lock@140.4, action:lock@141, action:lock@141.6, action:lock@142.2, action:lock@142.8, action:lock@143.4, action:lock@144, action:lock@144.6, action:lock@145.2, action:lock@145.8, action:lock@146.4, action:lock@147, action:lock@147.6, action:lock@148.2, action:lock@148.8, action:lock@149.4, 1@2.3, 1@4.3, 1@6.3, 1@8.3, 1@10.3, 1@12.3, 1@14.3, 1@16.3, 1@18.3, 1@20.3, 1@22.3, 1@24.3, 1@26.3, 1@28.3, 1@30.3, 1@32.3, 1@34.3, 1@36.3, 1@38.3, 1@40.3, 1@42.3, 1@44.3, 1@46.3, 1@48.3, 1@50.3, 1@52.3, 1@54.3, 1@56.3, 1@58.3, 1@60.3, 1@62.3, 1@64.3, 1@66.3, 1@68.3, 1@70.3, 1@72.3, 1@74.3, 1@76.3, 1@78.3, 1@80.3, 1@82.3, 1@84.3, 1@86.3, 1@88.3, 1@90.3, 1@92.3, 1@94.3, 1@96.3, 1@98.3, 1@100.3, 1@102.3, 1@104.3, 1@106.3, 1@108.3, 1@110.3, 1@112.3, 1@114.3, 1@116.3, 1@118.3, 1@120.3, 1@122.3, 1@124.3, 1@126.3, 1@128.3, 1@130.3, 1@132.3, 1@134.3, 1@136.3, 1@138.3, 1@140.3, 1@142.3, 1@144.3, 1@146.3, 1@148.3",
+  "steps": [
+   {
+    "at": 1,
+    "expect": "state.rookie"
+   },
+   {
+    "from": 0.5,
+    "to": 150,
+    "eventually": "state.wave >= 4"
+   },
+   {
+    "from": 0.5,
+    "to": 150,
+    "never": "state.dead && state.wave <= 3"
+   }
+  ]
+ },
+ {
+  "name": "rookie opening switches off once the player owns an upgrade",
+  "seed": 3,
+  "scene": "mid",
+  "params": {
+   "run": true
+  },
+  "steps": [
+   {
+    "at": 1,
+    "expect": "!state.rookie"
+   }
+  ]
  }
 ]

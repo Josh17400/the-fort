@@ -84,7 +84,7 @@ function snapshot() {
   const screen = inRun ? (g.choosing ? "directive" : paused ? "paused" : "battle") : g && g.swAsk ? "second-wind" : g && g.over ? "after-action" : "base";
   const st = {
     screen, theater: S.map, bank: Math.floor(S.bank), rp: S.rp | 0, gems: S.gems | 0, best: S.best,
-    wave: g ? g.wave : 0, kills: g ? g.kills : 0, time: g ? r1(g.time) : 0,
+    wave: g ? g.wave : 0, rookie: !!(g && g.rookie), kills: g ? g.kills : 0, time: g ? r1(g.time) : 0,
     dead: !!(g && g.over && !g.retreated), won: false,
     // each run is its own scene, so the harness forgets the last run's enemies; a retreat isn't a death
     scene: inRun || (g && g.over) ? "run " + runNo : "base",

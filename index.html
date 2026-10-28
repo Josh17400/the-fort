@@ -778,6 +778,8 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
 .ovr .en{font:800 16px/1.3 var(--f-display);letter-spacing:.02em}
 .ovr .brk{font:400 13px var(--f-body);color:var(--c-text-2)}
 .ovr .callout{margin-top:4px}
+.rookie{display:flex;flex-direction:column;gap:8px;margin:10px 0;padding:10px 12px;border-radius:var(--rad-md);border:1px solid rgba(255,207,90,.45);background:rgba(255,207,90,.08)}
+.rookie .eyebrow{color:var(--c-gold,#ffcf5a)}.rookie p{margin:0;font:400 14px/1.4 var(--f-body);color:var(--c-text)}
 .aarfix{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:6px 12px 6px 8px;border-radius:var(--rad-md);cursor:pointer;text-align:left;
   font:400 13px/1.35 var(--f-body);color:var(--c-text);background:rgba(255,255,255,.035);border:1px solid var(--c-line-2);transition:border-color var(--d-1),background var(--d-1)}
 .aarfix .ico{width:32px;height:32px;border-radius:9px}.aarfix.rd .ico{color:var(--c-blue)}
@@ -1766,6 +1768,11 @@ const threatName=t=>t==='vbied'?'Car Bomb':INTEL[t]?INTEL[t][0]:t||'last threat'
 function counterPick(){if(!lastCause)return null;const ids=[...(lastCause.breachW?COUNTER.walls:[]),...lastCause.top.flatMap(t=>COUNTER[t]||[])];
   const ok=[...new Set(ids)].map(id=>U.find(u=>u.id===id)).filter(u=>u&&L(u.id)<u.max&&!lockWhy(u));
   return ok.find(u=>S.bank>=costOf(u,L(u.id)))||ok[0]||null}
+// After a brand-new commander's fall (no Armory level bought here yet): say plainly that falling is the loop and point at a first buy
+function rookieAAR(a){if(a.dc||Object.values(S.lv).some(v=>v>0))return'';   // the OVERRUN box below already offers the counter pick: suggest another
+  const cp=lastCause&&counterPick(),p=recommend(3).find(q=>!cp||q.u.id!==cp.id),u=p&&p.u,c=u&&costOf(u,L(u.id)),can=u&&S.bank>=c;
+  return`<div class="rookie"><div class="eyebrow">EVERY FORT FALLS · THAT'S THE GAME</div><p>Your cash stays with you: you have <b>$${fmtN(S.bank)}</b> to spend. Upgrade in the Armory to hit harder and hold longer, then deploy again: every run goes further.</p>`
+    +(u?`<button class="aarfix${can?' can':''}" data-goto="${u.id}"><span class="ico">${ic(u.id,18)}</span><span class="ft">${can?'Buy':'Next up:'} <b>${u.name}</b> Lv ${L(u.id)+1}</span><i>${can?'$'+fmtN(c)+' · tap to buy →':'save $'+fmtN(c-S.bank)+' more'}</i></button>`:'')+'</div>'}
 function afterAction(){if(!lastCause)return'';const u=counterPick(),c=u&&costOf(u,L(u.id)),can=u&&S.bank>=c;
   return`<div class="ovr"><div class="eyebrow">OVERRUN BY</div><div class="en">${lastCause.top.map(threatName).join(' · ')}</div>`
     +(lastCause.breachW?`<div class="brk">Walls breached on wave ${lastCause.breachW}</div>`:'')+doctrineTip(lastCause.doc)+'</div>'
@@ -2749,6 +2756,7 @@ function renderAAR(){const el=$('lastRun'),a=lastAAR;
   const n=rsAffordN(),m=Math.floor(a.time/60),s=Math.floor(a.time%60),nm=a.medals.length,ne=(a.evs||[]).length;
   el.innerHTML=`<div class="panel aar ticks"><div class="sec-h"><div class="eyebrow">${a.dc?'DAILY CHALLENGE':'AFTER-ACTION'} · WAVE ${a.wave}</div>${a.rec?`<span class="badge b-new">${a.dc?"TODAY'S BEST":'NEW BEST'}</span>`:''}</div>`
     +`<div class="tiles t4">${[['WAVE',a.wave],['KILLS',fmtN(a.kills)],a.dc?['BEST TODAY','W'+a.dc.best]:['EARNED','$'+fmtN(a.earned)],['TIME',m+'<small>m</small> '+s+'<small>s</small>']].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join('')}</div>`
+    +rookieAAR(a)
     +(a.dc?dcResHtml(a):x2Html(a)+`<button class="rprow" data-rsgo="">${ic('research',16)}<span>${a.rp||careerBest()>=10?`<b>+${fmtN(a.rp)} RP</b> · ${fmtN(S.rp)} banked`:'<b>RP starts at wave 10</b> · hold that far to fund R&amp;D'}${n?'<span class="hph"> · enough for '+n+' '+pl(n,'tier')+'</span>':''}</span><span class="chev">→</span></button>`+afterAction())
     +statsHtml(a)
     +(a.perks||nm||ne?`<details class="rund"${narrow()?'':' open'}><summary>${ic('chevR',14)}Run details${a.nPerk?' · '+a.nPerk+' '+pl(a.nPerk,'directive'):''}${nm?' · '+nm+' '+pl(nm,'medal'):''}${ne?' · '+ne+' '+pl(ne,'event'):''}</summary><div class="rdx">`
@@ -3891,6 +3899,7 @@ function startRun(){
   G={wave:startWaveOk()-1,spawnLeft:0,spawnT:0,spawnInt:1,breakT:2,breakMax:2,enemies:[],fx:[],parts:[],floats:[],shells:[],bombs:[],planes:[],mines:[],crates:[],
     hp:hpAt(L('hp')),maxHp:hpAt(L('hp')),wallMax:wallMaxAt(L('walls')),wallHp:wallMaxAt(L('walls')),sold,kills:0,earned:0,time:0,shake:0,
     zoomV:vision()*0.3,artyT:3,airT:0,airArmed:false,nadeT:0,nadeArmed:false,nades:[],rapidT:0,crateT:10,banner:'',bannerT:0,hurtT:0,breached:false,pk:{},choosing:null,perkAt:0,startBest:S.best,threat:{},breachW:0,ev:null,evLast:0,evPrev:null,evN:0,fogK:0,drops:[],transports:[],vq:[],eshots:[],vwrecks:[]};
+  G.rookie=rookieRun();
   labTick();G.rs=Object.assign({},S.rs);G.rf=Object.assign({},S.rf);G.rp=0;G.cleared=0;G.rsNew=rsFieldNew();fortUpInit();   // research is frozen for the whole run
   {const w0=startWaveOk();G.startWave=w0;if(w0>1){G.cp={i:0,n:Math.min(8,Math.floor(w0/10))};G.perkAt=0.5;medalMax('cp',1)}}
   G.st={d:{},ks:{},k:{},big:0,bs:'',bt:'',wc:0,w0:G.wave};SM.dur=0;_ds='other';G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=speedOpts().filter(v=>v<=(S.set.lastSpeed||1)).pop()||1;syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;G.tbWr=[];G.tbD=null;G.wpE=null;G.wpT=0;initLogi();
@@ -3931,6 +3940,11 @@ const money=v=>Math.round(v*(1+WB*L('bounty'))*(1+0.125*pk('salvage')+0.2*pk('ha
 // wave 20 so every run ends in a last stand, then settles to a pace that bounty growth plus upgrades can chase: endless
 // waves keep escalating, and a fort that keeps investing keeps pushing deeper.
 const EARLY=w=>w<=5?0.4+0.12*(w-1):1;  // gentler waves 1-5 (0.4 -> 0.88) so a brand-new player on the Recruit sidearm (x0.6 dmg) gets a foothold
+// Rookie opening (launch data, Oct 2026: a quarter of new players quit after one sub-minute first run). Until a commander has bought
+// an Armory level on Desert Outpost or held past wave 3, waves 1-3 are softer still. Frozen per run (G.rookie, set in startRun) and
+// read only while a run is live, so the curves, the UI previews and every upgraded fort are untouched.
+const ROOKIE={hp:0.7,dmg:0.55,n:0.8,w:3},rookieRun=()=>!S.dcHold&&S.map===MAPS[0].id&&!Object.values(S.lv).some(v=>v>0)&&careerBest()<=3,
+  rk=(w,k)=>running&&G&&G.rookie&&w<=ROOKIE.w?ROOKIE[k]:1;
 function curve(w,d0,b,x0,ease,dL){const x=w-1;if(x<=x0)return d0*x+b*x*x;const d1=d0+2*b*x0,t=Math.min(x-x0,ease);
   return d0*x0+b*x0*x0+d1*t+(dL-d1)*t*t/(2*ease)+dL*Math.max(0,x-x0-ease)}
 const HPC=[Math.log(1.14),Math.log(1.003),26,30,Math.log(1.11)],DMC=[Math.log(1.1),0,26,30,Math.log(1.075)],RWC=[Math.log(1.045),0,26,30,Math.log(1.075)];
@@ -3938,8 +3952,8 @@ const HPC=[Math.log(1.14),Math.log(1.003),26,30,Math.log(1.11)],DMC=[Math.log(1.
 const LATE_G=Math.exp(2.5*RWC[4]),LATE_M=Math.exp(2.5*HPC[4]);   // 1.1982 / 1.2981
 // the active theater scales all three (MAPM + mapMul, see CAMPAIGN): Desert Outpost's multipliers are exactly 1, so its numbers are the original curves
 const hpBase=w=>Math.min(1e200,Math.exp(curve(w,...HPC))*EARLY(w)),dmgBase=w=>Math.min(1e200,Math.exp(curve(w,...DMC))*EARLY(w));
-const waveHp=w=>hpBase(w)*mapMul(w,MAPM.hp0,MAPM.hp),waveDmg=w=>dmgBase(w)*mapMul(w,MAPM.dmg0,MAPM.dmg),waveRew=w=>Math.min(1e200,Math.exp(curve(w,...RWC)))*MAPM.rew;
-const waveCount=w=>Math.round((6+2.6*w)*(1+0.04*L('vision'))), waveWindow=w=>Math.max(6,Math.min(12,6+0.3*w)-Math.max(0,w-24)*0.3);
+const waveHp=w=>hpBase(w)*mapMul(w,MAPM.hp0,MAPM.hp)*rk(w,'hp'),waveDmg=w=>dmgBase(w)*mapMul(w,MAPM.dmg0,MAPM.dmg)*rk(w,'dmg'),waveRew=w=>Math.min(1e200,Math.exp(curve(w,...RWC)))*MAPM.rew;
+const waveCount=w=>Math.round((6+2.6*w)*(1+0.04*L('vision'))*rk(w,'n')), waveWindow=w=>Math.max(6,Math.min(12,6+0.3*w)-Math.max(0,w-24)*0.3);
 const flyingCraft=()=>!!(G.fleet&&G.fleet.length||G.air&&G.air.some(u=>u.k==='gunship')||G.units&&G.units.some(u=>u.ck==='heli'));
 // theater enemy mix (MAPS[].mix): multiplies the spawn weights pickType built; null (Desert Outpost) leaves them untouched
 const mapMix=p=>{const m=mapCur().mix;if(m)for(const q of p)if(m[q[0]]!=null)q[1]*=m[q[0]]};
