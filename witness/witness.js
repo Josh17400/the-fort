@@ -27,6 +27,9 @@ const NODE = typeof process !== "undefined" && !!(process.versions && process.ve
 function createWitness() {
 const DEFAULT_ADDR = "127.0.0.1:7357";
 const VERSION = "1.0.0";
+// the Witness release this copy came from: the CLI says so when a game's copy is older than the CLI (a core test keeps
+// it equal to package.json)
+const WITNESS_VERSION = "0.7.10";
 
 // The real APIs, captured before any takeover. The adapter only ever uses these.
 const real = {
@@ -53,6 +56,7 @@ function readConfig() {
     if (c.seed == null && q.has("witness_seed")) c.seed = +q.get("witness_seed");
     if (c.audioUnlock == null && q.has("witness_audio_unlock")) c.audioUnlock = q.get("witness_audio_unlock") !== "0";
     if (c.epoch == null && q.has("witness_epoch")) c.epoch = q.get("witness_epoch");
+    if (c.audioCapture == null && q.has("witness_audio")) c.audioCapture = q.get("witness_audio") !== "0";
     for (const k of ["takeover", "raf", "timers", "webaudio", "console", "animations", "videos", "virtualEnded", "realtimeWatch"]) {
       if (c[k] == null && q.has(`witness_${k}`)) c[k] = q.get(`witness_${k}`) !== "0";
     }
@@ -64,6 +68,7 @@ function readConfig() {
     if (c.record == null && e.WITNESS_RECORD) c.record = e.WITNESS_RECORD;
     if (c.seed == null && e.WITNESS_SEED) c.seed = +e.WITNESS_SEED;
     if (c.epoch == null && e.WITNESS_EPOCH) c.epoch = e.WITNESS_EPOCH;
+    if (c.audioCapture == null && e.WITNESS_AUDIO) c.audioCapture = e.WITNESS_AUDIO !== "0";
   }
   return c;
 }
@@ -324,7 +329,10 @@ const clock = {
   /** Line Date.now() up on a whole millisecond, so its integer steps repeat identically after every reset. */
   align() { const n = this.ticks / TICK; this.dateBase = Math.ceil(this.dateBase + n) - n; },
 };
-clock.epoch = epochMs(CFG.epoch) ?? DEFAULT_EPOCH;
+// the configured start, kept: a reset with an epoch moves clock.epoch; the hello reports this one, so the CLI can
+// restore it for tests without their own after a test that set one
+const cfgEpoch = epochMs(CFG.epoch);
+clock.epoch = cfgEpoch ?? DEFAULT_EPOCH;
 clock.dateBase = clock.epoch - clock.now();
 
 const sched = {
@@ -743,11 +751,16 @@ function installWebAudioTap() {
   const nSuspend = Native.prototype.suspend, nResume = Native.prototype.resume;
   const destGet = Object.getOwnPropertyDescriptor(G.BaseAudioContext ? G.BaseAudioContext.prototype : Native.prototype, "destination").get;
   const timeGet = Object.getOwnPropertyDescriptor(G.BaseAudioContext ? G.BaseAudioContext.prototype : Native.prototype, "currentTime").get;
-  const seconds = +CFG.audioSeconds || 300;
+  const seconds = +CFG.audioSeconds || 300, capture = CFG.audioCapture !== false;
   installVirtualEnded();
   function WitnessAudioContext(opts = {}) {
     const rate = (opts && opts.sampleRate) || +CFG.audioRate || 24000;
-    const ctx = new Native({ numberOfChannels: 1, length: Math.ceil(rate * seconds), sampleRate: rate });
+    // no capture (a play session: WITNESS_CONFIG.audioCapture false / ?witness_audio=0): nothing renders, and the clock
+    // runs exactly as the capture's would (the same 128-frame steps, the same end at audioSeconds), so the game and its
+    // "ended" events go the same way as in a replay with capture
+    const len = Math.ceil(rate * seconds);
+    const ctx = new Native({ numberOfChannels: 1, length: capture ? len : Math.ceil(rate), sampleRate: rate });
+    const ctxTime = () => (capture ? timeGet.call(ctx) : tap.rendered / rate);
     const nativeDest = destGet.call(ctx);
     const bus = ctx.createGain();
     Object.defineProperty(bus, "maxChannelCount", { value: 2 });
@@ -781,7 +794,7 @@ function installWebAudioTap() {
     if (webReg()) webReg().track(entry);
     Object.defineProperties(ctx, {
       destination: { get: () => bus },
-      currentTime: { get: () => (tap.full ? frameTime(timeGet.call(ctx) + (entry.st === "running" ? audioClock.t - tap.fullAt : 0), rate) : frameTime(timeGet.call(ctx), rate)) },
+      currentTime: { get: () => (tap.full ? frameTime(ctxTime() + (entry.st === "running" ? audioClock.t - tap.fullAt : 0), rate) : frameTime(ctxTime(), rate)) },
       state: { get: () => entry.st },
       resume: { value: () => {
         entry.resumes++;
@@ -800,7 +813,7 @@ function installWebAudioTap() {
       createMediaStreamDestination: { value: () => Object.assign(silent(), { stream: null }) },
       setSinkId: { value: () => Promise.resolve() },
     });
-    const tap = { rate, born: audioClock.t, chunks: [], base: 0, received: 0, rendered: 0, started: false, dead: false, ready: null, frozenBase: 0 };
+    const tap = { rate, capture, born: audioClock.t, chunks: [], base: 0, received: 0, rendered: 0, started: false, dead: false, ready: null, frozenBase: 0 };
     // output position of the current simulated time, and output → context samples (the frozen gaps left out)
     tap.outNow = () => (tap.anchor != null ? tap.anchor + audioClock.since * rate : (audioClock.t - tap.born) * rate);
     tap.frozenAt = (o) => { let f = tap.frozenBase; for (const [g0, g1] of gaps) { if (g0 >= o) break; f += Math.min(o, g1) - g0; } return f; };
@@ -808,7 +821,7 @@ function installWebAudioTap() {
     tap.read = Math.round(audioReadSince * rate);   // created mid-run: start reading where the capture is
     // the context's clock in seconds: as rendered (where a start "now" lands), and the render quantum simulated time
     // is in (sources ending by then fire "ended" this frame; null: closed, they never end)
-    tap.nowRendered = () => (tap.full ? timeGet.call(ctx) + (entry.st === "running" ? audioClock.t - tap.fullAt : 0) : timeGet.call(ctx));
+    tap.nowRendered = () => (tap.full ? ctxTime() + (entry.st === "running" ? audioClock.t - tap.fullAt : 0) : ctxTime());
     tap.endedBy = () => (entry.st === "closed" ? null : tap.dead ? tap.nowRendered() : (Math.floor(tap.ctxAt(tap.outNow()) / 128) * 128) / rate);
     tap.closed = () => entry.st === "closed";
     taps.set(ctx, tap);
@@ -851,12 +864,13 @@ function installWebAudioTap() {
     tap.renderTo = async (target) => {
       if (tap.dead) return;
       try {
+        if (!capture) { if (target >= len) { tap.dead = true; tap.full = true; tap.fullAt = audioClock.t; } else if (target > tap.rendered) tap.rendered = target; return; }
         await tap.prepare();
         if (target <= tap.rendered) return;
         // the offline context's length is fixed when it is made: past it nothing more can be rendered. The context's
         // clock keeps following simulated time (below), so the game runs on unchanged; only a read of audio from past
         // the end says so (a play session never reads audio: no warning there)
-        if (target >= ctx.length) { tap.dead = true; tap.full = true; tap.fullAt = audioClock.t; return; }
+        if (target >= len) { tap.dead = true; tap.full = true; tap.fullAt = audioClock.t; return; }
         const reached = nSuspend.call(ctx, target / rate);
         if (!tap.started) { tap.started = true; ctx.startRendering().catch(() => {}); } else nResume.call(ctx);
         await reached;
@@ -894,7 +908,7 @@ function installWebAudioTap() {
     };
     tap.settle = async () => {   // worklet messages arrive asynchronously: wait until they caught up
       const end = real.now() + 2000;
-      while (!tap.dead && tap.received < tap.rendered && real.now() < end) await new Promise((r) => real.setTimeout(r, 2));
+      while (capture && !tap.dead && tap.received < tap.rendered && real.now() < end) await new Promise((r) => real.setTimeout(r, 2));
     };
     sources.push(tap);
     return ctx;
@@ -909,6 +923,7 @@ async function renderAudio(ceil) {
 }
 
 async function readAudio() {
+  if (CFG.audioCapture === false) warnOnce("audio-off", "audio capture is off in this session (a play session: WITNESS_CONFIG.audioCapture / ?witness_audio=0): audio reads are silent");
   await renderAudio(true);
   for (const s of sources) if (s.full) warnOnce("audio-full", `audio capture is full (${+CFG.audioSeconds || 300}s per AudioContext; set WITNESS_CONFIG.audioSeconds): later audio reads are silent`);
   for (const s of sources) if (s.settle) await s.settle();
@@ -1510,6 +1525,8 @@ async function connect(addr, onMessage, onClose) {
 
 let conn = null;
 let chain = Promise.resolve();
+let busyNow = null;              // the command being handled: {cmd, name, t0, awaiting} (answered to "busy")
+const asyncCalls = new Map();    // calls whose promise hasn't resolved yet
 const perfStats = { frames: 0, ms: 0 };
 
 function callsList() {
@@ -1536,15 +1553,17 @@ function hello() {
   const caps = ["step", "input", "snapshot", "eval", "logs", "perf"];
   if (H.reset) caps.unshift("reset");
   if (H.screenshot || BROWSER) caps.push("screenshot");
-  if (H.audio || sources.length || (BROWSER && G.OfflineAudioContext && CFG.webaudio !== false)) caps.push("audio");
+  if (H.audio || (CFG.audioCapture !== false && (sources.length || (BROWSER && G.OfflineAudioContext && CFG.webaudio !== false)))) caps.push("audio");
   if (H.calls && Object.keys(H.calls).length) caps.push("call");
-  const msg = { protocol: 1, name: H.name || (BROWSER ? document.title : "") || "game", engine: detectEngine(), language: H.language || "javascript", fps, capabilities: caps, adapter: `witness-js ${VERSION}` };
+  if (BROWSER) caps.push("reload");   // takes a reset with reloaded: true after the CLI reloaded the page (0.7.5+)
+  const msg = { protocol: 1, name: H.name || (BROWSER ? document.title : "") || "game", engine: detectEngine(), language: H.language || "javascript", fps, capabilities: caps, adapter: `witness-js ${VERSION}`, witness: WITNESS_VERSION };
   const size = BROWSER ? dom.logicalSize() : H.size;
   if (Array.isArray(size)) msg.size = size.map((n) => Math.round(n));
   const calls = callsList();
   if (calls.length) msg.calls = calls;
   if (H.keys) msg.keys = H.keys;
   if (H.touch) msg.touch = true;      // the game handles touch itself: no mouse fallback for finger 0
+  if (cfgEpoch != null) msg.epoch = cfgEpoch;   // the page's / env's own Date start (WITNESS_CONFIG.epoch, ?witness_epoch=, WITNESS_EPOCH)
   return { hello: msg };
 }
 
@@ -1648,7 +1667,13 @@ async function handle(m) {
       const c = (H.calls || {})[m.name];
       const fn = typeof c === "function" ? c : c && (c.run || c.fn);
       if (!fn) throw new Error(`unknown call '${m.name}'${H.calls ? ` (calls: ${Object.keys(H.calls).join(", ")})` : ""}`);
-      return { result: jsonSafe(await fn(...(Array.isArray(m.args) ? m.args : []))) ?? null };
+      const r = fn(...(Array.isArray(m.args) ? m.args : []));
+      if (!r || typeof r.then !== "function") return { result: jsonSafe(r) ?? null };
+      // a promise: named while unresolved (the "busy" query reports it)
+      const key = {};
+      asyncCalls.set(key, { name: String(m.name), t0: real.now() });
+      if (busyNow) busyNow.awaiting = true;
+      try { return { result: jsonSafe(await r) ?? null }; } finally { asyncCalls.delete(key); }
     }
     case "eval": return { value: jsonSafe(await evaluate(String(m.expr))) ?? null };
     case "logs": return { logs: logs.splice(0) };
@@ -1668,11 +1693,19 @@ function onMessage(line) {
   let m;
   try { m = JSON.parse(line); } catch { return; }
   if (!isObj(m) || m.cmd == null) return;
+  // "busy": answered at once, outside the queue (the CLI asks when a request timed out): what the page is still in
+  if (m.cmd === "busy") {
+    const t = real.now();
+    try { conn && conn.send({ id: m.id, ok: true, busy: busyNow ? { cmd: busyNow.cmd, name: busyNow.name || null, ms: t - busyNow.t0, awaiting: !!busyNow.awaiting } : null, calls: [...asyncCalls.values()].map((c) => ({ name: c.name, ms: t - c.t0 })) }); } catch { /* gone */ }
+    return;
+  }
   rtHold();   // Witness drives the game until one macrotask after the reply (real-time activity, above)
   chain = chain.then(async () => {
     let reply;
+    busyNow = { cmd: m.cmd, name: m.cmd === "call" ? String(m.name) : null, t0: real.now() };
     try { reply = { id: m.id, ok: true, ...(await handle(m)) }; }
     catch (e) { reply = { id: m.id, ok: false, error: e && e.message ? e.message : String(e) }; }
+    busyNow = null;
     try { conn && conn.send(reply); } catch (e) { reportError(e, "sending a reply"); }
     rtRelease();
   });
@@ -1707,10 +1740,17 @@ const withTimeout = (p, ms) => Promise.race([p, new Promise((r) => real.setTimeo
  * Wait until the page's pictures and fonts are ready: every <img> and every CSS background-image url() decoded, and
  * document.fonts.ready; then `frames` real display frames (default 2) and `ms` more real milliseconds (default 0).
  * start() calls it in witness mode (start({ ready: false }) skips it, start({ ready: { ms: 300 } }) tunes it).
- * At most `timeout` ms (default 10000) for the decoding.
+ * At most `timeout` ms (default 10000) for the decoding, and `each` ms (default 2500) for any one picture: WebKit's
+ * HTMLImageElement.decode() can stay pending forever on some pictures (said once in the logs, then skipped).
  */
-async function ready({ frames = 2, ms = 0, timeout = 10000 } = {}) {
+async function ready({ frames = 2, ms = 0, timeout = 10000, each = 2500 } = {}) {
   if (!BROWSER) return;
+  const stuck = [];
+  const dec = (im, u) => {
+    if (!im.decode) return null;
+    let done = false;
+    return Promise.race([im.decode().catch(() => {}).then(() => { done = true; }), new Promise((r) => real.setTimeout(() => { if (!done) stuck.push(u); r(); }, each))]);
+  };
   const work = (async () => {
     const urls = new Set();
     for (const img of Array.from(G.document.images || [])) if (img.currentSrc || img.src) urls.add(img.currentSrc || img.src);
@@ -1719,11 +1759,12 @@ async function ready({ frames = 2, ms = 0, timeout = 10000 } = {}) {
       try { bg = G.getComputedStyle(el).backgroundImage; } catch { /* detached */ }
       if (bg && bg !== "none") for (const m of bg.matchAll(/url\(\s*(['"]?)(.*?)\1\s*\)/g)) if (m[2]) urls.add(m[2]);
     }
-    await Promise.all([...urls].map((u) => { const im = new G.Image(); im.src = u; return im.decode ? im.decode().catch(() => {}) : null; }));
-    for (const img of Array.from(G.document.images || [])) if (img.decode) await img.decode().catch(() => {});
-    if (G.document.fonts && G.document.fonts.ready) await G.document.fonts.ready.catch(() => {});
+    await Promise.all([...urls].map((u) => { const im = new G.Image(); im.src = u; return dec(im, u); }));
+    await Promise.all(Array.from(G.document.images || []).map((img) => dec(img, img.currentSrc || img.src)));
+    if (G.document.fonts && G.document.fonts.ready) await withTimeout(G.document.fonts.ready.catch(() => {}), each);
   })();
-  await withTimeout(work, timeout);
+  const all = await Promise.race([work.then(() => true), new Promise((r) => real.setTimeout(() => r(false), timeout))]);
+  if (stuck.length || !all) warnOnce("ready-decode", `start() ready: ${stuck.length ? `${stuck.length} picture(s) never finished decoding within ${each} ms (${[...new Set(stuck)].slice(0, 3).map((u) => String(u).split("/").pop().slice(0, 60)).join(", ")}${stuck.length > 3 ? ", …" : ""}; WebKit's decode() can hang)` : ""}${!all ? `${stuck.length ? "; " : ""}the whole wait was cut at ${timeout} ms` : ""}: went on`);
   for (let i = 0; i < frames; i++) await withTimeout(new Promise((r) => (real.requestAnimationFrame ? real.requestAnimationFrame(() => r()) : real.setTimeout(r, 16))), 100);
   if (ms > 0) await new Promise((r) => real.setTimeout(r, ms));
 }
@@ -1758,10 +1799,33 @@ async function boot({ selector = 'script[type="text/witness"], script[data-witne
   return n;
 }
 
+// The text a reader sees under el: rendered text nodes, skipping aria-hidden / hidden subtrees (decorative minis,
+// icon glyphs) and elements that aren't displayed; block elements and <br> break words apart.
+function visibleText(el) {
+  if (!el) return "";
+  const out = [], cs = (e) => (G.getComputedStyle ? G.getComputedStyle(e) : null);
+  const skip = (e) => e.getAttribute("aria-hidden") === "true" || e.hidden || /^(SCRIPT|STYLE|TEMPLATE|NOSCRIPT)$/.test(e.tagName) || (cs(e) && cs(e).display === "none");
+  const walk = (n) => {
+    if (n.nodeType === 3) { out.push(n.nodeValue); return; }
+    if (n.nodeType !== 1 || skip(n)) return;
+    if (n.tagName === "BR") { out.push(" "); return; }
+    if (n.tagName === "INPUT" || n.tagName === "TEXTAREA") { if (n.value) out.push(` ${n.value} `); return; }
+    const block = cs(n) && !/^inline/.test(cs(n).display);
+    if (block) out.push(" ");
+    for (const c of n.childNodes) walk(c);
+    if (block) out.push(" ");
+  };
+  walk(el);
+  return out.join("").replace(/\s+/g, " ").trim();
+}
+
 function describeEl(el, plain = false) {
-  const text = (el.innerText || "").trim().replace(/\s+/g, " ");
-  const img = !text && el.querySelector ? el.querySelector("img[alt]") : null;
-  const label = text || el.getAttribute("aria-label") || el.getAttribute("title") || (img && img.alt) || (el.tagName === "IMG" && el.alt)
+  // the accessible name first (aria-label is what a screen reader says), then the visible text without decoration
+  const aria = (el.getAttribute("aria-label") || "").trim(), text = aria ? "" : visibleText(el);
+  const img = !aria && !text && el.querySelector ? el.querySelector("img[alt]") : null;
+  const field = el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && !/^(button|submit|reset|checkbox|radio|range|color|file|image)$/i.test(el.type || ""));
+  const label = field ? `${aria || el.getAttribute("placeholder") || (el.labels && el.labels[0] ? visibleText(el.labels[0]) : "") || el.name || "text"} [text field${el.value ? `: ${el.value}` : ""}]`
+    : aria || text || el.getAttribute("title") || (img && img.alt) || (el.tagName === "IMG" && el.alt)
     || (el.tagName === "INPUT" && el.value ? String(el.value) : "") || (el.id ? `#${el.id}` : `<${el.tagName.toLowerCase()}>`);
   return plain ? label : `"${label}"`;
 }
@@ -1806,7 +1870,7 @@ const domHelpers = {
     if (!scope) return [];
     const els = Array.from(scope.querySelectorAll('button, [role="button"], a[href], input:not([type="hidden"]), select, textarea, [onclick]'));
     const visible = (el) => {
-      if (el.closest("[hidden]") || el.disabled) return false;
+      if (el.closest('[hidden], [aria-hidden="true"]') || el.disabled) return false;
       const r = el.getBoundingClientRect();
       if (r.width <= 0 || r.height <= 0) return false;
       const cs = G.getComputedStyle(el);
@@ -1824,8 +1888,14 @@ const domHelpers = {
       const k = (seen.get(label) || 0) + 1;
       seen.set(label, k);
       if (k > 1) label = `${label.slice(0, 52)} #${k}`;
-      return { label, id: el.id || null };
+      return { label, id: el.id || null, ...(/\[text field(: .*)?\]$/.test(label) ? { input: true } : {}) };
     });
+  },
+  /** The visible text under root (an Element or a selector; default the body), aria-hidden / hidden parts left out: for
+   *  state.screenText, so play testers read a panel as a player does. */
+  text(root) {
+    if (!BROWSER) return "";
+    return visibleText(root ? (typeof root === "string" ? G.document.querySelector(root) : root) : G.document.body);
   },
 };
 
@@ -1930,7 +2000,7 @@ const api = {
   createMixer: (opts) => new Mixer(opts),
   ready,
   boot,
-  /** DOM games: dom.tap(elementOrSelector) -> "ok" | "blocked by …"; dom.tappables(root?) -> [{label, id}]. */
+  /** DOM games: dom.tap(elementOrSelector) -> "ok" | "blocked by …"; dom.tappables(root?) -> [{label, id, input?}]; dom.text(root?) -> string. */
   dom: domHelpers,
   /** Finite CSS / Web Animations still running (0 = settled): also globalThis.__witnessAnimating(). */
   animating: () => animatingCount(),
