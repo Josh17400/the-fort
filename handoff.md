@@ -939,3 +939,5 @@ Launch data (fort-analytics, build 20): about a quarter of real new players quit
 - `rookieAAR()` in `renderAAR`: gold "EVERY FORT FALLS · THAT'S THE GAME" card with the cash on hand and one upgrade button (a different pick from the OVERRUN counter). Shown until the first Armory buy.
 - Measured with Witness (fresh save, lock-on every 0.6 s / 1.5 s): before, died on wave 3 / wave 2 within a minute; after, both clear wave 3, take the first directive and fall on wave 4 at 1-2 min with ~$690.
 - t_par: curves and midsim unchanged; **freshsim changed on purpose** (now `w1 k0 hp-600 wall0 bank0 e7 ex78676`). t_core 57, t_econ 82, own.js identical. Witness tests: `rookie opening ...` (2 new, 6/6 pass).
+
+- 2026-10-28 (owner): default graphics preset is High on phones too (`GFX_DEF`); was Medium on phones. Only new saves pick it up (an existing save already stores its preset). Adaptive quality (AQ) still sheds work on slow phones.
