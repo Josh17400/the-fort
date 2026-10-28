@@ -779,7 +779,7 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
 .ovr .brk{font:400 13px var(--f-body);color:var(--c-text-2)}
 .ovr .callout{margin-top:4px}
 .rookie{display:flex;flex-direction:column;gap:8px;margin:10px 0;padding:10px 12px;border-radius:var(--rad-md);border:1px solid rgba(255,207,90,.45);background:rgba(255,207,90,.08)}
-.rookie .eyebrow{color:var(--c-gold,#ffcf5a)}.rookie p{margin:0;font:400 14px/1.4 var(--f-body);color:var(--c-text)}
+.rookie .eyebrow{color:var(--c-gold,#ffcf5a)}.rookie p{margin:0;font:400 14px/1.4 var(--f-body);color:var(--c-text)}.rookie .rk-h{font:800 20px/1.2 var(--f-display);letter-spacing:.02em;color:var(--c-gold-hi)}
 .aarfix{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:6px 12px 6px 8px;border-radius:var(--rad-md);cursor:pointer;text-align:left;
   font:400 13px/1.35 var(--f-body);color:var(--c-text);background:rgba(255,255,255,.035);border:1px solid var(--c-line-2);transition:border-color var(--d-1),background var(--d-1)}
 .aarfix .ico{width:32px;height:32px;border-radius:9px}.aarfix.rd .ico{color:var(--c-blue)}
@@ -1771,7 +1771,7 @@ function counterPick(){if(!lastCause)return null;const ids=[...(lastCause.breach
 // After a brand-new commander's fall (no Armory level bought here yet): say plainly that falling is the loop and point at a first buy
 function rookieAAR(a){if(a.dc||Object.values(S.lv).some(v=>v>0))return'';   // the OVERRUN box below already offers the counter pick: suggest another
   const cp=lastCause&&counterPick(),p=recommend(3).find(q=>!cp||q.u.id!==cp.id),u=p&&p.u,c=u&&costOf(u,L(u.id)),can=u&&S.bank>=c;
-  return`<div class="rookie"><div class="eyebrow">EVERY FORT FALLS · THAT'S THE GAME</div><p>Your cash stays with you: you have <b>$${fmtN(S.bank)}</b> to spend. Upgrade in the Armory to hit harder and hold longer, then deploy again: every run goes further.</p>`
+  return`<div class="rookie"><div class="eyebrow">YOU HAVE FALLEN</div><p class="rk-h">Upgrade to last longer!</p><p>You have <b>$${fmtN(S.bank)}</b> to spend in the Armory.</p>`
     +(u?`<button class="aarfix${can?' can':''}" data-goto="${u.id}"><span class="ico">${ic(u.id,18)}</span><span class="ft">${can?'Buy':'Next up:'} <b>${u.name}</b> Lv ${L(u.id)+1}</span><i>${can?'$'+fmtN(c)+' · tap to buy →':'save $'+fmtN(c-S.bank)+' more'}</i></button>`:'')+'</div>'}
 function afterAction(){if(!lastCause)return'';const u=counterPick(),c=u&&costOf(u,L(u.id)),can=u&&S.bank>=c;
   return`<div class="ovr"><div class="eyebrow">OVERRUN BY</div><div class="en">${lastCause.top.map(threatName).join(' · ')}</div>`

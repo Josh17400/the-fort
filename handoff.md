@@ -936,7 +936,7 @@ Merged with `--no-ff`, in order: theater bosses (`worktree-wf_27825535-dcf-1`), 
 ## Rookie opening + first-fall card (2026-10-28)
 Launch data (fort-analytics, build 20): about a quarter of real new players quit after one first run that ended on wave 1-3 inside a minute. Owner-approved fix:
 - `ROOKIE`/`rookieRun()`/`rk()` (next to `EARLY`): while no Armory level is owned on Desert Outpost and `careerBest()<=3` (not in a daily challenge), waves 1-3 get hp x0.7, dmg x0.55, count x0.8. Frozen per run in `G.rookie` (startRun) and read only while `running`, so the curves hash, UI previews and every upgraded fort are unchanged.
-- `rookieAAR()` in `renderAAR`: gold "EVERY FORT FALLS · THAT'S THE GAME" card with the cash on hand and one upgrade button (a different pick from the OVERRUN counter). Shown until the first Armory buy.
+- `rookieAAR()` in `renderAAR`: gold "YOU HAVE FALLEN · Upgrade to last longer!" card (owner wording) with the cash on hand and one upgrade button (a different pick from the OVERRUN counter). Shown until the first Armory buy.
 - Measured with Witness (fresh save, lock-on every 0.6 s / 1.5 s): before, died on wave 3 / wave 2 within a minute; after, both clear wave 3, take the first directive and fall on wave 4 at 1-2 min with ~$690.
 - t_par: curves and midsim unchanged; **freshsim changed on purpose** (now `w1 k0 hp-600 wall0 bank0 e7 ex78676`). t_core 57, t_econ 82, own.js identical. Witness tests: `rookie opening ...` (2 new, 6/6 pass).
 
