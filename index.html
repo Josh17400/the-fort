@@ -1030,7 +1030,7 @@ button.thc{cursor:pointer;touch-action:manipulation;transition:border-color var(
 @media (max-width:899px),(max-height:500px) and (orientation:landscape){
   .bgrid{display:flex;flex-direction:column;gap:12px}
   .bcol{display:contents}
-  #wbCard{order:0}#lastRun{order:1}#mission{order:2}#picks{order:3}#rdSum{order:4}#nextUnl{order:5}#medTile{order:5}#manual{order:6}
+  #wbCard{order:0}#lastRun{order:1}#mission{order:2}#cmdCard{order:2}#picks{order:3}#rdSum{order:4}#nextUnl{order:5}#medTile{order:5}#manual{order:6}
   .panel{padding:16px}.manual{padding:2px 16px}.manual[open]{padding-bottom:16px}
   .deploy{gap:14px}.deploy h2{font-size:22px;margin-top:8px}.deploy .mdesc{font-size:13px}
   .mkit{gap:12px;padding:10px}.por{width:64px;height:64px;border-radius:10px}.kb .kn{font-size:16px;margin-top:2px}.kb .kw{font-size:12px;margin-bottom:6px}
@@ -1305,6 +1305,74 @@ body.rm .adc::before{animation:none}@keyframes adSpin{to{transform:rotate(1turn)
 .mintro{margin:4px 0 16px;font:400 13px/1.45 var(--f-body);color:var(--c-text-2)}
 #medals .mgrid{margin-bottom:20px}#medals .mgrid:last-child{margin-bottom:12px}
 #medals .srec{margin-bottom:18px}
+/* ===== COMMAND (v1.1 Commander Powers): battle buttons, the Command view and its Base tile ===== */
+:root{--c-valor:#ff9d6b;--c-valor-lo:rgba(255,157,107,.16)}
+#home[data-view=cmd] .view[data-v=cmd]{display:block;animation:viewIn var(--d-3,320ms) var(--e-out,ease-out)}
+/* power buttons: a column above AIR on phones (port), a row beside the cluster elsewhere; hidden until a power is equipped */
+#hud .rbtn.pwb{--x:18px;color:var(--tx)}#hud .rbtn.pwb[hidden],#hud #cpL[hidden]{display:none!important}
+#hud .rbtn.pwb b{font-size:10px;letter-spacing:.04em}
+#hud .rbtn.pwb .rg{background:conic-gradient(var(--c-valor) calc(var(--p)*360deg),rgba(255,255,255,.1) 0)}
+#hud .rbtn.pwb .pp{position:absolute;bottom:-7px;left:0;right:0;display:flex;justify-content:center;gap:3px;pointer-events:none}
+#hud .rbtn.pwb .pp i{width:7px;height:7px;border-radius:50%;background:rgba(10,12,8,.85);border:1px solid rgba(255,157,107,.6)}
+#hud .rbtn.pwb .pp i.f{background:var(--c-valor);box-shadow:0 0 6px rgba(255,157,107,.8)}
+#hud .rbtn.pwb.chg{color:var(--dm)}#hud .rbtn.pwb.chg>.ic{opacity:.6}
+#hud .rbtn.pwb.ready{color:#ffd9c4;border-color:var(--c-valor);box-shadow:0 0 18px rgba(255,157,107,.45)}#hud .rbtn.pwb.ready b{color:#ffd9c4}
+#hud .rbtn.pwb.act{color:#fff3d0;border-color:var(--gh);background:rgba(120,90,20,.55)}#hud .rbtn.pwb.act .cdn{display:block}#hud .rbtn.pwb.act>.ic{display:none}
+#hud .rbtn.pwb.act .rg{background:var(--gh)}
+#hud #cpL{color:var(--gh)}#hud #cpL .rg{background:conic-gradient(var(--gh) calc(var(--p)*360deg),rgba(255,255,255,.1) 0)}
+#hud #cpL.ready{border-color:var(--gh);box-shadow:0 0 22px rgba(255,207,90,.6);animation:hudArm 1.2s ease-in-out infinite}#hud #cpL.chg{opacity:.75}
+body.rm #hud #cpL.ready{animation:none}
+#hud #cp0{--y:176px}#hud #cp1{--y:252px}#hud #cp2{--y:328px}#hud #cpL{--x:96px;--y:176px}
+#hud[data-mode=port] .rbtn.pwb{--s:56px}#hud[data-mode=port] #cp0{--x:20px;--y:172px}#hud[data-mode=port] #cp1{--x:20px;--y:240px}#hud[data-mode=port] #cp2{--x:20px;--y:308px}#hud[data-mode=port] #cpL{--x:98px;--y:172px}
+#hud[data-mode=land] .rbtn.pwb{--s:52px}#hud[data-mode=land] #cp0{--x:156px;--y:16px}#hud[data-mode=land] #cp1{--x:218px;--y:16px}#hud[data-mode=land] #cp2{--x:280px;--y:16px}#hud[data-mode=land] #cpL{--x:156px;--y:84px}
+#hud[data-mode=desk] #cp0{--x:248px;--y:20px}#hud[data-mode=desk] #cp1{--x:324px;--y:20px}#hud[data-mode=desk] #cp2{--x:400px;--y:20px}#hud[data-mode=desk] #cpL{--x:476px;--y:20px}
+body.mobile #hud[data-mode=desk] .rbtn.pwb{--s:60px}body.mobile #hud[data-mode=desk] #cp0{--x:30px;--y:190px}body.mobile #hud[data-mode=desk] #cp1{--x:30px;--y:262px}body.mobile #hud[data-mode=desk] #cp2{--x:30px;--y:334px}body.mobile #hud[data-mode=desk] #cpL{--x:108px;--y:190px}
+#hud .rbtn.pwb kbd{top:-6px;right:-6px}
+/* Command view */
+.view[data-v=cmd] .vhead{align-items:flex-start}
+.cm-back{margin:0 0 8px -6px;padding:0 10px;min-height:36px}
+.cm-bank{text-align:right}.cm-bank b{display:flex;align-items:center;gap:6px;color:var(--c-valor);font-size:22px}
+.cm-load{padding:14px 16px;margin-bottom:12px}
+.cm-slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cm-slot{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:76px;padding:8px 6px;border-radius:var(--rad-md);border:1px dashed var(--c-line-2);
+  background:var(--c-inset);color:var(--c-dim);font:600 11px/1.25 var(--f-body);text-align:center}
+.cm-slot.on{border:1px solid var(--c-valor);background:var(--c-valor-lo);color:var(--c-text);cursor:pointer}.cm-slot.on .ic{color:var(--c-valor)}
+.cm-slot.on span{font:700 12px var(--f-display);letter-spacing:.04em}.cm-slot i{font-style:normal;color:var(--c-valor);font-size:9px;letter-spacing:2px}
+.cm-slot.lk{opacity:.55;border-style:solid}
+.cm-tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:6px 2px 12px}
+.cm-tabs .cat{flex:1 1 0;min-width:0;justify-content:center;gap:5px;padding:0 6px;font-size:12px;letter-spacing:.05em}
+.cm-tabs .cat[aria-pressed=true]{color:rgb(var(--bc));border-color:rgba(var(--bc),.7);background:rgba(var(--bc),.1)}
+.cm-tag{font:600 11px var(--f-display);letter-spacing:.2em;color:rgb(var(--bc,227,181,60));text-transform:uppercase;margin:0 0 10px 4px}
+.cm-br{margin-bottom:20px}.cm-cap .eyebrow{margin:0 0 10px 4px}
+.cm-chain{position:relative;display:flex;flex-direction:column;gap:10px}
+.cm-chain:before{content:"";position:absolute;left:31px;top:24px;bottom:24px;width:2px;background:linear-gradient(rgba(var(--bc,227,181,60),.5),rgba(var(--bc,227,181,60),.1))}
+.cm-node{position:relative;display:flex;gap:12px;align-items:flex-start;padding:12px 14px 12px 10px;border-radius:var(--rad-lg);border:1px solid var(--c-line);background:var(--c-s1)}
+.cm-node .cm-ic{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--c-s3);border:1.5px solid rgba(var(--bc,227,181,60),.55);color:rgb(var(--bc,227,181,60));z-index:1}
+.cm-node.k-pow .cm-ic{border-radius:12px;transform:rotate(45deg)}.cm-node.k-pow .cm-ic .ic{transform:rotate(-45deg)}
+.cm-node.own{border-color:rgba(var(--bc,227,181,60),.45)}.cm-node.own .cm-ic{background:rgba(var(--bc,227,181,60),.18)}
+.cm-node.eq{box-shadow:0 0 0 1px var(--c-valor) inset}
+.cm-node.lk{opacity:.6}.cm-node.lk .cm-ic{border-color:var(--c-line-2);color:var(--c-dim)}
+.cm-b{flex:1;min-width:0}
+.cm-t{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.cm-t b{font:700 15px var(--f-display);color:var(--c-text)}.cm-k{font:600 10px var(--f-display);letter-spacing:.14em;color:var(--c-dim)}
+.cm-node.k-pow .cm-k{color:var(--c-valor)}.cm-node.k-cap .cm-k{color:var(--c-gold-hi)}
+.cm-lv{display:flex;align-items:center;gap:4px;margin:5px 0 2px}.cm-lv i{width:18px;height:5px;border-radius:3px;background:var(--c-line-2)}.cm-lv i.f{background:rgb(var(--bc,227,181,60))}
+.cm-lv small{margin-left:4px;font:700 10px var(--f-display);letter-spacing:.1em;color:var(--c-dim)}
+.cm-b p{margin:6px 0 10px;font:400 13px/1.45 var(--f-body);color:var(--c-text-2)}.cm-b p em{font-style:normal;color:var(--c-dim)}.cm-need{color:var(--c-red-hi);font-weight:600}
+.cm-a{display:flex;gap:8px;flex-wrap:wrap}.cm-a .btn{min-height:38px;padding:0 12px;gap:6px}.cm-a .btn .ic{color:var(--c-valor)}.cm-a .btn.pos .ic{color:inherit}
+.cm-max{font:700 11px var(--f-display);letter-spacing:.14em;color:rgb(var(--bc,227,181,60))}
+.cm-foot{display:flex;gap:6px;align-items:flex-start;margin:4px 4px 24px;font:400 12px/1.45 var(--f-body);color:var(--c-dim)}.cm-foot .ic{color:var(--c-valor);flex:none;margin-top:1px}
+/* Base tile + AAR row */
+#cmdCard{align-self:stretch}#cmdCard:empty{display:none}
+.cm-card{display:block;width:100%;text-align:left;cursor:pointer;padding:16px;border-color:rgba(255,157,107,.35);color:inherit;font:inherit}
+.cm-card .eyebrow{display:flex;align-items:center;gap:8px}.cm-card .dot.gold{position:static;display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c-gold-hi);box-shadow:0 0 8px rgba(255,207,90,.8)}
+.cm-v{display:flex;align-items:center;gap:5px;font:600 12px var(--f-display);letter-spacing:.1em;color:var(--c-dim)}.cm-v b{font-size:16px;color:var(--c-valor);letter-spacing:0}.cm-v .ic{color:var(--c-valor)}
+.cm-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}.cm-row .chev{margin-left:auto;color:var(--c-valor)}
+.cm-pw{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:var(--rad-pill);background:var(--c-valor-lo);color:var(--c-text);font:600 12px var(--f-display);letter-spacing:.04em}
+.cm-pw .ic{color:var(--c-valor)}.cm-pw.dim{background:var(--c-inset);color:var(--c-dim)}
+.cm-sub{margin-top:8px;font:600 12px var(--f-body);color:var(--c-gold-hi)}
+.rprow.vrow .ic{color:var(--c-valor)}.rprow.vrow b{color:var(--c-valor)}
+@media (hover:hover){.cm-card:hover{border-color:var(--c-valor)}}
 </style>
 </head>
 <body>
@@ -1321,6 +1389,7 @@ body.rm .adc::before{animation:none}@keyframes adSpin{to{transform:rotate(1turn)
   <button class="rbtn qbtn off" id="prioBtn" title="Target priority (T)"></button>
   <button class="rbtn" id="nadeBtn" title="Frag grenade (G)" aria-label="Frag grenade"><span class="rg"></span><svg class="ic" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 15m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M8.5 9.3V6.5h5v2.8M13.5 7.5c2.6 0 4.2 1.3 4.8 3.6M18.5 4.8m-1.7 0a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0M5.4 13.5h11.2M11 9.2v11.6"/></svg><em class="cdn" id="nadeCd"></em><b id="nadeTxt">FRAG</b><kbd>G</kbd></button>
   <button class="rbtn off" id="airBtn" title="Airstrike (Q)" aria-label="Airstrike"><span class="rg"></span><svg class="ic" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg><em class="cdn" id="airCdn"></em><b id="airTxt">AIR</b><kbd>Q</kbd><div class="cd" id="airCd" hidden></div></button>
+  <button class="rbtn pwb" id="cp0" hidden></button><button class="rbtn pwb" id="cp1" hidden></button><button class="rbtn pwb" id="cp2" hidden></button><button class="rbtn" id="cpL" hidden title="Legend Mode (4)" aria-label="Legend Mode"></button>
   <div id="armChip" role="status"><span id="armTxt"></span><button id="armX" aria-label="Cancel"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div id="coach" aria-hidden="true"><i>TIP</i><span id="coachTxt"></span></div>
   <div id="intel" role="status" aria-live="polite"><canvas id="intelCv" width="128" height="128"></canvas><div class="it"><div class="tag2">NEW CONTACT</div><div class="nm2" id="intelName"></div><div class="thrw"><small>THREAT</small><span class="thr" id="intelThr"></span></div><div class="tip" id="intelTip"></div></div><div class="tm anim-keep"></div></div>
@@ -1380,6 +1449,7 @@ body.rm .adc::before{animation:none}@keyframes adSpin{to{transform:rotate(1turn)
           <div class="cp" id="startSel"></div>
           <button class="btn pri xl" id="deployBtn"><span data-ic="play" data-s="20"></span><span id="depTxt">DEPLOY</span></button>
         </div>
+        <div id="cmdCard"></div>
         <div class="panel picks" id="picks" hidden></div>
         <div id="nextUnl"></div>
         <details class="panel manual medt" id="medTile"><summary><span class="eyebrow">MEDALS</span><span class="msum" id="medSum"></span><i class="dot gold" data-d="medals" aria-hidden="true"></i><span class="cv" data-ic="chevR" data-s="16"></span></summary><div id="medals"></div></details>
@@ -1399,6 +1469,7 @@ body.rm .adc::before{animation:none}@keyframes adSpin{to{transform:rotate(1turn)
     <div id="store" class="armx"></div>
   </section>
   <section class="view" data-v="rd" aria-label="Research and Development"><div id="rd"></div></section>
+  <section class="view" data-v="cmd" aria-label="Command"><div id="cmdv"></div></section>
   <section class="view" data-v="store" aria-label="Store"><div class="vhead"><div><h1 class="vt">STORE</h1><p class="vsub">Gems finish research early, open lab slots and top up a theater's cash. They never buy battle speed.</p></div></div><div id="shop"></div></section>
 </div>
 <nav class="dock" id="dock" aria-label="Home sections">
@@ -2608,7 +2679,7 @@ Object.assign(IC,{armory:'M3 10h18v10H3zM5 10l2-5h10l2 5M9 14h6M12 10v4',
 // ---- home shell: BASE / ARMORY / R&D / STORE views, header chips, phone dock / landscape rail, one DEPLOY everywhere ----
 Object.assign(IC,{chevR:'M9 6l6 6-6 6',chevL:'M15 6l-6 6 6 6',store:'M3 9.5L4.6 4h14.8L21 9.5M3 9.5a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0M5 12.3V20h14v-7.7M10 14.5h4l1.2 1.6L12 19.6l-3.2-3.5z'});
 let lastRunMsg='',lastCause=null,lastAAR=null;
-let homeView='base';const VIEWS=['base','armory','rd','store'];   // medals live in a Base tile: setView('medals') opens it (openMedals)
+let homeView='base';const VIEWS=['base','armory','rd','store','cmd'];   // medals live in a Base tile: setView('medals') opens it (openMedals)
 const narrow=()=>innerWidth<900||(innerHeight<=500&&innerWidth>innerHeight);
 function showScreen(id){const h=id==='home'||id==='settings';$('home').classList.toggle('on',h);document.body.classList.toggle('at-home',h);
   $('settings').classList.toggle('on',id==='settings');$('hud').classList.toggle('on',id==='game');if(h)renderHome()}
@@ -2626,7 +2697,7 @@ function setView(v,user){if(v==='medals'){openMedals(user);return}if(!VIEWS.incl
   renderHome();if(user&&ch)sfx('buy');if(user)rvTry()}
 function renderHome(){fillIcons();labLand();const h=$('home');if(h.dataset.view!==homeView)h.dataset.view=homeView;
   for(const b of document.querySelectorAll('.nv,.dk'))if(b.dataset.view===homeView)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
-  renderHdr();({base:renderBase,armory:renderArmory,rd:renderResearch,store:renderStore})[homeView]();_nar=narrow()}
+  renderHdr();({base:renderBase,armory:renderArmory,rd:renderResearch,store:renderStore,cmd:renderCommand})[homeView]();_nar=narrow()}
 const affordable=u=>{const l=L(u.id);return l<u.max&&!lockWhy(u)&&S.bank>=costOf(u,l)};
 // how many next tiers the banked RP covers together (cheapest first)
 function rsAffordN(){let rp=S.rp,n=0;for(const c of RLINES.lines.filter(r=>rsOpenNext(r)&&!labOf(r.id)).map(r=>rsCost(r.id,rsOwned(r.id)+1)).sort((a,b)=>a-b)){if(c>rp)break;rp-=c;n++}return n}
@@ -2662,7 +2733,7 @@ function renderStartSel(){const c=checkpoints(),el=$('startSel');
     +c.map(w=>`<button data-start="${w}" aria-pressed="${w===cur}">${ph||c.length>5?'W':'WAVE '}${w}</button>`).join('')+'</div>'
     +`<p class="cpx">${cpText(cur)}</p>`}
 const cpText=w=>{const n=Math.min(8,Math.floor(w/10));return w<=1?'Full run from the first wave.':`Skips ${w-1} waves · ${n} directive ${pl(n,'pick')} · back-pay of $${fmtN(cpCash(w))} and ${cpRp(w)} RP once you hold ${CP_HOLD} waves`};
-function renderBase(){renderTheater();renderStartSel();renderMission();renderAAR();renderDaily();renderWb();$('picks').hidden=true;$('picks').innerHTML='';renderRdSum();$('nextUnl').hidden=true;$('nextUnl').innerHTML='';renderMedTile();renderManual();
+function renderBase(){renderCmdCard();renderTheater();renderStartSel();renderMission();renderAAR();renderDaily();renderWb();$('picks').hidden=true;$('picks').innerHTML='';renderRdSum();$('nextUnl').hidden=true;$('nextUnl').innerHTML='';renderMedTile();renderManual();
   // desktop balance: next unlocks sit under the picks while the After-Action card fills the right column, else on the right
   const nu=$('nextUnl'),aar=!!(lastAAR&&lastRunMsg),col=aar?$('picks').parentNode:$('rdSum').parentNode;if(nu.parentNode!==col)col.insertBefore(nu,aar?null:$('manual'));
   if(S.campWin&&!_thWin&&!running)openThWin()}
@@ -2756,7 +2827,7 @@ function renderAAR(){const el=$('lastRun'),a=lastAAR;
   const n=rsAffordN(),m=Math.floor(a.time/60),s=Math.floor(a.time%60),nm=a.medals.length,ne=(a.evs||[]).length;
   el.innerHTML=`<div class="panel aar ticks"><div class="sec-h"><div class="eyebrow">${a.dc?'DAILY CHALLENGE':'AFTER-ACTION'} · WAVE ${a.wave}</div>${a.rec?`<span class="badge b-new">${a.dc?"TODAY'S BEST":'NEW BEST'}</span>`:''}</div>`
     +`<div class="tiles t4">${[['WAVE',a.wave],['KILLS',fmtN(a.kills)],a.dc?['BEST TODAY','W'+a.dc.best]:['EARNED','$'+fmtN(a.earned)],['TIME',m+'<small>m</small> '+s+'<small>s</small>']].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join('')}</div>`
-    +rookieAAR(a)
+    +rookieAAR(a)+cmdAAR(a)
     +(a.dc?dcResHtml(a):x2Html(a)+`<button class="rprow" data-rsgo="">${ic('research',16)}<span>${a.rp||careerBest()>=10?`<b>+${fmtN(a.rp)} RP</b> · ${fmtN(S.rp)} banked`:'<b>RP starts at wave 10</b> · hold that far to fund R&amp;D'}${n?'<span class="hph"> · enough for '+n+' '+pl(n,'tier')+'</span>':''}</span><span class="chev">→</span></button>`+afterAction())
     +statsHtml(a)
     +(a.perks||nm||ne?`<details class="rund"${narrow()?'':' open'}><summary>${ic('chevR',14)}Run details${a.nPerk?' · '+a.nPerk+' '+pl(a.nPerk,'directive'):''}${nm?' · '+nm+' '+pl(nm,'medal'):''}${ne?' · '+ne+' '+pl(ne,'event'):''}</summary><div class="rdx">`
@@ -2787,15 +2858,17 @@ function renderRdSum(){const rd=rsReady(),el=$('rdSum'),q=S.lab.q;if(!rd.length&
     +rd.slice().sort((a,b)=>cost(a)-cost(b)).slice(0,3).map(r=>`<button class="chip-btn rd" data-rsgo="${r.id}">${ic(r.u,14)}${r.t[rsOwned(r.id)+1].n} · ${cost(r)} RP<span class="chev">→</span></button>`).join('')+'</div></div>'}
 // field manual (Base) and the How to play sheet share one builder
 function manualHtml(full){const ctl=MOBILE?[['Tap','an enemy to lock on and fire'],['Hold','to keep firing'],['LOCK ON','grabs the best target'],['TARGET','sets what every gun shoots first'],
-      ['Tap','a crate to grab it (colours in Battle Tips)'],['FRAG','then touch the ground to throw'],['AIR','then drag a line for an airstrike'],['Pinch','to zoom the battlefield']]
-    :[['Click','an enemy to lock on and fire'],['Hold','to keep firing'],['G','throws a grenade at the cursor'],['Q','calls an airstrike'],['T','cycles the target doctrine'],['F','changes battle speed'],['Esc','pauses'],['Click','a crate to grab it (colours in Battle Tips)']];
+      ['Tap','a crate to grab it (colours in Battle Tips)'],['FRAG','then touch the ground to throw'],['AIR','then drag a line for an airstrike'],['Pinch','to zoom the battlefield'],['POWERS','the Command buttons above AIR, once charged']]
+    :[['Click','an enemy to lock on and fire'],['Hold','to keep firing'],['G','throws a grenade at the cursor'],['Q','calls an airstrike'],['T','cycles the target doctrine'],['F','changes battle speed'],['Esc','pauses'],['Click','a crate to grab it (colours in Battle Tips)'],['1 2 3','Command powers · 4 Legend Mode']];
   const tips=['Hold waves <b>3, 5, 10, 15…</b> to earn a Field Commendation: pick one of three directives for the run.',
     'Battlefield events (sandstorms, paratroopers, blitzes, ambushes, resupply drops, armor columns, drone swarms, barrages, car-bomb convoys) pay a bonus when you clear them.',
     'Crates: <b>gold</b> cash, <b>red</b> munitions, <b>green</b> wall repair, <b>blue</b> intel on hidden enemies, <b>orange</b> a free airstrike.',
     'Walls only self-repair after <b>3s</b> without a hit: kill whatever is shooting them.',
     'From <b>wave 6</b> the enemy brings armor. Rifles barely scratch it: lean on mines, grenades, artillery and heavy guns. Green-cross mechanics repair it: kill them first.',
-    'Upgrades unlock other upgrades, and deeper waves open new tech. Research tiers deploy with your next run.'];
-  const tipGate=[0,5,8,-1,6,0],tipsNow=tips.filter((t,i)=>tipGate[i]<0?L('repair')>0:careerBest()>=tipGate[i]);   // short manual rolls tips out with progress; the full guide keeps them all
+    'Upgrades unlock other upgrades, and deeper waves open new tech. Research tiers deploy with your next run.',
+    '<b>Command powers</b> charge only from what <b>you</b> do: aimed kills, grenades, airstrikes and crates. Every battle pays <b>Valor</b> for the Command tree.',
+    'From <b>wave 25</b>: <b>high-value targets</b> (red diamond). Officers toughen nearby troops, Shield Bearers need explosives, Heavy Strike Drones need your rifle. Kill them fast: they hit hard.'];
+  const tipGate=[0,5,8,-1,6,0,CM_OPEN,25],tipsNow=tips.filter((t,i)=>tipGate[i]<0?L('repair')>0:careerBest()>=tipGate[i]);   // short manual rolls tips out with progress; the full guide keeps them all
   const c=`<div class="mgrid2">${ctl.map(([k,t])=>`<div class="krow"><kbd>${k}</kbd><span>${t}</span></div>`).join('')}</div>`;
   if(!full)return`<div class="subh">CONTROLS</div>${c}<div class="subh">BATTLE TIPS</div><ul class="mtips">${tipsNow.map(t=>`<li>${t}</li>`).join('')}</ul>`
     +`<button class="btn sm" data-howto>OPEN FULL GUIDE<span class="chev">→</span></button>`;
@@ -3899,11 +3972,11 @@ function startRun(){
   G={wave:startWaveOk()-1,spawnLeft:0,spawnT:0,spawnInt:1,breakT:2,breakMax:2,enemies:[],fx:[],parts:[],floats:[],shells:[],bombs:[],planes:[],mines:[],crates:[],
     hp:hpAt(L('hp')),maxHp:hpAt(L('hp')),wallMax:wallMaxAt(L('walls')),wallHp:wallMaxAt(L('walls')),sold,kills:0,earned:0,time:0,shake:0,
     zoomV:vision()*0.3,artyT:3,airT:0,airArmed:false,nadeT:0,nadeArmed:false,nades:[],rapidT:0,crateT:10,banner:'',bannerT:0,hurtT:0,breached:false,pk:{},choosing:null,perkAt:0,startBest:S.best,threat:{},breachW:0,ev:null,evLast:0,evPrev:null,evN:0,fogK:0,drops:[],transports:[],vq:[],eshots:[],vwrecks:[]};
-  G.rookie=rookieRun();
+  G.rookie=rookieRun();G.cm=cmdRunInit();
   labTick();G.rs=Object.assign({},S.rs);G.rf=Object.assign({},S.rf);G.rp=0;G.cleared=0;G.rsNew=rsFieldNew();fortUpInit();   // research is frozen for the whole run
   {const w0=startWaveOk();G.startWave=w0;if(w0>1){G.cp={i:0,n:Math.min(8,Math.floor(w0/10))};G.perkAt=0.5;medalMax('cp',1)}}
   G.st={d:{},ks:{},k:{},big:0,bs:'',bt:'',wc:0,w0:G.wave};SM.dur=0;_ds='other';G.smoke=[];G.decals=[];G.lights=[];G.gun=L('arty')?Object.assign(artyPos(),{ang:-Math.PI/2,recoil:0}):null;placeSquad();G.simSpeed=speedOpts().filter(v=>v<=(S.set.lastSpeed||1)).pop()||1;syncSpeedBtn();G.units=buildUnits();G.air=buildAir();G.missiles=[];G.nukes=[];G.jets=[];G.fighterT=8;G.flashT=0;G.tshells=[];G.flameT=0;G.tbWr=[];G.tbD=null;G.wpE=null;G.wpT=0;initLogi();
-  pfSync();skyInit();sigInit();fcInit();syncPrioBtn();syncNadeBtn(true);$('hud').classList.toggle('air',L('air')>0);
+  pfSync();skyInit();sigInit();fcInit();syncPrioBtn();syncNadeBtn(true);$('hud').classList.toggle('air',L('air')>0);cmdHudInit();
   running=true;paused=false;mouse.down=false;$('overlay').classList.remove('on');showScreen('game');
   AN.track('run_start',{map:S.map,w0:G.startWave,best:S.best,runs:S.runs|0});if(!(S.runs|0))AN.once('run1');
 }
@@ -4053,7 +4126,7 @@ function startWave(){
   if(G.wallMax){G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.25)}
   if(G.shS)G.shS*=RAID.ease;
   banner(tbo?'WAVE '+G.wave+' — '+TBOSS[S.map].n+' INBOUND':G.wave%10===0?'WAVE '+G.wave+' — ENEMY ARMOR INCOMING':'WAVE '+G.wave,G.rsNew?'NEW KIT: '+G.rsNew:tbo?TBOSS[S.map].tag:'',G.rsNew?'110,195,255':tbo?'255,138,112':'');G.rsNew='';if(G.wave===G.startWave)rsBriefs();sfx('wave');
-  skyWaveStart();evStart();vehWave();lcWave(G.wave);armorCallout();
+  skyWaveStart();evStart();vehWave();lcWave(G.wave);armorCallout();cmdWave();
   G.uavT=!G.ev&&G.wave>=6&&G.wave%10!==0&&Math.random()<0.3?4+Math.random()*7:0;   // recon UAV pass partway into the wave
 }
 // Supply crates: mostly cash, but from wave 3 some are MUNITIONS (grenade ready + rapid fire) and, while the fort is hurt, ENGINEER kits
@@ -4064,7 +4137,7 @@ function crateKind(){if(G.wave<3)return'cash';const r=Math.random(),hurt=G.hp<G.
 function dropCrate(kind){const a=Math.random()*7,r=fortHalf()+wallThick()+wireOut()+18+Math.random()*Math.max(20,sight()-fortHalf()-wireOut()-40),k=kind||crateKind();
   G.crates.push(pfSnap(landPt({x:Math.cos(a)*r,y:Math.sin(a)*r,life:12,k,val:k==='cash'?crateVal(G.wave,L('scav')):money(crateVal(G.wave,L('scav'))*0.4)})));
   if(k!=='cash'&&!seen()['crate_'+k])spotted('crate_'+k)}   // first special crate ever: a SUPPLY DROP briefing card (seen once shown)
-function grabCrate(c){c.life=0;fxCrate(c);dqAdd('crate',1);S.bank+=c.val;G.earned+=c.val;sfx('cash');if(c.k&&c.k!=='cash')medalBump('crates');
+function grabCrate(c){c.life=0;fxCrate(c);dqAdd('crate',1);if(G.cm)cmGain(4);S.bank+=c.val;G.earned+=c.val;sfx('cash');if(c.k&&c.k!=='cash')medalBump('crates');
   if(c.k==='ammo'){G.nadeT=0;G.rapidT=RAPID_T;syncNadeBtn(true);float(c.x,c.y-10,'RAPID FIRE · GRENADE READY','#ff9d7a',13);setTimeout(()=>tone(990,0.1,'square',0,0.05),90)}
   else if(c.k==='fix'){const w=G.wallMax&&G.wallHp<G.wallMax,was=G.wallHp<=0;if(w)G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.25);G.hp=Math.min(G.maxHp,G.hp+G.maxHp*0.15);
     float(c.x,c.y-10,w?(was?'WALLS REBUILT':'WALLS +25%'):'FIELD DRESSING +15%','#8fe08a',13);sfx('wall')}
@@ -4145,7 +4218,7 @@ function statKill(e){const T=G.st;if(!T)return;const k=_ds||'other',c=statCls(e)
 let _dk='',_pen=0;
 function armMul(e){if(_dk==='m')return e.veh||e.boss?2.2:1;if(!e.arm)return 1;
   return _dk==='s'?1-e.arm*(1-Math.min(1,_pen+0.075*pk('tungsten'))):_dk==='p'?1-e.arm*(1-Math.max(0.55,_pen)):_dk==='f'?(1-e.arm)*0.5:1}
-function hurtEnemy(e,d,crit){if(e.dead)return;d*=(1+0.1*pk('overwatch'))*(e.veh||e.boss?1+0.175*pk('antiarmor'):1)*armMul(e)*(e.mkT>G.time?1+e.mkB:1);if(e.tb)d=tbHurt(e,d);statHit(e,d,e.hp);e.hp-=d;e.flash=0.08;(e.air?skyHit:fxHit)(e,crit);if(crit&&_mainHit&&G.time-(G.crT||0)>0.07){G.crT=G.time;tone(1500,0.045,'square',-500,0.03)}   // crit ping (commander rifle, throttled); e.mkT/e.mkB: research mark (sgMark)
+function hurtEnemy(e,d,crit){if(e.dead)return;d*=(1+0.1*pk('overwatch'))*(e.veh||e.boss?1+0.175*pk('antiarmor'):1)*armMul(e)*(e.mkT>G.time?1+e.mkB:1);if(G.cm&&(d=cmdHurt(e,d))<0){e.flash=0.08;return}if(e.tb)d=tbHurt(e,d);statHit(e,d,e.hp);e.hp-=d;e.flash=0.08;(e.air?skyHit:fxHit)(e,crit);if(crit&&_mainHit&&G.time-(G.crT||0)>0.07){G.crT=G.time;tone(1500,0.045,'square',-500,0.03)}   // crit ping (commander rifle, throttled); e.mkT/e.mkB: research mark (sgMark)
   if(S.set.dmgNums&&visible(e)&&(crit||_mainHit||S.set.gfx!=='high'))dmgFloat(e,d,crit);
   if(e.hp<=0)kill(e)}
 // Kill streak: kills from the player's own aimed rifle (a tapped/clicked lock, not auto-fire) chain within STREAK_T seconds;
@@ -4161,8 +4234,8 @@ const STRAG_T=15;
 function stragglers(){if(G.spawnLeft>0||G.vq&&G.vq.length||G.time-(G.lkT??G.time)<STRAG_T)return;let n=0;for(const e of G.enemies)if(!e.dead&&++n>3)return;for(const e of G.sky)if(!e.dead&&++n>3)return;if(!n)return;
   for(const e of G.enemies)if(!e.dead){e.rev=Math.max(e.rev||0,1);if(e.stand)e.fwd=1}for(const e of G.sky)if(!e.dead)e.rev=Math.max(e.rev||0,1)
   if(G.stragW!==G.wave&&S.set.callouts!==false){G.stragW=G.wave;feed('STRAGGLERS MARKED','255,207,90','threat')}}
-function kill(e){e.dead=true;G.lkT=G.time;statKill(e);if(_dqK)dqKill(e);if(e.mech)medalBump('mech');if(e.vbied){e.vbied=0;medalBump('vbied');explode(e.x,e.y,44,e.dmg*0.4);light(e.x,e.y,90,'255,150,60',0.4)}if(_mainHit&&_aimed)streakKill();
-  const bonus=e.load>0?money(e.rew*0.15*e.load):0,r=Math.round(money(e.rew)*streakMul())+bonus;S.bank+=r;G.earned+=r;G.kills++;S.tkills++;(e.tb?tbDown:e.air?airDown:fxKill)(e);
+function kill(e){e.dead=true;G.lkT=G.time;statKill(e);if(G.cm)cmdKill(e);if(_dqK)dqKill(e);if(e.mech)medalBump('mech');if(e.vbied){e.vbied=0;medalBump('vbied');explode(e.x,e.y,44,e.dmg*0.4);light(e.x,e.y,90,'255,150,60',0.4)}if(_mainHit&&_aimed)streakKill();
+  const bonus=e.load>0?money(e.rew*0.15*e.load):0,r=Math.round(money(e.rew)*streakMul()*(G.cm&&G.cm.hb&&_mainHit&&_aimed?G.cm.hb:1))+bonus;S.bank+=r;G.earned+=r;G.kills++;S.tkills++;(e.tb?tbDown:e.air?airDown:fxKill)(e);
   if(e.chute>0)medalBump('chute');if(_nadeK)medalBump('nade');if(ARMOR_KILL[e.type]&&!e.air)medalBump('tank');if(e.type==='manpads')medalBump('manpads');if(S.tkills%25===0)medalCheck('kills');
   if(e.tb){}else if((e.lc||e.amph)&&seaIn(e.x,e.y)>-6)lcSink(e);else if(S.set.gfx==='high'&&!e.air)corpse(e);else if(e.veh)G.vwrecks.push({type:e.type,x:e.x,y:e.y,r:e.r,a:eHd(e,e.x,e.y),t0:G.time,robo:e.robo});
   float(e.x,e.y-e.r-8,'+$'+r,'#7ddc5a',e.veh?13:11);sfx('kill',e.x,e.y);
@@ -4174,17 +4247,17 @@ function fire(s,e,mult=1){const m0=mult;
   const line=s.main?'dmg':'squad',big=sgRound(s,line),heat=big&&!!sg(line,'seek');if(heat)e=sgSeek(G.enemies,s)||e;
   if(e.air&&!s.main)mult*=AIR_BONUS.squad;
   const wp=s.main&&e.tb&&G.wpE===e&&G.time<G.wpT;if(wp)mult*=TB.wp;   // theater boss: a tapped weak point
-  let d=dmgAt(L('dmg'))*rMult(line)*mult*(1+0.125*pk('hollow'));const d0=d,crit=Math.random()<critChance()||s.main&&e===s.tgt&&sg('dmg','lockCrit')!=null;if(crit)d*=2.5+Math.max(0,L('crit')-15)*0.1;
+  let d=dmgAt(L('dmg'))*rMult(line)*mult*(1+0.125*pk('hollow'));const d0=d,crit=Math.random()<critChance()||s.main&&e===s.tgt&&sg('dmg','lockCrit')!=null||s.main&&G.cm&&G.cm.t.de>G.time;if(crit)d*=2.5+Math.max(0,L('crit')-15)*0.1;if(s.main&&G.cm)d=cmdRifle(d);
   s.ang=Math.atan2(e.y-s.y,e.x-s.x);s.fl=G.time;
   {const p=wp?tbWpPos(e):null;sgTracer(line,s.x+Math.cos(s.ang)*6,s.y+Math.sin(s.ang)*6,p?p[0]:e.x,p?p[1]:e.y,crit||wp?'#ffd23f':'#fff2b0',big?1.8:1.2,0.07)}
   const ex=e.x,ey=e.y;_mainHit=!!s.main;_dk=heat&&!e.air?'':'s';_pen=rPen(line);_tbWp=wp;hurtEnemy(e,d,crit);_tbWp=false;_mainHit=false;_dk='s';if(wp)tbWpHit(e);
   if(big&&!e.air){const p=sg(line,'splash');sigSplash(ex,ey,p[0],d*p[1],e)}
-  sigOnHit(line,s.x,s.y,e,d,'s',d0);
+  sigOnHit(line,s.x,s.y,e,d,'s',d0);if(s.main&&G.cm&&G.cm.t.rico>G.time)sigChain(e,G.cm.rcN,d*0.7,'s',rPen('dmg'));
   const fl=L('frag');if(fl&&!e.air){const fr=Math.min(40,10+4*fl);for(const o of G.enemies)if(o!==e&&!o.dead&&within(o,ex,ey,fr+o.r))hurtEnemy(o,d*0.35,false);G.fx.push({k:'boom',x:ex,y:ey,r:fr,life:0.2,max:0.2})}
   _dk='';_pen=0;
   fxMuzzle(s);sfx(s.main?'shot':'shot2',s.x,s.y);sgSalvo(s,line,e,m0)}
 // src = attacker type; G.threat keeps a decaying tally (x0.6 per wave) so the after-action report names what actually broke you
-function damageFort(d,src){d*=fortPress(G.wave);if(src)G.threat[src]=(G.threat[src]||0)+d;G.wHit=1;
+function damageFort(d,src){d*=fortPress(G.wave);if(G.cm&&(d=cmdFortHit(d))<0)return;if(src)G.threat[src]=(G.threat[src]||0)+d;G.wHit=1;
   if(G.shT>0){sgShieldHit();return}   // EM Armor Screen up over a fresh breach
   if(wallsUp()){G.wallHitT=G.time;if(L('repair')&&G.wallHp<G.wallMax*0.7&&!seen().ev_wallhold)spotted('ev_wallhold');G.wallHp-=d*(1-Math.min(0.5,0.05*L('armor')));sfx('wall');hapt('light','fort',1000);shSpill(d);if(G.wallHp<=0){G.wallHp=0;G.breachW=G.wave;banner('WALLS BREACHED!','','','crit');sfx('breach');shake(8);hapt('heavy','breach',600);sgBreach();if(!G.lastStand){G.lastStand=1;slowMo(0.9,0.35);G.rapidT=Math.max(G.rapidT,10);setTimeout(()=>{if(running)feed('LAST STAND · RAPID FIRE 10s','255,120,90','threat')},700)}}}
   else{if(shGuard(d)){G.hurtT=0.15;shake(2);return}G.hp-=d;G.hurtT=0.3;sfx('hurt');shake(3);hapt('medium','fort',1000);if(G.hp<=0&&!G.over)endRun()}}
@@ -4372,9 +4445,9 @@ function endRun(retreat){if(G.over)return;   // several hits in one frame can ea
     +`<button class="stat rpst" data-rsgo style="grid-column:1/-1"><span>${ic('research',14)}RESEARCH POINTS</span><b>+${f1(S.rpLast)} RP</b><i>${f1(S.rp)} RP banked${rsReady().length?' · '+rsReady().length+' tier'+(rsReady().length>1?'s':'')+' ready':''}</i></button>`
     +(perkList().length?`<div class="stat" style="grid-column:1/-1"><span>DIRECTIVES</span><div class="pperks" style="justify-content:flex-start;margin-top:6px">${perkChips()}</div></div>`:'')
     +(G.medals?`<div class="stat" style="grid-column:1/-1"><span>MEDALS EARNED</span><div class="pperks medal" style="justify-content:flex-start;margin-top:6px">${[...new Set(G.medals)].map(id=>{const m=MEDALS.find(q=>q.id===id),r=m.tiers?medalRank(m):0;return`<span>${ic(m.ic,14)}${m.name}${r>1?' '+'★'.repeat(r):''}</span>`}).join('')}</div></div>`:'');
-  snapAAR();S.runs=(S.runs|0)+1;if(G.dc){lastCause=null;lastAAR.dc=dcEnd()}lastAAR.map=S.map;dqSync();save();iaAfterRun();
+  snapAAR();cmdRunEnd();S.runs=(S.runs|0)+1;if(G.dc){lastCause=null;lastAAR.dc=dcEnd()}lastAAR.map=S.map;dqSync();save();iaAfterRun();
   _retEnd=Date.now();if(!G.dc&&G.wave>G.startBest&&G.wave>=RV_W)rvMoment('best');
-  AN.track('run_end',{map:lastAAR.map,dc:!!G.dc,w0:G.startWave||1,wave:G.wave,cause:retreat?'retreat':lastCause?lastCause.top[0]:'fort',dur_s:Math.round(G.time),kills:G.kills,rec:G.wave>G.startBest,sw:!!G.swUsed,spd:G.simSpeed||1});
+  AN.track('run_end',{map:lastAAR.map,dc:!!G.dc,w0:G.startWave||1,wave:G.wave,cause:retreat?'retreat':lastCause?lastCause.top[0]:'fort',dur_s:Math.round(G.time),kills:G.kills,rec:G.wave>G.startBest,sw:!!G.swUsed,spd:G.simSpeed||1,vl:lastAAR&&lastAAR.vl?lastAAR.vl.n:0,pw:G.cm?G.cm.used:0});
   if(S.runs===1)AN.once('run1_end',{wave:G.wave});for(const w of[5,10,25,50,100])if(careerBest()>=w)AN.once('w'+w,{runs:S.runs});gcSync();
   homeView='base';$('home').scrollTop=0;showScreen('home');
 }
@@ -4384,7 +4457,7 @@ function update(dt){
   if(G.bannerT>0)G.bannerT-=dt;if(G.hurtT>0)G.hurtT-=dt;G.shake*=0.88;updateBosses(dt);evUpdate(dt);twTick(dt);dayTick(dt);
   if(G.stkT>0){G.stkT-=dt;G.stkPop=Math.max(0,G.stkPop-dt*4);if(G.stkT<=0)G.stk=0}
   // waves
-  if(G.spawnLeft>0){G.spawnT-=dt;if(G.spawnT<=0){spawn(nextType());G.spawnLeft--;G.spawnT=G.spawnInt*(0.6+Math.random()*0.8)}}
+  if(G.spawnLeft>0){G.spawnT-=dt;if(G.spawnT<=0){cmdSpawn()||spawn(nextType());G.spawnLeft--;G.spawnT=G.spawnInt*(0.6+Math.random()*0.8)}}
   else if(G.enemies.length===0&&!G.sky.length&&!G.drops.length&&!(G.uavT>0)){
     if(G.breakT<=0){if(G.wave>0){if(G.st)G.st.wc++;hapt('success','wave',800);if(!G.dc)medalMax('wave',G.wave);campHold(G.wave);dqWave(G.wave);if(G.wave>=15&&!G.wHit)medalMax('flawless',1);let b=money(8*G.wave*waveRew(G.wave));if(G.ev)b+=evClear(b);S.bank+=b;G.earned+=b;{const rp=rpClear(G.wave),pay=' · +$'+f1(b)+(rp>0?' · +'+rp+' RP':'');feed('WAVE '+G.wave+' CLEAR'+pay,'255,207,90','coin','W'+G.wave+' CLEAR'+pay)}sfx('cash');setTimeout(()=>sfx('clear'),140);save();if(perkWave(G.wave))G.perkAt=G.time+0.9}G.breakT=G.breakMax=G.wave<10?3:2}
     G.breakT-=dt;if(G.breakT<=0)startWave();}
@@ -4396,7 +4469,7 @@ function update(dt){
   const half=blockHalf(),n=G.sold.length;
   for(const s of G.sold)s.cd-=dt;
   if(G.rapidT>0)G.rapidT-=dt;
-  const m=G.sold[0],cd=cdAt(L('rate'))/(1+0.075*pk('drill'))/(G.rapidT>0?1.5:1);
+  const m=G.sold[0],cd=cdAt(L('rate'))/(1+0.075*pk('drill'))/(G.rapidT>0?1.5:1)/(G.cm&&G.cm.t.de>G.time?2:1);
   if(m.tgt&&(m.tgt.dead||!visible(m.tgt)))m.tgt=null;
   if(!m.tgt&&mouse.down&&!G.airArmed&&!G.nadeArmed)m.tgt=enemyAt(mouse.wx,mouse.wy,Math.max(24,(MOBILE?36:18)/sc));
   if(mouse.down&&G.wpE)tbHold();   // finger held on a boss weak point keeps the bonus on
@@ -4409,7 +4482,7 @@ function update(dt){
     fire(s,pick[Math.floor(Math.random()*pick.length)],0.7*(1+0.12*Math.max(0,L('squad')-8)));s.cd=cd*1.5}
   updateUnits(dt,half);updateAir(dt,half);_ds='ddef';updateLogi(dt);_ds='other';sigUpdate(dt);_ds='ddef';repairTick(dt);_ds='other';
   // enemies
-  intelTick();stragglers();
+  cmdTick(dt);intelTick();stragglers();
   const wl=L('wire'),wireR=fortHalf()+wallThick()/2+wireOut(),slow=1-(Math.min(0.7,0.25+0.06*wl)),sgt=sight(),mR=G.mines.length?sgMineR():0,twS=tw().slow;if(G.mines.length)mineIdx();   // sight line and mine reach are fixed for the whole loop
   for(const e of G.enemies){
     if(e.dead)continue;e.flash-=dt;e.wob+=dt*8;if(e.rev>0)e.rev-=dt;
@@ -9059,7 +9132,7 @@ function showIntel(type,now){const [name,thr,tip]=INTEL[type],el=$('intel');seen
   drawPreview(type);el.style.setProperty('--dur',ms+'ms');el.classList.remove('on');void el.offsetWidth;el.classList.add('on');intelH=el.offsetHeight;
   tone(880,0.07,'square',0,0.035);setTimeout(()=>tone(1175,0.1,'square',0,0.035),90)}
 // renders the real in-game sprite, facing right, fitted to the card's preview canvas
-function drawPreview(type){if(type.startsWith('tb_'))return tbPreview(type.slice(3));if(SKY[type])return skyPreview(type);if(type==='robo_lt'||type==='robo_hv'){const hv=type==='robo_hv',t=hv?'mbt':'grunt',d=ET[t],c=$('intelCv'),k=d.r/6*(hv?.82:1),fit=c.width*0.9/((hv?42:26)*k),main=ctx;
+function drawPreview(type){if(type.startsWith('hvt_'))return hvtPreview(type.slice(4));if(type.startsWith('tb_'))return tbPreview(type.slice(3));if(SKY[type])return skyPreview(type);if(type==='robo_lt'||type==='robo_hv'){const hv=type==='robo_hv',t=hv?'mbt':'grunt',d=ET[t],c=$('intelCv'),k=d.r/6*(hv?.82:1),fit=c.width*0.9/((hv?42:26)*k),main=ctx;
     ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,c.width,c.height);ctx.setTransform(fit,0,0,fit,c.width/2-(hv?5:3)*k*fit+100*fit,c.height/2);drawEnemy({type:t,r:d.r,col:d.col,robo:hv?2:1,veh:d.veh,moving:true,wob:1.3,flash:0,odo:0},-100,0)}finally{ctx=main}return}if(type.startsWith('crate_'))return cratePreview(type.slice(6));if(type.startsWith('fr_'))return frPreview(type.slice(3));if(type.startsWith('rs_')){const c=$('intelCv');c.dataset.th=type.slice(3).replace(/_(\d+)$/,':$1');return paintThumb(c)}if(type.startsWith('ev_'))return evPreview(type.slice(3));const c=$('intelCv'),d=ET[type],k=d.r/6,span=d.span||(d.boss?25:21),cxo=d.cx??(d.boss?2.5:4.5),fit=c.width*0.94/(span*k),main=ctx;
   ctx=c.getContext('2d');try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,c.width,c.height);ctx.setTransform(fit,0,0,fit,c.width/2-cxo*k*fit+100*fit,c.height/2);
     drawEnemy({type,r:d.r,col:d.col,boss:d.boss,veh:d.veh,moving:false,wob:0,flash:0,odo:0},-100,0)}finally{ctx=main}}
@@ -11291,7 +11364,7 @@ function draw(){aqTick();
   const tg=G.sold[0].tgt;if(tg){ctx.strokeStyle='#ffd23f';ctx.lineWidth=Math.max(1.2,1.5/sc);const r=Math.max(tg.r+5,(tg.r*sc+6)/sc)+Math.sin(G.time*10);ctx.beginPath();ctx.arc(tg.x,tg.y,r,0,7);ctx.stroke();
     const tk=Math.max(4,5/sc);for(let i=0;i<4;i++){const a=i*Math.PI/2;ctx.beginPath();ctx.moveTo(tg.x+Math.cos(a)*r,tg.y+Math.sin(a)*r);ctx.lineTo(tg.x+Math.cos(a)*(r+tk),tg.y+Math.sin(a)*(r+tk));ctx.stroke()}}
   for(const s of G.shells){ctx.strokeStyle='rgba(255,80,60,.9)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(s.x,s.y,s.r*(0.3+s.t*0.8),0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(s.x-5,s.y);ctx.lineTo(s.x+5,s.y);ctx.moveTo(s.x,s.y-5);ctx.lineTo(s.x,s.y+5);ctx.stroke()}
-  drawBombMarks();
+  drawBombMarks();cmdDraw();
   if(S.set.ring){ctx.strokeStyle='rgba(200,220,150,.15)';ctx.lineWidth=1;ctx.setLineDash([6,6]);ctx.beginPath();ctx.arc(0,0,V,0,7);ctx.stroke();ctx.setLineDash([])}
   // threat indicators: off-screen contacts bucketed into 24 sectors of 15deg; one arrow per sector (size = count, colour = worst class).
   // Clamped to the visible screen inside the safe area; on phone portrait the top edge sits below the status strip so arrows never hide under it.
@@ -11323,6 +11396,267 @@ function draw(){aqTick();
   drawLowHp();
   drawHud();drawRepairHud();
 }
+// ================= COMMAND =================
+// v1.1 Commander Powers (owner 2026-11-01). In late waves the army fought on its own while the player watched, so the commander's OWN
+// actions now drive the biggest moments of a run:
+// - Command meter (run state G.cm): aimed rifle kills, grenade kills, airstrike kills, crate grabs and high-value kills fill it. Auto-fire,
+//   the squad and every other system never do. Up to CM_MAX charges; each equipped power costs 1-3 charges plus its own cooldown.
+// - Valor Tokens (S.cmd.v), paid at the end of every run (waves held + your own combat + high-value kills), buy and level the Commander
+//   tree (CMD): three branches of 4 powers and 2 perks, two extra power slots and the LEGEND MODE capstone. Account-wide, never sold
+//   (owner rule: no pay-to-win power; a gem respec is the only thing that could ever be sold here).
+// - High-value targets from wave CM_W: Officers (troops near them take 40% less damage), Shield Bearers (a riot shield only explosives
+//   break fast) and Heavy Strike Drones (only the commander's own rifle and powers hurt them fully). Tough and they hit very hard.
+// Every hook into the sim is an identity while nothing is active (x1, no RNG before wave CM_W), so Desert parity and the curves hold.
+const CM_PTS=25,CM_MAX=3,CM_LEG=6,CM_W=25,CM_OPEN=6,CM_WELCOME=10,HVT_AURA=110;
+const CMD_BR=[{id:'fire',name:'FIREPOWER',ic:'arty',c:'255,140,90',tag:'Destroy things'},{id:'mark',name:'MARKSMAN',ic:'dmg',c:'255,207,90',tag:'You become the hero'},
+  {id:'iron',name:'IRONCLAD',ic:'armor',c:'120,200,255',tag:'Survive anything'}];
+// k: pow = power (ch charges, cd s cooldown, tgt 'pt' tap a spot / 'en' tap an enemy) · pas = perk · slot · cap. cost = Valor per level.
+const CMD=[
+ {id:'rally',br:'fire',k:'pow',name:'Rally',sh:'RALLY',ic:'cp_rally',ch:1,cd:20,cost:[5,10,15],d:l=>`Everything you have hits ${[1.5,1.75,2][l-1]}× as hard and your rifle fires fast for ${[8,10,12][l-1]}s.`},
+ {id:'demo',br:'fire',k:'pas',name:'Demolitions Expert',ic:'nade',cost:[8,12,18],d:l=>`Grenades and airstrikes deal +${20*l}% damage.`},
+ {id:'barrage',br:'fire',k:'pow',name:'Barrage',sh:'BARRAGE',ic:'arty',ch:1,cd:25,tgt:'pt',cost:[14,20,28],d:l=>`Tap a spot: ${[10,14,18][l-1]} heavy shells carpet it.`},
+ {id:'ord',br:'fire',k:'pas',name:'Heavy Ordnance',ic:'cp_ord',cost:[18,26,36],d:l=>`Every Commander power deals +${15*l}% damage.`},
+ {id:'gunship',br:'fire',k:'pow',name:'Gunship',sh:'GUNSHIP',ic:'gunship',ch:2,cd:40,cost:[30,42,56],d:l=>`An AC-130 circles the fort for ${[12,15,18][l-1]}s: 40mm on your target (or the thickest crowd), 105mm on the rest.`},
+ {id:'laser',br:'fire',k:'pow',name:'Space Laser',sh:'LASER',ic:'cp_laser',ch:3,cd:60,cost:[50,70,95],d:l=>`An orbital beam burns for ${[7,8.5,10][l-1]}s and melts anything it touches. Hold and drag to steer it.`},
+ {id:'deadeye',br:'mark',k:'pow',name:'Deadeye',sh:'DEADEYE',ic:'crit',ch:1,cd:20,cost:[5,10,15],d:l=>`Time slows. For ${[6,8,10][l-1]}s every rifle shot is a critical hit, fires twice as fast and drops a trooper in one hit.`},
+ {id:'aim',br:'mark',k:'pas',name:'Steady Aim',ic:'dmg',cost:[8,12,18],d:l=>`Shots at the enemy you tapped deal extra damage (+${[50,100,150][l-1]}% of a trooper's health).`},
+ {id:'marktgt',br:'mark',k:'pow',name:'Mark Target',sh:'MARK',ic:'cp_mark',ch:1,cd:15,tgt:'en',cost:[14,20,28],d:l=>`Tap an enemy: every gun you own hits it ${[3,3.5,4][l-1]}× as hard for 12s.`},
+ {id:'hunter',br:'mark',k:'pas',name:'Bounty Hunter',ic:'bounty',cost:[18,26,36],d:l=>`Your aimed kills pay +${25*l}% cash; high-value kills pay +${l} Valor.`},
+ {id:'rico',br:'mark',k:'pow',name:'Ricochet',sh:'RICO',ic:'cp_rico',ch:2,cd:30,cost:[30,42,56],d:l=>`For 10s every rifle shot bounces to ${l+1} more enemies.`},
+ {id:'rail',br:'mark',k:'pow',name:'Rail Shot',sh:'RAIL',ic:'cp_rail',ch:3,cd:45,tgt:'pt',cost:[50,70,95],d:l=>`Tap a direction: a railgun round tears through everything in a line, aircraft too. Bosses lose ${[15,20,25][l-1]}% of their health.`},
+ {id:'repair',br:'iron',k:'pow',name:'Emergency Repair',sh:'REPAIR',ic:'repair',ch:1,cd:25,cost:[5,10,15],d:l=>`Walls back by ${[50,75,100][l-1]}% (rebuilt if breached) and the fort's health to full.`},
+ {id:'bulwark',br:'iron',k:'pas',name:'Bulwark',ic:'walls',cost:[8,12,18],d:l=>`The fort takes ${6*l}% less damage.`},
+ {id:'smoke',br:'iron',k:'pow',name:'Smoke Screen',sh:'SMOKE',ic:'cp_smoke',ch:1,cd:25,cost:[14,20,28],d:l=>`For ${[6,8,10][l-1]}s the enemy can barely see: the fort takes 75% less damage and the advance slows.`},
+ {id:'nerves',br:'iron',k:'pas',name:'Steel Nerves',ic:'hp',cost:[18,26,36],d:l=>`While the fort or its walls are below half, the Command meter fills ${40*l}% faster.`},
+ {id:'fortify',br:'iron',k:'pow',name:'Fortify',sh:'FORTIFY',ic:'armor',ch:2,cd:40,cost:[30,42,56],d:l=>`For ${[5,6,7][l-1]}s the fort can't be damaged and the walls rebuild fast.`},
+ {id:'shock',br:'iron',k:'pow',name:'Shockwave',sh:'SHOCK',ic:'cp_shock',ch:3,cd:50,cost:[50,70,95],d:l=>`A blast wave from the fort hurls every ground enemy back and stuns it for ${[3,4,5][l-1]}s.`},
+ {id:'slot2',k:'slot',name:'Second Power Slot',ic:'cmd',cost:[25],d:()=>'Bring two powers into battle.'},
+ {id:'slot3',k:'slot',name:'Third Power Slot',ic:'cmd',cost:[60],d:()=>'Bring three powers into battle.'},
+ {id:'legend',k:'cap',name:'Legend Mode',ic:'star',cost:[150],d:()=>`Every charge you spend fills a gold meter. At ${CM_LEG}, tap LEGEND: 12s of Rally, Deadeye and Fortify at once.`}];
+const CMB={};for(const q of CMD)CMB[q.id]=q;
+Object.assign(IC,{valor:'M8 2h8l-2.5 6h-3zM12 15m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M12 11.5l1.1 2.3 2.4.3-1.8 1.6.5 2.4-2.2-1.2-2.2 1.2.5-2.4-1.8-1.6 2.4-.3z',
+  cmd:'M4 10l8-5 8 5M4 15l8-5 8 5M4 20l8-5 8 5',cp_rally:'M5 21V4M5 4h12l-2.5 4 2.5 4H5',cp_ord:'M12 2c2.5 2 3.5 5 3.5 8v8h-7v-8c0-3 1-6 3.5-8zM8.5 14h7M7 21h10',
+  cp_laser:'M12 2v3M5 5l2 2M19 5l-2 2M9 8h6l-1 3h-4zM12 11v7M12 21m-2 0a2 1 0 1 0 4 0a2 1 0 1 0 -4 0',cp_mark:'M12 12m-8 0a8 8 0 1 0 16 0a8 8 0 1 0 -16 0M12 8l4 4-4 4-4-4z',
+  cp_rico:'M3 18l6-10 5 7 7-11M17 4h4v4',cp_rail:'M2 12h20M6 8v8M10 9v6M14 9v6M18 8v8',cp_smoke:'M6 18a4 4 0 0 1 0-8 5 5 0 0 1 9.5-2A4 4 0 0 1 18 18zM4 21h16',
+  cp_shock:'M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M7.5 7.5a6.4 6.4 0 0 0 0 9M16.5 7.5a6.4 6.4 0 0 1 0 9M4.5 4.5a10.6 10.6 0 0 0 0 15M19.5 4.5a10.6 10.6 0 0 1 0 15'});
+STAT_SRC.power=['Commander Powers','cmd'];
+Object.assign(INTEL,{
+ hvt_off:['Enemy Officer',4,'High-value target. Troops near him take 40% less damage while he lives, and his scoped rifle hits the walls hard. Kill him first: tap him, throw a grenade, or spend a power.'],
+ hvt_shd:['Shield Bearer',5,'High-value target. A heavy riot shield shrugs off bullets; explosives break it fast (grenades, airstrikes, artillery, Commander powers). He hits the walls very hard.'],
+ hvt_drn:['Heavy Strike Drone',5,'High-value target. An armored kamikaze drone with a huge charge. Only your own rifle and Commander powers hurt it properly: tap it the moment it shows.']});
+// ---- save (S.cmd: v Valor, tot lifetime Valor, lv levels, eq equipped powers, on = unlock welcome paid) ----
+const cpL=id=>(S.cmd&&S.cmd.lv&&S.cmd.lv[id])|0,cmSlots=c=>1+(c.lv.slot2?1:0)+(c.lv.slot3?1:0),cmOwnedN=()=>CMD.filter(q=>cpL(q.id)>0).length;
+function cmdS(){let c=S.cmd;if(!c||typeof c!=='object'||Array.isArray(c))c=S.cmd={};c.v=Math.max(0,Math.floor(+c.v||0));c.tot=Math.max(0,Math.floor(+c.tot||0));
+  if(!c.lv||typeof c.lv!=='object'||Array.isArray(c.lv))c.lv={};for(const k in c.lv){const q=CMB[k];if(!q)delete c.lv[k];else c.lv[k]=Math.max(0,Math.min(q.cost.length,Math.floor(+c.lv[k]||0)))}
+  if(!Array.isArray(c.eq))c.eq=[];c.eq=c.eq.filter((id,i,a)=>CMB[id]&&CMB[id].k==='pow'&&c.lv[id]>0&&a.indexOf(id)===i).slice(0,cmSlots(c));return c}
+const cmdOpen=()=>careerBest()>=CM_OPEN||cmOwnedN()>0||(S.cmd&&S.cmd.on);
+// first time the tree opens (a new player reaching wave 6, or a veteran on the 1.1 update): a welcome grant so the first power is one tap away
+function cmdUnlock(){if(!cmdOpen())return false;const c=cmdS();if(c.on)return false;c.on=1;c.v+=CM_WELCOME;c.tot+=CM_WELCOME;save();AN.track('cmd_open',{best:careerBest(),runs:S.runs|0});return true}
+// why a node can't be bought yet ('' = open)
+function cmNeed(q){if(q.k==='slot')return q.id==='slot2'?(cmOwnedN()>=3?'':'Own any 3 upgrades first'):(['gunship','rico','fortify'].some(cpL)?'':'Unlock Gunship, Ricochet or Fortify first');
+  if(q.k==='cap')return['laser','rail','shock'].some(cpL)?'':'Unlock Space Laser, Rail Shot or Shockwave first';
+  const br=CMD.filter(o=>o.br===q.br),i=br.indexOf(q);return i===0||cpL(br[i-1].id)>0?'':'Unlock '+br[i-1].name+' first'}
+const cmCost=q=>q.cost[cpL(q.id)],cmMaxed=q=>cpL(q.id)>=q.cost.length,cmCan=q=>!cmMaxed(q)&&!cmNeed(q)&&cmdS().v>=cmCost(q);
+function cmBuy(id){const c=cmdS(),q=CMB[id];if(!q||!cmCan(q))return false;const l=c.lv[id]|0,p=q.cost[l];c.v-=p;c.lv[id]=l+1;
+  if(q.k==='pow'&&!l&&c.eq.length<cmSlots(c))c.eq.push(id);save();AN.track('cmd_buy',{id,lv:l+1,v:c.v});return true}
+function cmEquip(id){const c=cmdS();if(!(c.lv[id]>0)||CMB[id].k!=='pow')return;const i=c.eq.indexOf(id);if(i>=0)c.eq.splice(i,1);else{if(c.eq.length>=cmSlots(c))c.eq.shift();c.eq.push(id)}save()}
+const cmAff=()=>cmdOpen()?CMD.filter(cmCan).length:0;
+// ---- run state ----
+function cmdRunInit(){const c=cmdS(),lv=Object.assign({},c.lv),l=id=>lv[id]|0;
+  return{pts:c.eq.length?CM_PTS:0,eq:c.eq.slice(),lv,cd:{},t:{},rk:1,rcN:0,lg:0,arm:null,el:0,pe:0,used:0,uses:{},offs:[],elQ:0,elAt:[],hlog:[],sh:[],gs:null,lz:null,fx:[],lockT:0,
+    dem:l('demo')?1+0.2*l('demo'):0,hb:l('hunter')?1+0.25*l('hunter'):0,aim:l('aim'),bul:l('bulwark')?1-0.06*l('bulwark'):0,nrv:l('nerves'),pd:1+0.15*l('ord')}}
+// one trooper's health this wave: powers are sized off the wave, not your upgrades, so they stay strong on every theater and wave
+const cmGh=()=>ET.grunt.hp*waveHp(Math.max(1,G.wave))*hazardHp();
+const cmOn=k=>G.cm.t[k]>G.time;
+function cmGain(p){const m=G.cm;m.pe+=p;if(!m.eq.length)return;if(m.nrv&&(G.hp<G.maxHp*0.5||G.wallMax&&G.wallHp<G.wallMax*0.5))p*=1+0.4*m.nrv;
+  const was=Math.floor(m.pts/CM_PTS);m.pts=Math.min(CM_MAX*CM_PTS,m.pts+p);if(Math.floor(m.pts/CM_PTS)>was){tone(740,0.08,'square',220,0.04);cmSync(true,true)}}
+// kill(): the meter only fills from what the commander does
+function cmdKill(e){const m=G.cm,own=_ds==='power'||_ds==='nade'||_ds==='air'||_ds==='rifle'&&_mainHit;let p=0;
+  if(e.el){m.el++;p=own?30:10;const h=m.hlog.find(q=>q.e===e);if(h){h.t1=G.time;h.e=null}feed('HIGH-VALUE TARGET DOWN','255,207,90','star');hapt('success','hvt',400);if(e.el==='off')m.offs=m.offs.filter(o=>o!==e)}
+  else if(e.tb)p=20;
+  if(_ds==='power'){}else if(_mainHit&&_aimed)p+=e.boss?10:1;else if(_nadeK)p+=1;else if(_ds==='air')p+=0.5;
+  if(p)cmGain(p)}
+// hurtEnemy(): Rally, Demolitions Expert, the officer aura, the riot shield and the drone's armor. Identity when none apply;
+// -1 = the shield took the whole hit (hurtEnemy then only flashes the target: no damage number, no kill check).
+function cmdHurt(e,d){const m=G.cm;
+  if(m.t.rally>G.time)d*=m.rk;
+  if(m.dem&&(_ds==='nade'||_ds==='air'))d*=m.dem;
+  if(e.el){const own=_ds==='power'||_ds==='nade'||_ds==='air'||_ds==='rifle'&&_mainHit;
+    if(e.el==='drn'){if(!(own||_ds==='power'))d*=0.25}
+    else if(e.shd>0){e.shd-=d*(_dk===''||_dk==='m'?(own?2.5:1.6):own?0.4:0.05);if(e.shd<=0){e.shd=0;cmShieldBreak(e)}return -1}}
+  else if(m.offs.length){for(const o of m.offs)if(!o.dead&&within(e,o.x,o.y,HVT_AURA)){d*=0.6;break}}
+  return d}
+function cmShieldBreak(e){spark(e.x,e.y,18,170,['#ffffff','#bfe6ff','#ffd27a'],0.5,1.8);ring(e.x,e.y,e.r*3,0.4,'190,225,255',3);float(e.x,e.y-e.r-16,'SHIELD BROKEN','#bfe6ff',13);sfx('armor',e.x,e.y)}
+// fire() (commander rifle only): Deadeye's floor and Steady Aim's bonus
+function cmdRifle(d){const m=G.cm;if(m.t.de>G.time)d=Math.max(d,3*cmGh());if(m.aim&&_aimed)d+=0.5*m.aim*cmGh();return d}
+// damageFort(): -1 = blocked (Fortify), else the damage after Smoke Screen and Bulwark
+function cmdFortHit(d){const m=G.cm;if(m.t.fort>G.time){if(R()<0.3){const h=blockHalf(),a=R()*TAU,c=Math.max(Math.abs(Math.cos(a)),Math.abs(Math.sin(a)));spark(Math.cos(a)/c*h,Math.sin(a)/c*h,3,70,['#fff3c4','#ffd23f'],0.25,1.2)}return -1}
+  if(m.t.smoke>G.time)d*=0.25;if(m.bul)d*=m.bul;return d}
+// ---- using a power ----
+function cmUse(i){if(!running||paused||!G||G.choosing||G.over)return;const m=G.cm,id=m.eq[i];if(!id)return;const q=CMB[id];
+  if(m.arm===id){m.arm=null;cmSync(true);return}
+  if((m.cd[id]||0)>G.time||m.pts<q.ch*CM_PTS-1e-9){sfx('deny');return}
+  if(q.tgt){m.arm=id;G.airArmed=false;G.airAim=null;G.nadeArmed=false;sfx('buy');cmSync(true);return}
+  cmFire(id)}
+function cmTap(x,y){const m=G.cm,id=m.arm,q=CMB[id];if(!q)return;
+  if(q.tgt==='en'){const e=enemyAt(x,y,Math.max(24,(MOBILE?40:20)/sc));if(!e){float(x,y,'TAP AN ENEMY','#ffd0c4',12);return}cmFire(id,e.x,e.y,e);return}
+  cmFire(id,x,y)}
+function cmFire(id,x,y,e){const m=G.cm,q=CMB[id],l=m.lv[id]|0;m.arm=null;m.pts=Math.max(0,m.pts-q.ch*CM_PTS);m.cd[id]=G.time+q.cd;m.used++;m.uses[id]=(m.uses[id]||0)+1;
+  if(m.lv.legend)m.lg=Math.min(CM_LEG,m.lg+q.ch);CMFX[id](l,x,y,e);dqAdd('power',1);cmSync(true);hapt('medium','cmd',300)}
+function cmLegend(){if(!running||paused||!G||G.choosing||G.over)return;const m=G.cm;if(!m.lv.legend||m.lg<CM_LEG){sfx('deny');return}m.lg=0;const T=G.time+12;
+  m.t.rally=Math.max(m.t.rally||0,T);m.rk=Math.max(m.rk,2);G.rapidT=Math.max(G.rapidT,12);m.t.de=Math.max(m.t.de||0,T);m.t.fort=Math.max(m.t.fort||0,T);m.t.leg=T;m.uses.legend=(m.uses.legend||0)+1;
+  banner('LEGEND MODE','Rally · Deadeye · Fortify for 12s','255,207,90');slowMo(1.4,0.35);shake(8);hapt('heavy','cmd',300);[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,i<3?0.1:0.3,'square',0,0.05),i*90));cmSync(true)}
+const cmBanner=(t,sub,c)=>feed(t+(sub?' · '+sub:''),c,'cmd',t);
+const CMFX={
+ rally(l){const m=G.cm,s=[8,10,12][l-1];m.t.rally=G.time+s;m.rk=Math.max(m.t.leg>G.time?2:1,[1.5,1.75,2][l-1]);G.rapidT=Math.max(G.rapidT,s);
+   cmBanner('RALLY','every gun hits '+m.rk+'× as hard','255,140,90');ring(0,0,blockHalf()*2.2,0.6,'255,160,90',4);[392,523,659].forEach((f,i)=>setTimeout(()=>tone(f,0.12,'square',0,0.05),i*80))},
+ barrage(l,x,y){const m=G.cm,n=[10,14,18][l-1],dmg=5*cmGh()*m.pd;for(let i=0;i<n;i++){const a=R()*TAU,o=Math.sqrt(R())*75;m.sh.push({x:x+Math.cos(a)*o,y:y+Math.sin(a)*o,t:0.7+i*0.16,t0:0.7+i*0.16,r:34,dmg})}
+   cmBanner('BARRAGE','shells inbound','255,140,90');sfx('whistle',x,y)},
+ gunship(l){const m=G.cm;m.gs={t:G.time+[12,15,18][l-1],a:R()*TAU,f40:0.6,f105:1.5,rt:0,c:null,px:0,py:0};cmBanner('GUNSHIP ON STATION','','255,140,90');sfx('plane')},
+ laser(l){const m=G.cm,c=cmCluster(50);m.lz={t:G.time+[7,8.5,10][l-1],x:c?c.x:0,y:c?c.y:-sight()*0.5,c,rt:0.7,fx:0,man:0,hum:0};
+   cmBanner('SPACE LASER','hold and drag to steer','150,225,255');sfx('laser',m.lz.x,m.lz.y);shake(6);light(m.lz.x,m.lz.y,160,'150,225,255',0.6)},
+ deadeye(l){const m=G.cm;m.t.de=G.time+[6,8,10][l-1];slowMo(1.6,0.4);cmBanner('DEADEYE','every shot crits','255,207,90');tone(1320,0.14,'sine',-600,0.05)},
+ marktgt(l,x,y,e){if(!e||e.dead)return;sgMark(e,[2,2.5,3][l-1],12);e.rev=Math.max(e.rev||0,12);G.sold[0].tgt=e;float(e.x,e.y-e.r-16,'MARKED · '+[3,3.5,4][l-1]+'× DAMAGE','#ff8a70',13);
+   ring(e.x,e.y,e.r*3,0.4,'255,110,80',3);tone(990,0.1,'square',0,0.05)},
+ rico(l){const m=G.cm;m.t.rico=G.time+10;m.rcN=l+1;cmBanner('RICOCHET','shots bounce to '+(l+1)+' more','255,207,90')},
+ rail(l,x,y){const m=G.cm,d=hyp(x,y)||1,ux=x/d,uy=y/d,L0=fortHalf()+6,L1=skyVision()+200,x1=ux*L0,y1=uy*L0,x2=ux*L1,y2=uy*L1,bp=[0.15,0.2,0.25][l-1],dmg=40*cmGh()*m.pd;
+   const ds=_ds,dk=_dk;_ds='power';_dk='';
+   for(const list of[G.enemies,G.sky])for(const e of list){if(e.dead)continue;const t=(e.x-x1)*ux+(e.y-y1)*uy;if(t<0||t>L1-L0)continue;const px=x1+ux*t,py=y1+uy*t;
+     if(hyp(e.x-px,e.y-py)>14+e.r)continue;hurtEnemy(e,e.boss||e.tb||e.el||e.type==='airboss'?e.max*bp*m.pd:dmg,true);spark(e.x,e.y,6,160,['#ffffff','#9fd8ff'],0.35,1.5)}
+   _ds=ds;_dk=dk;m.fx.push({k:'rail',x1,y1,x2,y2,life:0.6,max:0.6});shake(9);sfx('laser',x1,y1);sfx('cannon',0,0,1.2);hapt('heavy','cmd',300)},
+ repair(l){if(G.wallMax){const was=G.wallHp<=0;G.wallHp=Math.min(G.wallMax,Math.max(0,G.wallHp)+G.wallMax*[0.5,0.75,1][l-1]);float(0,-fortHalf()-30,was?'WALLS REBUILT':'WALLS +'+[50,75,100][l-1]+'%','#8fe08a',14)}
+   G.hp=G.maxHp;ring(0,0,blockHalf()*1.6,0.6,'130,230,140',5);spark(0,0,24,180,['#c8ffc0','#8fe08a','#ffffff'],0.6,1.6);sfx('wall');tone(660,0.12,'sine',300,0.05)},
+ smoke(l){const m=G.cm,s=[6,8,10][l-1],sg0=sight();m.t.smoke=G.time+s;for(const e of G.enemies)if(!e.dead&&!e.air&&within(e,0,0,sg0+40))sgSlow(e,0.35,s);
+   const h=blockHalf()+40;for(let i=0;i<20;i++){const a=i/20*TAU;puff(Math.cos(a)*h*1.25,Math.sin(a)*h*1.25,3,30,s*0.9,'200,200,195',8,0.55)}cmBanner('SMOKE SCREEN','','200,210,220');sfx('flare')},
+ fortify(l){const m=G.cm;m.t.fort=G.time+[5,6,7][l-1];cmBanner('FORTIFY','the walls hold','255,207,90');sfx('emp',0,0)},
+ shock(l){const m=G.cm,k=[50,70,90][l-1],st=[3,4,5][l-1],R2=sight()+60,dmg=6*cmGh()*m.pd,ds=_ds,dk=_dk;_ds='power';_dk='';
+   for(const e of G.enemies){if(e.dead||e.lc||e.chute>0||!within(e,0,0,R2))continue;const d=hyp(e.x,e.y)||1,f=e.tb||e.boss?0.3:1;
+     if(!e.tb){e.x+=e.x/d*k*f;e.y+=e.y/d*k*f}e.stun=Math.max(e.stun||0,st*f);hurtEnemy(e,dmg,false)}
+   _ds=ds;_dk=dk;for(let i=0;i<3;i++)ring(0,0,R2*(0.55+i*0.25),0.5+i*0.15,'150,220,255',7-i*2);light(0,0,R2,'150,220,255',0.5);shake(12);slowMo(0.7,0.45);sfx('emp',0,0);sfx('boom',0,0,2);hapt('heavy','cmd',300)}};
+// the visible ground enemy with the most others within rad (artillery's rule, capped at 25 candidates)
+function cmCluster(rad){let best=null,bc=-1,n=0;for(const c of G.enemies){if(c.dead||!visible(c))continue;if(++n>25)break;let k=0;for(const o of G.enemies)if(!o.dead&&within(o,c.x,c.y,rad))k+=o.el?6:o.veh||o.boss?3:1;if(k>bc){bc=k;best=c}}return best}
+// ---- per tick (update): barrage shells, gunship, laser, fortify regen; high-value target bookkeeping ----
+function cmdTick(dt){const m=G.cm;if(!m)return;const T=G.time;
+  if(m.t.fort>T&&G.wallMax&&G.wallHp>0)G.wallHp=Math.min(G.wallMax,G.wallHp+G.wallMax*0.08*dt);
+  if(m.t.smoke>T&&(m.smF=(m.smF||0)-dt)<=0){m.smF=0.5;const h=blockHalf()+40,a=R()*TAU;puff(Math.cos(a)*h*1.3,Math.sin(a)*h*1.3,2,30,3,'200,200,195',8,0.5)}
+  for(const f of m.fx)f.life-=dt;if(m.fx.length&&m.fx[0].life<=0)m.fx=m.fx.filter(f=>f.life>0);
+  if(!m.sh.length&&!m.gs&&!m.lz)return;
+  const ds=_ds,dk=_dk;_ds='power';_dk='';
+  if(m.sh.length){for(const s of m.sh){s.t-=dt;if(s.t<=0){s.done=true;explode(s.x,s.y,s.r,s.dmg)}}m.sh=m.sh.filter(s=>!s.done)}
+  const gs=m.gs;if(gs){if(T>=gs.t){m.gs=null;feed('GUNSHIP OFF STATION','255,140,90','gunship')}
+    else{gs.a+=dt*0.42;const Rr=sight()*0.78;gs.px=Math.cos(gs.a)*Rr;gs.py=Math.sin(gs.a)*Rr;gs.f40-=dt;gs.f105-=dt;gs.rt-=dt;
+      const tg=G.sold[0].tgt;let p=tg&&!tg.dead&&!tg.air&&visible(tg)?tg:null;if(!p){if(gs.rt<=0||!gs.c||gs.c.dead){gs.rt=0.8;gs.c=cmCluster(60)}p=gs.c}
+      if(p&&gs.f40<=0){gs.f40=0.28;const x=p.x+(R()-.5)*14,y=p.y+(R()-.5)*14;G.fx.push({k:'tracer',x:gs.px,y:gs.py,x2:x,y2:y,life:0.08,max:0.08,c:'#ffd27a',w:2.2});explode(x,y,16,2.2*cmGh()*m.pd,false);sfx('cannon',x,y,0.5)}
+      if(gs.f105<=0){gs.f105=2.2;const c=cmCluster(90);if(c){G.fx.push({k:'tracer',x:gs.px,y:gs.py,x2:c.x,y2:c.y,life:0.12,max:0.12,c:'#ffb050',w:3.5});explode(c.x,c.y,46,9*cmGh()*m.pd);sfx('howitzer',c.x,c.y)}}}}
+  const lz=m.lz;if(lz){if(T>=lz.t){m.lz=null;feed('LASER OFFLINE','150,225,255','cp_laser')}
+    else{let tx=null,ty=null;if(mouse.down&&!m.arm&&!G.nadeArmed&&!G.airArmed){tx=mouse.wx;ty=mouse.wy;lz.man=1}
+      else{if((lz.rt-=dt)<=0||!lz.c||lz.c.dead){lz.rt=0.7;lz.c=cmCluster(50)}if(lz.c){tx=lz.c.x;ty=lz.c.y}}
+      if(tx!=null){const dx=tx-lz.x,dy=ty-lz.y,d=hyp(dx,dy),st=Math.min(d,(lz.man?460:210)*dt);if(d>0.01){lz.x+=dx/d*st;lz.y+=dy/d*st}}
+      const dmg=14*cmGh()*m.pd*dt;for(const e of G.enemies)if(!e.dead&&within(e,lz.x,lz.y,26+e.r))hurtEnemy(e,dmg+(e.boss||e.tb||e.el?e.max*0.04*dt:0),false);
+      if((lz.fx-=dt)<=0){lz.fx=0.06;spark(lz.x,lz.y,3,140,['#ffffff','#bfe6ff','#ffd27a'],0.3,1.4);light(lz.x,lz.y,90,'150,225,255',0.12);if(R()<0.25)decal(lz.x,lz.y,'scorch',18)}
+      if((lz.hum-=dt)<=0){lz.hum=0.45;tone(110,0.4,'sawtooth',20,0.025)}}}
+  _ds=ds;_dk=dk}
+// ---- high-value targets: queued at wave start, each replaces one ordinary spawn at a fixed point in the wave ----
+function cmdWave(){const m=G.cm;if(!m)return;m.elQ=0;m.elAt=[];const w=G.wave;if(w<CM_W||tbWave(w))return;
+  const n=1+(w>=40)+(w>=60)+(w>=85),N=G.spawnLeft;m.elAt=[0.75,0.5,0.3,0.12].slice(0,n).map(f=>Math.floor(N*f));m.elQ=n}
+function cmdSpawn(){const m=G.cm;if(!m||!m.elQ)return false;const i=m.elAt.length-m.elQ;if(G.spawnLeft>m.elAt[i])return false;m.elQ--;hvtSpawn();return true}
+function hvtSpawn(){const w=G.wave,ks=['off'];if(w>=30)ks.push('shd');if(w>=35)ks.push('drn');const k=ks[Math.floor(R()*ks.length)];let e;
+  if(k==='drn'){e=spawnSky('drone',R()*TAU,false);e.hp=e.max*=16;e.dmg*=10;e.spd*=0.75;e.rew*=10}
+  else{e=spawn(k==='off'?'shooter':'brute');if(e.robo){e.robo=undefined;e.arm=ET[e.type].arm||0}e.hp=e.max*=k==='off'?20:8;e.dmg*=k==='off'?8:6;e.rew*=10;e.r=Math.round(e.r*1.3);
+    if(k==='shd')e.shd=e.max;else G.cm.offs.push(e)}
+  e.el=k;G.cm.hlog.push({k,w,t0:G.time,t1:0,e});if(G.cm.hlog.length>40)G.cm.hlog.shift();if(!seen()['hvt_'+k])spotted('hvt_'+k);
+  feed('HIGH-VALUE TARGET · '+INTEL['hvt_'+k][0].toUpperCase(),'255,110,90','threat','HVT · '+INTEL['hvt_'+k][0].toUpperCase());tone(880,0.1,'square',0,0.05);setTimeout(()=>tone(660,0.16,'square',0,0.05),120)}
+const hvtPreview=k=>k==='drn'?skyPreview('drone'):drawPreview(k==='off'?'shooter':'brute');
+// ---- end of run: Valor Tokens ----
+function cmdRunEnd(){const m=G.cm;if(!m)return;const c=cmdS(),held=Math.max(0,G.wave-(G.startWave||1)),mi=Math.max(0,MAPS.findIndex(q=>q.id===S.map)),
+    wv=Math.floor(held*0.4),own=Math.floor(m.pe/30),el=m.el*(1+(m.lv.hunter|0)),rec=lastAAR&&lastAAR.rec?2:0,mk=1+0.2*mi;
+  let n=Math.round((wv+own+el+rec)*mk);if(held>=1)n=Math.max(1,n);c.v+=n;c.tot+=n;
+  if(lastAAR)lastAAR.vl={n,wv,own,el,rec,mk,uses:m.used};save();return n}
+// ---- HUD: one button per equipped power (ring = charge toward its cost, or the cooldown), plus LEGEND once owned ----
+const CM_ACT={rally:'rally',deadeye:'de',rico:'rico',smoke:'smoke',fortify:'fort'};
+function cmActive(id){const m=G.cm;if(id==='gunship')return m.gs?m.gs.t-G.time:0;if(id==='laser')return m.lz?m.lz.t-G.time:0;const k=CM_ACT[id];return k&&m.t[k]>G.time?m.t[k]-G.time:0}
+function cmdHudInit(){const m=G.cm;for(let i=0;i<3;i++){const b=$('cp'+i),id=m.eq[i],q=CMB[id];b.hidden=!q;b._s=null;if(!q)continue;
+    b.innerHTML=`<span class="rg"></span>${ic(q.ic,22)}<em class="cdn"></em><b>${q.sh}</b><span class="pp">${'<i></i>'.repeat(q.ch)}</span>`;b.setAttribute('aria-label',q.name+' (Command power, '+q.ch+' '+pl(q.ch,'charge')+')');b.title=q.name+' ('+(i+1)+')'}
+  const L0=$('cpL');L0.hidden=!m.lv.legend;L0._s=null;if(!L0.innerHTML)L0.innerHTML=`<span class="rg"></span>${ic('star',22)}<b>LEGEND</b>`;$('hud').classList.toggle('cmd',m.eq.length>0);cmSync(true)}
+function cmSync(force,ping){if(!G||!G.cm)return;const m=G.cm,T=G.time,ch=m.pts/CM_PTS,now=performance.now();
+  for(let i=0;i<m.eq.length;i++){const b=$('cp'+i),id=m.eq[i],q=CMB[id],act=cmActive(id),cd=(m.cd[id]||0)-T,
+      st=m.arm===id?'armed':act>0?'act':cd>0?'cd':ch>=q.ch-1e-9?'ready':'chg',p=st==='cd'?Math.max(0,1-cd/q.cd):st==='chg'?Math.min(1,ch/q.ch):1;
+    if(force||b._s!==st){const was=b._s;b._s=st;for(const k of['armed','act','cd','ready','chg'])b.classList.toggle(k,st===k);if(st==='ready'&&was&&was!=='ready'&&!force||ping&&st==='ready')hudPing(b)}
+    if(force||(p!==b._p&&(p===1||now-(b._pt||0)>=100))){b._pt=now;b._p=p;b.style.setProperty('--p',p.toFixed(3))}
+    const txt=st==='cd'?Math.ceil(cd)+'s':st==='act'?Math.ceil(act)+'s':'',pf=Math.min(q.ch,Math.floor(ch+1e-9));
+    if(force||b._t!==txt||b._f!==pf){b._t=txt;b._f=pf;b.querySelector('.cdn').textContent=txt;b.querySelectorAll('.pp i').forEach((x,j)=>x.classList.toggle('f',j<pf))}}
+  if(m.lv.legend){const b=$('cpL'),st=m.t.leg>T?'act':m.lg>=CM_LEG?'ready':'chg',p=st==='chg'?m.lg/CM_LEG:1;
+    if(force||b._s!==st){const was=b._s;b._s=st;for(const k of['act','ready','chg'])b.classList.toggle(k,st===k);if(st==='ready'&&was==='chg')hudPing(b)}
+    if(force||b._p!==p){b._p=p;b.style.setProperty('--p',p.toFixed(3))}}}
+const cmArmTxt=id=>{const q=CMB[id];return q?q.name.toUpperCase()+' · '+(q.tgt==='en'?(MOBILE?'tap an enemy':'click an enemy · Esc cancels'):(MOBILE?'tap a spot':'click a spot · Esc cancels')):''};
+// AAR: Valor paid for this run (opens the Command view)
+function cmdAAR(a){if(!a.vl||!cmdOpen())return'';const n=cmAff();
+  return`<button class="rprow vrow" data-view-go="cmd">${ic('valor',16)}<span><b>+${fmtN(a.vl.n)} VALOR</b> · ${fmtN(cmdS().v)} banked${n?`<span class="hph"> · ${n} ${pl(n,'upgrade')} ready</span>`:''}</span><span class="chev">→</span></button>`}
+// ---- world-space drawing (after the light pass: full-bright, above the fog) ----
+function cmdDraw(){const m=G.cm;if(!m)return;const px=1/sc,T=G.time;
+  for(const s of m.sh){const f=1-s.t/s.t0;ctx.strokeStyle=`rgba(255,110,70,${(0.35+0.5*f).toFixed(2)})`;ctx.lineWidth=Math.max(1.2,1.5*px);ctx.beginPath();ctx.arc(s.x,s.y,s.r*(1.2-0.6*f),0,7);ctx.stroke()}
+  for(const f of m.fx)if(f.k==='rail'){const a=f.life/f.max;ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+    for(const[w,c]of[[22,'90,170,255'],[9,'170,220,255'],[3,'255,255,255']]){ctx.strokeStyle=`rgba(${c},${(a*(w>20?0.35:0.9)).toFixed(3)})`;ctx.lineWidth=w*a;ctx.beginPath();ctx.moveTo(f.x1,f.y1);ctx.lineTo(f.x2,f.y2);ctx.stroke()}ctx.restore()}
+  const lz=m.lz;if(lz){const p=0.5+0.5*Math.sin(T*30),lef=Math.min(1,(lz.t-T)/0.4);ctx.save();ctx.globalCompositeOperation='lighter';
+    const g=ctx.createRadialGradient(lz.x,lz.y,0,lz.x,lz.y,60);g.addColorStop(0,`rgba(255,255,255,${0.95*lef})`);g.addColorStop(0.25,`rgba(160,220,255,${0.75*lef})`);g.addColorStop(1,'rgba(60,140,255,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(lz.x,lz.y,60,0,7);ctx.fill();ctx.strokeStyle=`rgba(170,225,255,${(0.5+0.3*p)*lef})`;ctx.lineWidth=(10+4*p)*lef;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(lz.x,lz.y);ctx.lineTo(lz.x+40,lz.y-VH/sc);ctx.stroke();ctx.strokeStyle=`rgba(255,255,255,${0.9*lef})`;ctx.lineWidth=3*lef;ctx.stroke();
+    ctx.strokeStyle=`rgba(255,200,120,${0.6*lef})`;ctx.lineWidth=2*px;ctx.beginPath();ctx.arc(lz.x,lz.y,26+3*p,0,7);ctx.stroke();ctx.restore()}
+  const gs=m.gs;if(gs){const a=gs.a+Math.PI/2;for(const sh of[1,0]){ctx.save();const k=Math.max(2.6,2.4/sc),so=k*14;ctx.translate(gs.px+(sh?so:0),gs.py+(sh?so*1.15:0));ctx.rotate(a);ctx.scale(k,k);
+      const c=sh?'rgba(0,0,0,.3)':'#6d7470',d=sh?c:'#4d5350';box(-2.2,-15,4.4,30,c);box(-16,-3,32,4.6,c);box(-6,10.5,12,2.6,c);if(!sh){for(const x of[-11,-6,6,11])box(x-1,-4.4,2,3,d);box(-1.1,-12.5,2.2,4,'#9aa3a0');ell(0,-13.6,1.2,0.8,'#2b3a46')}ctx.restore()}}
+  if(m.t.fort>T||m.t.leg>T){const h=blockHalf()+6,a=0.45+0.25*Math.sin(T*8);ctx.strokeStyle=`rgba(255,207,90,${a.toFixed(3)})`;ctx.lineWidth=Math.max(3,5*px);ctx.strokeRect(-h,-h,h*2,h*2)}
+  if(m.t.leg>T){const r=blockHalf()*2.4+6*Math.sin(T*6);ctx.strokeStyle='rgba(255,207,90,.35)';ctx.lineWidth=Math.max(2,3*px);ctx.beginPath();ctx.arc(0,0,r,0,7);ctx.stroke()}
+  // high-value targets: a red diamond and tag; officers show their aura, shield bearers their shield
+  for(const list of[G.enemies,G.sky])for(const e of list){if(!e.el||e.dead)continue;const y=e.y-e.r-(e.air?(e.alt||0)*0.3:0)-14*Math.max(1,px),s=Math.max(5,6*px),pl=0.6+0.4*Math.sin(T*7+e.wob);
+    if(e.el==='off'){ctx.strokeStyle=`rgba(255,110,90,${(0.22+0.12*pl).toFixed(3)})`;ctx.lineWidth=Math.max(1,1.4*px);ctx.setLineDash([6*px,5*px]);ctx.beginPath();ctx.arc(e.x,e.y,HVT_AURA,0,7);ctx.stroke();ctx.setLineDash([])}
+    if(e.shd>0){const a=Math.atan2(-e.y,-e.x),f=e.shd/e.max;ctx.strokeStyle=`rgba(170,215,255,${(0.5+0.4*f).toFixed(3)})`;ctx.lineWidth=Math.max(2.5,3.5*px);ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,a-1.1,a+1.1);ctx.stroke()}
+    ctx.fillStyle=`rgba(255,80,60,${(0.75+0.25*pl).toFixed(3)})`;ctx.beginPath();ctx.moveTo(e.x,y-s);ctx.lineTo(e.x+s*0.8,y);ctx.lineTo(e.x,y+s);ctx.lineTo(e.x-s*0.8,y);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(20,8,6,.8)';ctx.lineWidth=Math.max(1,px);ctx.stroke();
+    const w=Math.max(18,e.r*2.6),bh=Math.max(2.5,2.5*px),by=y+s+2*px;ctx.fillStyle='#000';ctx.fillRect(e.x-w/2,by,w,bh);ctx.fillStyle='#f44';ctx.fillRect(e.x-w/2,by,w*Math.max(0,e.hp/e.max),bh);
+    if(e.shd>0){ctx.fillStyle='#9fd0ff';ctx.fillRect(e.x-w/2,by+bh+px,w*Math.min(1,e.shd/e.max),bh)}}
+  cmHint()}
+// tap-to-shoot hint (owner 2026-11-01: brand-new players dying on waves 1-2 with almost no kills): when the commander hasn't tapped a
+// target for a few seconds early in a new player's runs, a pulsing ring and "TAP TO SHOOT" sit on the nearest enemy. Retired for good
+// after 5 taps on enemies.
+function cmHint(){const m=G.cm,tp=hudTips();if(tp.shoot||G.wave>6||careerBest()>10||paused||G.choosing||G.sold[0].tgt||G.airArmed||G.nadeArmed||m.arm)return;
+  if(G.time-m.lockT<(G.wave<=1?3:6))return;let e=null,bd=1e9;for(const o of G.enemies){if(o.dead||!visible(o))continue;const d=hyp(o.x,o.y);if(d<bd){bd=d;e=o}}if(!e)return;
+  const px=1/sc,p=(G.time*1.6)%1,r=e.r+8*px+p*22*px;ctx.strokeStyle=`rgba(255,207,90,${(0.9*(1-p)).toFixed(3)})`;ctx.lineWidth=Math.max(2,2.5*px);ctx.beginPath();ctx.arc(e.x,e.y,r,0,7);ctx.stroke();
+  ctx.strokeStyle='rgba(255,207,90,.95)';ctx.beginPath();ctx.arc(e.x,e.y,e.r+6*px,0,7);ctx.stroke();
+  const k=Math.max(1,0.9/sc),t=MOBILE?'TAP TO SHOOT':'CLICK TO SHOOT';ctx.font=`800 ${Math.round(13*k)}px Oxanium,sans-serif`;ctx.textAlign='center';const ty=e.y-e.r-18*k;
+  ctx.lineWidth=4*k;ctx.strokeStyle='rgba(10,12,8,.85)';ctx.strokeText(t,e.x,ty);ctx.fillStyle='#ffd23f';ctx.fillText(t,e.x,ty)}
+function cmTapped(){if(!G||!G.cm)return;G.cm.lockT=G.time;const tp=hudTips();if(tp.shoot)return;tp.shootN=(tp.shootN|0)+1;if(tp.shootN>=5){tp.shoot=1;save()}}
+// ---- Command view (home): branches, nodes, loadout ----
+let cmBr='fire';
+function cmNodeHtml(q){const l=cpL(q.id),max=q.cost.length,mx=l>=max,need=cmNeed(q),c=cmdS(),eq=c.eq.includes(q.id),cost=mx?0:q.cost[l],can=!mx&&!need&&c.v>=cost,
+    br=CMD_BR.find(b=>b.id===q.br),kind=q.k==='pow'?`POWER · ${q.ch} ${pl(q.ch,'CHARGE')}`:q.k==='pas'?'PERK':q.k==='slot'?'SLOT':'CAPSTONE';
+  return`<div class="cm-node k-${q.k}${l?' own':''}${need?' lk':''}${eq?' eq':''}"${br?` style="--bc:${br.c}"`:''} data-cmnode="${q.id}"><span class="cm-ic">${ic(need?'lock':q.ic,22)}</span>`
+    +`<div class="cm-b"><div class="cm-t"><b>${q.name}</b><span class="cm-k">${kind}</span></div>`
+    +(max>1?`<div class="cm-lv">${Array.from({length:max},(_,i)=>`<i${i<l?' class="f"':''}></i>`).join('')}<small>${mx?'MAX':l?'LV '+l:''}</small></div>`:'')
+    +`<p>${need?`<b class="cm-need">${need}.</b> `:''}${l&&!mx?'<em>Next level:</em> ':''}${q.d(mx?l:l+1)}</p>`
+    +`<div class="cm-a">${mx?'<span class="cm-max">MAXED</span>':`<button class="btn sm${can?' pos':''}" data-cmbuy="${q.id}"${can?'':' disabled'}>${ic('valor',13)}${cost} · ${l?'UPGRADE':'UNLOCK'}</button>`}`
+    +(q.k==='pow'&&l?`<button class="btn sm${eq?' pri':' ghost'}" data-cmeq="${q.id}" aria-pressed="${eq}">${eq?'EQUIPPED':'EQUIP'}</button>`:'')+'</div></div></div>'}
+function renderCommand(){const el=$('cmdv'),c=cmdS(),slots=cmSlots(c);cmdUnlock();
+  const head=`<div class="vhead"><div><button class="btn ghost sm cm-back" data-view-go="base">${ic('chevL',14)}BASE</button><h1 class="vt">COMMAND</h1><p class="vsub">Your own powers. Win Valor Tokens every battle. Your aimed kills, grenades, airstrikes and crate grabs charge the Command meter in battle; your army never does.</p></div>`
+    +`<div class="vmeta cm-bank"><b>${ic('valor',18)}${fmtN(c.v)}</b>VALOR</div></div>`;
+  const load=`<div class="panel cm-load"><div class="sec-h"><div class="eyebrow">BATTLE LOADOUT · ${c.eq.length}/${slots}</div></div><div class="cm-slots">`
+    +[0,1,2].map(i=>{const id=c.eq[i],q=CMB[id];if(i>=slots)return`<div class="cm-slot lk">${ic('lock',18)}<span>${i===1?'Second slot':'Third slot'}</span></div>`;
+      return q?`<button class="cm-slot on" data-cmeq="${id}" title="Unequip ${q.name}">${ic(q.ic,20)}<span>${q.name}</span><i>${'●'.repeat(q.ch)}</i></button>`:`<div class="cm-slot">${ic('cmd',18)}<span>Empty: equip a power</span></div>`}).join('')+'</div></div>';
+  const tabs=`<div class="cm-tabs" role="group" aria-label="Branches">${CMD_BR.map(b=>{const n=CMD.filter(q=>q.br===b.id&&cmCan(q)).length;return`<button class="cat" data-cmbr="${b.id}" aria-pressed="${b.id===cmBr}" style="--bc:${b.c}">${ic(b.ic,14)}${b.name}${n?`<span class="n">${n}</span>`:''}</button>`}).join('')}</div>`;
+  const B=CMD_BR.find(b=>b.id===cmBr),list=CMD.filter(q=>q.br===cmBr);
+  const tree=`<div class="cm-br" style="--bc:${B.c}"><div class="cm-tag">${B.tag}</div><div class="cm-chain">${list.map(cmNodeHtml).join('')}</div></div>`;
+  const cap=`<div class="cm-br cm-cap"><div class="eyebrow">COMMAND UPGRADES</div><div class="cm-chain">${['slot2','slot3','legend'].map(id=>cmNodeHtml(CMB[id])).join('')}</div></div>`;
+  el.innerHTML=head+load+tabs+tree+cap+`<p class="cm-foot">${ic('valor',14)}Valor: about 1 for every 2-3 waves you hold, more for your own kills and high-value targets, x1.2 per theater past Desert Outpost. Lifetime: ${fmtN(c.tot)}.</p>`}
+$('cmdv').addEventListener('click',e=>{const t=e.target;let b;
+  if(b=t.closest('[data-cmbr]')){cmBr=b.dataset.cmbr;sfx('buy');renderCommand();return}
+  if(b=t.closest('[data-cmbuy]')){const id=b.dataset.cmbuy;if(cmBuy(id)){sfx('cash');const q=CMB[id];toast(`${q.name} ${cpL(id)>1?'Lv '+cpL(id):'unlocked'}`,'valor');renderCommand();const n=$('cmdv').querySelector(`[data-cmnode="${id}"]`);if(n)flash(n)}else sfx('deny');return}
+  if(b=t.closest('[data-cmeq]')){cmEquip(b.dataset.cmeq);sfx('buy');renderCommand();return}});
+// Base tile: Valor, the loadout and a way in (only once the tree is open)
+function renderCmdCard(){const el=$('cmdCard');if(!el)return;if(!cmdOpen()){el.innerHTML='';return}const fresh=cmdUnlock(),c=cmdS(),n=cmAff();
+  if(fresh)setTimeout(()=>toast('COMMAND unlocked · +'+CM_WELCOME+' Valor to spend','valor'),400);
+  el.innerHTML=`<button class="panel cm-card" data-view-go="cmd"><div class="sec-h"><div class="eyebrow">COMMAND${n?`<i class="dot gold"></i>`:''}</div><span class="cm-v">${ic('valor',16)}<b>${fmtN(c.v)}</b> VALOR</span></div>`
+    +`<div class="cm-row">${c.eq.length?c.eq.map(id=>`<span class="cm-pw">${ic(CMB[id].ic,16)}${CMB[id].name}</span>`).join(''):`<span class="cm-pw dim">${ic('cmd',16)}No power equipped yet</span>`}<span class="chev">→</span></div>`
+    +(n?`<div class="cm-sub">${n} ${pl(n,'upgrade')} ready to unlock</div>`:'')+'</button>'}
+
 // ================= BATTLE HUD =================
 // Three layouts share one set of primitives: desk (>=640 wide), port (phone portrait) and land (short landscape). Safe-area insets
 // come from a CSS probe (#hudSafe) so the canvas and the DOM buttons agree. Zones: top-left status stack, top-right system buttons (DOM),
@@ -11658,9 +11992,9 @@ function hudRunStart(){hudPrioHint(false);syncDirBtn();dirPop(false);coachCur=nu
 function hudDomSync(o,now){const d=o.dom;
   const t=G.sold[0].tgt,lk=!!(t&&!t.dead);if(d.lk!==lk){d.lk=lk;$('aimBtn').classList.toggle('locked',lk);$('aimTxt').textContent=lk?'LOCKED':'LOCK ON'}
   const z=Math.round((G.uZoom||1)*10)/10;if(d.z!==z){d.z=z;$('zoomTxt').textContent=z+'×';$('zoomBtn').classList.toggle('z',z>1)}
-  const arm=G.airArmed?'air':G.nadeArmed?'nade':'';if(d.arm!==arm){d.arm=arm;$('armChip').classList.toggle('on',!!arm);
-    if(arm)$('armTxt').textContent=arm==='nade'?(MOBILE?'FRAG ARMED · touch the ground':'FRAG ARMED · click to throw · Esc cancels'):(MOBILE?'AIRSTRIKE ARMED · drag a line':'AIRSTRIKE · click-drag a line · Esc cancels')}
-  syncAirBtn();syncNadeBtn();coachTick(o,now)}
+  const arm=G.airArmed?'air':G.nadeArmed?'nade':G.cm&&G.cm.arm?'cm_'+G.cm.arm:'';if(d.arm!==arm){d.arm=arm;$('armChip').classList.toggle('on',!!arm);
+    if(arm)$('armTxt').textContent=arm.startsWith('cm_')?cmArmTxt(arm.slice(3)):arm==='nade'?(MOBILE?'FRAG ARMED · touch the ground':'FRAG ARMED · click to throw · Esc cancels'):(MOBILE?'AIRSTRIKE ARMED · drag a line':'AIRSTRIKE · click-drag a line · Esc cancels')}
+  syncAirBtn();syncNadeBtn();cmSync();coachTick(o,now)}
 // ---- directives pill + popover (replaces the unlabeled canvas badge row)
 let _dirHide=0,_dirW=0,_dirPopH=240,intelH=124;
 function syncDirBtn(){if(!G)return;const ps=perkList(),n=ps.reduce((a,p)=>a+pk(p.id),0),b=$('dirBtn');b.classList.toggle('off',!ps.length);$('dirN').textContent=n;
@@ -11705,7 +12039,7 @@ function renderPause(){dropUi();const t=G.time;$('pauseCtx').textContent='WAVE '
   const hw=$('pauseHow');hw.classList.remove('on');$('pauseHowBtn').setAttribute('aria-expanded','false')}
 $('pauseHowBtn').onclick=()=>{if(typeof openHowto==='function'){openHowto();return}const hw=$('pauseHow'),on=!hw.classList.contains('on');
   if(on&&!hw.innerHTML){const h=$('helpTxt');hw.innerHTML=h?h.innerHTML:''}hw.classList.toggle('on',on);$('pauseHowBtn').setAttribute('aria-expanded',on?'true':'false');if(on)hw.scrollIntoView({block:'nearest'})};
-$('armX').onclick=e=>{e.stopPropagation();if(!G)return;G.airArmed=false;G.airAim=null;G.nadeArmed=false;syncNadeBtn();syncAirBtn()};
+$('armX').onclick=e=>{e.stopPropagation();if(!G)return;G.airArmed=false;G.airAim=null;G.nadeArmed=false;if(G.cm)G.cm.arm=null;syncNadeBtn();syncAirBtn()};
 $('intel').addEventListener('pointerdown',e=>{if(HL.mode==='desk'||!intelCur)return;e.preventDefault();e.stopPropagation();intelCur=null;$('intel').classList.remove('on');intelEnd=performance.now()+450});
 function rrect(x,y,w,h,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(x,y,Math.max(0,w),h,r);ctx.fill()}
 function drawPlane(){if(S.set.gfx==='high'){drawPlaneHQ();return}ctx.scale(2.2,2.2);const at=tierOf('air');if(at>=2){ctx.scale(1.15,1.15);const jt=at<=3?1:at===4?2:4,sh=String(ctx.fillStyle).indexOf('rgba(0, 0, 0')===0;if(!sh)ctx.fillStyle=JET_LO[jt];ctx.fill(jetPath(jt));if(!sh){jetLoDetail(jt);if(at===3)for(const y of[-6.4,6.4]){box(-4,y-1.15,9.4,2.3,'#3c4130');box(1.6,y-1.15,.7,2.3,'#e07a20')}}return}
@@ -11794,15 +12128,16 @@ function campHold(w){if(!G||G.dc)return;const m=mapCur(),r=mapRec(m.id),was=r.st
 const MOBILE=matchMedia('(pointer:coarse)').matches&&matchMedia('(hover:none)').matches;
 if(MOBILE){document.body.classList.add('mobile');
   $('helpTxt').innerHTML='<kbd>Tap</kbd> an enemy to lock on · <kbd>Hold</kbd> to keep firing<br><kbd>LOCK ON</kbd> grabs a target · <kbd>TARGET</kbd> sets what every gun shoots first<br><kbd>Tap</kbd> '+ic('scav',16)+' crates: cash, munitions, repairs · <kbd>FRAG</kbd> then a spot throws a grenade<br><kbd>'+ic('air',14)+'</kbd> button for airstrikes<br>Hold waves 3, 5, 10, 15... to earn a Field Commendation: pick one of three directives for the run.<br>Some waves bring battlefield events (sandstorms, paratroopers, blitzes, armored columns) that pay a bonus when you clear them.<br>From wave 6 the enemy brings armor: rifles barely scratch it, so lean on mines, grenades, artillery and your own heavy guns.<br>Upgrades unlock other upgrades, and reaching deeper waves opens new tech.';}
-$('aimBtn').onclick=()=>{if(!running||paused)return;if(G.airArmed||G.nadeArmed){G.airArmed=G.nadeArmed=false;return}const t=nearestVisible(G.sold[0]);if(t)G.sold[0].tgt=t};   // locks by the current target doctrine
+$('aimBtn').onclick=()=>{if(!running||paused)return;if(G.airArmed||G.nadeArmed||G.cm.arm){G.airArmed=G.nadeArmed=false;G.cm.arm=null;return}const t=nearestVisible(G.sold[0]);if(t){G.sold[0].tgt=t;cmTapped()}};   // locks by the current target doctrine
 function toWorld(e){mouse.x=e.clientX;mouse.y=e.clientY;mouse.wx=(e.clientX-VW/2)/sc;mouse.wy=(e.clientY-VH/2)/sc}
 cv.addEventListener('mousemove',e=>{toWorld(e);mouse.in=true});cv.addEventListener('mouseleave',()=>{mouse.in=false});
 cv.addEventListener('mousedown',e=>{if(!running||paused||e.button!==0)return;toWorld(e);mouse.down=true;
   if(G.nadeArmed){if(!MOBILE)throwNade(mouse.wx,mouse.wy);return}   // phones throw on release, once the finger has seen the blast circle
   if(G.airArmed){G.airAim={x:mouse.wx,y:mouse.wy};return}
+  if(G.cm&&G.cm.arm){cmTap(mouse.wx,mouse.wy);return}   // a Command power waiting for its spot / enemy
   for(const c of G.crates)if(Math.hypot(c.x-mouse.wx,c.y-mouse.wy)<Math.max(14,(MOBILE?30:16)/sc)){grabCrate(c);return}
   if(tbTap(mouse.wx,mouse.wy))return;   // a theater boss's glowing weak point
-  const t=enemyAt(mouse.wx,mouse.wy,Math.max(24,(MOBILE?36:18)/sc));if(t)G.sold[0].tgt=t});
+  const t=enemyAt(mouse.wx,mouse.wy,Math.max(24,(MOBILE?36:18)/sc));if(t){G.sold[0].tgt=t;cmTapped()}});
 function airRelease(){if(!G||!G.airAim)return;const a=G.airAim,dx=mouse.wx-a.x,dy=mouse.wy-a.y;G.airAim=null;
   callAir(a.x,a.y,Math.hypot(dx,dy)*sc>14?Math.atan2(dy,dx):undefined);dqAdd('strike',1)}
 addEventListener('mouseup',()=>{mouse.down=false;airRelease()});
@@ -11821,6 +12156,7 @@ document.addEventListener('gesturestart',e=>e.preventDefault());
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 $('airBtn').onclick=()=>toggleAir();
 $('nadeBtn').onclick=()=>nadeButton();
+for(let i=0;i<3;i++)$('cp'+i).onclick=()=>cmUse(i);$('cpL').onclick=()=>cmLegend();
 // Battle speed is account-wide and never sold: 1x/2x from the first run, 3x once Desert Outpost is cleared (speedOpts).
 const SPEEDS=[1,2,3],speedOpts=()=>SPEEDS.slice(0,mapRec(MAPS[0].id).cleared?3:2);
 function syncSpeedBtn(){const b=$('speedBtn'),v=G?G.simSpeed||1:1;$('speedTxt').textContent=v+'×';b.classList.toggle('fast',v>1);b.classList.remove('off')}
@@ -11845,8 +12181,8 @@ $('abandonBtn').onclick=e=>{const b=e.currentTarget,t=$('abandonTxt');if(!b.data
 addEventListener('keydown',e=>{if(!running||e.repeat)return;
   if($('settings').classList.contains('on')){if(e.code==='Escape')closeSettings();return}
   if(G.choosing){if(/^(Digit|Numpad)[1-3]$/.test(e.code))pickPerk(+e.code.slice(-1)-1);return}
-  if(e.code==='Escape'){if(G.airArmed)G.airArmed=false;else if(G.nadeArmed)G.nadeArmed=false;else setPause(!paused)}
-  if(e.code==='KeyQ')toggleAir();if(e.code==='KeyF')cycleSpeed();if(e.code==='KeyT')cyclePrio();if(e.code==='KeyG')nadeKey();if(e.code==='KeyP')setPause(!paused)});
+  if(e.code==='Escape'){if(G.airArmed)G.airArmed=false;else if(G.nadeArmed)G.nadeArmed=false;else if(G.cm.arm)G.cm.arm=null;else setPause(!paused)}
+  if(e.code==='KeyQ')toggleAir();if(e.code==='KeyF')cycleSpeed();if(e.code==='KeyT')cyclePrio();if(e.code==='KeyG')nadeKey();if(e.code==='KeyP')setPause(!paused);if(/^Digit[1-3]$/.test(e.code))cmUse(+e.code.slice(5)-1);if(e.code==='Digit4')cmLegend()});
 addEventListener('blur',()=>{mouse.down=false;if(S.set.blurPause)setPause(true)});
 // persist mid-run earnings (phones kill backgrounded apps without warning)
 function persist(){if(G&&running&&G.wave>S.best)S.best=G.wave;save()}

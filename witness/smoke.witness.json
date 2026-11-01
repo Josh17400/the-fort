@@ -125,5 +125,77 @@
     "expect": "!state.rookie"
    }
   ]
+ },
+ {
+  "name": "command: Rally spends its charge, runs 12 s, then cools down",
+  "seed": 1,
+  "scene": "maxed",
+  "params": {
+   "run": true,
+   "cmd": "all",
+   "eq": [
+    "rally"
+   ]
+  },
+  "input": "action:power1@2",
+  "steps": [
+   {
+    "at": 1,
+    "expect": [
+     "state.command.charges == 1",
+     "state.command.powers[0] == 'rally READY'"
+    ]
+   },
+   {
+    "at": 3,
+    "expect": [
+     "state.command.used == 1",
+     "state.command.charges == 0",
+     "state.command.powers[0].startsWith('rally active')"
+    ]
+   },
+   {
+    "at": 16,
+    "expect": "state.command.powers[0].startsWith('rally cooldown')"
+   }
+  ]
+ },
+ {
+  "name": "command: a run pays Valor at the end (waves held)",
+  "seed": 3,
+  "scene": "mid",
+  "params": {
+   "run": true,
+   "cmd": 0,
+   "wave": 12
+  },
+  "steps": [
+   {
+    "at": 5,
+    "call": [
+     "retreat"
+    ],
+    "expect": [
+     "state.command.lastValor >= 4",
+     "state.command.valor == state.command.lastValor"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "high-value target: one joins wave 25 (this fort kills it fast)",
+  "seed": 3,
+  "scene": "mid",
+  "params": {
+   "run": true,
+   "wave": 25
+  },
+  "steps": [
+   {
+    "from": 0.5,
+    "to": 25,
+    "eventually": "state.command.hvtSpawned >= 1"
+   }
+  ]
  }
 ]

@@ -55,6 +55,9 @@ function reset({ seed, scene, params = {} }) {
   running = false; paused = false; G = null; mouse.down = false;
   ids = new WeakMap(); nextId = 1; runNo = 0; lastHit = null; hitN = 0;
   const s = profile(scene || "fresh", seed);
+  // params.cmd: Commander tree on this save. "all" = every node maxed (loadout params.eq or laser/rail/shock), a number = that much Valor
+  if (params.cmd === "all") { s.cmd = { v: 0, tot: 0, on: 1, lv: Object.fromEntries(CMD.map((q) => [q.id, q.cost.length])), eq: params.eq || ["laser", "rail", "shock"] }; }
+  else if (params.cmd != null) s.cmd = { v: +params.cmd || 0, tot: 0, on: 1, lv: params.lv || {}, eq: params.eq || [] };
   if (params.map) { s.map = params.map; s.maps = {}; for (const m of MAPS) { if (m.id === params.map) break; s.maps[m.id] = { stars: 2, cleared: true }; } }
   freshAudio();
   localStorage.clear();
@@ -70,20 +73,22 @@ function reset({ seed, scene, params = {} }) {
   // the intel card queue, the medal toast queue and the HUD lane's busy clock outlive a run (module-level in the game): start clean
   _mtQ.length = 0; clearTimeout(_mtW); clearTimeout(_mtHide); _mtOn = false; _mtCur = null; $("medalToast").classList.remove("on");
   intelG = null; intelQ = []; intelCur = null; intelEnd = 0; intelLast = 0; $("intel").classList.remove("on"); HL.busyT = 0;
+  SM.dur = 0; _smSilo = -1e9;   // a cinematic slow-mo left running by the last test would slow this run's first frames
   last = performance.now(); acc = 0;   // the loop's clock: the real one ran before Witness took over
-  if (params.run) { startRun(); runNo = 1; }
+  if (params.run) { startRun(); runNo = 1; if (params.charges != null) G.cm.pts = params.charges * CM_PTS; if (params.wave) G.wave = params.wave - 1; }
 }
 
 function enemy(e, air) {
   return { id: idOf(e), type: air ? "Air:" + e.type : e.type, pos: [r1(e.x), r1(e.y)], hp: r1(e.hp), maxHp: r1(e.max),
-    hostile: true, dist: r1(Math.hypot(e.x, e.y)), inSight: visible(e), ...(e.boss || e.tb ? { boss: true } : {}) };
+    hostile: true, dist: r1(Math.hypot(e.x, e.y)), inSight: visible(e), ...(e.boss || e.tb ? { boss: true } : {}),
+    ...(e.el ? { hvt: e.el, ...(e.shd > 0 ? { shield: r1(e.shd) } : {}) } : {}) };
 }
 
 function snapshot() {
   const g = G, inRun = !!(g && running);
   const screen = inRun ? (g.choosing ? "directive" : paused ? "paused" : "battle") : g && g.swAsk ? "second-wind" : g && g.over ? "after-action" : "base";
   const st = {
-    screen, theater: S.map, bank: Math.floor(S.bank), rp: S.rp | 0, gems: S.gems | 0, best: S.best,
+    screen, theater: S.map, bank: Math.floor(S.bank), rp: S.rp | 0, gems: S.gems | 0, best: Math.max(S.best, inRun ? g.wave : 0),   // the game's 10 s autosave (real clock) bumps S.best mid-run: report what it would hold
     wave: g ? g.wave : 0, rookie: !!(g && g.rookie), kills: g ? g.kills : 0, time: g ? r1(g.time) : 0,
     dead: !!(g && g.over && !g.retreated), won: false,
     // each run is its own scene, so the harness forgets the last run's enemies; a retreat isn't a death
@@ -112,6 +117,12 @@ function snapshot() {
       options: g.choosing.map((p) => p.name + ": " + p.desc),
       ready: performance.now() - perkOpenT >= 650 } : null;   // pickPerk() ignores picks for 650 ms after the card opens (anti-misclick)
   } else st.entities = [];
+  // Commander powers: Valor (account), the Command meter and each equipped power's state (run)
+  const c = S.cmd || {};
+  st.command = { valor: c.v | 0, open: !!cmdOpen() };
+  if (g && g.cm) { const m = g.cm; Object.assign(st.command, { charges: r1(m.pts / CM_PTS), eq: m.eq.slice(), armed: m.arm, used: m.used, hvtKills: m.el, hvtSpawned: m.hlog.length, legend: m.lv.legend ? m.lg : null,
+    powers: m.eq.map((id) => { const q = CMB[id], act = cmActive(id), cd = (m.cd[id] || 0) - g.time; return id + (act > 0 ? " active " + r1(act) + "s" : cd > 0 ? " cooldown " + r1(cd) + "s" : m.pts >= q.ch * CM_PTS ? " READY" : " needs " + q.ch + " charges"); }) }); }
+  if (lastAAR && lastAAR.vl) st.command.lastValor = lastAAR.vl.n;
   return st;
 }
 
@@ -124,6 +135,9 @@ function action(name, down) {
   else if (name === "grab") { const c = G.crates.filter((c) => c.life > 0).sort((a, b) => Math.hypot(a.x, a.y) - Math.hypot(b.x, b.y))[0]; if (c) grabCrate(c); }
   else if (name === "strike") { const t = nearestEnemy(); if (!t) return; toggleAir(); if (G.airArmed) { G.airArmed = false; callAir(t.x, t.y); dqAdd("strike", 1); } }
   else if (name === "frag") { const t = nearestEnemy(); if (t) throwNade(t.x, t.y); }
+  // Command powers 1-3 (the buttons above AIR) and LEGEND; a power that wants a spot or an enemy gets the nearest visible one
+  else if (/^power[1-3]$/.test(name)) { cmUse(+name.slice(5) - 1); if (G.cm.arm) { const t = nearestEnemy(); if (t) cmTap(t.x, t.y); else G.cm.arm = null; } }
+  else if (name === "legend") cmLegend();
 }
 
 // Base-screen calls: the Armory, R&D and theater menus are HTML, so the tester reaches them through these.
@@ -147,6 +161,15 @@ const calls = {
   retreat: { help: "end the current run now", run: () => { if (!running) return { error: "not in battle" }; G.retreated = true; endRun(true); return `retreated at wave ${G.wave}`; } },
   decline: { help: "on the Second Wind offer: end the run", run: () => { if (G && G.swAsk) { swDecline(); return "run ended"; } return { error: "no Second Wind offer is open" }; } },
   theater: { args: "id", help: "switch theater at the base (desert, ...)", run: (id) => switchMap(id) ? `now in ${id}` : { error: `can't switch to "${id}" (unknown, locked, already there, or in battle); theaters: ${MAPS.map((m) => m.id + (mapOpen(m.id) ? "" : " (locked)")).join(", ")}` } },
+  command: { help: "the Commander tree: Valor, each node's level and cost (Valor is earned at the end of every run)", run: () => {
+    if (!cmdOpen()) return { error: "the Command tree opens once you have reached wave " + CM_OPEN };
+    const c = cmdS(); return `Valor ${c.v} · loadout ${c.eq.join(", ") || "none"} (${cmSlots(c)} slots) | ` + CMD.map((q) => `${q.id} (${q.name}) Lv${cpL(q.id)}/${q.cost.length}` + (cmMaxed(q) ? " MAX" : cmNeed(q) ? " locked" : ` ${cmCost(q)} Valor${c.v >= cmCost(q) ? "" : " (can't afford)"}`)).join("; "); } },
+  cmdbuy: { args: "id", help: "unlock or upgrade a Commander node (ids from command)", run: (id) => {
+    const q = CMB[id]; if (!q) return { error: `no node "${id}"` }; if (running) return { error: "the Command tree is closed during battle" };
+    if (cmMaxed(q)) return { error: id + " is maxed" }; const need = cmNeed(q); if (need) return { error: need };
+    if (!cmBuy(id)) return { error: `can't afford ${id}: costs ${cmCost(q)} Valor, you have ${cmdS().v}` }; renderHome(); return `${id} now Lv${cpL(id)} · loadout ${cmdS().eq.join(", ")}`; } },
+  equip: { args: "id", help: "equip / unequip an owned power for battle", run: (id) => { if (running) return { error: "set the loadout at base" }; cmEquip(id); renderHome(); return "loadout: " + (cmdS().eq.join(", ") || "none"); } },
+  js: { args: "expr", help: "DEV ONLY: evaluate an expression in the page", run: (x) => { try { return String((0, eval)(x)); } catch (e) { return { error: String(e) }; } } },
   speed: { args: "n", help: "battle speed (the speeds this save has unlocked)", run: (n) => {
     if (!G || !running) return { error: "speed is set during battle" };
     const ok = speedOpts(); if (!ok.includes(+n)) return { error: `speed ${n} isn't available: ${ok.join("/")}` };
