@@ -1325,6 +1325,9 @@ body.rm #hud #cpL.ready{animation:none}
 #hud[data-mode=desk] #cp0{--x:248px;--y:20px}#hud[data-mode=desk] #cp1{--x:324px;--y:20px}#hud[data-mode=desk] #cp2{--x:400px;--y:20px}#hud[data-mode=desk] #cpL{--x:476px;--y:20px}
 body.mobile #hud[data-mode=desk] .rbtn.pwb{--s:60px}body.mobile #hud[data-mode=desk] #cp0{--x:30px;--y:190px}body.mobile #hud[data-mode=desk] #cp1{--x:30px;--y:262px}body.mobile #hud[data-mode=desk] #cp2{--x:30px;--y:334px}body.mobile #hud[data-mode=desk] #cpL{--x:108px;--y:190px}
 #hud .rbtn.pwb kbd{top:-6px;right:-6px}
+/* no Air Support yet (AIR hidden): the power column drops into its spot instead of floating over a gap */
+#hud:not(.air)[data-mode=port] #cp0{--y:96px}#hud:not(.air)[data-mode=port] #cp1{--y:164px}#hud:not(.air)[data-mode=port] #cp2{--y:232px}
+body.mobile #hud:not(.air)[data-mode=desk] #cp0{--y:108px}body.mobile #hud:not(.air)[data-mode=desk] #cp1{--y:180px}body.mobile #hud:not(.air)[data-mode=desk] #cp2{--y:252px}
 /* Command view */
 .view[data-v=cmd] .vhead{align-items:flex-start}
 .cm-back{margin:0 0 8px -6px;padding:0 10px;min-height:36px}
