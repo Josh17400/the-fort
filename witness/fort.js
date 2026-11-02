@@ -55,6 +55,10 @@ globalThis.damageFort = function (d, src) {
   return damageFort0.apply(this, arguments);
 };
 
+// Name every game sound for Witness (play's "sounds:" line, listen): a tester can't hear the deny buzz of a power that can't fire.
+const sfx0 = sfx;
+globalThis.sfx = function (n) { witness.sound(String(n)); return sfx0.apply(this, arguments); };
+
 function reset({ seed, scene, params = {} }) {
   if (G && G.swAsk) swClose();
   running = false; paused = false; G = null; mouse.down = false;
