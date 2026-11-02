@@ -22,7 +22,6 @@
     "controls": {
       "attack": "tap:target",
       "interact": "action:grab",
-      "heal": "action:strike",
       "frag": "action:frag",
       "lock": "action:lock",
       "grab": "action:grab",
@@ -53,6 +52,10 @@
       {
         "expr": "state.player && state.player.walls",
         "label": "walls"
+      },
+      {
+        "expr": "state.command && state.command.open && state.command.powers.length ? state.command.powers.join(' / ') + ' (meter ' + state.command.charges + ')' : null",
+        "label": "powers"
       }
     ],
     "map": false,

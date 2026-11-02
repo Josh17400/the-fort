@@ -1310,6 +1310,7 @@ body.rm .adc::before{animation:none}@keyframes adSpin{to{transform:rotate(1turn)
 #home[data-view=cmd] .view[data-v=cmd]{display:block;animation:viewIn var(--d-3,320ms) var(--e-out,ease-out)}
 /* power buttons: a column above AIR on phones (port), a row beside the cluster elsewhere; hidden until a power is equipped */
 #hud .rbtn.pwb{--x:18px;color:var(--tx)}#hud .rbtn.pwb[hidden],#hud #cpL[hidden]{display:none!important}
+@keyframes cmNope{0%,60%{border-color:var(--c-red-hi,#ff6b5a);box-shadow:0 0 16px rgba(255,90,70,.7)}100%{}}#hud .rbtn.pwb.nope{animation:cmNope .6s ease-out}
 #hud .rbtn.pwb b{font-size:10px;letter-spacing:.04em}
 #hud .rbtn.pwb .rg{background:conic-gradient(var(--c-valor) calc(var(--p)*360deg),rgba(255,255,255,.1) 0)}
 #hud .rbtn.pwb.chg{color:var(--dm)}#hud .rbtn.pwb.chg>.ic{opacity:.6}
@@ -4014,10 +4015,11 @@ const money=v=>Math.round(v*(1+WB*L('bounty'))*(1+0.125*pk('salvage')+0.2*pk('ha
 // waves keep escalating, and a fort that keeps investing keeps pushing deeper.
 const EARLY=w=>w<=5?0.4+0.12*(w-1):1;  // gentler waves 1-5 (0.4 -> 0.88) so a brand-new player on the Recruit sidearm (x0.6 dmg) gets a foothold
 // Rookie opening (launch data, Oct 2026: a quarter of new players quit after one sub-minute first run). Until a commander has bought
-// an Armory level on Desert Outpost or held past wave 3, waves 1-3 are softer still. Frozen per run (G.rookie, set in startRun) and
+// an Armory level on Desert Outpost or held past wave 3, waves 1-3 are softer still, easing back over waves 4-5 (2/3, then 1/3 of
+// the softening: v1.1 playtest, switching it off at once doubled grunt hp and dumped 12 on wave 4). Frozen per run (G.rookie, set in startRun) and
 // read only while a run is live, so the curves, the UI previews and every upgraded fort are untouched.
 const ROOKIE={hp:0.7,dmg:0.55,n:0.8,w:3},rookieRun=()=>!S.dcHold&&S.map===MAPS[0].id&&!Object.values(S.lv).some(v=>v>0)&&careerBest()<=3,
-  rk=(w,k)=>running&&G&&G.rookie&&w<=ROOKIE.w?ROOKIE[k]:1;
+  rk=(w,k)=>running&&G&&G.rookie&&w<=ROOKIE.w+2?1-(1-ROOKIE[k])*Math.min(1,(ROOKIE.w+3-w)/3):1;
 function curve(w,d0,b,x0,ease,dL){const x=w-1;if(x<=x0)return d0*x+b*x*x;const d1=d0+2*b*x0,t=Math.min(x-x0,ease);
   return d0*x0+b*x0*x0+d1*t+(dL-d1)*t*t/(2*ease)+dL*Math.max(0,x-x0-ease)}
 const HPC=[Math.log(1.14),Math.log(1.003),26,30,Math.log(1.11)],DMC=[Math.log(1.1),0,26,30,Math.log(1.075)],RWC=[Math.log(1.045),0,26,30,Math.log(1.075)];
@@ -4818,6 +4820,7 @@ function buildUnits(){const u=[],ph=wallHalfAt(L('walls'));
   return u}
 const HEAVY={apc:1,tank:1,tesla:1,mlaunch:1};   // TOUGHEST doctrine applies to these; MG-class guns keep sweeping the nearest
 function nearestTo(u){const aa=AA_UNIT[u.k]||(sg(u.k,'aaBonus')?1:0),h=!!HEAVY[u.k];   // an aaBonus tier also engages aircraft
+  const mk=G.cm&&G.cm.mkE;if(mk){if(mk.dead||!(mk.mkT>G.time))G.cm.mkE=null;else if(visible(mk)&&(mk.air?aa===2||aa===1&&!mk.hi:aa!==2))return mk}   // Mark Target: every gun that can engage it turns on it
   return aa===2&&bestTarget(G.sky,u,h,true)||bestTarget(G.enemies,u,h,undefined,aa===1?G.sky:null)}
 function updateUnits(dt,ph){
   _ds='flame';const fl=L('flame');if(fl&&L('walls')){G.flameT-=dt;if(G.flameT<=0){G.flameT=0.1;const reach=ph+Math.min(60,26+4*fl),hel=sg('flame','instant');
@@ -11420,7 +11423,7 @@ const CMD=[
  {id:'laser',br:'fire',k:'pow',name:'Space Laser',sh:'LASER',ic:'cp_laser',ch:3,cd:60,cost:[50,70,95],d:l=>`An orbital beam burns for ${[7,8.5,10][l-1]}s and melts anything it touches. Hold and drag to steer it.`},
  {id:'deadeye',br:'mark',k:'pow',name:'Deadeye',sh:'DEADEYE',ic:'crit',ch:1,cd:20,cost:[5,10,15],d:l=>`Time slows. For ${[6,8,10][l-1]}s every rifle shot is a critical hit, fires twice as fast and drops a trooper in one hit.`},
  {id:'aim',br:'mark',k:'pas',name:'Steady Aim',ic:'dmg',cost:[8,12,18],d:l=>`Shots at the enemy you tapped deal extra damage (+${[50,100,150][l-1]}% of a trooper's health).`},
- {id:'marktgt',br:'mark',k:'pow',name:'Mark Target',sh:'MARK',ic:'cp_mark',ch:1,cd:15,tgt:'en',cost:[14,20,28],d:l=>`Tap an enemy: every gun you own hits it ${[3,3.5,4][l-1]}× as hard for 12s.`},
+ {id:'marktgt',br:'mark',k:'pow',name:'Mark Target',sh:'MARK',ic:'cp_mark',ch:1,cd:15,tgt:'en',cost:[14,20,28],d:l=>`Tap an enemy: every gun you own turns on it and hits it ${[4,5,6][l-1]}× as hard for 15s.`},
  {id:'hunter',br:'mark',k:'pas',name:'Bounty Hunter',ic:'bounty',cost:[18,26,36],d:l=>`Your aimed kills pay +${25*l}% cash; high-value kills pay +${l} Valor.`},
  {id:'rico',br:'mark',k:'pow',name:'Ricochet',sh:'RICO',ic:'cp_rico',ch:2,cd:30,cost:[30,42,56],d:l=>`For 10s every rifle shot bounces to ${l+1} more enemies.`},
  {id:'rail',br:'mark',k:'pow',name:'Rail Shot',sh:'RAIL',ic:'cp_rail',ch:3,cd:45,tgt:'pt',cost:[50,70,95],d:l=>`Tap a direction: a railgun round tears through everything in a line, aircraft too. Bosses lose ${[15,20,25][l-1]}% of their health.`},
@@ -11495,9 +11498,12 @@ function cmdFortHit(d){const m=G.cm;if(m.t.fort>G.time){if(R()<0.3){const h=bloc
 // ---- using a power ----
 function cmUse(i){if(!running||paused||!G||G.choosing||G.over)return;const m=G.cm,id=m.eq[i];if(!id)return;const q=CMB[id];
   if(m.arm===id){m.arm=null;cmSync(true);return}
-  if((m.cd[id]||0)>G.time||m.pts<q.ch*CM_PTS-1e-9){sfx('deny');return}
+  const cdl=(m.cd[id]||0)-G.time;if(cdl>0||m.pts<q.ch*CM_PTS-1e-9){sfx('deny');cmNope(i,cdl>0?q.sh+' READY IN '+Math.ceil(cdl)+'s':q.sh+' NEEDS '+q.ch+' CHARGE'+(q.ch>1?'S':''));return}
   if(q.tgt){m.arm=id;G.airArmed=false;G.airAim=null;G.nadeArmed=false;sfx('buy');cmSync(true);return}
   cmFire(id)}
+// a press that can't fire: the button flashes red and the reason floats over the fort (the deny sound alone told players nothing)
+function cmNope(i,t){const b=$('cp'+i);if(b){b.classList.remove('nope');void b.offsetWidth;b.classList.add('nope');clearTimeout(b._np);b._np=setTimeout(()=>b.classList.remove('nope'),600)}
+  const h=blockHalf();float(0,-h-26,t,'#ffb0a0',13)}
 function cmTap(x,y){const m=G.cm,id=m.arm,q=CMB[id];if(!q)return;
   if(q.tgt==='en'){const e=enemyAt(x,y,Math.max(24,(MOBILE?40:20)/sc));if(!e){float(x,y,'TAP AN ENEMY','#ffd0c4',12);return}cmFire(id,e.x,e.y,e);return}
   cmFire(id,x,y)}
@@ -11516,7 +11522,7 @@ const CMFX={
  laser(l){const m=G.cm,c=cmCluster(50);m.lz={t:G.time+[7,8.5,10][l-1],x:c?c.x:0,y:c?c.y:-sight()*0.5,c,rt:0.7,fx:0,man:0,hum:0};
    cmBanner('SPACE LASER','hold and drag to steer','150,225,255');sfx('laser',m.lz.x,m.lz.y);shake(6);light(m.lz.x,m.lz.y,160,'150,225,255',0.6)},
  deadeye(l){const m=G.cm;m.t.de=G.time+[6,8,10][l-1];slowMo(1.6,0.4);cmBanner('DEADEYE','every shot crits','255,207,90');tone(1320,0.14,'sine',-600,0.05)},
- marktgt(l,x,y,e){if(!e||e.dead)return;sgMark(e,[2,2.5,3][l-1],12);e.rev=Math.max(e.rev||0,12);G.sold[0].tgt=e;float(e.x,e.y-e.r-16,'MARKED · '+[3,3.5,4][l-1]+'× DAMAGE','#ff8a70',13);
+ marktgt(l,x,y,e){if(!e||e.dead)return;sgMark(e,[3,4,5][l-1],15);e.rev=Math.max(e.rev||0,15);G.cm.mkE=e;G.sold[0].tgt=e;float(e.x,e.y-e.r-16,'MARKED · '+[4,5,6][l-1]+'× DAMAGE','#ff8a70',14);
    ring(e.x,e.y,e.r*3,0.4,'255,110,80',3);tone(990,0.1,'square',0,0.05)},
  rico(l){const m=G.cm;m.t.rico=G.time+10;m.rcN=l+1;cmBanner('RICOCHET','shots bounce to '+(l+1)+' more','255,207,90')},
  rail(l,x,y){const m=G.cm,d=hyp(x,y)||1,ux=x/d,uy=y/d,L0=fortHalf()+6,L1=skyVision()+200,x1=ux*L0,y1=uy*L0,x2=ux*L1,y2=uy*L1,bp=[0.15,0.2,0.25][l-1],dmg=40*cmGh()*m.pd;
@@ -11564,6 +11570,7 @@ function hvtSpawn(){const w=G.wave,ks=['off'];if(w>=30)ks.push('shd');if(w>=35)k
   if(k==='drn'){e=spawnSky('drone',R()*TAU,false);e.hp=e.max*=16;e.dmg*=10;e.spd*=0.75;e.rew*=10}
   else{e=spawn(k==='off'?'shooter':'brute');if(e.robo){e.robo=undefined;e.arm=ET[e.type].arm||0}e.hp=e.max*=k==='off'?20:8;e.dmg*=k==='off'?8:6;e.rew*=10;e.r=Math.round(e.r*1.3);
     if(k==='shd')e.shd=e.max;else G.cm.offs.push(e)}
+  if(k==='shd'){const sv=seen();if(!sv.shd_bn){sv.shd_bn=1;G.shdBn=w;save()}if(G.shdBn===w)setTimeout(()=>{if(running&&!G.over)banner('USE EXPLOSIVES!','Shield Bearer · bullets bounce off · grenades, airstrikes and powers break the shield','170,215,255','crit')},900)}   // owner: first wave they appear, then never again
   e.el=k;G.cm.hlog.push({k,w,t0:G.time,t1:0,e});if(G.cm.hlog.length>40)G.cm.hlog.shift();if(!seen()['hvt_'+k])spotted('hvt_'+k);
   feed('HIGH-VALUE TARGET · '+INTEL['hvt_'+k][0].toUpperCase(),'255,110,90','threat','HVT · '+INTEL['hvt_'+k][0].toUpperCase());tone(880,0.1,'square',0,0.05);setTimeout(()=>tone(660,0.16,'square',0,0.05),120)}
 const hvtPreview=k=>k==='drn'?skyPreview('drone'):drawPreview(k==='off'?'shooter':'brute');
@@ -11606,6 +11613,10 @@ function cmdDraw(){const m=G.cm;if(!m)return;const px=1/sc,T=G.time;
       const c=sh?'rgba(0,0,0,.3)':'#6d7470',d=sh?c:'#4d5350';box(-2.2,-15,4.4,30,c);box(-16,-3,32,4.6,c);box(-6,10.5,12,2.6,c);if(!sh){for(const x of[-11,-6,6,11])box(x-1,-4.4,2,3,d);box(-1.1,-12.5,2.2,4,'#9aa3a0');ell(0,-13.6,1.2,0.8,'#2b3a46')}ctx.restore()}}
   if(m.t.fort>T||m.t.leg>T){const h=blockHalf()+6,a=0.45+0.25*Math.sin(T*8);ctx.strokeStyle=`rgba(255,207,90,${a.toFixed(3)})`;ctx.lineWidth=Math.max(3,5*px);ctx.strokeRect(-h,-h,h*2,h*2)}
   if(m.t.leg>T){const r=blockHalf()*2.4+6*Math.sin(T*6);ctx.strokeStyle='rgba(255,207,90,.35)';ctx.lineWidth=Math.max(2,3*px);ctx.beginPath();ctx.arc(0,0,r,0,7);ctx.stroke()}
+  const mk=m.mkE;if(mk&&!mk.dead&&mk.mkT>T){const y=mk.y-(mk.air?(mk.alt||0)*0.3:0),r=mk.r+14+4*Math.sin(T*8),a=Math.min(1,(mk.mkT-T)/1.5);ctx.save();ctx.globalAlpha=a;
+    ctx.strokeStyle='rgba(255,70,50,.9)';ctx.lineWidth=Math.max(2,2.5*px);ctx.beginPath();ctx.arc(mk.x,y,r,0,7);ctx.stroke();ctx.beginPath();
+    for(let i=0;i<4;i++){const q=i*Math.PI/2+T*1.5;ctx.moveTo(mk.x+Math.cos(q)*(r-6),y+Math.sin(q)*(r-6));ctx.lineTo(mk.x+Math.cos(q)*(r+10),y+Math.sin(q)*(r+10))}ctx.stroke();
+    ctx.font=`700 ${Math.max(9,11*px)}px sans-serif`;ctx.textAlign='center';ctx.fillStyle='#ff6a50';ctx.fillText('MARKED',mk.x,y-r-6*Math.max(1,px));ctx.restore()}
   // high-value targets: a red diamond and tag; officers show their aura, shield bearers their shield
   for(const list of[G.enemies,G.sky])for(const e of list){if(!e.el||e.dead)continue;const y=e.y-e.r-(e.air?(e.alt||0)*0.3:0)-14*Math.max(1,px),s=Math.max(5,6*px),pl=0.6+0.4*Math.sin(T*7+e.wob);
     if(e.el==='off'){ctx.strokeStyle=`rgba(255,110,90,${(0.22+0.12*pl).toFixed(3)})`;ctx.lineWidth=Math.max(1,1.4*px);ctx.setLineDash([6*px,5*px]);ctx.beginPath();ctx.arc(e.x,e.y,HVT_AURA,0,7);ctx.stroke();ctx.setLineDash([])}

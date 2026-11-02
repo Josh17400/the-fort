@@ -24,7 +24,12 @@ function profile(name, seed) {
     Object.assign(s, { bank: 1e9, best: 45, tkills: 999 });
     let sd = seed >>> 0 || 1; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
     U.forEach((u) => { if (rnd() < 0.7) s.lv[u.id] = Math.floor(rnd() * (isFinite(u.max) ? u.max + 1 : 25)); });
-  } else if (name !== "fresh") throw new Error(`unknown scene "${name}" (fresh | mid | maxed)`);
+  } else if (name === "late") {
+    // a steady mid-campaign save: every Armory line at 40% of its cap (uncapped lines at 16), all R&D at 40%
+    Object.assign(s, { bank: 5e6, best: 45, tkills: 3000 });
+    U.forEach((u) => { s.lv[u.id] = Math.floor((isFinite(u.max) ? u.max : 40) * 0.4); });
+    RLINES.lines.forEach((l) => { s.rs[l.id] = Math.floor((l.t.length - 1) * 0.4); });
+  } else if (name !== "fresh") throw new Error(`unknown scene "${name}" (fresh | mid | late | maxed)`);
   return s;
 }
 
@@ -163,7 +168,8 @@ const calls = {
   theater: { args: "id", help: "switch theater at the base (desert, ...)", run: (id) => switchMap(id) ? `now in ${id}` : { error: `can't switch to "${id}" (unknown, locked, already there, or in battle); theaters: ${MAPS.map((m) => m.id + (mapOpen(m.id) ? "" : " (locked)")).join(", ")}` } },
   command: { help: "the Commander tree: Valor, each node's level and cost (Valor is earned at the end of every run)", run: () => {
     if (!cmdOpen()) return { error: "the Command tree opens once you have reached wave " + CM_OPEN };
-    const c = cmdS(); return `Valor ${c.v} · loadout ${c.eq.join(", ") || "none"} (${cmSlots(c)} slots) | ` + CMD.map((q) => `${q.id} (${q.name}) Lv${cpL(q.id)}/${q.cost.length}` + (cmMaxed(q) ? " MAX" : cmNeed(q) ? " locked" : ` ${cmCost(q)} Valor${c.v >= cmCost(q) ? "" : " (can't afford)"}`)).join("; "); } },
+    const c = cmdS(); return `Valor ${c.v} · loadout ${c.eq.join(", ") || "none"} (${cmSlots(c)} slots) | ` + "Valor is earned at the end of every run | " + CMD.map((q) => `${q.id} (${q.name}) Lv${cpL(q.id)}/${q.cost.length}` + (cmMaxed(q) ? " MAX" : cmNeed(q) ? " locked: " + cmNeed(q) : ` ${cmCost(q)} Valor${c.v >= cmCost(q) ? "" : " (can't afford)"}`)
+      + (q.d ? " · " + (typeof q.d === "function" ? q.d(Math.max(1, Math.min(q.cost.length, cpL(q.id) + 1))) : q.d) : "")).join("; "); } },   // what the Command screen shows a player: description and why a node is locked
   cmdbuy: { args: "id", help: "unlock or upgrade a Commander node (ids from command)", run: (id) => {
     const q = CMB[id]; if (!q) return { error: `no node "${id}"` }; if (running) return { error: "the Command tree is closed during battle" };
     if (cmMaxed(q)) return { error: id + " is maxed" }; const need = cmNeed(q); if (need) return { error: need };
