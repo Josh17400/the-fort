@@ -11423,7 +11423,7 @@ const CMD=[
  {id:'laser',br:'fire',k:'pow',name:'Space Laser',sh:'LASER',ic:'cp_laser',ch:3,cd:60,cost:[50,70,95],d:l=>`An orbital beam burns for ${[7,8.5,10][l-1]}s and melts anything it touches. Hold and drag to steer it.`},
  {id:'deadeye',br:'mark',k:'pow',name:'Deadeye',sh:'DEADEYE',ic:'crit',ch:1,cd:20,cost:[5,10,15],d:l=>`Time slows. For ${[6,8,10][l-1]}s every rifle shot is a critical hit, fires twice as fast and drops a trooper in one hit.`},
  {id:'aim',br:'mark',k:'pas',name:'Steady Aim',ic:'dmg',cost:[8,12,18],d:l=>`Shots at the enemy you tapped deal extra damage (+${[50,100,150][l-1]}% of a trooper's health).`},
- {id:'marktgt',br:'mark',k:'pow',name:'Mark Target',sh:'MARK',ic:'cp_mark',ch:1,cd:15,tgt:'en',cost:[14,20,28],d:l=>`Tap an enemy: every gun you own turns on it and hits it ${[4,5,6][l-1]}× as hard for 15s.`},
+ {id:'marktgt',br:'mark',k:'pow',name:'Mark Target',sh:'MARK',ic:'cp_mark',ch:1,cd:15,tgt:'en',cost:[14,20,28],d:l=>`Tap an enemy: every gun you own turns on it and hits it ${[4,5,6][l-1]}× as hard for 15s. Shields block the bonus until broken.`},
  {id:'hunter',br:'mark',k:'pas',name:'Bounty Hunter',ic:'bounty',cost:[18,26,36],d:l=>`Your aimed kills pay +${25*l}% cash; high-value kills pay +${l} Valor.`},
  {id:'rico',br:'mark',k:'pow',name:'Ricochet',sh:'RICO',ic:'cp_rico',ch:2,cd:30,cost:[30,42,56],d:l=>`For 10s every rifle shot bounces to ${l+1} more enemies.`},
  {id:'rail',br:'mark',k:'pow',name:'Rail Shot',sh:'RAIL',ic:'cp_rail',ch:3,cd:45,tgt:'pt',cost:[50,70,95],d:l=>`Tap a direction: a railgun round tears through everything in a line, aircraft too. Bosses lose ${[15,20,25][l-1]}% of their health.`},
@@ -11486,7 +11486,7 @@ function cmdHurt(e,d){const m=G.cm;
   if(m.dem&&(_ds==='nade'||_ds==='air'))d*=m.dem;
   if(e.el){const own=_ds==='power'||_ds==='nade'||_ds==='air'||_ds==='rifle'&&_mainHit;
     if(e.el==='drn'){if(!(own||_ds==='power'))d*=0.25}
-    else if(e.shd>0){e.shd-=d*(_dk===''||_dk==='m'?(own?2.5:1.6):own?0.4:0.05);if(e.shd<=0){e.shd=0;cmShieldBreak(e)}return -1}}
+    else if(e.shd>0){if(e.mkT>G.time)d/=1+e.mkB;e.shd-=d*(_dk===''||_dk==='m'?(own?2.5:1.6):own?0.4:0.05);if(e.shd<=0){e.shd=0;cmShieldBreak(e)}return -1}}
   else if(m.offs.length){for(const o of m.offs)if(!o.dead&&within(e,o.x,o.y,HVT_AURA)){d*=0.6;break}}
   return d}
 function cmShieldBreak(e){spark(e.x,e.y,18,170,['#ffffff','#bfe6ff','#ffd27a'],0.5,1.8);ring(e.x,e.y,e.r*3,0.4,'190,225,255',3);float(e.x,e.y-e.r-16,'SHIELD BROKEN','#bfe6ff',13);sfx('armor',e.x,e.y)}
@@ -11522,7 +11522,7 @@ const CMFX={
  laser(l){const m=G.cm,c=cmCluster(50);m.lz={t:G.time+[7,8.5,10][l-1],x:c?c.x:0,y:c?c.y:-sight()*0.5,c,rt:0.7,fx:0,man:0,hum:0};
    cmBanner('SPACE LASER','hold and drag to steer','150,225,255');sfx('laser',m.lz.x,m.lz.y);shake(6);light(m.lz.x,m.lz.y,160,'150,225,255',0.6)},
  deadeye(l){const m=G.cm;m.t.de=G.time+[6,8,10][l-1];slowMo(1.6,0.4);cmBanner('DEADEYE','every shot crits','255,207,90');tone(1320,0.14,'sine',-600,0.05)},
- marktgt(l,x,y,e){if(!e||e.dead)return;sgMark(e,[3,4,5][l-1],15);e.rev=Math.max(e.rev||0,15);G.cm.mkE=e;G.sold[0].tgt=e;float(e.x,e.y-e.r-16,'MARKED · '+[4,5,6][l-1]+'× DAMAGE','#ff8a70',14);
+ marktgt(l,x,y,e){if(!e||e.dead)return;sgMark(e,[3,4,5][l-1],15);e.rev=Math.max(e.rev||0,15);G.cm.mkE=e;G.sold[0].tgt=e;float(e.x,e.y-e.r-16,e.shd>0?'MARKED · BREAK THE SHIELD FIRST':'MARKED · '+[4,5,6][l-1]+'× DAMAGE','#ff8a70',14);
    ring(e.x,e.y,e.r*3,0.4,'255,110,80',3);tone(990,0.1,'square',0,0.05)},
  rico(l){const m=G.cm;m.t.rico=G.time+10;m.rcN=l+1;cmBanner('RICOCHET','shots bounce to '+(l+1)+' more','255,207,90')},
  rail(l,x,y){const m=G.cm,d=hyp(x,y)||1,ux=x/d,uy=y/d,L0=fortHalf()+6,L1=skyVision()+200,x1=ux*L0,y1=uy*L0,x2=ux*L1,y2=uy*L1,bp=[0.15,0.2,0.25][l-1],dmg=40*cmGh()*m.pd;
