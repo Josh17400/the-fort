@@ -4231,10 +4231,11 @@ function streakKill(){G.stk=(G.stk||0)+1;G.stkT=STREAK_T;G.stkPop=1;medalMax('st
 // armored hulls that count toward Tank Hunter (technicals are soft-skinned pickups)
 const ARMOR_KILL={boss:1,mbt:1,ifv:1,apc:1,mlrs:1,spaag:1,samtel:1};
 // Stragglers: once the wave has fully spawned and at most 3 hostiles (ground + air) are left with no kill for STRAG_T seconds, they are
-// marked (revealed) and standoff crews move up, so a wave never ends in a hunt for one hidden rifleman.
+// marked (revealed) and standoff crews and ranged infantry move up, so a wave never ends in a hunt for one hidden rifleman
+// (portrait phones crop the sides of the vision ring: a shooter parked there is visible but can't be tapped).
 const STRAG_T=15;
 function stragglers(){if(G.spawnLeft>0||G.vq&&G.vq.length||G.time-(G.lkT??G.time)<STRAG_T)return;let n=0;for(const e of G.enemies)if(!e.dead&&++n>3)return;for(const e of G.sky)if(!e.dead&&++n>3)return;if(!n)return;
-  for(const e of G.enemies)if(!e.dead){e.rev=Math.max(e.rev||0,1);if(e.stand)e.fwd=1}for(const e of G.sky)if(!e.dead)e.rev=Math.max(e.rev||0,1)
+  for(const e of G.enemies)if(!e.dead){e.rev=Math.max(e.rev||0,1);if(e.stand||e.range)e.fwd=1}for(const e of G.sky)if(!e.dead)e.rev=Math.max(e.rev||0,1)
   if(G.stragW!==G.wave&&S.set.callouts!==false){G.stragW=G.wave;feed('STRAGGLERS MARKED','255,207,90','threat')}}
 function kill(e){e.dead=true;G.lkT=G.time;statKill(e);if(G.cm)cmdKill(e);if(_dqK)dqKill(e);if(e.mech)medalBump('mech');if(e.vbied){e.vbied=0;medalBump('vbied');explode(e.x,e.y,44,e.dmg*0.4);light(e.x,e.y,90,'255,150,60',0.4)}if(_mainHit&&_aimed)streakKill();
   const bonus=e.load>0?money(e.rew*0.15*e.load):0,r=Math.round(money(e.rew)*streakMul()*(G.cm&&G.cm.hb&&_mainHit&&_aimed?G.cm.hb:1))+bonus;S.bank+=r;G.earned+=r;G.kills++;S.tkills++;(e.tb?tbDown:e.air?airDown:fxKill)(e);
@@ -4495,7 +4496,7 @@ function update(dt){
     if(e.chute>0){e.chute-=dt;if(e.chute<=0)chuteLand(e);continue}   // paratroopers are helpless until they touch down
     if(sigStatus(e,dt))continue;   // burning / stunned (research signatures)
     if(e.tb){tbTick(e,dt,half);if(!running)return}
-    const d=hyp(e.x,e.y)||1,cheb=Math.max(Math.abs(e.x),Math.abs(e.y)),stop=half+e.range+e.r;
+    const d=hyp(e.x,e.y)||1,cheb=Math.max(Math.abs(e.x),Math.abs(e.y)),stop=half+(e.fwd?Math.min(e.range,40):e.range)+e.r;
     let spd=e.slT>G.time?e.spd*(1-e.slF):e.spd;if(e.veh&&pk('barriers')&&cheb<wireR+40)spd*=0.9;if(twS&&G.fogK)spd*=1-twS*G.fogK;   // Vehicle Barriers: jersey blocks outside the wire; blizzards slow the ground advance
     if(wl&&cheb<wireR){if(e.veh)spd*=(1+slow)/2;else{spd*=slow;const wd=2*wl*dt;if(G.st){const k=_ds;_ds='wire';statHit(e,wd,e.hp);_ds=k}e.hp-=wd;if(e.hp<=0){_ds='wire';kill(e);_ds='other';continue}}}   // tracks and tyres crush the wire
     if(e.lc&&lcTick(e,dt))continue;
