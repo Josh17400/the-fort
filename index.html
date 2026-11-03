@@ -4230,11 +4230,11 @@ let _aimed=false;
 function streakKill(){G.stk=(G.stk||0)+1;G.stkT=STREAK_T;G.stkPop=1;medalMax('streak',G.stk);if(_dqK)dqAdd('streak',G.stk);if(G.stk>1&&G.stk<=11)tone(520+G.stk*60,0.07,'square',40,0.03)}
 // armored hulls that count toward Tank Hunter (technicals are soft-skinned pickups)
 const ARMOR_KILL={boss:1,mbt:1,ifv:1,apc:1,mlrs:1,spaag:1,samtel:1};
-// Stragglers: once the wave has fully spawned and at most 3 hostiles (ground + air) are left with no kill for STRAG_T seconds, they are
+// Stragglers: once the wave has fully spawned and at most 3 hostiles (ground + air) are left with no kill for STRAG_T seconds (any number after 2×STRAG_T), they are
 // marked (revealed) and standoff crews and ranged infantry move up, so a wave never ends in a hunt for one hidden rifleman
 // (portrait phones crop the sides of the vision ring: a shooter parked there is visible but can't be tapped).
 const STRAG_T=15;
-function stragglers(){if(G.spawnLeft>0||G.vq&&G.vq.length||G.time-(G.lkT??G.time)<STRAG_T)return;let n=0;for(const e of G.enemies)if(!e.dead&&++n>3)return;for(const e of G.sky)if(!e.dead&&++n>3)return;if(!n)return;
+function stragglers(){const q=G.time-(G.lkT??G.time);if(G.spawnLeft>0||G.vq&&G.vq.length||q<STRAG_T)return;const cap=q<2*STRAG_T?3:1e9;let n=0;for(const e of G.enemies)if(!e.dead&&++n>cap)return;for(const e of G.sky)if(!e.dead&&++n>cap)return;if(!n)return;
   for(const e of G.enemies)if(!e.dead){e.rev=Math.max(e.rev||0,1);if(e.stand||e.range)e.fwd=1}for(const e of G.sky)if(!e.dead)e.rev=Math.max(e.rev||0,1)
   if(G.stragW!==G.wave&&S.set.callouts!==false){G.stragW=G.wave;feed('STRAGGLERS MARKED','255,207,90','threat')}}
 function kill(e){e.dead=true;G.lkT=G.time;statKill(e);if(G.cm)cmdKill(e);if(_dqK)dqKill(e);if(e.mech)medalBump('mech');if(e.vbied){e.vbied=0;medalBump('vbied');explode(e.x,e.y,44,e.dmg*0.4);light(e.x,e.y,90,'255,150,60',0.4)}if(_mainHit&&_aimed)streakKill();
