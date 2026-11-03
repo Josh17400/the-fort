@@ -55,6 +55,17 @@ globalThis.damageFort = function (d, src) {
   return damageFort0.apply(this, arguments);
 };
 
+// Ids are handed out when an enemy / aircraft / crate is created (the game's only three pushes), not when a snapshot first
+// reports it: a replay takes fewer snapshots than the live session, so lazily numbered ids came out different.
+for (const fn of ["spawn", "spawnSky", "dropCrate"]) {
+  const f0 = globalThis[fn];
+  globalThis[fn] = function () {
+    const g = G, n = g ? [g.enemies.length, g.sky.length, g.crates.length] : null, r = f0.apply(this, arguments);
+    if (n) [g.enemies, g.sky, g.crates].forEach((a, k) => { for (let i = n[k]; i < a.length; i++) idOf(a[i]); });
+    return r;
+  };
+}
+
 // Name every game sound for Witness (play's "sounds:" line, listen): a tester can't hear the deny buzz of a power that can't fire.
 const sfx0 = sfx;
 globalThis.sfx = function (n) { witness.sound(String(n)); return sfx0.apply(this, arguments); };
