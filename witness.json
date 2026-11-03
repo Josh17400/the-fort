@@ -29,7 +29,10 @@
       "pause": "p",
       "choose": "numbers",
       "confirm": "enter",
-      "cancel": "escape"
+      "cancel": "escape",
+      "power1": "action:power1",
+      "power2": "action:power2",
+      "power3": "action:power3"
     },
     "allowCalls": true,
     "stats": [
@@ -60,6 +63,6 @@
     ],
     "map": false,
     "cell": 20,
-    "brief": "THE FORT is a top-down fort-defense game for phones. The fort sits at the centre and enemies (infantry, vehicles, aircraft, bosses) close in from every side in waves. You fight by tapping enemies: your commander fires at what you tap; squad, artillery, aircraft and other defences fire on their own. BATTLE RHYTHM: 'fight enemies for 25s' (it taps targets for you, waits for the next wave on an empty field, and ends on its time). Between fights: 'press grab' (nearest supply crate: cash and repairs), 'press frag' (grenade), 'press strike' (airstrike), 'press lock' (lock onto the nearest enemy), 'press t' (cycle the target doctrine). 'wait 10 quiet' lets battle play out. Every few waves a FIELD COMMENDATION offers 3 directives (dialogue): 'choose 1|2|3'. When the fort falls the run ends ('call decline' if a Second Wind offer shows). At the BASE: 'call base' (Armory upgrades and research with costs), 'call buy <id>', 'call research <id>', 'call deploy', 'call retreat', 'call speed <n>' (during battle), 'call theater <id>' (switch map at the base; clearing wave 100 unlocks the next). Judge it as a player would."
+    "brief": "THE FORT is a top-down fort-defense game for phones. The fort sits at the centre and enemies (infantry, vehicles, aircraft, bosses) close in from every side in waves. You fight by tapping enemies: your commander fires at what you tap; squad, artillery, aircraft and other defences fire on their own. BATTLE RHYTHM: 'fight enemies for 25s' (it taps targets for you, waits for the next wave on an empty field, and ends on its time). COMMANDER POWERS (the buttons above AIR, in loadout order): 'press power1|power2|power3' fires one when it says READY (a power that needs a spot or enemy picks the nearest). Between fights: 'press grab' (nearest supply crate: cash and repairs), 'press frag' (grenade), 'press strike' (airstrike), 'press lock' (lock onto the nearest enemy), 'press t' (cycle the target doctrine). 'wait 10 quiet' lets battle play out. Every few waves a FIELD COMMENDATION offers 3 directives (dialogue): 'choose 1|2|3'. When the fort falls the run ends ('call decline' if a Second Wind offer shows). At the BASE: 'call base' (Armory upgrades and research with costs), 'call buy <id>', 'call research <id>', 'call deploy', 'call retreat', 'call speed <n>' (during battle), 'call theater <id>' (switch map at the base; clearing wave 100 unlocks the next). Judge it as a player would."
   }
 }

@@ -165,7 +165,10 @@ const calls = {
     buyUpgrade(id); renderHome(); return `bought ${id}: now Lv${L(id)}, $${Math.floor(S.bank)} left`; } },
   research: { args: "id", help: "start researching the next tier (ids from base)", run: (id) => {
     if (!RLINES[id]) return { error: `no research line "${id}"` };
-    const ok = buyResearch(id); renderHome(); return ok ? `research ${id} started` : { error: `can't start ${id} now (not enough RP, lab busy, or not unlocked)` }; } },
+    const ok = buyResearch(id); renderHome(); if (ok) return `research ${id} started`;
+    // say which reason, as the R&D screen does
+    const r = RLINES[id], k = rsOwned(id) + 1, why = !S.lab ? "the lab isn't open yet" : labOf(id) ? "already researching it" : !labFree() ? "lab busy: every slot is in use" : rsDone(id) ? `refit needs ${refitCost(S.rf[id] | 0)} RP, you have ${Math.floor(S.rp)}` : rsWhy(id, k) || `needs ${rsPrice(id, k).rp} RP, you have ${Math.floor(S.rp)}`;
+    return { error: `can't start ${id}: ${why}` }; } },
   deploy: { help: "start a run from the base", run: () => { if (running) return { error: "already in battle" }; if (G && G.swAsk) swDecline(); showScreen("home"); startRun(); runNo++; return `deployed: run ${runNo}, first wave ${G.wave + 1}`; } },
   retreat: { help: "end the current run now", run: () => { if (!running) return { error: "not in battle" }; G.retreated = true; endRun(true); return `retreated at wave ${G.wave}`; } },
   decline: { help: "on the Second Wind offer: end the run", run: () => { if (G && G.swAsk) { swDecline(); return "run ended"; } return { error: "no Second Wind offer is open" }; } },
