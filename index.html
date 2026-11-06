@@ -1365,7 +1365,7 @@ body.mobile #hud:not(.air)[data-mode=desk] #cp0{--y:108px}body.mobile #hud:not(.
 .cm-foot{display:flex;gap:6px;align-items:flex-start;margin:4px 4px 24px;font:400 12px/1.45 var(--f-body);color:var(--c-dim)}.cm-foot .ic{color:var(--c-valor);flex:none;margin-top:1px}
 /* Base tile + AAR row */
 #cmdCard{align-self:stretch}#cmdCard:empty{display:none}
-.cm-card{display:block;width:100%;text-align:left;cursor:pointer;padding:16px;border-color:rgba(255,157,107,.35);color:inherit;font:inherit}
+.cm-card{display:block;width:100%;text-align:left;cursor:pointer;padding:16px;border-color:rgba(255,157,107,.35);color:inherit;font:inherit}.cm-note{margin-top:10px;padding:14px 16px;border-color:var(--c-valor,rgba(255,207,90,.4))}.cm-note p{margin:6px 0 12px;font-size:13px;line-height:1.45}
 .cm-card .eyebrow{display:flex;align-items:center;gap:8px}.cm-card .dot.gold{position:static;display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c-gold-hi);box-shadow:0 0 8px rgba(255,207,90,.8)}
 .cm-v{display:flex;align-items:center;gap:5px;font:600 12px var(--f-display);letter-spacing:.1em;color:var(--c-dim)}.cm-v b{font-size:16px;color:var(--c-valor);letter-spacing:0}.cm-v .ic{color:var(--c-valor)}
 .cm-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}.cm-row .chev{margin-left:auto;color:var(--c-valor)}
@@ -3159,6 +3159,7 @@ $('moneyChip').onclick=()=>setView('armory',true);
 $('rpChip').onclick=()=>openResearch();
 $('gemChip').onclick=()=>{if(homeView==='store'&&$('home').classList.contains('on')){$('home').scrollTo({top:0,behavior:S.set.reduceMotion?'auto':'smooth'});flash($('shop').querySelector('.gmh'));return}openGems()};   // on the STORE view the chip just brings the balance up
 $('home').addEventListener('click',e=>{const q=s=>e.target.closest(s);let b;
+  if(b=q('[data-cmpace]')){const c=cmdS();c.pace=1;save();renderCmdCard();return}   // Valor-pace apology note: dismiss for good
   if(b=q('[data-rsgo]')){openResearch(b.dataset.rsgo);return}
   if(b=q('[data-goto]')){gotoCard(b.dataset.goto);return}
   if(b=q('[data-view-go]')){setView(b.dataset.viewGo,true);return}
@@ -11668,10 +11669,12 @@ $('cmdv').addEventListener('click',e=>{const t=e.target;let b;
   if(b=t.closest('[data-cmeq]')){cmEquip(b.dataset.cmeq);sfx('buy');renderCommand();return}});
 // Base tile: Valor, the loadout and a way in (only once the tree is open)
 function renderCmdCard(){const el=$('cmdCard');if(!el)return;if(!cmdOpen()){el.innerHTML='';return}const fresh=cmdUnlock(),c=cmdS(),n=cmAff();
+  if(fresh||!c.pace&&!Object.values(c.lv).some(v=>v>0))c.pace=1;   // the 1.1.1 note is only for commanders who bought under 1.1's fast Valor
   if(fresh)setTimeout(()=>toast('COMMAND unlocked · +'+CM_WELCOME+' Valor to spend','valor'),400);
   el.innerHTML=`<button class="panel cm-card" data-view-go="cmd"><div class="sec-h"><div class="eyebrow">COMMAND${n?`<i class="dot gold"></i>`:''}</div><span class="cm-v">${ic('valor',16)}<b>${fmtN(c.v)}</b> VALOR</span></div>`
     +`<div class="cm-row">${c.eq.length?c.eq.map(id=>`<span class="cm-pw">${ic(CMB[id].ic,16)}${CMB[id].name}</span>`).join(''):`<span class="cm-pw dim">${ic('cmd',16)}No power equipped yet</span>`}<span class="chev">→</span></div>`
-    +(n?`<div class="cm-sub">${n} ${pl(n,'upgrade')} ready to unlock</div>`:'')+'</button>'}
+    +(n?`<div class="cm-sub">${n} ${pl(n,'upgrade')} ready to unlock</div>`:'')+'</button>'
+    +(c.pace?'':`<div class="panel cm-note"><div class="eyebrow">A NOTE FROM THE TEAM</div><p>In 1.1, Valor Tokens were paying out far faster than we intended. Valor now mostly comes from setting new wave records on each theater, so the Commander tree fills out as your campaign goes on. <b>Everything you've already earned and unlocked is yours to keep.</b> Sorry for the mix-up, and thanks for playing!</p><button class="btn sm" data-cmpace>Got it</button></div>`)}
 
 // ================= BATTLE HUD =================
 // Three layouts share one set of primitives: desk (>=640 wide), port (phone portrait) and land (short landscape). Safe-area insets
