@@ -161,7 +161,7 @@
   ]
  },
  {
-  "name": "command: a run pays Valor at the end (waves held)",
+  "name": "command: a run pays Valor at the end (no new record: the small battle trickle)",
   "seed": 3,
   "scene": "mid",
   "params": {
@@ -176,7 +176,7 @@
      "retreat"
     ],
     "expect": [
-     "state.command.lastValor >= 4",
+     "state.command.lastValor >= 1 && state.command.lastValor <= 2",
      "state.command.valor == state.command.lastValor"
     ]
    }
