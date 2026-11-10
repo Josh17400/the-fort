@@ -2229,7 +2229,8 @@ const Plat=(()=>{let busy=false,booted=null;
         const r=await full(()=>s.ads.showInterstitial());AN.track('ad',{k:'ia',ok:!!(r&&r.shown)});return!!(r&&r.shown)}catch(e){return false}finally{busy=false}},
     async buy(sku){if(busy||!P.iapOn())return false;busy=true;try{const s=sh();if(!s)return await sim('buy',sku);
         const r=await s.iap.purchase(sku);if(r&&!r.ok&&!r.cancelled)toast('Purchase failed · '+String(r.error||'try again later').slice(0,80),'close');
-        AN.track('iap',{sku,ok:!!(r&&r.ok),cancel:!!(r&&r.cancelled)});return!!(r&&r.ok)}
+        const ip={sku,ok:!!(r&&r.ok),cancel:!!(r&&r.cancelled)};if(!ip.ok&&!ip.cancel)ip.err=String(r&&r.error||'no result').slice(0,40);
+        AN.track('iap',ip);return!!(r&&r.ok)}
       catch(e){return false}finally{busy=false}},
     async restore(){const s=sh();return s&&s.iap.available()?await s.iap.restore():[]},
     notify(when,title,body,id){P.log.push({when,title,body,id});if(P.log.length>20)P.log.shift();const s=sh();if(s)s.notify.schedule({id,at:when,title,body})},
