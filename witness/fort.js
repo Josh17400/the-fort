@@ -186,6 +186,7 @@ const calls = {
   theater: { args: "id", help: "switch theater at the base (desert, ...)", run: (id) => switchMap(id) ? `now in ${id}` : { error: `can't switch to "${id}" (unknown, locked, already there, or in battle); theaters: ${MAPS.map((m) => m.id + (mapOpen(m.id) ? "" : " (locked)")).join(", ")}` } },
   command: { help: "the Commander tree: Valor, each node's level and cost (Valor is earned at the end of every run)", run: () => {
     if (!cmdOpen()) return { error: "the Command tree opens once you have reached wave " + CM_OPEN };
+    cmdUnlock();   // as the Command screen does on first open: the one-time welcome Valor
     const c = cmdS(); return `Valor ${c.v} · loadout ${c.eq.join(", ") || "none"} (${cmSlots(c)} slots) | ` + "Valor is earned at the end of every run | " + CMD.map((q) => `${q.id} (${q.name}) Lv${cpL(q.id)}/${q.cost.length}` + (cmMaxed(q) ? " MAX" : cmNeed(q) ? " locked: " + cmNeed(q) : ` ${cmCost(q)} Valor${c.v >= cmCost(q) ? "" : " (can't afford)"}`)
       + (q.d ? " · " + (typeof q.d === "function" ? q.d(Math.max(1, Math.min(q.cost.length, cpL(q.id) + 1))) : q.d) : "")).join("; "); } },   // what the Command screen shows a player: description and why a node is locked
   cmdbuy: { args: "id", help: "unlock or upgrade a Commander node (ids from command)", run: (id) => {
